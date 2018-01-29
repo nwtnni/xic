@@ -30,11 +30,12 @@ public class MyLexer {
    * Translates characters to character classes
    */
   private static final String ZZ_CMAP_PACKED = 
-    "\11\0\2\1\1\0\2\1\22\0\1\1\1\0\1\11\4\0\1\5"+
-    "\5\0\1\7\2\0\1\6\11\3\7\0\32\2\1\0\1\10\2\0"+
-    "\1\4\1\0\1\2\1\12\2\2\1\2\1\12\1\2\1\2\1\2"+
-    "\2\2\1\2\1\2\1\12\1\2\2\2\1\12\1\2\1\12\1\2"+
-    "\1\2\1\2\3\2\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uff95\0";
+    "\11\0\1\1\1\4\1\0\1\1\1\4\22\0\1\1\1\15\1\12"+
+    "\3\0\1\15\1\6\2\14\3\15\1\10\2\15\1\7\11\3\2\15"+
+    "\3\15\2\0\32\2\1\15\1\11\1\15\1\0\1\5\1\0\1\2"+
+    "\1\13\2\2\1\2\1\13\1\2\1\2\1\2\2\2\1\2\1\2"+
+    "\1\13\1\2\2\2\1\13\1\2\1\13\1\2\1\2\1\2\3\2"+
+    "\1\15\1\15\1\15\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uff92\0";
 
   /** 
    * Translates characters to character classes
@@ -47,11 +48,11 @@ public class MyLexer {
   private static final int [] ZZ_ACTION = zzUnpackAction();
 
   private static final String ZZ_ACTION_PACKED_0 =
-    "\1\0\1\1\1\2\1\3\1\4\1\1\1\4\1\1"+
-    "\2\0\1\5";
+    "\1\0\1\1\1\2\1\3\1\4\1\1\1\4\1\5"+
+    "\1\1\1\5\4\0\1\6\1\7";
 
   private static int [] zzUnpackAction() {
-    int [] result = new int[11];
+    int [] result = new int[16];
     int offset = 0;
     offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
     return result;
@@ -76,11 +77,11 @@ public class MyLexer {
   private static final int [] ZZ_ROWMAP = zzUnpackRowMap();
 
   private static final String ZZ_ROWMAP_PACKED_0 =
-    "\0\0\0\13\0\13\0\26\0\41\0\54\0\13\0\67"+
-    "\0\102\0\115\0\13";
+    "\0\0\0\16\0\16\0\34\0\52\0\70\0\16\0\106"+
+    "\0\124\0\16\0\142\0\160\0\124\0\176\0\16\0\16";
 
   private static int [] zzUnpackRowMap() {
-    int [] result = new int[11];
+    int [] result = new int[16];
     int offset = 0;
     offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
     return result;
@@ -103,14 +104,17 @@ public class MyLexer {
   private static final int [] ZZ_TRANS = zzUnpackTrans();
 
   private static final String ZZ_TRANS_PACKED_0 =
-    "\1\2\1\3\1\4\1\5\1\2\1\6\1\7\1\10"+
-    "\2\2\1\4\15\0\5\4\3\0\1\4\3\0\1\5"+
-    "\2\0\1\5\4\0\5\11\1\0\2\11\1\12\1\0"+
-    "\1\11\3\0\1\5\14\0\1\13\12\0\1\11\2\0"+
-    "\3\11";
+    "\1\2\1\3\1\4\1\5\1\3\1\2\1\6\1\7"+
+    "\1\10\1\2\1\11\1\4\2\12\20\0\2\4\1\0"+
+    "\3\4\3\0\1\4\5\0\1\5\3\0\1\5\6\0"+
+    "\4\13\1\0\1\13\1\0\2\13\1\14\1\0\1\13"+
+    "\1\0\1\13\3\0\1\5\12\0\4\15\1\0\1\15"+
+    "\1\0\2\15\1\16\1\17\1\15\1\0\1\15\6\0"+
+    "\1\20\15\0\1\13\2\0\3\13\10\0\1\15\2\0"+
+    "\3\15\2\0";
 
   private static int [] zzUnpackTrans() {
-    int [] result = new int[88];
+    int [] result = new int[140];
     int offset = 0;
     offset = zzUnpackTrans(ZZ_TRANS_PACKED_0, offset, result);
     return result;
@@ -148,10 +152,10 @@ public class MyLexer {
   private static final int [] ZZ_ATTRIBUTE = zzUnpackAttribute();
 
   private static final String ZZ_ATTRIBUTE_PACKED_0 =
-    "\1\0\2\11\3\1\1\11\1\1\2\0\1\11";
+    "\1\0\2\11\3\1\1\11\2\1\1\11\4\0\2\11";
 
   private static int [] zzUnpackAttribute() {
-    int [] result = new int[11];
+    int [] result = new int[16];
     int offset = 0;
     offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
     return result;
@@ -269,7 +273,7 @@ public class MyLexer {
     char [] map = new char[0x110000];
     int i = 0;  /* index in packed string  */
     int j = 0;  /* index in unpacked array */
-    while (i < 120) {
+    while (i < 140) {
       int  count = packed.charAt(i++);
       char value = packed.charAt(i++);
       do map[j++] = value; while (--count > 0);
@@ -622,23 +626,31 @@ public class MyLexer {
           case 1: 
             { System.out.printf("%d:%d, %s ERROR!!! \n",yyline,yycolumn, yytext());
             }
-          case 6: break;
+          case 8: break;
           case 2: 
             { /* ignore */
             }
-          case 7: break;
+          case 9: break;
           case 3: 
             { System.out.printf("%d:%d id %s\n", yyline,yycolumn, yytext());
             }
-          case 8: break;
+          case 10: break;
           case 4: 
             { System.out.printf("%d:%d integer %s\n", yyline,yycolumn, yytext());
             }
-          case 9: break;
+          case 11: break;
           case 5: 
+            { System.out.printf("%d:%d %s\n", yyline,yycolumn, yytext());
+            }
+          case 12: break;
+          case 6: 
+            { System.out.printf("%d:%d string %s\n", yyline,yycolumn, yytext());
+            }
+          case 13: break;
+          case 7: 
             { System.out.printf("%d:%d character %s\n", yyline,yycolumn, yytext().substring(1,yytext().length()-1));
             }
-          case 10: break;
+          case 14: break;
           default:
             zzScanError(ZZ_NO_MATCH);
         }
