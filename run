@@ -1,0 +1,1 @@
+jflex lexer.flex && javac MyLexer.java && java MyLexer text
