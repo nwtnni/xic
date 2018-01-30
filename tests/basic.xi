@@ -14,4 +14,4 @@ int bool true false
 4 / 5 != 6
 7 * 8 = 56
 !true == false
-true && true == true
+true & true == true
