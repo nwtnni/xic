@@ -1,2 +1,4 @@
 #!/bin/sh
-make
+make clean
+make jar
+cat stub.sh xic.jar > xic && chmod u+x xic

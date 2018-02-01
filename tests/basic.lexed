@@ -1,0 +1,74 @@
+1:1 string \u0000\n\t\n\f\r
+2:1 _
+2:2 id a
+3:1 id a
+4:1 id b
+5:1 id c
+6:1 id xyz
+7:1 use
+7:5 if
+7:8 while
+7:14 else
+7:19 return
+7:26 length
+8:1 int
+8:5 bool
+8:10 true
+8:15 false
+9:1 character n
+9:5 character \n
+9:10 character '
+9:15 character \"
+9:20 character \\
+9:25 character \f
+9:30 character \r
+9:35 character  
+10:1 integer 0
+10:3 integer 1
+10:5 integer 2
+10:7 integer 3
+10:9 integer 4
+10:11 integer 5
+10:13 integer 6
+10:15 integer 7
+10:17 integer 8
+10:19 integer 9
+11:1 integer 1234567890
+12:1 -
+12:2 integer 1
+12:4 -
+12:5 integer 50
+12:8 -
+12:9 integer 999
+13:1 string asdfjkl;
+14:1 string asdf\njkl;
+15:1 integer 1
+15:2 +
+15:3 integer 2
+15:4 =
+15:5 integer 3
+16:1 integer 4
+16:3 /
+16:5 integer 5
+16:7 !=
+16:10 integer 6
+17:1 integer 7
+17:3 *
+17:5 integer 8
+17:7 =
+17:9 integer 56
+18:1 !
+18:2 true
+18:7 ==
+18:10 false
+19:1 true
+19:6 &
+19:8 true
+19:13 ==
+19:16 true
+20:1 -
+20:2 integer 100
+20:6 =
+20:8 integer 0
+20:9 -
+20:10 integer 100

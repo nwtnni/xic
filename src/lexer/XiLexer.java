@@ -2,8 +2,8 @@
 
 package lexer;
 
-import lexer.TokenType;
 import static lexer.TokenType.*;
+import org.apache.commons.text.StringEscapeUtils;
 
 
 /**
@@ -21,6 +21,8 @@ public class XiLexer {
 
   /** lexical states */
   public static final int YYINITIAL = 0;
+  public static final int YYSTRING = 2;
+  public static final int YYCHARLITERAL = 4;
 
   /**
    * ZZ_LEXSTATE[l] is the state in the DFA for the lexical state l
@@ -29,20 +31,21 @@ public class XiLexer {
    * l is of the form l = 2*k, k a non negative integer
    */
   private static final int ZZ_LEXSTATE[] = { 
-     0, 0
+     0,  0,  1,  1,  2, 2
   };
 
   /** 
    * Translates characters to character classes
    */
   private static final String ZZ_CMAP_PACKED = 
-    "\11\0\1\7\1\2\1\0\1\7\1\1\22\0\1\7\1\41\1\16"+
-    "\2\0\1\44\1\50\1\12\1\52\1\53\1\42\1\45\1\62\1\14"+
-    "\1\63\1\10\1\13\3\21\4\5\2\4\1\60\1\61\1\46\1\47"+
-    "\1\43\2\0\6\6\13\3\1\23\10\3\1\54\1\15\1\55\1\0"+
-    "\1\11\1\0\1\40\1\20\2\6\1\26\1\30\1\36\1\32\1\27"+
-    "\2\3\1\33\1\3\1\17\1\37\2\3\1\34\1\25\1\35\1\24"+
-    "\1\3\1\31\1\22\2\3\1\56\1\51\1\57\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uff92\0";
+    "\11\0\1\7\1\2\1\63\1\64\1\1\22\0\1\7\1\37\1\15"+
+    "\2\0\1\42\1\47\1\12\1\51\1\52\1\40\1\43\1\61\1\44"+
+    "\1\62\1\10\1\13\3\16\4\5\2\4\1\57\1\60\1\45\1\46"+
+    "\1\41\2\0\6\6\24\3\1\53\1\14\1\54\1\0\1\11\1\0"+
+    "\1\36\1\34\2\6\1\22\1\24\1\33\1\26\1\23\2\3\1\27"+
+    "\1\3\1\32\1\35\2\3\1\30\1\21\1\31\1\20\1\3\1\25"+
+    "\1\17\2\3\1\55\1\50\1\56\7\0\1\63\u1fa2\0\1\63\1\63"+
+    "\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\udfe6\0";
 
   /** 
    * Translates characters to character classes
@@ -55,17 +58,21 @@ public class XiLexer {
   private static final int [] ZZ_ACTION = zzUnpackAction();
 
   private static final String ZZ_ACTION_PACKED_0 =
-    "\1\0\1\1\2\2\1\3\1\4\1\5\1\1\1\4"+
-    "\1\6\1\1\11\3\1\7\1\10\1\11\1\12\1\13"+
-    "\1\14\1\15\1\16\1\17\1\20\1\21\1\22\1\23"+
-    "\1\24\1\25\1\26\1\27\1\30\1\31\1\2\4\0"+
-    "\1\32\4\3\1\33\5\3\1\34\1\0\1\35\1\36"+
-    "\1\37\1\40\4\0\1\3\1\41\1\3\1\42\5\3"+
-    "\1\43\2\0\1\44\1\45\4\3\1\46\1\47\1\50"+
-    "\2\3\1\51\1\52";
+    "\3\0\1\1\2\2\1\3\1\4\1\5\1\6\1\7"+
+    "\1\4\1\10\11\3\1\11\1\12\1\13\1\14\1\15"+
+    "\1\16\1\17\1\20\1\21\1\22\1\23\1\24\1\25"+
+    "\1\26\1\27\1\30\1\31\1\32\1\33\1\34\1\35"+
+    "\2\36\1\1\1\37\3\40\1\41\2\3\1\42\7\3"+
+    "\1\43\1\0\1\44\1\45\1\46\1\47\1\50\1\51"+
+    "\1\50\1\52\1\53\1\47\1\54\1\55\1\56\1\57"+
+    "\1\60\1\61\14\62\2\41\1\63\1\3\1\64\6\3"+
+    "\1\65\1\50\2\0\1\66\1\67\1\0\1\70\1\71"+
+    "\1\0\1\72\1\73\1\74\1\75\1\76\1\77\4\3"+
+    "\1\100\1\101\1\102\1\0\1\103\1\104\2\3\1\105"+
+    "\1\106\1\107";
 
   private static int [] zzUnpackAction() {
-    int [] result = new int[90];
+    int [] result = new int[133];
     int offset = 0;
     offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
     return result;
@@ -90,21 +97,26 @@ public class XiLexer {
   private static final int [] ZZ_ROWMAP = zzUnpackRowMap();
 
   private static final String ZZ_ROWMAP_PACKED_0 =
-    "\0\0\0\64\0\150\0\64\0\234\0\320\0\u0104\0\u0138"+
-    "\0\64\0\u016c\0\u01a0\0\u01d4\0\u0208\0\u023c\0\u0270\0\u02a4"+
-    "\0\u02d8\0\u030c\0\u0340\0\u0374\0\u03a8\0\u03dc\0\u0410\0\64"+
-    "\0\64\0\u0444\0\u0478\0\64\0\64\0\64\0\64\0\64"+
-    "\0\64\0\64\0\64\0\64\0\64\0\64\0\64\0\u04ac"+
-    "\0\u04e0\0\u0514\0\u01a0\0\u0548\0\64\0\u057c\0\u05b0\0\u05e4"+
-    "\0\u0618\0\234\0\u064c\0\u0680\0\u06b4\0\u06e8\0\u071c\0\64"+
-    "\0\u0750\0\64\0\64\0\64\0\64\0\u0784\0\u07b8\0\u07ec"+
-    "\0\u0820\0\u0854\0\234\0\u0888\0\234\0\u08bc\0\u08f0\0\u0924"+
-    "\0\u0958\0\u098c\0\64\0\u09c0\0\u09f4\0\234\0\234\0\u0a28"+
-    "\0\u0a5c\0\u0a90\0\u0ac4\0\234\0\234\0\234\0\u0af8\0\u0b2c"+
-    "\0\234\0\234";
+    "\0\0\0\65\0\152\0\237\0\324\0\237\0\u0109\0\u013e"+
+    "\0\u0173\0\237\0\237\0\237\0\237\0\u01a8\0\u01dd\0\u0212"+
+    "\0\u0247\0\u027c\0\u02b1\0\u02e6\0\u031b\0\u0350\0\u0385\0\u03ba"+
+    "\0\u03ef\0\237\0\237\0\237\0\u0424\0\u0459\0\237\0\237"+
+    "\0\237\0\237\0\237\0\237\0\237\0\237\0\237\0\237"+
+    "\0\237\0\237\0\u048e\0\u04c3\0\237\0\u04f8\0\237\0\u052d"+
+    "\0\237\0\u0562\0\u0597\0\u05cc\0\u0601\0\u0109\0\u0636\0\u066b"+
+    "\0\u06a0\0\u06d5\0\u070a\0\u073f\0\u0774\0\237\0\u07a9\0\237"+
+    "\0\237\0\237\0\237\0\u07de\0\237\0\u0813\0\237\0\237"+
+    "\0\u0848\0\237\0\237\0\237\0\237\0\237\0\237\0\237"+
+    "\0\u087d\0\u08b2\0\u08e7\0\u091c\0\u0951\0\u0986\0\u09bb\0\u09f0"+
+    "\0\u0a25\0\u0a5a\0\u0a8f\0\u0ac4\0\237\0\u0109\0\u0af9\0\u0109"+
+    "\0\u0b2e\0\u0b63\0\u0b98\0\u0bcd\0\u0c02\0\u0c37\0\237\0\237"+
+    "\0\u0c6c\0\u0ca1\0\237\0\237\0\u087d\0\237\0\237\0\u0cd6"+
+    "\0\237\0\237\0\237\0\237\0\237\0\u0109\0\u0d0b\0\u0d40"+
+    "\0\u0d75\0\u0daa\0\u0109\0\u0109\0\237\0\u0ddf\0\u0109\0\u0109"+
+    "\0\u0e14\0\u0e49\0\237\0\u0109\0\u0109";
 
   private static int [] zzUnpackRowMap() {
-    int [] result = new int[90];
+    int [] result = new int[133];
     int offset = 0;
     offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
     return result;
@@ -127,65 +139,72 @@ public class XiLexer {
   private static final int [] ZZ_TRANS = zzUnpackTrans();
 
   private static final String ZZ_TRANS_PACKED_0 =
-    "\1\2\1\3\1\4\1\5\2\6\1\5\1\4\1\7"+
-    "\1\2\1\10\1\11\1\12\1\2\1\13\1\5\1\14"+
-    "\1\6\2\5\1\15\1\5\1\16\1\17\1\20\1\21"+
-    "\1\5\1\22\1\23\1\24\3\5\1\25\1\26\1\27"+
-    "\1\30\1\31\1\32\1\33\1\34\1\35\1\36\1\37"+
-    "\1\40\1\41\1\42\1\43\1\44\1\45\1\46\1\47"+
-    "\66\0\1\4\64\0\4\5\2\0\3\5\3\0\22\5"+
-    "\27\0\2\6\5\0\1\6\5\0\1\6\52\0\1\50"+
-    "\53\0\2\51\1\0\7\51\1\0\2\51\1\52\1\0"+
-    "\4\51\1\0\40\51\4\0\2\6\13\0\1\6\42\0"+
-    "\2\53\1\0\7\53\1\0\2\53\1\54\1\55\4\53"+
-    "\1\0\40\53\3\0\4\5\2\0\3\5\3\0\20\5"+
-    "\1\56\1\5\26\0\4\5\2\0\3\5\3\0\6\5"+
-    "\1\57\13\5\26\0\4\5\2\0\3\5\3\0\14\5"+
-    "\1\60\5\5\26\0\4\5\2\0\3\5\3\0\1\61"+
-    "\10\5\1\62\10\5\26\0\4\5\2\0\3\5\3\0"+
-    "\21\5\1\63\26\0\4\5\2\0\3\5\3\0\13\5"+
-    "\1\64\6\5\26\0\4\5\2\0\3\5\3\0\7\5"+
-    "\1\65\12\5\26\0\4\5\2\0\3\5\3\0\7\5"+
-    "\1\66\12\5\26\0\4\5\2\0\3\5\3\0\15\5"+
-    "\1\67\4\5\72\0\1\70\57\0\1\71\67\0\1\72"+
-    "\63\0\1\73\63\0\1\74\14\0\1\50\1\3\1\4"+
-    "\61\50\12\0\1\75\56\0\1\76\4\0\1\51\1\77"+
-    "\1\0\4\51\1\77\1\100\5\0\1\51\3\0\2\51"+
-    "\33\0\1\53\4\0\2\53\1\0\5\53\1\101\5\0"+
-    "\1\53\3\0\2\53\31\0\4\5\2\0\3\5\3\0"+
-    "\20\5\1\102\1\5\26\0\4\5\2\0\3\5\3\0"+
-    "\7\5\1\103\12\5\26\0\4\5\2\0\3\5\3\0"+
-    "\6\5\1\104\13\5\26\0\4\5\2\0\3\5\3\0"+
-    "\16\5\1\105\3\5\26\0\4\5\2\0\3\5\3\0"+
-    "\14\5\1\106\5\5\26\0\4\5\2\0\3\5\3\0"+
-    "\10\5\1\107\11\5\26\0\4\5\2\0\3\5\3\0"+
-    "\1\110\21\5\26\0\4\5\2\0\3\5\3\0\16\5"+
-    "\1\111\3\5\26\0\4\5\2\0\3\5\3\0\5\5"+
-    "\1\112\14\5\66\0\1\113\25\0\1\51\4\0\1\75"+
-    "\1\51\5\0\1\51\47\0\1\76\4\0\1\75\1\76"+
-    "\5\0\1\76\46\0\3\114\4\0\1\114\4\0\2\114"+
-    "\4\0\1\114\1\0\1\114\7\0\1\114\27\0\3\115"+
-    "\4\0\1\115\4\0\2\115\4\0\1\115\1\0\1\115"+
-    "\7\0\1\115\26\0\4\5\2\0\3\5\3\0\14\5"+
-    "\1\116\5\5\26\0\4\5\2\0\3\5\3\0\7\5"+
-    "\1\117\12\5\26\0\4\5\2\0\3\5\3\0\6\5"+
-    "\1\120\13\5\26\0\4\5\2\0\3\5\3\0\14\5"+
-    "\1\121\5\5\26\0\4\5\2\0\3\5\3\0\17\5"+
-    "\1\122\2\5\26\0\4\5\2\0\3\5\3\0\5\5"+
-    "\1\123\14\5\26\0\4\5\2\0\3\5\3\0\7\5"+
-    "\1\124\12\5\27\0\3\51\4\0\1\51\4\0\2\51"+
-    "\4\0\1\51\1\0\1\51\7\0\1\51\27\0\3\53"+
-    "\4\0\1\53\4\0\2\53\4\0\1\53\1\0\1\53"+
-    "\7\0\1\53\26\0\4\5\2\0\3\5\3\0\7\5"+
-    "\1\125\12\5\26\0\4\5\2\0\3\5\3\0\7\5"+
-    "\1\126\12\5\26\0\4\5\2\0\3\5\3\0\16\5"+
-    "\1\127\3\5\26\0\4\5\2\0\3\5\3\0\15\5"+
-    "\1\130\4\5\26\0\4\5\2\0\3\5\3\0\13\5"+
-    "\1\131\6\5\26\0\4\5\2\0\3\5\3\0\1\132"+
-    "\21\5\23\0";
+    "\1\4\1\5\1\6\1\7\2\10\1\7\1\6\1\11"+
+    "\1\12\1\13\1\14\1\4\1\15\1\10\1\7\1\16"+
+    "\1\7\1\17\1\20\1\21\1\22\1\7\1\23\1\24"+
+    "\1\25\2\7\1\26\2\7\1\27\1\30\1\31\1\32"+
+    "\1\33\1\34\1\35\1\36\1\37\1\40\1\41\1\42"+
+    "\1\43\1\44\1\45\1\46\1\47\1\50\1\51\1\52"+
+    "\1\4\1\6\1\53\1\54\1\55\11\53\1\56\1\57"+
+    "\47\53\1\60\2\61\7\60\1\61\1\60\1\62\50\60"+
+    "\67\0\1\6\65\0\4\7\2\0\3\7\2\0\21\7"+
+    "\32\0\2\10\5\0\1\10\2\0\1\10\56\0\1\63"+
+    "\57\0\4\7\2\0\3\7\2\0\3\7\1\64\15\7"+
+    "\31\0\4\7\2\0\3\7\2\0\11\7\1\65\7\7"+
+    "\31\0\4\7\2\0\3\7\2\0\6\7\1\66\5\7"+
+    "\1\67\4\7\31\0\4\7\2\0\3\7\2\0\20\7"+
+    "\1\70\31\0\4\7\2\0\3\7\2\0\10\7\1\71"+
+    "\10\7\31\0\4\7\2\0\3\7\2\0\4\7\1\72"+
+    "\14\7\31\0\4\7\2\0\3\7\2\0\4\7\1\73"+
+    "\14\7\31\0\4\7\2\0\3\7\2\0\12\7\1\74"+
+    "\6\7\31\0\4\7\2\0\3\7\2\0\17\7\1\75"+
+    "\1\7\74\0\1\76\57\0\1\77\71\0\1\100\64\0"+
+    "\1\101\64\0\1\102\16\0\1\53\2\0\11\53\2\0"+
+    "\47\53\2\0\1\55\62\0\1\103\2\0\2\103\1\104"+
+    "\4\103\1\105\1\106\1\107\1\110\1\106\1\111\4\103"+
+    "\1\112\3\103\1\113\1\114\1\115\1\103\1\116\26\103"+
+    "\14\0\1\117\52\0\1\120\2\0\2\120\1\121\4\120"+
+    "\1\122\1\123\1\124\1\125\1\123\1\126\4\120\1\127"+
+    "\3\120\1\130\1\131\1\132\1\120\1\133\26\120\2\0"+
+    "\1\63\1\134\1\135\62\63\3\0\4\7\2\0\3\7"+
+    "\2\0\4\7\1\136\14\7\31\0\4\7\2\0\3\7"+
+    "\2\0\3\7\1\137\15\7\31\0\4\7\2\0\3\7"+
+    "\2\0\13\7\1\140\5\7\31\0\4\7\2\0\3\7"+
+    "\2\0\11\7\1\141\7\7\31\0\4\7\2\0\3\7"+
+    "\2\0\5\7\1\142\13\7\31\0\4\7\2\0\3\7"+
+    "\2\0\14\7\1\143\4\7\31\0\4\7\2\0\3\7"+
+    "\2\0\13\7\1\144\5\7\31\0\4\7\2\0\3\7"+
+    "\2\0\2\7\1\145\16\7\31\0\4\7\2\0\3\7"+
+    "\2\0\17\7\1\146\1\7\67\0\1\147\30\0\1\150"+
+    "\5\0\1\150\2\0\1\150\53\0\1\104\5\0\1\104"+
+    "\2\0\1\104\52\0\3\151\4\0\1\151\2\0\1\151"+
+    "\3\0\1\151\1\0\1\151\7\0\1\151\1\0\1\151"+
+    "\33\0\1\152\4\0\1\153\1\152\2\0\1\152\60\0"+
+    "\1\154\57\0\1\155\4\0\1\153\1\155\2\0\1\155"+
+    "\60\0\1\156\64\0\1\157\56\0\3\160\4\0\1\160"+
+    "\2\0\1\160\3\0\1\160\1\0\1\160\7\0\1\160"+
+    "\1\0\1\160\40\0\1\161\64\0\1\162\64\0\1\163"+
+    "\64\0\1\164\64\0\1\165\54\0\1\135\65\0\4\7"+
+    "\2\0\3\7\2\0\4\7\1\166\14\7\31\0\4\7"+
+    "\2\0\3\7\2\0\3\7\1\167\15\7\31\0\4\7"+
+    "\2\0\3\7\2\0\11\7\1\170\7\7\31\0\4\7"+
+    "\2\0\3\7\2\0\15\7\1\171\3\7\31\0\4\7"+
+    "\2\0\3\7\2\0\2\7\1\172\16\7\31\0\4\7"+
+    "\2\0\3\7\2\0\4\7\1\173\14\7\31\0\4\7"+
+    "\2\0\3\7\2\0\11\7\1\174\7\7\32\0\3\175"+
+    "\4\0\1\175\2\0\1\175\3\0\1\175\1\0\1\175"+
+    "\7\0\1\175\1\0\1\175\40\0\1\153\56\0\3\176"+
+    "\4\0\1\176\2\0\1\176\3\0\1\176\1\0\1\176"+
+    "\7\0\1\176\1\0\1\176\31\0\4\7\2\0\3\7"+
+    "\2\0\4\7\1\177\14\7\31\0\4\7\2\0\3\7"+
+    "\2\0\4\7\1\200\14\7\31\0\4\7\2\0\3\7"+
+    "\2\0\13\7\1\201\5\7\31\0\4\7\2\0\3\7"+
+    "\2\0\12\7\1\202\6\7\40\0\1\203\55\0\4\7"+
+    "\2\0\3\7\2\0\10\7\1\204\10\7\31\0\4\7"+
+    "\2\0\3\7\2\0\14\7\1\205\4\7\26\0";
 
   private static int [] zzUnpackTrans() {
-    int [] result = new int[2912];
+    int [] result = new int[3710];
     int offset = 0;
     offset = zzUnpackTrans(ZZ_TRANS_PACKED_0, offset, result);
     return result;
@@ -223,12 +242,15 @@ public class XiLexer {
   private static final int [] ZZ_ATTRIBUTE = zzUnpackAttribute();
 
   private static final String ZZ_ATTRIBUTE_PACKED_0 =
-    "\1\0\1\11\1\1\1\11\4\1\1\11\16\1\2\11"+
-    "\2\1\14\11\1\1\4\0\1\11\12\1\1\11\1\0"+
-    "\4\11\4\0\11\1\1\11\2\0\15\1";
+    "\3\0\1\11\1\1\1\11\3\1\4\11\14\1\3\11"+
+    "\2\1\14\11\2\1\1\11\1\1\1\11\1\1\1\11"+
+    "\14\1\1\11\1\0\4\11\1\1\1\11\1\1\2\11"+
+    "\1\1\7\11\14\1\1\11\11\1\2\11\2\0\2\11"+
+    "\1\0\2\11\1\0\5\11\7\1\1\11\1\0\4\1"+
+    "\1\11\2\1";
 
   private static int [] zzUnpackAttribute() {
-    int [] result = new int[90];
+    int [] result = new int[133];
     int offset = 0;
     offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
     return result;
@@ -304,42 +326,98 @@ public class XiLexer {
   private int zzFinalHighSurrogate = 0;
 
   /* user code: */
+    private Token currentToken;
+
+    private StringBuilder string = new StringBuilder();
+
+    private int row() { return yyline + 1; };
+    
+    private int lastColumn = 1;
+    
+    private int column() {
+        switch (yystate()) {
+            case YYCHARLITERAL:
+            case YYSTRING:
+                break;
+            default:
+                lastColumn = yycolumn + 1;
+                break;
+        }
+        return lastColumn;
+    }
+
     private Token tokenize(TokenType tt) throws Exception {
         String literal;
         switch (tt) {
-            case USE: case IF: case WHILE: case ELSE: case RETURN: case LENGTH:
-            case INT: case BOOL: case TRUE: case FALSE:
-            case LNEG: case NEG:
-            case MULT: case HMULT: case DIV: case MOD:
-            case ADD: case SUB:
-            case LTE: case LT: case GTE: case GT:
-            case EQEQ: case EQ: case NEQ:
-            case LAND: case LOR:
-            case LPAREN: case RPAREN: 
-            case LBRACK: case RBRACK:
-            case LBRACE: case RBRACE:
-            case COLON: case SEMICOLON: case COMMA: case DOT:
+            case USE:
+            case IF:
+            case WHILE:
+            case ELSE:
+            case RETURN:
+            case LENGTH:
+            case INT:
+            case BOOL:
+            case TRUE:
+            case FALSE:
+            case LNEG:
+            case NEG:
+            case MULT:
+            case HMULT:
+            case DIV:
+            case MOD:
+            case ADD:
+            case SUB:
+            case LTE:
+            case LT:
+            case GTE:
+            case GT:
+            case EQEQ:
+            case EQ:
+            case NEQ:
+            case LAND:
+            case LOR:
+            case LPAREN:
+            case RPAREN:
+            case LBRACK:
+            case RBRACK:
+            case LBRACE:
+            case RBRACE:
+            case COLON:
+            case SEMICOLON:
+            case COMMA:
+            case DOT:
+            case UNDERSCORE:
             case ID:
-                literal = yytext();
-                break;
             case INTEGER:
                 literal = yytext();
                 break;
-            case EOF: 
+            case EOF:
                 literal = null;
                 break;
-            default:    throw new Exception("Unknown token type.");
+            default:
+                throw new Exception("Unknown token type.");
         }
-        return new Token(tt, yyline + 1, yycolumn + 1, literal);
+        return new Token(tt, row(), column(), literal);
     }
 
-    private Token tokenize(TokenType tt, String l) {
-        return new Token(tt, yyline + 1, yycolumn + 1, l);
+    private Token tokenize(char c) throws Exception {
+        String literal = Character.toString(c);
+        literal = StringEscapeUtils.escapeJava(literal);
+        int col = column();
+        yybegin(YYINITIAL);
+        return new Token(CHAR, row(), col, literal);
+    }
+
+    private Token tokenize(String l) {
+        l = StringEscapeUtils.escapeJava(l);
+        int col = column();
+        yybegin(YYINITIAL);
+        return new Token(STRING, row(), col, l);
     }
 
     private Token logError(String msg) throws Exception {
         throw new Exception(
-            String.format("%d:%d error:%s", yyline + 1, yycolumn + 1, msg)
+            String.format("%d:%d error:%s", row(), column(), msg)
         );
     }
 
@@ -364,7 +442,7 @@ public class XiLexer {
     char [] map = new char[0x110000];
     int i = 0;  /* index in packed string  */
     int j = 0;  /* index in unpacked array */
-    while (i < 168) {
+    while (i < 174) {
       int  count = packed.charAt(i++);
       char value = packed.charAt(i++);
       do map[j++] = value; while (--count > 0);
@@ -717,173 +795,293 @@ public class XiLexer {
       else {
         switch (zzAction < 0 ? zzAction : ZZ_ACTION[zzAction]) {
           case 1: 
-            { logError("invalid syntax");
+            { logError("Invalid syntax");
             }
-          case 43: break;
+          case 72: break;
           case 2: 
-            { /* ignore */
+            { column();
             }
-          case 44: break;
+          case 73: break;
           case 3: 
             { return tokenize(ID);
             }
-          case 45: break;
+          case 74: break;
           case 4: 
             { return tokenize(INTEGER);
             }
-          case 46: break;
+          case 75: break;
           case 5: 
             { return tokenize(DIV);
             }
-          case 47: break;
-          case 6: 
-            { return tokenize(SUB);
-            }
-          case 48: break;
-          case 7: 
-            { return tokenize(LNEG);
-            }
-          case 49: break;
-          case 8: 
-            { return tokenize(MULT);
-            }
-          case 50: break;
-          case 9: 
-            { return tokenize(GT);
-            }
-          case 51: break;
-          case 10: 
-            { return tokenize(MOD);
-            }
-          case 52: break;
-          case 11: 
-            { return tokenize(ADD);
-            }
-          case 53: break;
-          case 12: 
-            { return tokenize(LT);
-            }
-          case 54: break;
-          case 13: 
-            { return tokenize(EQ);
-            }
-          case 55: break;
-          case 14: 
-            { return tokenize(LAND);
-            }
-          case 56: break;
-          case 15: 
-            { return tokenize(LOR);
-            }
-          case 57: break;
-          case 16: 
-            { return tokenize(LPAREN);
-            }
-          case 58: break;
-          case 17: 
-            { return tokenize(RPAREN);
-            }
-          case 59: break;
-          case 18: 
-            { return tokenize(LBRACK);
-            }
-          case 60: break;
-          case 19: 
-            { return tokenize(RBRACK);
-            }
-          case 61: break;
-          case 20: 
-            { return tokenize(LBRACE);
-            }
-          case 62: break;
-          case 21: 
-            { return tokenize(RBRACE);
-            }
-          case 63: break;
-          case 22: 
-            { return tokenize(COLON);
-            }
-          case 64: break;
-          case 23: 
-            { return tokenize(SEMICOLON);
-            }
-          case 65: break;
-          case 24: 
-            { return tokenize(COMMA);
-            }
-          case 66: break;
-          case 25: 
-            { return tokenize(DOT);
-            }
-          case 67: break;
-          case 26: 
-            { return tokenize(STRING, yytext());
-            }
-          case 68: break;
-          case 27: 
-            { return tokenize(IF);
-            }
-          case 69: break;
-          case 28: 
-            { return tokenize(NEQ);
-            }
-          case 70: break;
-          case 29: 
-            { return tokenize(GTE);
-            }
-          case 71: break;
-          case 30: 
-            { return tokenize(LTE);
-            }
-          case 72: break;
-          case 31: 
-            { return tokenize(EQEQ);
-            }
-          case 73: break;
-          case 32: 
-            { return tokenize(CHAR, yytext());
-            }
-          case 74: break;
-          case 33: 
-            { return tokenize(USE);
-            }
-          case 75: break;
-          case 34: 
-            { return tokenize(INT);
-            }
           case 76: break;
-          case 35: 
-            { return tokenize(HMULT);
+          case 6: 
+            { return tokenize(UNDERSCORE);
             }
           case 77: break;
-          case 36: 
-            { return tokenize(BOOL);
+          case 7: 
+            { column(); yybegin(YYCHARLITERAL);
             }
           case 78: break;
-          case 37: 
-            { return tokenize(ELSE);
+          case 8: 
+            { column(); string.setLength(0); yybegin(YYSTRING);
             }
           case 79: break;
-          case 38: 
-            { return tokenize(TRUE);
+          case 9: 
+            { return tokenize(LNEG);
             }
           case 80: break;
-          case 39: 
-            { return tokenize(FALSE);
+          case 10: 
+            { return tokenize(MULT);
             }
           case 81: break;
-          case 40: 
-            { return tokenize(WHILE);
+          case 11: 
+            { return tokenize(GT);
             }
           case 82: break;
-          case 41: 
-            { return tokenize(LENGTH);
+          case 12: 
+            { return tokenize(MOD);
             }
           case 83: break;
-          case 42: 
-            { return tokenize(RETURN);
+          case 13: 
+            { return tokenize(ADD);
             }
           case 84: break;
+          case 14: 
+            { return tokenize(SUB);
+            }
+          case 85: break;
+          case 15: 
+            { return tokenize(LT);
+            }
+          case 86: break;
+          case 16: 
+            { return tokenize(EQ);
+            }
+          case 87: break;
+          case 17: 
+            { return tokenize(LAND);
+            }
+          case 88: break;
+          case 18: 
+            { return tokenize(LOR);
+            }
+          case 89: break;
+          case 19: 
+            { return tokenize(LPAREN);
+            }
+          case 90: break;
+          case 20: 
+            { return tokenize(RPAREN);
+            }
+          case 91: break;
+          case 21: 
+            { return tokenize(LBRACK);
+            }
+          case 92: break;
+          case 22: 
+            { return tokenize(RBRACK);
+            }
+          case 93: break;
+          case 23: 
+            { return tokenize(LBRACE);
+            }
+          case 94: break;
+          case 24: 
+            { return tokenize(RBRACE);
+            }
+          case 95: break;
+          case 25: 
+            { return tokenize(COLON);
+            }
+          case 96: break;
+          case 26: 
+            { return tokenize(SEMICOLON);
+            }
+          case 97: break;
+          case 27: 
+            { return tokenize(COMMA);
+            }
+          case 98: break;
+          case 28: 
+            { return tokenize(DOT);
+            }
+          case 99: break;
+          case 29: 
+            { string.append(yytext());
+            }
+          case 100: break;
+          case 30: 
+            { logError("String literal not properly terminated");
+            }
+          case 101: break;
+          case 31: 
+            { return tokenize(string.toString());
+            }
+          case 102: break;
+          case 32: 
+            { logError("Invalid character literal");
+            }
+          case 103: break;
+          case 33: 
+            { /* ignore */
+            }
+          case 104: break;
+          case 34: 
+            { return tokenize(IF);
+            }
+          case 105: break;
+          case 35: 
+            { return tokenize(NEQ);
+            }
+          case 106: break;
+          case 36: 
+            { return tokenize(GTE);
+            }
+          case 107: break;
+          case 37: 
+            { return tokenize(LTE);
+            }
+          case 108: break;
+          case 38: 
+            { return tokenize(EQEQ);
+            }
+          case 109: break;
+          case 39: 
+            { logError("Invalid escape sequence \"" +  yytext() + "\"");
+            }
+          case 110: break;
+          case 40: 
+            { int i = Integer.parseInt(yytext().substring(1, yylength()), 8);
+                            string.append((char) i);
+            }
+          case 111: break;
+          case 41: 
+            { string.append('\'');
+            }
+          case 112: break;
+          case 42: 
+            { string.append('\\');
+            }
+          case 113: break;
+          case 43: 
+            { string.append('\"');
+            }
+          case 114: break;
+          case 44: 
+            { string.append('\f');
+            }
+          case 115: break;
+          case 45: 
+            { string.append('\r');
+            }
+          case 116: break;
+          case 46: 
+            { string.append('\t');
+            }
+          case 117: break;
+          case 47: 
+            { string.append('\n');
+            }
+          case 118: break;
+          case 48: 
+            { string.append('\b');
+            }
+          case 119: break;
+          case 49: 
+            { return tokenize(yytext().charAt(0));
+            }
+          case 120: break;
+          case 50: 
+            { logError("Invalid escape sequence \'" + yytext() + "\'");
+            }
+          case 121: break;
+          case 51: 
+            { return tokenize(USE);
+            }
+          case 122: break;
+          case 52: 
+            { return tokenize(INT);
+            }
+          case 123: break;
+          case 53: 
+            { return tokenize(HMULT);
+            }
+          case 124: break;
+          case 54: 
+            { int i = Integer.parseInt(yytext().substring(1, yylength() - 1), 8);
+                            return tokenize((char) i);
+            }
+          case 125: break;
+          case 55: 
+            { return tokenize('\'');
+            }
+          case 126: break;
+          case 56: 
+            { return tokenize('\\');
+            }
+          case 127: break;
+          case 57: 
+            { return tokenize('\"');
+            }
+          case 128: break;
+          case 58: 
+            { return tokenize('\f');
+            }
+          case 129: break;
+          case 59: 
+            { return tokenize('\r');
+            }
+          case 130: break;
+          case 60: 
+            { return tokenize('\t');
+            }
+          case 131: break;
+          case 61: 
+            { return tokenize('\n');
+            }
+          case 132: break;
+          case 62: 
+            { return tokenize('\b');
+            }
+          case 133: break;
+          case 63: 
+            { return tokenize(ELSE);
+            }
+          case 134: break;
+          case 64: 
+            { return tokenize(TRUE);
+            }
+          case 135: break;
+          case 65: 
+            { return tokenize(BOOL);
+            }
+          case 136: break;
+          case 66: 
+            { int i = Integer.parseInt(yytext().substring(2,4), 16);
+                            string.append((char) i);
+            }
+          case 137: break;
+          case 67: 
+            { return tokenize(FALSE);
+            }
+          case 138: break;
+          case 68: 
+            { return tokenize(WHILE);
+            }
+          case 139: break;
+          case 69: 
+            { int i = Integer.parseInt(yytext().substring(2,4), 16);
+                            return tokenize((char) i);
+            }
+          case 140: break;
+          case 70: 
+            { return tokenize(LENGTH);
+            }
+          case 141: break;
+          case 71: 
+            { return tokenize(RETURN);
+            }
+          case 142: break;
           default:
             zzScanError(ZZ_NO_MATCH);
         }

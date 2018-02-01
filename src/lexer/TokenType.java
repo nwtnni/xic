@@ -38,6 +38,7 @@ public enum TokenType {
     SEMICOLON,
     COMMA,
     DOT,
+    UNDERSCORE,
     ID ("id"),
     INTEGER ("integer"),
     CHAR ("character"),

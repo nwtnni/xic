@@ -1,7 +1,7 @@
 package lexer;
 
-import lexer.TokenType;
 import static lexer.TokenType.*;
+import org.apache.commons.text.StringEscapeUtils;
 
 %%
 
@@ -19,42 +19,98 @@ import static lexer.TokenType.*;
 %column
 
 %{
+    private Token currentToken;
+
+    private StringBuilder string = new StringBuilder();
+
+    private int row() { return yyline + 1; };
+    
+    private int lastColumn = 1;
+    
+    private int column() {
+        switch (yystate()) {
+            case YYCHARLITERAL:
+            case YYSTRING:
+                break;
+            default:
+                lastColumn = yycolumn + 1;
+                break;
+        }
+        return lastColumn;
+    }
+
     private Token tokenize(TokenType tt) throws Exception {
         String literal;
         switch (tt) {
-            case USE: case IF: case WHILE: case ELSE: case RETURN: case LENGTH:
-            case INT: case BOOL: case TRUE: case FALSE:
-            case LNEG: case NEG:
-            case MULT: case HMULT: case DIV: case MOD:
-            case ADD: case SUB:
-            case LTE: case LT: case GTE: case GT:
-            case EQEQ: case EQ: case NEQ:
-            case LAND: case LOR:
-            case LPAREN: case RPAREN: 
-            case LBRACK: case RBRACK:
-            case LBRACE: case RBRACE:
-            case COLON: case SEMICOLON: case COMMA: case DOT:
+            case USE:
+            case IF:
+            case WHILE:
+            case ELSE:
+            case RETURN:
+            case LENGTH:
+            case INT:
+            case BOOL:
+            case TRUE:
+            case FALSE:
+            case LNEG:
+            case NEG:
+            case MULT:
+            case HMULT:
+            case DIV:
+            case MOD:
+            case ADD:
+            case SUB:
+            case LTE:
+            case LT:
+            case GTE:
+            case GT:
+            case EQEQ:
+            case EQ:
+            case NEQ:
+            case LAND:
+            case LOR:
+            case LPAREN:
+            case RPAREN:
+            case LBRACK:
+            case RBRACK:
+            case LBRACE:
+            case RBRACE:
+            case COLON:
+            case SEMICOLON:
+            case COMMA:
+            case DOT:
+            case UNDERSCORE:
             case ID:
+            case INTEGER:
                 literal = yytext();
                 break;
-            case INTEGER:
-                literal = yytext();j
-                break;
-            case EOF: 
+            case EOF:
                 literal = null;
                 break;
-            default:    throw new Exception("Unknown token type.");
+            default:
+                throw new Exception("Unknown token type.");
         }
-        return new Token(tt, yyline + 1, yycolumn + 1, literal);
+        return new Token(tt, row(), column(), literal);
     }
 
-    private Token tokenize(TokenType tt, String l) {
-        return new Token(tt, yyline + 1, yycolumn + 1, l);
+    private Token tokenize(char c) throws Exception {
+        String literal = Character.toString(c);
+        literal = StringEscapeUtils.escapeJava(literal);
+        int col = column();
+        yybegin(YYINITIAL);
+        return new Token(CHAR, row(), col, literal);
+    }
+
+    private Token tokenize(String l) {
+        l = StringEscapeUtils.escapeJava(l);
+        int col = column();
+        yybegin(YYINITIAL);
+        return new Token(STRING, row(), col, l);
     }
 
     private Token logError(String msg) throws Exception {
         throw new Exception(
-            String.format("%d:%d error:%s", yyline + 1, yycolumn + 1, msg)
+            String.format("%d:%d error:%s", row(), column(), msg)
         );
     }
 %}
@@ -74,22 +130,20 @@ Comment = "//" {InputCharacter}* {LineTerminator}?
 
 Identifier = {Letter}({Digit}|{Letter}|_|')*
 
-Integer = "0"|"-"?[1-9]{Digit}*
+Integer = "0"|[1-9]{Digit}*
 
-/* character literals */
-EscapeCharacter = \\([tbnrf\'\"\\]|[0-3]?{OctDigit}?{OctDigit}|x{HexDigit}{2})
-Character = ([^\\\'\"\R\n]|{EscapeCharacter})
+SingleChar = [^\r\n\'\\]
+StringChar = [^\r\n\"\\]
 
-CharacterLiteral = '{Character}'
+OctEscape = \\[0-3]?{OctDigit}?{OctDigit}
+HexEscape = \\x{HexDigit}{2}
 
-/* string literals */
-String = \"{Character}*\"
-
+%state YYSTRING, YYCHARLITERAL
 
 %%
 
 <YYINITIAL> {
-    {Whitespace}        { /* ignore */ }
+    {Whitespace}        { column(); }
     {Comment}           { /* ignore */ }
 
     // 
@@ -136,6 +190,7 @@ String = \"{Character}*\"
     ";"                 { return tokenize(SEMICOLON); }
     ","                 { return tokenize(COMMA); }
     "."                 { return tokenize(DOT); }
+    "_"                 { return tokenize(UNDERSCORE); }
 
     {Identifier}        { return tokenize(ID); } 
 
@@ -144,8 +199,58 @@ String = \"{Character}*\"
 
     // TODO: make lexing chars and strings more robust
     // include custom error messages
-    {CharacterLiteral}  { return tokenize(CHAR, yytext()); }
-    {String}            { return tokenize(STRING, yytext()); } 
+
+    \'                  { column(); yybegin(YYCHARLITERAL); }
+
+    \"                  { column(); string.setLength(0); yybegin(YYSTRING); }
+
 }
-[^]                     { logError("invalid syntax"); } 
+
+<YYCHARLITERAL> {
+    {SingleChar}\'      { return tokenize(yytext().charAt(0)); }
+    // escape sequences
+    "\\t"\'             { return tokenize('\t'); }
+    "\\b"\'             { return tokenize('\b'); }
+    "\\n"\'             { return tokenize('\n'); }
+    "\\r"\'             { return tokenize('\r'); }
+    "\\f"\'             { return tokenize('\f'); }
+    "\\'"\'             { return tokenize('\''); }
+    "\\\""\'            { return tokenize('\"'); }
+    "\\\\"\'            { return tokenize('\\'); }
+    {OctEscape}\'       { 
+                            int i = Integer.parseInt(yytext().substring(1, yylength() - 1), 8);
+                            return tokenize((char) i);
+                        }
+    {HexEscape}\'       { 
+                            int i = Integer.parseInt(yytext().substring(2,4), 16);
+                            return tokenize((char) i);
+                        }
+    \\.                 { logError("Invalid escape sequence \'" + yytext() + "\'"); }
+    [^]                 { logError("Invalid character literal"); }
+}
+
+<YYSTRING> {
+    \"                  { return tokenize(string.toString()); }
+    {StringChar}+       { string.append(yytext()); }
+    "\\b"               { string.append('\b'); }
+    "\\t"               { string.append('\t'); }
+    "\\n"               { string.append('\n'); }
+    "\\f"               { string.append('\f'); }
+    "\\r"               { string.append('\r'); }
+    "\\'"               { string.append('\''); }
+    "\\\""              { string.append('\"'); }
+    "\\\\"              { string.append('\\'); }
+    {OctEscape}         { 
+                            int i = Integer.parseInt(yytext().substring(1, yylength()), 8);
+                            string.append((char) i);
+                        }
+    {HexEscape}         { 
+                            int i = Integer.parseInt(yytext().substring(2,4), 16);
+                            string.append((char) i);
+                        }
+    \\.                 { logError("Invalid escape sequence \"" +  yytext() + "\""); }
+    {LineTerminator}    { logError("String literal not properly terminated"); }
+}
+
+[^]                     { logError("Invalid syntax"); } 
 <<EOF>>                 { return tokenize(EOF); }

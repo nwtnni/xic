@@ -1,3 +1,5 @@
+"\x00\n\177\011\12\14\15"
+_a
 a
 b
 c
@@ -15,3 +17,4 @@ int bool true false
 7 * 8 = 56
 !true == false
 true & true == true
+-100 = 0-100

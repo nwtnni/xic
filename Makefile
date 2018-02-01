@@ -2,16 +2,20 @@
 
 compile: lexer xic
 
-lexer:
-	javac -d bin src/lexer/*.java &&\
-	jflex -d src/lexer --nobak src/lexer/lexer.flex &&\
-	javac -d bin -cp bin src/lexer/XiLexer.java
+lexer: src/lexer/XiLexer.java
+	javac -d bin -cp "bin:lib/*" src/lexer/XiLexer.java
+
+bin/lexer/*:
+	javac -d bin -cp "bin:lib/*" src/lexer/*.java
+
+src/lexer/XiLexer.java: bin/lexer/*
+	jflex -d src/lexer --nobak src/lexer/lexer.flex
 	
 xic:
-	javac -d bin -cp bin src/Xic.java
+	javac -d bin -cp "bin:lib/*" src/xic/Xic.java
 
-run: bin/Xic.class
-	java -cp bin Xic tests/basic.xi
+jar: compile
+	jar -cmf manifest.mf xic.jar lib -C bin .
 
 clean:
-	rm -rf bin/* src/lexer/XiLexer.java
+	rm -rf bin src/lexer/XiLexer.java
