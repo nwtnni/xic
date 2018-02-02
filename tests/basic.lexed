@@ -1,74 +1,89 @@
-1:1 string \u0000\n\t\n\f\r
-2:1 _
-2:2 id a
-3:1 id a
-4:1 id b
-5:1 id c
-6:1 id xyz
-7:1 use
-7:5 if
-7:8 while
-7:14 else
-7:19 return
-7:26 length
-8:1 int
-8:5 bool
-8:10 true
-8:15 false
-9:1 character n
-9:5 character \n
-9:10 character '
-9:15 character \"
-9:20 character \\
-9:25 character \f
-9:30 character \r
-9:35 character  
-10:1 integer 0
-10:3 integer 1
-10:5 integer 2
-10:7 integer 3
-10:9 integer 4
-10:11 integer 5
-10:13 integer 6
-10:15 integer 7
-10:17 integer 8
-10:19 integer 9
-11:1 integer 1234567890
-12:1 -
-12:2 integer 1
-12:4 -
-12:5 integer 50
-12:8 -
-12:9 integer 999
-13:1 string asdfjkl;
-14:1 string asdf\njkl;
-15:1 integer 1
-15:2 +
-15:3 integer 2
-15:4 =
-15:5 integer 3
-16:1 integer 4
-16:3 /
-16:5 integer 5
-16:7 !=
-16:10 integer 6
-17:1 integer 7
-17:3 *
-17:5 integer 8
-17:7 =
-17:9 integer 56
-18:1 !
-18:2 true
-18:7 ==
-18:10 false
-19:1 true
-19:6 &
-19:8 true
-19:13 ==
-19:16 true
-20:1 -
-20:2 integer 100
-20:6 =
-20:8 integer 0
-20:9 -
-20:10 integer 100
+1:1 string \x00\u0000
+2:1 string \u007F\177
+3:1 string \11\12\14\15
+4:1 string \177\x7F\u007F
+5:1 character \0
+6:1 character \x00
+7:1 character \u0000
+8:1 character \177
+9:1 character \x7F
+10:1 character \u007F
+11:1 character ~
+12:1 character ~
+13:1 character ~
+14:1 character a
+15:1 character x
+16:1 id ifthen
+17:1 _
+17:2 id a
+18:1 id a
+19:1 id b
+20:1 id c
+21:1 id xyz
+22:1 use
+22:5 if
+22:8 while
+22:14 else
+22:19 return
+22:26 length
+23:1 int
+23:5 bool
+23:10 true
+23:15 false
+24:1 character n
+24:5 character \n
+24:10 character '
+24:15 character \"
+24:20 character \\
+24:25 character \f
+24:30 character \r
+24:35 character  
+25:1 integer 0
+25:3 integer 1
+25:5 integer 2
+25:7 integer 3
+25:9 integer 4
+25:11 integer 5
+25:13 integer 6
+25:15 integer 7
+25:17 integer 8
+25:19 integer 9
+26:1 integer 1234567890
+27:1 -
+27:2 integer 1
+27:4 -
+27:5 integer 50
+27:8 -
+27:9 integer 999
+28:1 string asdfjkl;
+29:1 string asdf\njkl;
+30:1 integer 1
+30:2 +
+30:3 integer 2
+30:4 =
+30:5 integer 3
+31:1 integer 4
+31:3 /
+31:5 integer 5
+31:7 !=
+31:10 integer 6
+32:1 integer 7
+32:3 *
+32:5 integer 8
+32:7 =
+32:9 integer 56
+33:1 !
+33:2 true
+33:7 ==
+33:10 false
+34:1 true
+34:6 &
+34:8 true
+34:13 ==
+34:16 true
+35:1 -
+35:2 integer 100
+35:6 =
+35:8 integer 0
+35:9 -
+35:10 integer 100

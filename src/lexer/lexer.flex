@@ -19,28 +19,16 @@ import org.apache.commons.text.StringEscapeUtils;
 %column
 
 %{
-    private Token currentToken;
+    private StringBuilder value = new StringBuilder();
+    private StringBuilder literal = new StringBuilder();
 
-    private StringBuilder string = new StringBuilder();
+    private int row() { return yyline + 1; }
 
-    private int row() { return yyline + 1; };
+    private int column() { return yycolumn + 1; }
     
-    private int lastColumn = 1;
-    
-    private int column() {
-        switch (yystate()) {
-            case YYCHARLITERAL:
-            case YYSTRING:
-                break;
-            default:
-                lastColumn = yycolumn + 1;
-                break;
-        }
-        return lastColumn;
-    }
+    private int startColumn = 1;
 
     private Token tokenize(TokenType tt) throws Exception {
-        String literal;
         switch (tt) {
             case USE:
             case IF:
@@ -53,13 +41,12 @@ import org.apache.commons.text.StringEscapeUtils;
             case TRUE:
             case FALSE:
             case LNEG:
-            case NEG:
             case MULT:
             case HMULT:
             case DIV:
             case MOD:
             case ADD:
-            case SUB:
+            case MINUS:
             case LTE:
             case LT:
             case GTE:
@@ -80,39 +67,46 @@ import org.apache.commons.text.StringEscapeUtils;
             case COMMA:
             case DOT:
             case UNDERSCORE:
-            case ID:
-            case INTEGER:
-                literal = yytext();
-                break;
             case EOF:
-                literal = null;
-                break;
+                return new Token(tt, row(), column(), yytext());
+            case ID:
+                return new IDToken(row(), column(), yytext());
+            case INTEGER:
+                return new IntToken(row(), column(), yytext());
             default:
                 throw new Exception("Unknown token type.");
         }
-        return new Token(tt, row(), column(), literal);
     }
 
     private Token tokenize(char c) throws Exception {
-        String literal = Character.toString(c);
-        literal = StringEscapeUtils.escapeJava(literal);
-        int col = column();
         yybegin(YYINITIAL);
-        return new Token(CHAR, row(), col, literal);
+        String literal = escape(stripQuote(yytext()), c);
+        return new CharToken(row(), startColumn, literal, c);
     }
 
-    private Token tokenize(String l) {
-        l = StringEscapeUtils.escapeJava(l);
-        int col = column();
+    private Token tokenize() {
         yybegin(YYINITIAL);
-        return new Token(STRING, row(), col, l);
+        return new StringToken(row(), startColumn, literal.toString(), value.toString());
     }
 
-    private Token logError(String msg) throws Exception {
+    private Token logError(int r, int c, String msg) throws Exception {
         throw new Exception(
-            String.format("%d:%d error:%s", row(), column(), msg)
+            String.format("%d:%d error:%s", r, c, msg)
         );
     }
+
+    private String escape(String source, char c) {
+        if (!(c <= 0x1F || (0x7F <= c && c <= 0x9F))) {
+            String s = Character.toString(c);
+            return StringEscapeUtils.escapeJava(s);
+        }
+        return source;
+    }
+
+    private String stripQuote(String s) {
+        return s.substring(0, s.length() - 1);
+    }
+
 %}
 
 /* main character classes*/
@@ -137,13 +131,14 @@ StringChar = [^\r\n\"\\]
 
 OctEscape = \\[0-3]?{OctDigit}?{OctDigit}
 HexEscape = \\x{HexDigit}{2}
+UnicodeEscape = \\u{HexDigit}{4}
 
-%state YYSTRING, YYCHARLITERAL
+%state YYCHARLITERAL, YYSTRING 
 
 %%
 
 <YYINITIAL> {
-    {Whitespace}        { column(); }
+    {Whitespace}        { /* ignore */ }
     {Comment}           { /* ignore */ }
 
     // 
@@ -162,13 +157,12 @@ HexEscape = \\x{HexDigit}{2}
 
     // operators
     "!"                 { return tokenize(LNEG); }
-    // TODO: figure out how to deal with negation NEG
     "*"                 { return tokenize(MULT); }
     "*>>"               { return tokenize(HMULT); }
     "/"                 { return tokenize(DIV); }
     "%"                 { return tokenize(MOD); }
     "+"                 { return tokenize(ADD); }
-    "-"                 { return tokenize(SUB); }
+    "-"                 { return tokenize(MINUS); }
     "<="                { return tokenize(LTE); }
     "<"                 { return tokenize(LT); }
     ">="                { return tokenize(GTE); }
@@ -200,57 +194,112 @@ HexEscape = \\x{HexDigit}{2}
     // TODO: make lexing chars and strings more robust
     // include custom error messages
 
-    \'                  { column(); yybegin(YYCHARLITERAL); }
+    \'                  {
+                            startColumn = column();
+                            yybegin(YYCHARLITERAL);
+                        }
 
-    \"                  { column(); string.setLength(0); yybegin(YYSTRING); }
+    \"                  {
+                            startColumn = column();
+                            value.setLength(0);
+                            literal.setLength(0);
+                            yybegin(YYSTRING);
+                        }
 
 }
 
 <YYCHARLITERAL> {
-    {SingleChar}\'      { return tokenize(yytext().charAt(0)); }
+    {SingleChar}\'     { return tokenize(yytext().charAt(0)); }
+
     // escape sequences
-    "\\t"\'             { return tokenize('\t'); }
-    "\\b"\'             { return tokenize('\b'); }
-    "\\n"\'             { return tokenize('\n'); }
-    "\\r"\'             { return tokenize('\r'); }
-    "\\f"\'             { return tokenize('\f'); }
-    "\\'"\'             { return tokenize('\''); }
-    "\\\""\'            { return tokenize('\"'); }
-    "\\\\"\'            { return tokenize('\\'); }
-    {OctEscape}\'       { 
-                            int i = Integer.parseInt(yytext().substring(1, yylength() - 1), 8);
-                            return tokenize((char) i);
+    "\\t"\'            { return tokenize('\t'); }
+    "\\b"\'            { return tokenize('\b'); }
+    "\\n"\'            { return tokenize('\n'); }
+    "\\r"\'            { return tokenize('\r'); }
+    "\\f"\'            { return tokenize('\f'); }
+    "\\'"\'            { return tokenize('\''); }
+    "\\\""\'           { return tokenize('\"'); }
+    "\\\\"\'           { return tokenize('\\'); }
+    {OctEscape}\'      { 
+                            String s = yytext().substring(1, yylength() - 1);
+                            char c = (char) Integer.parseInt(s, 8);
+                            return tokenize(c);
                         }
-    {HexEscape}\'       { 
-                            int i = Integer.parseInt(yytext().substring(2,4), 16);
-                            return tokenize((char) i);
+    {HexEscape}\'      { 
+                            String s = yytext().substring(2, 4);
+                            char c = (char) Integer.parseInt(s, 16);
+                            return tokenize(c);
                         }
-    \\.                 { logError("Invalid escape sequence \'" + yytext() + "\'"); }
-    [^]                 { logError("Invalid character literal"); }
+    {UnicodeEscape}\'  {
+                            String s = yytext().substring(2, 6);
+                            char c = (char) Integer.parseInt(s, 16);
+                            return tokenize(c);
+                        }
+    \\.                 { logError(row(), startColumn, "Invalid escape sequence \'" + yytext() + "\'"); }
+    {LineTerminator}    { logError(row(), startColumn, "Character literal not properly terminated"); }
+    [^]                 { logError(row(), startColumn, "Invalid character literal"); }
 }
 
 <YYSTRING> {
-    \"                  { return tokenize(string.toString()); }
-    {StringChar}+       { string.append(yytext()); }
-    "\\b"               { string.append('\b'); }
-    "\\t"               { string.append('\t'); }
-    "\\n"               { string.append('\n'); }
-    "\\f"               { string.append('\f'); }
-    "\\r"               { string.append('\r'); }
-    "\\'"               { string.append('\''); }
-    "\\\""              { string.append('\"'); }
-    "\\\\"              { string.append('\\'); }
+    \"                  { return tokenize(); }
+    {StringChar}+       {
+                            value.append(yytext());
+                            literal.append(yytext());
+                        }
+    "\\b"               {
+                            value.append('\b');
+                            literal.append("\\b");
+                        }
+    "\\t"               {
+                            value.append('\t');
+                            literal.append("\\t");
+                        }
+    "\\n"               {
+                            value.append('\n');
+                            literal.append("\\n");
+                        }
+    "\\f"               {
+                            value.append('\f');
+                            literal.append("\\f");
+                        }
+    "\\r"               {
+                            value.append('\r');
+                            literal.append("\\r");
+                        }
+    "\\'"               {
+                            value.append('\'');
+                            literal.append("\\'");
+                        }
+    "\\\""              {
+                            value.append('\"');
+                            literal.append("\\\"");
+                        }
+    "\\\\"              {
+                            value.append('\\');
+                            literal.append("\\\\");
+                        }
     {OctEscape}         { 
-                            int i = Integer.parseInt(yytext().substring(1, yylength()), 8);
-                            string.append((char) i);
+                            String s = yytext().substring(1, yylength());
+                            char c = (char) Integer.parseInt(s, 8);
+                            value.append(c);
+                            literal.append(escape(yytext(), c));
                         }
     {HexEscape}         { 
-                            int i = Integer.parseInt(yytext().substring(2,4), 16);
-                            string.append((char) i);
+                            String s = yytext().substring(2, 4);
+                            char c = (char) Integer.parseInt(s, 16);
+                            value.append(c);
+                            literal.append(escape(yytext(), c));
                         }
-    \\.                 { logError("Invalid escape sequence \"" +  yytext() + "\""); }
-    {LineTerminator}    { logError("String literal not properly terminated"); }
+    {UnicodeEscape}     {
+                            String s = yytext().substring(2, 6);
+                            char c = (char) Integer.parseInt(s, 16);
+                            value.append(c);
+                            literal.append(escape(yytext(), c));
+                        }
+    \\.                 { logError(row(), startColumn, "Invalid escape sequence \"" +  yytext() + "\""); }
+    {LineTerminator}    { logError(row(), startColumn, "String literal not properly terminated"); }
+    [^]                 { logError(row(), startColumn, "Invalid string literal"); }
 }
 
-[^]                     { logError("Invalid syntax"); } 
+[^]                     { logError(row(), column(), "Invalid syntax"); } 
 <<EOF>>                 { return tokenize(EOF); }

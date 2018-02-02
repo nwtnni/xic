@@ -14,12 +14,6 @@ public class Token {
     }
 
     public String toString() {
-        String s;
-        if (type.label != null) {
-            s = String.format("%d:%d %s %s", row, col, type.label, literal);
-        } else {
-            s = String.format("%d:%d %s", row, col, literal);
-        }
-        return s;
+        return String.format("%d:%d %s", row, col, literal);
     }
 }

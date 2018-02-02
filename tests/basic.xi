@@ -1,8 +1,20 @@
-"\x00\n\177\011\12\14\15"
+"\x00\u0000"
+"\u007F\177"
+"\11\12\14\15"
+"\177\x7F\u007F"
+'\0'
+'\x00'
+'\u0000'
+'\177'
+'\x7F'
+'\u007F'
+'\176'
+'\x7E'
+'\u007E'
+'a'
+'x'
+ifthen
 _a
-a
-b
-c
 xyz
 use if while else return length
 int bool true false
@@ -18,3 +30,4 @@ int bool true false
 !true == false
 true & true == true
 -100 = 0-100
+// end of file

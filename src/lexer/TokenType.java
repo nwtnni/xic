@@ -12,13 +12,12 @@ public enum TokenType {
     TRUE,
     FALSE,
     LNEG,
-    NEG,
     MULT,
     HMULT,
     DIV,
     MOD,
     ADD,
-    SUB,
+    MINUS,
     LTE,
     LT,
     GTE,
@@ -39,19 +38,9 @@ public enum TokenType {
     COMMA,
     DOT,
     UNDERSCORE,
-    ID ("id"),
-    INTEGER ("integer"),
-    CHAR ("character"),
-    STRING ("string"),
+    ID,
+    INTEGER, 
+    CHAR,
+    STRING,
     EOF;
-    
-    public final String label;
-
-    TokenType() {
-        label = null;
-    }
-
-    TokenType(String l) {
-        label = l;
-    }
 }
