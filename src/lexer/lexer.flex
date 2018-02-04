@@ -96,7 +96,8 @@ import org.apache.commons.text.StringEscapeUtils;
     }
 
     private String escape(String source, char c) {
-        if (!(c <= 0x1F || (0x7F <= c && c <= 0x9F))) {
+        if (!(c <= 0x1F || c == 0x22 || c == 0x27 || 0x5C || 
+			  (0x7F <= c && c <= 0x9F))) {
             String s = Character.toString(c);
             return StringEscapeUtils.escapeJava(s);
         }
