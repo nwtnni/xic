@@ -1,4 +1,4 @@
-.PHONY: compile lexer xic jar payload clean
+.PHONY: compile lexer xic jar payload zip clean
 
 compile: clean lexer xic
 
@@ -20,5 +20,9 @@ jar: compile
 payload: jar
 	cat stub.sh xic.jar > xic && chmod u+x xic
 
+zip: clean
+	git log > pa1.log &&\
+	zip -r xic.zip lib resources src tests Makefile manifest.mf stub.sh xic-build
+
 clean:
-	rm -rf bin src/lexer/XiLexer.java
+	rm -rf bin src/lexer/XiLexer.java xic.jar xic.zip
