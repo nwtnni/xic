@@ -3,7 +3,7 @@
 1:11 character \n
 1:16 character \r
 1:21 character \f
-1:26 character '
+1:26 character \'
 1:31 character \"
 1:36 character \\
 2:1 string \t\b\n\r\f\'\"\\

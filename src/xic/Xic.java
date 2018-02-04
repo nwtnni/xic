@@ -31,7 +31,7 @@ public class Xic {
             }
 
         }
-        else if (args.length == 1 && args[0].equals("--help")) {
+        else if (args.length == 1 && args[0].equals("--help") || true) {
             try {
                 InputStream stream = Xic.class.getClassLoader().getResourceAsStream("resources/help.txt");
                 BufferedReader in = new BufferedReader(new InputStreamReader(stream));
