@@ -1,0 +1,9 @@
+build
+
+xic ("Test --help") "--help" {
+    ;
+}
+
+xic ("Test --lex") "--lex" {
+    general.xi;
+}

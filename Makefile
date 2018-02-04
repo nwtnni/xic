@@ -1,6 +1,6 @@
 .PHONY: compile lexer xic run clean
 
-compile: lexer xic
+compile: clean lexer xic
 
 lexer: src/lexer/XiLexer.java
 	javac -d bin -cp "bin:lib/*" src/lexer/XiLexer.java

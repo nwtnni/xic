@@ -30,7 +30,7 @@
 21:15 false
 22:1 character n
 22:5 character \n
-22:10 character '
+22:10 character \'
 22:15 character \"
 22:20 character \\
 22:25 character \f
