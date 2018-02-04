@@ -15,7 +15,7 @@ xic:
 	javac -d bin -cp "bin:lib/*" src/xic/Xic.java
 
 jar: compile
-	jar -cmf manifest.mf xic.jar lib -C bin .
+	jar -cmf manifest.mf xic.jar lib resources -C bin .
 
 payload: jar
 	cat stub.sh xic.jar > xic && chmod u+x xic

@@ -9,7 +9,7 @@ public class Xic {
         if (args.length > 1 && args[0].equals("--lex")) {
             try {
                 for(int i=1;i<args.length;i++) {
-                    String source = args[1];
+                    String source = args[i];
                     String output = FilenameUtils.removeExtension(source) + ".lexed";
                     BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
                     try {
@@ -33,7 +33,8 @@ public class Xic {
         }
         else if (args.length == 1 && args[0].equals("--help")) {
             try {
-                BufferedReader in = new BufferedReader(new FileReader("resources/help.txt"));
+                InputStream stream = Xic.class.getClassLoader().getResourceAsStream("resources/help.txt");
+                BufferedReader in = new BufferedReader(new InputStreamReader(stream));
                 String line = in.readLine();
                 while(line != null)
                 {

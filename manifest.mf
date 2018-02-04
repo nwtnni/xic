@@ -1,2 +1,2 @@
 Main-class: xic.Xic
-Class-Path: lib/commons-cli-1.4.jar lib/commons-lang3-3.7.jar lib/commons-text-1.2.jar lib/commons-io-2.6.jar
+Class-Path: lib/commons-cli-1.4.jar lib/commons-lang3-3.7.jar lib/commons-text-1.2.jar lib/commons-io-2.6.jar resources/help.txt

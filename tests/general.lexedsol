@@ -16,7 +16,7 @@
 6:1 integer 12345667890
 9:1 character n
 9:5 character \n
-9:10 character '
+9:10 character \'
 9:15 character \"
 9:20 character \\
 9:25 character \f
@@ -55,8 +55,7 @@
 17:10 :
 17:12 ;
 17:14 ,
-17:16 .
-17:18 _
+17:16 _
 21:1 use
 21:5 if
 21:8 while
