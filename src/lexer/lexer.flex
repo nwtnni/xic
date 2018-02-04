@@ -65,7 +65,6 @@ import org.apache.commons.text.StringEscapeUtils;
             case COLON:
             case SEMICOLON:
             case COMMA:
-            case DOT:
             case UNDERSCORE:
             case EOF:
                 return new Token(tt, row(), column(), yytext());
@@ -183,7 +182,6 @@ UnicodeEscape = \\u{HexDigit}{4}
     ":"                 { return tokenize(COLON); }
     ";"                 { return tokenize(SEMICOLON); }
     ","                 { return tokenize(COMMA); }
-    "."                 { return tokenize(DOT); }
     "_"                 { return tokenize(UNDERSCORE); }
 
     {Identifier}        { return tokenize(ID); } 
