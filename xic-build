@@ -1,4 +1,2 @@
 #!/bin/sh
-make clean
-make jar
-cat stub.sh xic.jar > xic && chmod u+x xic
+make payload
