@@ -9,7 +9,7 @@ public class Xic {
         if (args.length > 1 && args[0].equals("--lex")) {
             try {
                 for(int i=1;i<args.length;i++) {
-                    String source = args[1];
+                    String source = args[i];
                     String output = FilenameUtils.removeExtension(source) + ".lexed";
                     BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
                     try {

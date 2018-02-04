@@ -14,7 +14,7 @@ a abc a_sdf a'sdjfkl a_g_'_g25
 //Symbol
 ! * *>> / % + -
 <= < >= > == = != & |
-() [] {} : ; , . _
+() [] {} : ; , _
 
 
 //Keyword
