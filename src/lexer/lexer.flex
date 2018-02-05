@@ -95,12 +95,28 @@ import org.apache.commons.text.StringEscapeUtils;
     }
 
     private String escape(String source, char c) {
-        if (!(c <= 0x1F || c == 0x22 || c == 0x27 || c == 0x5C || 
-			  (0x7F <= c && c <= 0x9F))) {
-            String s = Character.toString(c);
-            return StringEscapeUtils.escapeJava(s);
+        if (c == 0x08) {
+            return "\\b";
+        } else if (c == 0x09) {
+            return "\\t";
+        } else if (c == 0x0A) {
+            return "\\n";
+        } else if (c == 0x0C) {
+            return "\\f";
+        } else if (c == 0x0D) {
+            return "\\r";
+        } else if (c == 0x22) {
+            return "\\\"";
+        } else if (c == 0x27) {
+            return "\\\'";
+        } else if (c == 0x5C){
+            return "\\\\";
         }
-        return source;
+        else if (c <= 0x1F || (0x7F <= c && c <= 0x9F)) {
+            return source;
+        }
+        String s = Character.toString(c);
+        return StringEscapeUtils.escapeJava(s);
     }
 
     private String stripQuote(String s) {
