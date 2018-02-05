@@ -1,86 +1,93 @@
-1:1 string \x00\u0000
-2:1 string \u007F\177
-3:1 string \11\12\14\15
-4:1 string \177\x7F\u007F
-5:1 character \0
-6:1 character \x00
-7:1 character \u0000
-8:1 character \177
-9:1 character \x7F
-10:1 character \u007F
-11:1 character ~
-12:1 character ~
-13:1 character ~
-14:1 character a
-15:1 character x
-16:1 id ifthen
-17:1 _
-17:2 id a
-18:1 id xyz
-19:1 use
-19:5 if
-19:8 while
-19:14 else
-19:19 return
-19:26 length
-20:1 int
-20:5 bool
-20:10 true
-20:15 false
-21:1 character n
-21:5 character \n
-21:10 character '
-21:15 character \"
-21:20 character \\
-21:25 character \f
-21:30 character \r
-21:35 character  
-22:1 integer 0
-22:3 integer 1
-22:5 integer 2
-22:7 integer 3
-22:9 integer 4
-22:11 integer 5
-22:13 integer 6
-22:15 integer 7
-22:17 integer 8
-22:19 integer 9
-23:1 integer 1234567890
-24:1 -
-24:2 integer 1
-24:4 -
-24:5 integer 50
-24:8 -
-24:9 integer 999
-25:1 string asdfjkl;
-26:1 string asdf\njkl;
-27:1 integer 1
-27:2 +
-27:3 integer 2
-27:4 =
-27:5 integer 3
-28:1 integer 4
-28:3 /
-28:5 integer 5
-28:7 !=
-28:10 integer 6
-29:1 integer 7
-29:3 *
-29:5 integer 8
-29:7 =
-29:9 integer 56
-30:1 !
-30:2 true
-30:7 ==
-30:10 false
-31:1 true
-31:6 &
-31:8 true
-31:13 ==
-31:16 true
-32:1 -
-32:2 integer 100
-32:6 =
-32:8 integer 0
-32:9 -
-32:10 integer 100
+1:1 id foobar
+2:1 character \'
+3:1 string \'
+4:1 character \"
+5:1 string \"
+6:1 character \\
+7:1 string \\
+8:1 string \x00\u0000
+9:1 string \u007F\177
+10:1 string \11\12\14\15
+11:1 string \177\x7F\u007F
+12:1 character \0
+13:1 character \x00
+14:1 character \u0000
+15:1 character \177
+16:1 character \x7F
+17:1 character \u007F
+18:1 character ~
+19:1 character ~
+20:1 character ~
+21:1 character a
+22:1 character x
+23:1 id ifthen
+24:1 _
+24:2 id a
+25:1 id xyz
+26:1 use
+26:5 if
+26:8 while
+26:14 else
+26:19 return
+26:26 length
+27:1 int
+27:5 bool
+27:10 true
+27:15 false
+28:1 character n
+28:5 character \n
+28:10 character \'
+28:15 character \"
+28:20 character \\
+28:25 character \f
+28:30 character \r
+28:35 character  
+29:1 integer 0
+29:3 integer 1
+29:5 integer 2
+29:7 integer 3
+29:9 integer 4
+29:11 integer 5
+29:13 integer 6
+29:15 integer 7
+29:17 integer 8
+29:19 integer 9
+30:1 integer 1234567890
+31:1 -
+31:2 integer 1
+31:4 -
+31:5 integer 50
+31:8 -
+31:9 integer 999
+32:1 string asdfjkl;
+33:1 string asdf\njkl;
+34:1 integer 1
+34:2 +
+34:3 integer 2
+34:4 =
+34:5 integer 3
+35:1 integer 4
+35:3 /
+35:5 integer 5
+35:7 !=
+35:10 integer 6
+36:1 integer 7
+36:3 *
+36:5 integer 8
+36:7 =
+36:9 integer 56
+37:1 !
+37:2 true
+37:7 ==
+37:10 false
+38:1 true
+38:6 &
+38:8 true
+38:13 ==
+38:16 true
+39:1 -
+39:2 integer 100
+39:6 =
+39:8 integer 0
+39:9 -
+39:10 integer 100

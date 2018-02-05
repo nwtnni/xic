@@ -65,7 +65,6 @@ import org.apache.commons.text.StringEscapeUtils;
             case COLON:
             case SEMICOLON:
             case COMMA:
-            case DOT:
             case UNDERSCORE:
             case EOF:
                 return new Token(tt, row(), column(), yytext());
@@ -96,7 +95,8 @@ import org.apache.commons.text.StringEscapeUtils;
     }
 
     private String escape(String source, char c) {
-        if (!(c <= 0x1F || (0x7F <= c && c <= 0x9F))) {
+        if (!(c <= 0x1F || c == 0x22 || c == 0x27 || c == 0x5C || 
+			  (0x7F <= c && c <= 0x9F))) {
             String s = Character.toString(c);
             return StringEscapeUtils.escapeJava(s);
         }
@@ -183,17 +183,13 @@ UnicodeEscape = \\u{HexDigit}{4}
     ":"                 { return tokenize(COLON); }
     ";"                 { return tokenize(SEMICOLON); }
     ","                 { return tokenize(COMMA); }
-    "."                 { return tokenize(DOT); }
     "_"                 { return tokenize(UNDERSCORE); }
 
     {Identifier}        { return tokenize(ID); } 
 
-    // TODO: improve integer lexing
     {Integer}           { return tokenize(INTEGER); } 
 
-    // TODO: make lexing chars and strings more robust
-    // include custom error messages
-
+    // Character and string literals
     \'                  {
                             startColumn = column();
                             yybegin(YYCHARLITERAL);
