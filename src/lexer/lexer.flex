@@ -1,7 +1,6 @@
 package lexer;
 
 import static lexer.TokenType.*;
-import org.apache.commons.text.StringEscapeUtils;
 
 %%
 
@@ -115,8 +114,7 @@ import org.apache.commons.text.StringEscapeUtils;
         else if (c <= 0x1F || (0x7F <= c && c <= 0x9F)) {
             return source;
         }
-        String s = Character.toString(c);
-        return StringEscapeUtils.escapeJava(s);
+        return Character.toString(c);
     }
 
     private String stripQuote(String s) {
@@ -146,7 +144,7 @@ SingleChar = [^\r\n\'\\]
 StringChar = [^\r\n\"\\]
 
 OctEscape = \\[0-3]?{OctDigit}?{OctDigit}
-HexEscape = \\x{HexDigit}{2}
+HexEscape = \\x{HexDigit}?{HexDigit}
 UnicodeEscape = \\u{HexDigit}{4}
 
 %state YYCHARLITERAL, YYSTRING 
@@ -238,12 +236,12 @@ UnicodeEscape = \\u{HexDigit}{4}
                             return tokenize(c);
                         }
     {HexEscape}\'      { 
-                            String s = yytext().substring(2, 4);
+                            String s = yytext().substring(2, yylength() - 1);
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
     {UnicodeEscape}\'  {
-                            String s = yytext().substring(2, 6);
+                            String s = yytext().substring(2, yylength() - 1);
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
@@ -297,13 +295,13 @@ UnicodeEscape = \\u{HexDigit}{4}
                             literal.append(escape(yytext(), c));
                         }
     {HexEscape}         { 
-                            String s = yytext().substring(2, 4);
+                            String s = yytext().substring(2, yylength());
                             char c = (char) Integer.parseInt(s, 16);
                             value.append(c);
                             literal.append(escape(yytext(), c));
                         }
     {UnicodeEscape}     {
-                            String s = yytext().substring(2, 6);
+                            String s = yytext().substring(2, yylength());
                             char c = (char) Integer.parseInt(s, 16);
                             value.append(c);
                             literal.append(escape(yytext(), c));

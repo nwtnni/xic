@@ -9,7 +9,7 @@
 2:1 string \t\b\n\r\f\'\"\\
 4:1 string \x00\u0000
 5:1 string \u007F\177
-6:1 string \11\12\14\15
+6:1 string \t\n\f\r
 7:1 string \177\x7F\u007F
 8:1 character \0
 9:1 character \x00

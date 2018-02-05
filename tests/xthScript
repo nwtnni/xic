@@ -6,4 +6,8 @@ xic ("Test --help") "--help" {
 
 xic ("Test --lex") "--lex" {
     general.xi;
+    escapes.xi;
+    hex.xi;
+    oct.xi;
+    unicode.xi;
 }
