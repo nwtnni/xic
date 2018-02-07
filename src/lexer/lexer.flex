@@ -124,7 +124,7 @@ import static lexer.TokenType.*;
 %}
 
 /* main character classes*/
-LineTerminator = \r|\n|\r\n
+EOL = \r|\n|\r\n
 InputCharacter = [^\r\n]
 
 Letter = [a-zA-Z]
@@ -132,9 +132,9 @@ Digit = [0-9]
 OctDigit = [0-7]
 HexDigit = {Digit}|[A-Fa-f]
 
-Whitespace = [ \t\f]|{LineTerminator}
+Whitespace = [ \t\f]|{EOL}
 
-Comment = "//" {InputCharacter}* {LineTerminator}?
+Comment = "//"{InputCharacter}*{EOL}?
 
 Identifier = {Letter}({Digit}|{Letter}|_|')*
 
@@ -219,34 +219,34 @@ UnicodeEscape = \\u{HexDigit}{4}
 }
 
 <YYCHARLITERAL> {
-    {SingleChar}\'     { return tokenize(yytext().charAt(0)); }
+    {SingleChar}\'      { return tokenize(yytext().charAt(0)); }
 
     // escape sequences
-    "\\t"\'            { return tokenize('\t'); }
-    "\\b"\'            { return tokenize('\b'); }
-    "\\n"\'            { return tokenize('\n'); }
-    "\\r"\'            { return tokenize('\r'); }
-    "\\f"\'            { return tokenize('\f'); }
-    "\\'"\'            { return tokenize('\''); }
-    "\\\""\'           { return tokenize('\"'); }
-    "\\\\"\'           { return tokenize('\\'); }
-    {OctEscape}\'      { 
+    "\\t"\'             { return tokenize('\t'); }
+    "\\b"\'             { return tokenize('\b'); }
+    "\\n"\'             { return tokenize('\n'); }
+    "\\r"\'             { return tokenize('\r'); }
+    "\\f"\'             { return tokenize('\f'); }
+    "\\'"\'             { return tokenize('\''); }
+    "\\\""\'            { return tokenize('\"'); }
+    "\\\\"\'            { return tokenize('\\'); }
+    {OctEscape}\'       { 
                             String s = yytext().substring(1, yylength() - 1);
                             char c = (char) Integer.parseInt(s, 8);
                             return tokenize(c);
                         }
-    {HexEscape}\'      { 
+    {HexEscape}\'       { 
                             String s = yytext().substring(2, yylength() - 1);
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
-    {UnicodeEscape}\'  {
+    {UnicodeEscape}\'   {
                             String s = yytext().substring(2, yylength() - 1);
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
-    \\.                 { logError(row(), startColumn, "Invalid escape sequence \'" + yytext() + "\'"); }
-    {LineTerminator}    { logError(row(), startColumn, "Character literal not properly terminated"); }
+    \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
+    [^\']*{EOL}         { logError(row(), startColumn, "Character literal not properly terminated"); }
     [^]                 { logError(row(), startColumn, "Invalid character literal"); }
 }
 
@@ -306,9 +306,9 @@ UnicodeEscape = \\u{HexDigit}{4}
                             value.append(c);
                             literal.append(escape(yytext(), c));
                         }
-    \\.                 { logError(row(), startColumn, "Invalid escape sequence \"" +  yytext() + "\""); }
-    {LineTerminator}    { logError(row(), startColumn, "String literal not properly terminated"); }
-    [^]                 { logError(row(), startColumn, "Invalid string literal"); }
+    \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
+    {EOL}               { logError(row(), startColumn, "String literal not properly terminated"); }
+    /* [^]                 { logError(row(), startColumn, "Invalid string literal"); } */
 }
 
 [^]                     { logError(row(), column(), "Invalid syntax"); } 

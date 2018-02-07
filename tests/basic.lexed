@@ -94,3 +94,6 @@
 42:8 integer 0
 42:9 -
 42:10 integer 100
+43:1 string foo
+44:1 character f
+45:1 error:Character literal not properly terminated

@@ -40,5 +40,14 @@ int bool true false
 !true == false
 true & true == true
 -100 = 0-100
-// end of file
-
+"foo"
+'f'
+'dfdfdafdf
+//'\.'
+//'[^]'
+//"hello \r"
+//'b'
+//"abbsaodij
+//"\"
+//"hello\
+//'
