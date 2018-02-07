@@ -307,6 +307,7 @@ UnicodeEscape = \\u{HexDigit}{4}
                         }
     \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
     {EOL}               { logError(row(), startColumn, "String literal not properly terminated"); }
+    <<EOF>>             { logError(row(), startColumn, "String literal not properly terminated"); }
 }
 
 [^]                     { logError(row(), column(), "Invalid syntax"); } 
