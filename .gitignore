@@ -2,7 +2,9 @@
 bin/
 src/lexer/XiLexer.java
 
-xic
-xic.jar
+/xic
+/xic.jar
+/xic.zip
 
 tests/xthScript.results
+*.lexed
