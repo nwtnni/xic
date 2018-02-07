@@ -10,4 +10,5 @@ xic ("Test --lex") "--lex" {
     hex.xi;
     oct.xi;
     unicode.xi;
+    identifiers.xi;
 }
