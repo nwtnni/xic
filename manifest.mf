@@ -1,2 +1,0 @@
-Main-class: xic.Xic
-Class-Path: lib/commons-lang3-3.7.jar lib/commons-io-2.6.jar

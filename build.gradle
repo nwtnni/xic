@@ -1,0 +1,26 @@
+description = 'Compiler for CS 4120\'s Xi programming language'
+version = '0.1.0'
+
+apply plugin: 'java'
+apply plugin: 'application'
+mainClassName = 'xic.Xic'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile 'commons-io:commons-io:2.6'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'xic.Xic'
+    }    
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task jflex(type: JFlexTask)
+compileJava.dependsOn jflex

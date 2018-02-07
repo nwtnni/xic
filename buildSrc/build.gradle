@@ -1,0 +1,7 @@
+repositories {
+    jcenter()    
+}
+
+dependencies {
+    compile "de.jflex:jflex:1.6.1"
+}
