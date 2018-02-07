@@ -33,19 +33,9 @@ public class Xic {
 
         }
         else if (args.length == 1 && args[0].equals("--help") || true) {
-            try {
-                InputStream stream = Xic.class.getClassLoader().getResourceAsStream("resources/help.txt");
-                BufferedReader in = new BufferedReader(new InputStreamReader(stream));
-                String line = in.readLine();
-                while(line != null)
-                {
-                  System.out.println(line);
-                  line = in.readLine();
-                }
-                in.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+          System.out.println("Usage: xic [options] <source-files>");
+          System.out.println("  --help:                 Print a synopsis of options");
+          System.out.println("  --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed");
         }
     }
 }
