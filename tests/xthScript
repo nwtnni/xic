@@ -5,10 +5,13 @@ xic ("Test --help") "--help" {
 }
 
 xic ("Test --lex") "--lex" {
-    general.xi;
+    escape-errors.xi;
     escapes.xi;
+    general.xi;
     hex.xi;
-    oct.xi;
-    unicode.xi;
     identifiers.xi;
+    oct.xi;
+    singlequote-errors.xi;
+    termination-errors.xi;
+    unicode.xi;
 }

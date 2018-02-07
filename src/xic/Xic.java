@@ -12,8 +12,8 @@ public class Xic {
                     String source = args[i];
                     String output = FilenameUtils.removeExtension(source) + ".lexed";
                     BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
+                    XiLexer lexer = new XiLexer(new FileReader(source));
                     try {
-                        XiLexer lexer = new XiLexer(new FileReader(source));
                         Token t = lexer.nextToken();
                         while (t.type != TokenType.EOF) {
                             w.append(t.toString() + "\n");
@@ -21,7 +21,6 @@ public class Xic {
                         }
                         w.close();
                     } catch (Exception e) {
-                        e.printStackTrace();
                         w.append(e.getMessage());
                         w.close();
                         System.out.println(e.getMessage());

@@ -15,14 +15,14 @@ xic:
 	javac -d bin -cp "bin:lib/*" src/xic/Xic.java
 
 jar: compile
-	jar -cmf manifest.mf xic.jar lib resources -C bin .
+	jar -cmf manifest.mf xic.jar lib -C bin .
 
 payload: jar
 	cat stub.sh xic.jar > xic && chmod u+x xic
 
 zip: clean
 	git log > pa1.log &&\
-	zip -r xic.zip lib resources src tests Makefile manifest.mf stub.sh xic-build
+	zip -r xic.zip lib src tests Makefile manifest.mf stub.sh xic-build
 
 clean:
 	rm -rf bin src/lexer/XiLexer.java xic xic.jar xic.zip
