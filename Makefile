@@ -25,4 +25,4 @@ zip: clean
 	zip -r xic.zip lib resources src tests Makefile manifest.mf stub.sh xic-build
 
 clean:
-	rm -rf bin src/lexer/XiLexer.java xic.jar xic.zip
+	rm -rf bin src/lexer/XiLexer.java xic xic.jar xic.zip

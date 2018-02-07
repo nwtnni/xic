@@ -21,7 +21,6 @@ public class Xic {
                         }
                         w.close();
                     } catch (Exception e) {
-                        e.printStackTrace();
                         w.append(e.getMessage());
                         w.close();
                         System.out.println(e.getMessage());

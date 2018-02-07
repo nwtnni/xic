@@ -246,7 +246,6 @@ UnicodeEscape = \\u{HexDigit}{4}
                             return tokenize(c);
                         }
     \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
-    [^\']*{EOL}         { logError(row(), startColumn, "Character literal not properly terminated"); }
     [^]                 { logError(row(), startColumn, "Invalid character literal"); }
 }
 
@@ -308,7 +307,6 @@ UnicodeEscape = \\u{HexDigit}{4}
                         }
     \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
     {EOL}               { logError(row(), startColumn, "String literal not properly terminated"); }
-    /* [^]                 { logError(row(), startColumn, "Invalid string literal"); } */
 }
 
 [^]                     { logError(row(), column(), "Invalid syntax"); } 
