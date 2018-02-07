@@ -6,17 +6,19 @@ apply plugin: 'application'
 mainClassName = 'xic.Xic'
 
 repositories {
+    mavenCentral()
     jcenter()
 }
 
 dependencies {
-    compile 'commons-io:commons-io:2.6'
+    compile files('libs/java_cup.jar')
+    compile files('libs/commons-io-2.6.jar')
 }
 
 jar {
     manifest {
         attributes 'Main-Class': 'xic.Xic'
-    }    
+    }
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }

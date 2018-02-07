@@ -1,7 +1,9 @@
 repositories {
-    jcenter()    
+    mavenCentral()
+    jcenter()
 }
 
 dependencies {
-    compile "de.jflex:jflex:1.6.1"
+    compile files("libs/jflex-1.6.1.jar")
+    compile files("../libs/java_cup.jar")
 }
