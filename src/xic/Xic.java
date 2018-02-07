@@ -28,7 +28,7 @@ public class Xic {
                     }
                 } 
             } catch (Exception e) {
-                e.printStackTrace();
+                System.out.println("Invalid input for --lex. See --help for correct usage.");
             }
 
         }
