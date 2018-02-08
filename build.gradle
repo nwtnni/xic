@@ -24,42 +24,8 @@ jar {
     }
 }
 
-// JFlex Options
-String lexerName = 'XiLexer'
-String lexerSource = 'src/main/jflex/'
-String lexerSink = 'src/main/java/lexer/'
+task jflexGenerate(type: JFlexGenerate) {}
+task cupGenerate(type: CupGenerate) {}
 
-// CUP Options
-String parserName = 'XiParser'
-String symbolName = 'Symbol'
-String parserSource = 'src/main/cup/'
-String parserSink = 'src/main/java/parser/'
-
-task jflexClean(type: JFlexClean) {
-    lexer = lexerName
-    sink = lexerSink
-}
-
-task jflexGenerate(dependsOn: jflexClean, type: JFlexGenerate) {
-    lexer = lexerName
-    source = lexerSource
-    sink = lexerSink
-}
-
-task cupClean(type: CupClean) {
-    parser = parserName
-    symbol = symbolName
-    sink = parserSink
-}
-
-task cupGenerate(dependsOn: cupClean, type: CupGenerate) {
-    parser = parserName
-    symbol = symbolName
-    source = parserSource
-    sink = parserSink
-}
-
-clean.dependsOn cupClean
-clean.dependsOn jflexClean
 compileJava.dependsOn cupGenerate
 compileJava.dependsOn jflexGenerate

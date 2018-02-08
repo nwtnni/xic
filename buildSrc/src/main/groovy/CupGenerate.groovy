@@ -1,21 +1,28 @@
 import java_cup.Main;
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.StopActionException
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*;
 
+@CacheableTask
 class CupGenerate extends DefaultTask {
 
-    String parser = ''
-    String symbol = ''
-    String source = ''
-    String sink = ''
+    static final String source = 'src/main/cup/'
+    static final String sink = 'src/main/java/parser/'
+    static final String parser = 'XiParser'
+    static final String symbol = 'Symbol'
 
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @Input
+    File input = project.file(source + parser + '.cup')
+
+    @PathSensitive(PathSensitivity.RELATIVE)
+    @OutputFile
+    File output = project.file(source + parser + '.java')
 
     @TaskAction
     void generate() {
         try {
-            File input = project.file(source + parser + '.cup')
+            project.delete(output)
             def args = ['-destdir', sink, '-parser', parser, '-symbols', symbol, input] as String[]
             Main.main(args)
         } catch (Exception e) {
