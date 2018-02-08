@@ -6,17 +6,17 @@ import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.tasks.StopActionException
 import org.gradle.api.tasks.TaskAction
 
-class JFlexTask extends DefaultTask {
+class JFlexGenerate extends DefaultTask {
 
-    File source = project.file('src/main/jflex/XiLexer.jflex')
-    File sink = project.file('src/main/java/lexer/')
-    File clean = project.file('src/main/java/lexer/XiLexer.java')
+    String lexer = ''
+    String source = ''
+    String sink = ''
 
     @TaskAction
     void generate() {
         try {
-            project.delete(clean)
-            def args = ['-q', '-d', sink, source] as String[]
+            File input = project.file(source + lexer + '.jflex')
+            def args = ['-d', sink, input] as String[]
             Main.generate(args)
         } catch (GeneratorException e) {
             throw new StopActionException("Error during JFlex code generation.")
