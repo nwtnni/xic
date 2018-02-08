@@ -1,0 +1,65 @@
+description = 'Compiler for CS 4120\'s Xi programming language'
+version = '0.1.0'
+
+apply plugin: 'java'
+apply plugin: 'application'
+mainClassName = 'xic.Xic'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile files('libs/java_cup.jar')
+    compile files('libs/commons-io-2.6.jar')
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'xic.Xic'
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+// JFlex Options
+String lexerName = 'XiLexer'
+String lexerSource = 'src/main/jflex/'
+String lexerSink = 'src/main/java/lexer/'
+
+// CUP Options
+String parserName = 'XiParser'
+String symbolName = 'Symbol'
+String parserSource = 'src/main/cup/'
+String parserSink = 'src/main/java/parser/'
+
+task jflexClean(type: JFlexClean) {
+    lexer = lexerName
+    sink = lexerSink
+}
+
+task jflexGenerate(dependsOn: jflexClean, type: JFlexGenerate) {
+    lexer = lexerName
+    source = lexerSource
+    sink = lexerSink
+}
+
+task cupClean(type: CupClean) {
+    parser = parserName
+    symbol = symbolName
+    sink = parserSink
+}
+
+task cupGenerate(dependsOn: cupClean, type: CupGenerate) {
+    parser = parserName
+    symbol = symbolName
+    source = parserSource
+    sink = parserSink
+}
+
+clean.dependsOn cupClean
+clean.dependsOn jflexClean
+compileJava.dependsOn cupGenerate
+compileJava.dependsOn jflexGenerate
