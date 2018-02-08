@@ -5,7 +5,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.tasks.*;
 
-@CacheableTask
 class JFlexGenerate extends DefaultTask {
 
     String lexer = 'XiLexer'
@@ -13,8 +12,8 @@ class JFlexGenerate extends DefaultTask {
     String sink = 'src/main/java/lexer/'
 
     @PathSensitive(PathSensitivity.RELATIVE)
-    @Input
-    File input = project.file(source + lexer + '.jflex')
+    @InputDirectory
+    File input = project.file(source)
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @OutputFile
@@ -24,7 +23,7 @@ class JFlexGenerate extends DefaultTask {
     void generate() {
         try {
             project.delete(output)
-            def args = ['-d', sink, input] as String[]
+            def args = ['-d', sink, project.file(source + lexer + '.jflex')] as String[]
             Main.generate(args)
         } catch (GeneratorException e) {
             throw new StopActionException("Error during JFlex code generation.")

@@ -3,7 +3,7 @@ version = '0.1.0'
 
 apply plugin: 'java'
 apply plugin: 'application'
-mainClassName = 'xic.Xic'
+mainClassName = 'parser.XiScanner'
 
 repositories {
     mavenCentral()
@@ -11,13 +11,13 @@ repositories {
 }
 
 dependencies {
-    compile files('libs/java_cup.jar')
-    compile files('libs/commons-io-2.6.jar')
+    compile files("libs/java_cup.jar")
+    compile files("libs/commons-io-2.6.jar")
 }
 
 jar {
     manifest {
-        attributes 'Main-Class': 'xic.Xic'
+        attributes 'Main-Class': 'parser.XiScanner'
     }
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }

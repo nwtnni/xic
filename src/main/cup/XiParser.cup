@@ -3,9 +3,11 @@ import java_cup.runtime.*;
 
 parser code {:
 	// Connect this parser to a scanner!
-	scanner s;
-	Parser(scanner s){ this.s=s; }
-	:}
+	XiScanner s;
+	XiParser(XiScanner s) {
+    this.s=s;
+    }
+:}
 
 	/* define how to connect to the scanner! */
 	init with {: s.init(); :};
