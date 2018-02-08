@@ -1,0 +1,31 @@
+description = 'Compiler for CS 4120\'s Xi programming language'
+version = '0.1.0'
+
+apply plugin: 'java'
+apply plugin: 'application'
+mainClassName = 'parser.XiScanner'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile files("libs/java_cup.jar")
+    compile files("libs/commons-io-2.6.jar")
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'parser.XiScanner'
+    }
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task jflexGenerate(type: JFlexGenerate) {}
+task cupGenerate(type: CupGenerate) {}
+
+compileJava.dependsOn cupGenerate
+compileJava.dependsOn jflexGenerate

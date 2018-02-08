@@ -1,6 +1,13 @@
 *.class
+.gradle/
 bin/
-src/lexer/XiLexer.java
+build/
+buildSrc/.gradle/
+buildSrc/build/
+
+src/main/java/lexer/XiLexer.java
+src/main/java/parser/XiParser.java
+src/main/java/parser/Symbol.java
 
 /xic
 /xic.jar
