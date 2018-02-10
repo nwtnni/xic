@@ -1,9 +1,13 @@
 # Build system
 .gradle/
-build/
 buildSrc/.gradle/
 buildSrc/build/
 *.class
+build/
+bin/
+.classpath
+.project
+.settings/
 
 
 # JFlex and CUP generated files
@@ -13,6 +17,7 @@ src/main/java/parser/Symbol.java
 
 
 # Generated files
+/xic
 /xic.zip
 
 
