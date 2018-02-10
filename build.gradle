@@ -3,7 +3,7 @@ version = '0.1.0'
 
 apply plugin: 'java'
 apply plugin: 'application'
-mainClassName = 'parser.XiScanner'
+mainClassName = 'xic.Xic'
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'parser.XiScanner'
+        attributes 'Main-Class': 'xic.Xic'
     }
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }

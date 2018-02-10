@@ -1,17 +1,21 @@
-*.class
+# Build system
 .gradle/
-bin/
 build/
 buildSrc/.gradle/
 buildSrc/build/
+*.class
 
+
+# JFlex and CUP generated files
 src/main/java/lexer/XiLexer.java
 src/main/java/parser/XiParser.java
 src/main/java/parser/Symbol.java
 
-/xic
-/xic.jar
+
+# Generated files
 /xic.zip
 
-tests/xthScript.results
+
+# Test files
+xthScript.results
 *.lexed
