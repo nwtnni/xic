@@ -1,3 +1,2 @@
 #!/bin/sh
-gradle jar
-cat stub.sh build/libs/xic-0.1.0.jar > xic && chmod u+x xic
+gradle xic
