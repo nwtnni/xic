@@ -1,0 +1,103 @@
+
+Expr ::= (E)
+| Expr BinOp E
+| Expr UnOp E
+| FuncCall
+| INT
+| BOOL
+| CHAR
+| STRING
+| ID
+| ArrayCall
+| LBRACE ExprList RBRACE
+
+ArrayCall ::= FuncCall LBRACK Expr RBRACK IndexList
+| ID LBRACK Expr RBRACK Indlist
+
+FuncCall ::= ID LPAREN Args RPAREN 
+
+UnOp ::= LNEG
+| MINUS 
+
+BinOp ::= MULT
+| HMULT
+| DIV
+| MOD
+| ADD
+| MINUS
+| LTE
+| LT
+| GTE
+| GT
+| EQEQ
+| EQ
+| NEQ
+| LAND
+| LOR
+
+Type ::= INT
+| BOOL
+| CHAR
+| Type LBRACK RBRACK
+
+Args ::= Expr
+| FArgs COMMA Expr
+| empty
+
+FArgs ::= Expr
+| FArgs COMMA Expr
+
+IndexList ::= empty 
+| IndexList LBRACK Expr RBRACK
+
+Assign ::= IDList EQ EList
+
+AssignName ::= UNDERSCORE
+| ID
+| ID COLON Type
+
+VarDeclr ::= ID COLON Type 
+
+EList ::= Expr
+| Expr FEList
+
+FEList ::= empty
+| COMMA Expr FEList
+
+IDList ::= AssignName
+| AssignName FIDList
+
+FIDList ::= empty
+| COMMA AssignName FIDList
+
+WhileStmt ::= WHILE Expr Block
+
+IfStmt ::= IF Expr Block ElseIfStmt ElseStmt
+
+ElseIfStmt ::= empty
+| ELSE IF Expr Block ElseIfStmt
+
+ElseStmt ::= empty
+| ELSE Expr Block
+
+Block ::= Stmt
+| LBRACE StmtList RBRACE
+
+StmtList ::= empty
+| Stmt StmtList
+
+Stmt ::= Assign
+| WhileStmt
+| IfStmt
+| variable declaration
+| FuncCall
+
+ReturnBlock ::= LBRACE StmtList ReturnStmt RBRACE
+
+ReturnStmt ::= RETURN Expr 
+| RETURN
+
+
+
+
+
