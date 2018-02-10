@@ -28,7 +28,7 @@ task jflexGenerate(type: JFlexGenerate) {}
 task cupGenerate(type: CupGenerate) {}
 task xic(type: Exec) {
     executable "sh"
-    args "-c", "cat resources/stub.sh build/libs/xi-0.1.0.jar >> xic && chmod 777 xic"
+    args "-c", "cat resources/stub.sh build/libs/xic-0.1.0.jar >> xic && chmod 777 xic"
 }
 
 compileJava.dependsOn cupGenerate
