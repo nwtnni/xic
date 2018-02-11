@@ -2,9 +2,9 @@ package parser;
 
 public abstract class Statement extends Node {
 
-    protected Kind kind;
+    protected StatementType stype;
 
-    public enum Kind {
+    public enum StatementType {
         ASSIGN,
         IF,
         WHILE,
@@ -14,7 +14,7 @@ public abstract class Statement extends Node {
         DECLARE,
     }
 
-    public Kind kind() {
-        return this.kind;
+    public StatementType statementType() {
+        return this.stype;
     }
 }
