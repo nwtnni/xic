@@ -1,25 +1,21 @@
-
-Expr ::= (E)
-| Expr BinOp E
-| Expr UnOp E
-| FuncCall
+// Expressions
+Expr ::= (Expr)
+| Expr UnaryOp Expr
+| Expr BinaryOp Expr
+| FunctionCall
+| ArrayCall
+| LBRACE ExprList RBRACE
 | INT
-| BOOL
+| TRUE
+| FALSE
 | CHAR
 | STRING
 | ID
-| ArrayCall
-| LBRACE ExprList RBRACE
 
-ArrayCall ::= FuncCall LBRACK Expr RBRACK IndexList
-| ID LBRACK Expr RBRACK Indlist
-
-FuncCall ::= ID LPAREN Args RPAREN 
-
-UnOp ::= LNEG
+UnaryOp ::= LNEG
 | MINUS 
 
-BinOp ::= MULT
+BinaryOp ::= MULT
 | HMULT
 | DIV
 | MOD
@@ -30,39 +26,41 @@ BinOp ::= MULT
 | GTE
 | GT
 | EQEQ
-| EQ
 | NEQ
 | LAND
 | LOR
 
-Type ::= INT
-| BOOL
-| CHAR
-| Type LBRACK RBRACK
+// Function Calls
+FunctionCall ::= ID LPAREN Args RPAREN 
 
-Args ::= Expr
-| FArgs COMMA Expr
-| empty
+Args ::= empty
+| Expr FArgs
 
-FArgs ::= Expr
-| FArgs COMMA Expr
+FArgs ::= COMMA Expr
+| COMMA Expr FArgs
+
+// Array Calls
+ArrayCall ::= FunctionCall LBRACK Expr RBRACK IndexList
+| ID LBRACK Expr RBRACK IndexList
 
 IndexList ::= empty 
 | IndexList LBRACK Expr RBRACK
 
-Assign ::= IDList EQ EList
+// Variable Declaration
+VarDeclr ::= ID COLON VarType 
 
-AssignName ::= UNDERSCORE
-| ID
-| ID COLON Type
+VarType ::= VarType LBRACK RBRACK
+| FVarType
 
-VarDeclr ::= ID COLON Type 
+FVarType ::= KeyType
+| FVarType LBRACK EXPR RBRACK
 
-EList ::= Expr
-| Expr FEList
+KeyType ::= INT
+| BOOL
+| CHAR
 
-FEList ::= empty
-| COMMA Expr FEList
+// Assignment
+Assign ::= IDList EQ ExprList
 
 IDList ::= AssignName
 | AssignName FIDList
@@ -70,8 +68,20 @@ IDList ::= AssignName
 FIDList ::= empty
 | COMMA AssignName FIDList
 
+AssignName ::= UNDERSCORE
+| ID
+| VarDeclr
+
+ExprList ::= Expr
+| Expr FExprList
+
+FExprList ::= empty
+| COMMA Expr FExprList
+
+// While Statement
 WhileStmt ::= WHILE Expr Block
 
+// If Statement
 IfStmt ::= IF Expr Block ElseIfStmt ElseStmt
 
 ElseIfStmt ::= empty
@@ -80,24 +90,53 @@ ElseIfStmt ::= empty
 ElseStmt ::= empty
 | ELSE Expr Block
 
+// Block
 Block ::= Stmt
-| LBRACE StmtList RBRACE
+| LBRACE StmtListNoReturn RBRACE
+| LBrace StmtListNoReturn ReturnStmt RBRACE
 
-StmtList ::= empty
-| Stmt StmtList
-
-Stmt ::= Assign
-| WhileStmt
-| IfStmt
-| variable declaration
-| FuncCall
-
-ReturnBlock ::= LBRACE StmtList ReturnStmt RBRACE
+StmtListNoReturn ::= empty
+| StmtNoReturn StmtList
 
 ReturnStmt ::= RETURN Expr 
 | RETURN
 
+StmtNoReturn ::= Assign
+| IfStmt
+| WhileStmt
+| FunctionCall
+| Block
+| VarDeclr
+| SEMICOLON
 
+Stmt ::= ReturnStmt
+| StmtNoReturn
 
+// Function Declaration
+FunctionDeclr ::= FunctionInit Block
 
+FunctionDef ::= ID LPAREN ArgsTypeList RPAREN ReturnTypeList
 
+ArgsTypeList ::= empty
+| ID COLON Type FArgsTypeList
+
+FArgsTypeList ::= empty
+| COMMA ID COLON TYPE FArgsTypeList
+
+ReturnTypeList ::= empty
+| Type FTypeList
+
+FReturnTypeList ::= empty
+| COMMA Type FTypeList
+
+// Use Declaration
+UseDeclr ::= USE ID | UseDeclr SEMICOLON
+
+// Program
+Program ::= UseDeclarations FunctionDeclarations
+
+UseDeclarations ::= empty
+| UseDeclarations UseDeclr
+
+FunctionDeclarations ::= empty
+| FunctionDeclr FunctionDeclarations
