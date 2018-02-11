@@ -2,21 +2,20 @@ package parser;
 
 public abstract class Expression extends Node {
 
-    protected Kind kind;
+    protected ExpressionType etype;
 
-    public enum Kind {
+    public enum ExpressionType {
+        ARRAY,
         BOOL,
-        BOOLARRAY,
         INDEX,
         INT,
-        INTARRAY,
         FUNCTION,
         MULTIPLE, 
         OPERATOR,
         VARIABLE,
     }
     
-    public Kind kind() {
-        return this.kind; 
+    public ExpressionType expressionType() {
+        return etype; 
     };
 }

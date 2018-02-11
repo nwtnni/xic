@@ -6,12 +6,8 @@ public class Bool extends Expression {
     
     public Bool(boolean value) {
         this.children = null;
-        this.kind = Expression.Kind.BOOL;
+        this.etype = Expression.ExpressionType.BOOL;
         this.value = value; 
-    }
-
-    public boolean validate() {
-        return true; 
     }
 
     public String toString() {
