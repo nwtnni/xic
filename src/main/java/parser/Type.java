@@ -4,66 +4,55 @@ import java.util.ArrayList;
 
 public class Type {
 
-    private Primitive type;
-    private ArrayList<Integer> shape;
+    public static final Type INTEGER = new Type(Primitive.INTEGER);
+    public static final Type BOOLEAN = new Type(Primitive.BOOLEAN);
 
-    public enum Primitive { INT, BOOL }
-
-    public static final Type INT = new Type(Primitive.INT);
-    public static final Type BOOL = new Type(Primitive.BOOL);
-
-    public Type(Primitive type) {
-        shape = new ArrayList<Integer>();
-        shape.add(1);
-        this.type = type; 
-        this.shape = shape;
+    public enum Primitive {
+        INTEGER, BOOLEAN, ARRAY
     }
 
-    public Type(Primitive type, int length) {
-        shape = new ArrayList<Integer>();
-        shape.add(length);
-        this.type = type; 
-        this.shape = shape;
+    private Primitive primitive;
+    private Type child;
+    private int length;
+
+    private Type(Primitive primitive) {
+        assert primitive != Primitive.ARRAY;
+        this.primitive = primitive; 
+        this.length = 0;
+        this.child = null;
     }
 
-    public void promote(int length) {
-        this.shape.add(0, length);
+    public Type(Type type, int length) {
+        this.primitive = Primitive.ARRAY;
+        this.length = length;
+        this.child = null;
+        type.child = this;
     }
 
     public boolean equals(Object other) {
-        if (!(other instanceof Type)) {
-            return false; 
-        }
-
+        if (!(other instanceof Type)) { return false; }
         Type t = (Type) other;
 
-        if (this.type != t.type 
-        || (this.shape != null && t.shape != null
-        && this.shape.size() != t.shape.size())) {
-            return false;
-        }
-    
-        for (int i = 0; i < this.shape.size(); i++) {
-            if (this.shape.get(i) != t.shape.get(i)) {
-                return false; 
+        if (!(primitive.equals(t.primitive))) {
+            return false; 
+        } else if (primitive.equals(Primitive.ARRAY)) {
+            if (length == 0 || t.length == 0) {
+                return child.equals(t.child);
+            } else {
+                return length == t.length && child.equals(t.child);
             }
+        } else {
+            return true; 
         }
-
-        return true;
     }
 
     public int hashCode() {
-        int hash;
-        if (this.type == Primitive.INT) {
-            hash = -100; 
-        } else {
-            hash = 100; 
+        switch (primitive) {
+            case INTEGER: return 2;
+            case BOOLEAN: return 3;
+            case ARRAY: return this.length * child.hashCode();
         }
-        if (this.shape != null) {
-            for (int i = 0; i < this.shape.size(); i++) {
-                hash *= shape.get(i);
-            }
-        }
-        return hash;
+        assert false;
+        return 0;
     }
 }
