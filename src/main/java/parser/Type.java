@@ -12,45 +12,47 @@ public class Type {
     }
 
     private Primitive primitive;
-    private Type child;
-    private int length;
+    private ArrayList<Type> children;
 
     private Type(Primitive primitive) {
         assert primitive != Primitive.ARRAY;
         this.primitive = primitive; 
-        this.length = 0;
-        this.child = null;
+        this.children = null;
     }
 
-    public Type(Type type, int length) {
+    public Type(ArrayList<Type> children) {
         this.primitive = Primitive.ARRAY;
-        this.length = length;
-        this.child = null;
-        type.child = this;
+        this.children = children;
     }
 
     public boolean equals(Object other) {
         if (!(other instanceof Type)) { return false; }
         Type t = (Type) other;
+        
+        if (!primitive.equals(Primitive.ARRAY)
+        || !primitive.equals(t.primitive)
+        || children.size() != t.children.size()) { return false; }
 
-        if (!(primitive.equals(t.primitive))) {
-            return false; 
-        } else if (primitive.equals(Primitive.ARRAY)) {
-            if (length == 0 || t.length == 0) {
-                return child.equals(t.child);
-            } else {
-                return length == t.length && child.equals(t.child);
+        for (int i = 0; i < children.size(); i++) {
+            if (!children.get(i).equals(t.children.get(i))) {
+                return false; 
             }
-        } else {
-            return true; 
         }
+
+        return true;
     }
 
     public int hashCode() {
         switch (primitive) {
             case INTEGER: return 2;
             case BOOLEAN: return 3;
-            case ARRAY: return this.length * child.hashCode();
+            case ARRAY: {
+                int product = 4; 
+                for (Type child : children) {
+                    product *= child.hashCode(); 
+                }
+                return product;
+            }
         }
         assert false;
         return 0;

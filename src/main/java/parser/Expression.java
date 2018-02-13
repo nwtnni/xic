@@ -2,6 +2,7 @@ package parser;
 
 public abstract class Expression extends Node {
 
+    protected Type type;
     protected ExpressionType etype;
 
     public enum ExpressionType {
