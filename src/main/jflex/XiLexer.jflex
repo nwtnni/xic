@@ -140,8 +140,7 @@ Identifier = {Letter}({Digit}|{Letter}|_|')*
 
 Integer = "0"|[1-9]{Digit}*
 
-SingleChar = [^\r\n\'\\]
-StringChar = [^\r\n\"\\]
+SingleChar = [^\r\n\"\'\\]
 
 OctEscape = \\[0-3]?{OctDigit}?{OctDigit}
 HexEscape = \\x{HexDigit}?{HexDigit}
@@ -220,6 +219,7 @@ UnicodeEscape = \\u{HexDigit}{4}
 
 <YYCHARLITERAL> {
     {SingleChar}\'      { return tokenize(yytext().charAt(0)); }
+    \"\'                { return tokenize('\"'); }
 
     // escape sequences
     "\\t"\'             { return tokenize('\t'); }
@@ -245,15 +245,19 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
-    \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
-    [^]                 { logError(row(), startColumn, "Invalid character literal"); }
+    \\                  { logError(row(), column(), "Invalid escape sequence"); }
+    [^]                 { logError(row(), column(), "Invalid character literal"); }
 }
 
 <YYSTRING> {
     \"                  { return tokenize(); }
-    {StringChar}+       {
+    {SingleChar}+       {
                             value.append(yytext());
                             literal.append(yytext());
+                        }
+    \'                  {
+                            value.append('\'');
+                            literal.append("\\\'");
                         }
     "\\b"               {
                             value.append('\b');
@@ -305,9 +309,9 @@ UnicodeEscape = \\u{HexDigit}{4}
                             value.append(c);
                             literal.append(escape(yytext(), c));
                         }
-    \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
-    {EOL}               { logError(row(), startColumn, "String literal not properly terminated"); }
-    <<EOF>>             { logError(row(), startColumn, "String literal not properly terminated"); }
+    \\                  { logError(row(), column(), "Invalid escape sequence"); }
+    {EOL}               { logError(row(), column(), "String literal not properly terminated"); }
+    <<EOF>>             { logError(row(), column(), "String literal not properly terminated"); }
 }
 
 [^]                     { logError(row(), column(), "Invalid syntax"); } 
