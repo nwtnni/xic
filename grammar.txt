@@ -115,10 +115,10 @@ FunctionDeclr ::= FunctionInit Block
 FunctionDef ::= ID LPAREN ArgsTypeList RPAREN ReturnTypeList
 
 ArgsTypeList ::= empty
-| ID COLON Type FArgsTypeList
+| ID COLON ArgsType FArgsTypeList
 
 FArgsTypeList ::= empty
-| COMMA ID COLON TYPE FArgsTypeList
+| COMMA ID COLON ArgsType FArgsTypeList
 
 ReturnTypeList ::= empty
 | Type FTypeList
@@ -126,10 +126,10 @@ ReturnTypeList ::= empty
 FReturnTypeList ::= empty
 | COMMA Type FTypeList
 
-Type ::= INT
+ArgsType ::= INT
 | BOOL
 | CHAR
-| Type LBRACK RBRACK
+| ArgsType LBRACK RBRACK
 
 // Use Declaration
 UseDeclr ::= USE ID | UseDeclr SEMICOLON
