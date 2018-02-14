@@ -27,4 +27,6 @@ public interface Visitor {
     public void visit(Return r);
 
     public void visit(Call c);
+
+    public void visit(Block b);
 }
