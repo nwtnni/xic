@@ -23,4 +23,8 @@ public interface Visitor {
     public void visit(Index i);
 
     public void visit(Assign a);
+
+    public void visit(Return r);
+
+    public void visit(Call c);
 }
