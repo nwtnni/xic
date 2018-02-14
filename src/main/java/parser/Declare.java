@@ -3,8 +3,9 @@ package parser;
 public class Declare extends Statement {
 
     public Node id;
+    public Node type;
 
-    public Declare(Node id, Type type) {
+    public Declare(Node id, Node type) {
         this.id = id; 
         this.type = type;
     }

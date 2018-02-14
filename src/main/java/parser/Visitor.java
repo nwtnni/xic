@@ -43,5 +43,11 @@ public interface Visitor {
 
     public void visit(Index i);
 
+    /*
+     * Other nodes
+     */
+
     public void visit(Call c);
+
+    public void visit(Type t);
 }

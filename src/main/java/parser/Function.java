@@ -4,10 +4,10 @@ import java.util.ArrayList;
 
 public class Function extends Node {
     
-    private String id;
-    private ArrayList<Node> args;
-    private ArrayList<Node> types;
-    private Node block;
+    public String id;
+    public ArrayList<Node> args;
+    public ArrayList<Node> types;
+    public Node block;
 
     public Function(String id, ArrayList<Node> args, ArrayList<Node> types, Node block) {
         this.id = id;  

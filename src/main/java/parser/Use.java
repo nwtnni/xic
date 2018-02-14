@@ -2,7 +2,7 @@ package parser;
 
 public class Use extends Node {
     
-    private String file;
+    public String file;
 
     public Use(String file) {
         this.file = file; 
