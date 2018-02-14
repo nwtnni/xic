@@ -18,7 +18,7 @@ terminal                        INT, BOOL;
 terminal                        UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
 terminal                        LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
 terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                        EQ, COLON, SEMICOLON, COMMA, UNDERSCORE;
+terminal                        EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
 terminal    Boolean             TRUE, FALSE; 
 terminal    String              IDENTIFIER;
 terminal    Long                INTEGER;
@@ -34,9 +34,12 @@ non terminal    ArrayElems, FArrayElems;
 non terminal    VarDeclr, VarType, FVarType, KeyType;
 non terminal    Assign, IDList, FIDList, AssignName, ExprList, FExprList;
 non terminal    WhileStmt, IfStmt, ElseStmt;
-non terminal    Block, StmtListNoReturn, ReturnStmt, StmtNoReturn, Procedure, Stmt;
+non terminal    BlockNoReturn, SingleStmtNoReturn, Procedure, StmtListNoReturn, StmtNoReturn;
+non terminal    BlockReturn, StmtList;
+non terminal    BlockVoidReturn, StmtListVoid;
 non terminal    FunctionDeclr, FunctionDef;
 non terminal    ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList, FunType;
+non terminal    ProcedureDeclr, ProcedureDef;
 non terminal    UseDeclr, UseDeclarations, FunctionDeclarations;
 non terminal    Program;
 
@@ -56,7 +59,6 @@ start with          Program;
 // Expressions
 Expr ::= LPAREN Expr RPAREN
     | UnaryOp Expr
-      %prec UMINUS
     | Expr BinaryOp Expr
     | FunctionCall
     | ArrayCall
@@ -70,7 +72,8 @@ Expr ::= LPAREN Expr RPAREN
     ;
 
 UnaryOp ::= LNEG
-    | MINUS 
+    | MINUS
+    %prec UMINUS
     ;
 
 BinaryOp ::= MULT
@@ -91,8 +94,7 @@ BinaryOp ::= MULT
 
 // Function Calls
 FunctionCall ::= IDENTIFIER LPAREN Args RPAREN
-    | LENGTH LPAREN Args RPAREN
-    ;
+    | LENGTH LPAREN Args RPAREN;
 
 Args ::= 
     | Expr FArgs
@@ -125,7 +127,7 @@ FArrayElems ::=
 VarDeclr ::= IDENTIFIER COLON VarType;
 
 VarType ::= VarType LBRACK RBRACK
-    | FVarType
+    | FVarType LBRACK RBRACK
     ;
 
 FVarType ::= KeyType
@@ -134,15 +136,12 @@ FVarType ::= KeyType
 
 KeyType ::= INT
     | BOOL
-    | CHAR
     ;
 
 // Assignment
 Assign ::= IDList EQ ExprList;
 
-IDList ::= AssignName
-    | AssignName FIDList
-    ;
+IDList ::= AssignName FIDList;
 
 FIDList ::= 
     | COMMA AssignName FIDList
@@ -153,55 +152,65 @@ AssignName ::= UNDERSCORE
     | VarDeclr
     ;
 
-ExprList ::= Expr
-    | Expr FExprList
-    ;
+ExprList ::= Expr FExprList;
 
 FExprList ::= 
     | COMMA Expr FExprList
     ;
 
 // While Statement
-WhileStmt ::= WHILE Expr Block;
+WhileStmt ::= WHILE Expr BlockNoReturn;
 
 // If Statement
-IfStmt ::= IF Expr Block ElseStmt;
+IfStmt ::= IF Expr BlockNoReturn ElseStmt;
 
 ElseStmt ::= 
-    | ELSE Expr Block
+    | ELSE Expr BlockNoReturn
     ;
 
-// Block
-Block ::= Stmt
+// No Return Block
+BlockNoReturn ::= SingleStmtNoReturn
     | LBRACE StmtListNoReturn RBRACE
-    | LBRACE StmtListNoReturn ReturnStmt RBRACE
     ;
 
-StmtListNoReturn ::= 
-    | StmtNoReturn StmtListNoReturn
-    ;
-
-ReturnStmt ::= RETURN Expr 
-    | RETURN
-    ;
-
-StmtNoReturn ::= Assign
+SingleStmtNoReturn ::= Assign
     | IfStmt
     | WhileStmt
     | Procedure
-    | Block
     | VarDeclr
     | SEMICOLON
     ;
 
 Procedure ::= FunctionCall;
 
-Stmt ::= ReturnStmt
-    | StmtNoReturn
+StmtListNoReturn ::= 
+    | StmtNoReturn StmtListNoReturn
     ;
 
+StmtNoReturn ::= SingleStmtNoReturn
+    | LBRACE StmtList RBRACE
+    ;
+
+// Return Block
+BlockReturn ::= RETURN Expr
+    | LBRACE StmtList RBRACE
+    ;
+
+StmtList ::= StmtListNoReturn
+    | StmtListNoReturn RETURN Expr
+    ;
+
+// Void Return Block
+BlockVoidReturn ::= RETURN
+    | LBRACE StmtListVoid RBRACE
+    ;
+
+StmtListVoid ::= StmtListNoReturn
+    | StmtListNoReturn RETURN
+    ; 
+
 // Function Declaration
-FunctionDeclr ::= FunctionDef Block;
+FunctionDeclr ::= FunctionDef BlockReturn;
 
 FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
 
@@ -213,9 +222,7 @@ FArgsTypeList ::=
     | COMMA IDENTIFIER COLON FunType FArgsTypeList
     ;
 
-ReturnTypeList ::= 
-    | FunType FReturnTypeList
-    ;
+ReturnTypeList ::= FunType FReturnTypeList;
 
 FReturnTypeList ::= 
     | COMMA FunType FReturnTypeList
@@ -223,9 +230,13 @@ FReturnTypeList ::=
 
 FunType ::= INT
     | BOOL
-    | CHAR
     | FunType LBRACK RBRACK
     ;
+
+// Procedure Declaration
+ProcedureDeclr ::= ProcedureDef BlockVoidReturn;
+
+ProcedureDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN;
 
 // Use Declaration
 UseDeclr ::= USE IDENTIFIER | UseDeclr SEMICOLON;
@@ -239,4 +250,5 @@ UseDeclarations ::=
 
 FunctionDeclarations ::= 
     | FunctionDeclr FunctionDeclarations
+    | ProcedureDeclr FunctionDeclarations
     ;
