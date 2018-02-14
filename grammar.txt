@@ -55,7 +55,13 @@ IndexList ::= empty
 
 // Array List
 ArrayElems ::= empty
-    | Expr COMMA ArrayElems
+    | Expr FArrayElems
+    ;
+
+FArrayElems ::= empty
+    | COMMA
+    | COMMA Expr FArrayElems
+    ;
 
 // Variable Declaration
 VarDeclr ::= IDENTIFIER COLON VarType;
