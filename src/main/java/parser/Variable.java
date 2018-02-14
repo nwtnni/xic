@@ -1,6 +1,8 @@
 package parser;
 
 public class Variable extends Expression {
+
+    public static final Variable UNDERSCORE = new Variable("_");
     
     private String id;
 

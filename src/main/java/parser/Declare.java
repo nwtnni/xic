@@ -2,12 +2,9 @@ package parser;
 
 public class Declare extends Statement {
 
-    public static final Declare UNDERSCORE = new Declare("_", Type.INTEGER);
+    public Node id;
 
-    public String id;
-    public Type type;
-
-    public Declare(String id, Type type) {
+    public Declare(Node id, Type type) {
         this.id = id; 
         this.type = type;
     }

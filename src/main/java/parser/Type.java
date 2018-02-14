@@ -6,9 +6,14 @@ public class Type {
 
     public static final Type INTEGER = new Type(Primitive.INTEGER);
     public static final Type BOOLEAN = new Type(Primitive.BOOLEAN);
+    public static final Type UNIT = new Type(Primitive.UNIT);
 
     public enum Primitive {
-        INTEGER, BOOLEAN, ARRAY
+        ARRAY,
+        BOOLEAN,
+        INTEGER,
+        MULTIPLE, 
+        UNIT
     }
 
     private Primitive primitive;
@@ -20,8 +25,9 @@ public class Type {
         this.children = null;
     }
 
-    public Type(ArrayList<Type> children) {
-        this.primitive = Primitive.ARRAY;
+    public Type(Primitive primitive, ArrayList<Type> children) {
+        assert primitive == Primitive.ARRAY || primitive == Primitive.MULTIPLE;
+        this.primitive = primitive;
         this.children = children;
     }
 

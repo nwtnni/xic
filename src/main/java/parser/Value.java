@@ -40,6 +40,7 @@ public class Value extends Expression {
         this.etype = Expression.ExpressionType.VALUE;
         this.vtype = Value.ValueType.ARRAY;
         this.type = new Type(
+            Type.Primitive.ARRAY,
             values.stream()
                 .map(value -> (Value) value)
                 .map(value -> value.type)
