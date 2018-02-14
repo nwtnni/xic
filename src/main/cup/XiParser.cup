@@ -36,7 +36,7 @@ non terminal    Assign, IDList, FIDList, AssignName, ExprList, FExprList;
 non terminal    WhileStmt, IfStmt, ElseStmt;
 non terminal    Block, StmtListNoReturn, ReturnStmt, StmtNoReturn, Procedure, Stmt;
 non terminal    FunctionDeclr, FunctionDef;
-non terminal    ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList, ArgsType;
+non terminal    ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList, FunType;
 non terminal    UseDeclr, UseDeclarations, FunctionDeclarations;
 non terminal    Program;
 
@@ -116,7 +116,7 @@ VarType ::= VarType LBRACK RBRACK
     ;
 
 FVarType ::= KeyType
-    | FVarType LBRACK EXPR RBRACK
+    | FVarType LBRACK Expr RBRACK
     ;
 
 KeyType ::= INT
@@ -165,7 +165,7 @@ Block ::= Stmt
     ;
 
 StmtListNoReturn ::= 
-    | StmtNoReturn StmtList
+    | StmtNoReturn StmtListNoReturn
     ;
 
 ReturnStmt ::= RETURN Expr 
@@ -188,30 +188,30 @@ Stmt ::= ReturnStmt
     ;
 
 // Function Declaration
-FunctionDeclr ::= FunctionInit Block;
+FunctionDeclr ::= FunctionDef Block;
 
 FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
 
 ArgsTypeList ::= 
-    | IDENTIFIER COLON ArgsType FArgsTypeList
+    | IDENTIFIER COLON FunType FArgsTypeList
     ;
 
 FArgsTypeList ::= 
-    | COMMA IDENTIFIER COLON ArgsType FArgsTypeList
+    | COMMA IDENTIFIER COLON FunType FArgsTypeList
     ;
 
 ReturnTypeList ::= 
-    | Type FTypeList
+    | FunType FReturnTypeList
     ;
 
 FReturnTypeList ::= 
-    | COMMA Type FTypeList
+    | COMMA FunType FReturnTypeList
     ;
 
-ArgsType ::= INT
+FunType ::= INT
     | BOOL
     | CHAR
-    | ArgsType LBRACK RBRACK
+    | FunType LBRACK RBRACK
     ;
 
 // Use Declaration
