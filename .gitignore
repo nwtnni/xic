@@ -8,7 +8,7 @@ build/
 # JFlex and CUP generated files
 src/main/java/lexer/XiLexer.java
 src/main/java/parser/XiParser.java
-src/main/java/parser/Symbol.java
+src/main/java/parser/XiSymbol.java
 
 
 # VS Code generated nonsense

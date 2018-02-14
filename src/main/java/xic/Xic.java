@@ -51,7 +51,7 @@ public class Xic {
     private static String formatSymbol(ComplexSymbol s) {
         String label;
         switch (s.sym) {
-            case XiSymbol.ID:
+            case XiSymbol.IDENTIFIER:
                 label = "id ";
                 break;
             case XiSymbol.INTEGER:

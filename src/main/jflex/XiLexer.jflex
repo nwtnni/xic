@@ -2,18 +2,20 @@ package lexer;
 
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import java.util.ArrayList;
+
 import static parser.XiSymbol.*;
 
 %%
 
 %public
 %class XiLexer
-%cup
+
 %cupsym XiSymbol
+%cup
 %yylexthrow Exception, LexerError
 
 %pack
-
 %unicode
 %line
 %column
@@ -22,8 +24,9 @@ import static parser.XiSymbol.*;
     private String unit;
     private ComplexSymbolFactory symbolFactory;
     
-    private StringBuilder value = new StringBuilder();
     private StringBuilder literal = new StringBuilder();
+    private ArrayList<Long> value = new ArrayList<Long>();
+    
     private int startColumn = 1;
 
     public void init(String unit, ComplexSymbolFactory sf) {
@@ -31,41 +34,11 @@ import static parser.XiSymbol.*;
         this.symbolFactory = sf;
     }
 
+    /* Utility methods */
+
     private int row() { return yyline + 1; }
 
     private int column() { return yycolumn + 1; }
-
-    private Symbol tokenize(int id) throws Exception {
-        Location l = new Location(unit, row(), column());
-        Location r = new Location(unit, row(), column() + yylength());
-        switch (id) {
-            case INTEGER:
-                Long value = Long.valueOf(yytext());
-                return symbolFactory.newSymbol(yytext(), INTEGER, l, r, value);
-            default:
-                return symbolFactory.newSymbol(yytext(), id, l, r);
-        }
-    }
-
-    private Symbol tokenize(char c) throws Exception {
-        yybegin(YYINITIAL);
-        Location l = new Location(unit, row(), startColumn);
-        Location r = new Location(unit, row(), column());
-        String literal = yytext().substring(0, yylength() - 1);      
-        String name = escape(literal, c);
-        return symbolFactory.newSymbol(name, CHAR, l, r, c);
-    }
-
-    private Symbol tokenize() {
-        yybegin(YYINITIAL);
-        Location l = new Location(unit, row(), startColumn);
-        Location r = new Location(unit, row(), column());
-        return symbolFactory.newSymbol(literal.toString(), STRING, l, r, value.toString());
-    }
-
-    private Symbol logError(int r, int c, String msg) throws Exception {
-        throw new LexerError(String.format("%d:%d error:%s", r, c, msg));
-    }
 
     private String escape(String source, char c) {
         if (c == 0x08) {
@@ -91,9 +64,53 @@ import static parser.XiSymbol.*;
         return Character.toString(c);
     }
 
+    private void buildString(String l, char c) {
+        literal.append(l);
+        value.add((long) c);
+    }
+
+    /* Symbol factory methods */
+
+    private Symbol tokenize(int id) throws Exception {
+        Location l = new Location(unit, row(), column());
+        Location r = new Location(unit, row(), column() + yylength());
+        switch (id) {
+            case TRUE:
+                return symbolFactory.newSymbol(yytext(), TRUE, l, r, true);
+            case FALSE:
+                return symbolFactory.newSymbol(yytext(), FALSE, l, r, false);
+            case IDENTIFIER:
+                return symbolFactory.newSymbol(yytext(), IDENTIFIER, l, r, yytext());
+            case INTEGER:
+                Long value = Long.valueOf(yytext());
+                return symbolFactory.newSymbol(yytext(), INTEGER, l, r, value);
+            default:
+                return symbolFactory.newSymbol(yytext(), id, l, r);
+        }
+    }
+
+    private Symbol tokenize(char c) throws Exception {
+        yybegin(YYINITIAL);
+        Location l = new Location(unit, row(), startColumn);
+        Location r = new Location(unit, row(), column());
+        String literal = yytext().substring(0, yylength() - 1);      
+        String name = escape(literal, c);
+        return symbolFactory.newSymbol(name, CHAR, l, r, new Long((long) c));
+    }
+
+    private Symbol tokenize() {
+        yybegin(YYINITIAL);
+        Location l = new Location(unit, row(), startColumn);
+        Location r = new Location(unit, row(), column());
+        return symbolFactory.newSymbol(literal.toString(), STRING, l, r, value);
+    }
+
+    private Symbol logError(int r, int c, String msg) throws Exception {
+        throw new LexerError(String.format("%d:%d error:%s", r, c, msg));
+    }
 %}
 
-/* main character classes*/
+/* main character classes */
 EOL = \r|\n|\r\n
 InputCharacter = [^\r\n]
 
@@ -132,7 +149,7 @@ UnicodeEscape = \\u{HexDigit}{4}
     "return"            { return tokenize(RETURN); }
     "length"            { return tokenize(LENGTH); }
 
-    // primatives
+    // primitives
     "int"               { return tokenize(INT); }
     "bool"              { return tokenize(BOOL); }
     "true"              { return tokenize(TRUE); }
@@ -168,7 +185,7 @@ UnicodeEscape = \\u{HexDigit}{4}
     ","                 { return tokenize(COMMA); }
     "_"                 { return tokenize(UNDERSCORE); }
 
-    {Identifier}        { return tokenize(ID); } 
+    {Identifier}        { return tokenize(IDENTIFIER); } 
 
     {Integer}           { return tokenize(INTEGER); } 
 
@@ -180,8 +197,8 @@ UnicodeEscape = \\u{HexDigit}{4}
 
     \"                  {
                             startColumn = column();
-                            value.setLength(0);
                             literal.setLength(0);
+                            value.clear();
                             yybegin(YYSTRING);
                         }
 
@@ -221,63 +238,30 @@ UnicodeEscape = \\u{HexDigit}{4}
 
 <YYSTRING> {
     \"                  { return tokenize(); }
-    {SingleChar}+       {
-                            value.append(yytext());
-                            literal.append(yytext());
-                        }
-    \'                  {
-                            value.append('\'');
-                            literal.append("\\\'");
-                        }
-    "\\b"               {
-                            value.append('\b');
-                            literal.append("\\b");
-                        }
-    "\\t"               {
-                            value.append('\t');
-                            literal.append("\\t");
-                        }
-    "\\n"               {
-                            value.append('\n');
-                            literal.append("\\n");
-                        }
-    "\\f"               {
-                            value.append('\f');
-                            literal.append("\\f");
-                        }
-    "\\r"               {
-                            value.append('\r');
-                            literal.append("\\r");
-                        }
-    "\\'"               {
-                            value.append('\'');
-                            literal.append("\\'");
-                        }
-    "\\\""              {
-                            value.append('\"');
-                            literal.append("\\\"");
-                        }
-    "\\\\"              {
-                            value.append('\\');
-                            literal.append("\\\\");
-                        }
+    {SingleChar}        { buildString(yytext(), yytext().charAt(0)); }
+    \'                  { buildString("\\\'", '\''); }
+    "\\b"               { buildString("\\b", '\b'); }
+    "\\t"               { buildString("\\t", '\t'); }
+    "\\n"               { buildString("\\n", '\n'); }
+    "\\f"               { buildString("\\f", '\f'); }
+    "\\r"               { buildString("\\r", '\r'); }
+    "\\'"               { buildString("\\\'", '\''); }
+    "\\\""              { buildString("\\\"", '\"'); }
+    "\\\\"              { buildString("\\\\", '\\'); }
     {OctEscape}         { 
                             String s = yytext().substring(1, yylength());
                             char c = (char) Integer.parseInt(s, 8);
-                            value.append(c);
-                            literal.append(escape(yytext(), c));
+                            buildString(escape(yytext(), c), c);
                         }
     {HexEscape}         { 
                             String s = yytext().substring(2, yylength());
                             char c = (char) Integer.parseInt(s, 16);
-                            value.append(c);
-                            literal.append(escape(yytext(), c));
+                            buildString(escape(yytext(), c), c);
                         }
     {UnicodeEscape}     {
                             String s = yytext().substring(2, yylength());
                             char c = (char) Integer.parseInt(s, 16);
-                            value.append(c);
-                            literal.append(escape(yytext(), c));
+                            buildString(escape(yytext(), c), c);
                         }
     \\                  { logError(row(), column(), "Invalid escape sequence"); }
     {EOL}               { logError(row(), column(), "String literal not properly terminated"); }

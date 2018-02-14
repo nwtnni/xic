@@ -1,61 +1,29 @@
 import java_cup.runtime.*;
-import lexer.XiLexer;
+import java.util.ArrayList;
+
+import lexer.*;
 
 parser code {:
     // Connect this parser to a scanner!
     XiLexer lex;
-    XiParser(XiLexer lex) {
+    XiParser(XiLexer lex, ComplexSymbolFactory sf) {
+        super(lex, sf);
         this.lex = lex;
     }
 :};
 
-/* define how to connect to the scanner! */
-init with {: :};
-scan with {: return null; :};
-
 /* Terminals (tokens returned by the scanner). */
-terminal
-    USE,
-    IF,
-    WHILE,
-    ELSE,
-    RETURN,
-    LENGTH,
-    INT,
-    BOOL,
-    TRUE,
-    FALSE,
-    LNEG,
-    MULT,
-    HMULT,
-    DIV,
-    MOD,
-    ADD,
-    MINUS,
-    LTE,
-    LT,
-    GTE,
-    GT,
-    EQEQ,
-    EQ,
-    NEQ,
-    LAND,
-    LOR,
-    LPAREN,
-    RPAREN,
-    LBRACK,
-    RBRACK,
-    LBRACE,
-    RBRACE,
-    COLON,
-    SEMICOLON,
-    COMMA,
-    DOT,
-    UNDERSCORE,
-    ID,
-    INTEGER, 
-    CHAR, 
-    STRING;
+terminal                        USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                        INT, BOOL;
+terminal                        LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                        LTE, LT, GTE, GT, EQEQ, EQ, NEQ, LAND, LOR; 
+terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                        COLON, SEMICOLON, COMMA, DOT, UNDERSCORE;
+terminal    Boolean             TRUE, FALSE; 
+terminal    String              IDENTIFIER;
+terminal    Long                INTEGER;
+terminal    Long                CHAR;
+terminal    ArrayList<Long>     STRING;
 
 /* Non terminals */
 non terminal        expr;
@@ -63,5 +31,5 @@ non terminal        expr;
 /* Precedences */
 
 /* The grammar rules */
-expr    ::=     STRING         {: System.out.println("test"); :}
+expr    ::=     STRING:s         {: System.out.println("test"); :}
 ;
