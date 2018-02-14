@@ -18,4 +18,6 @@ public interface Visitor {
 
     public void visit(Variable v);
 
+    public void visit(Multiple m);
+
 }
