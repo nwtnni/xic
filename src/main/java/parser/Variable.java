@@ -8,7 +8,7 @@ public class Variable extends Expression {
         this.id = id; 
     }
 
-    public String toString() {
-        return id; 
+    public void accept(Visitor v) {
+        v.visit(this);
     }
 }

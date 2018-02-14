@@ -8,7 +8,7 @@ public class Use extends Node {
         this.file = file; 
     }
 
-    public String toString() {
-        return "use " + file;
+    public void accept(Visitor v) {
+        v.visit(this);
     }
 }

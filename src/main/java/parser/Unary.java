@@ -19,19 +19,15 @@ public class Unary extends Expression {
         }
     }
 
-    public static final int RHS = 0;
-    private UnaryType utype;
+    public UnaryType utype;
+    public Node child; 
 
-    public Unary(UnaryType utype, Expression rhs) {
+    public Unary(UnaryType utype, Node child) {
         this.utype = utype; 
-        this.children = new ArrayList<>();
-        this.children.add(rhs);
+        this.child = child;
     }
 
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("( " + utype.toString());
-        sb.append(" " + children.get(RHS).toString() + ")");
-        return sb.toString();
+    public void accept(Visitor v) {
+        v.visit(this);
     }
 }

@@ -31,23 +31,17 @@ public class Binary extends Expression {
         }
     }
 
-    private static final int LHS = 0;
-    private static final int RHS = 1;
+    public BinaryType btype;
+    public Node lhs;
+    public Node rhs;
 
-    protected BinaryType btype;
-
-    public Binary(BinaryType type, Expression lhs, Expression rhs) {
+    public Binary(BinaryType type, Node lhs, Node rhs) {
         this.btype = type; 
-        this.children = new ArrayList<>(); 
-        this.children.add(lhs);
-        this.children.add(rhs);
+        this.lhs = lhs;
+        this.rhs = rhs;
     }
 
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("( " + btype.toString() + " ");
-        sb.append(children.get(LHS).toString() + " ");
-        sb.append(children.get(RHS).toString() + ")");
-        return sb.toString();
+    public void accept(Visitor v) {
+        v.visit(this);
     }
 }

@@ -1,11 +1,12 @@
 package parser;
 
-public class Program extends Node {
-    public String toString() {
-        return ""; 
-    } 
+import java.util.ArrayList;
 
-    public boolean validate() {
-        return true;
+public class Program extends Node {
+    public ArrayList<Node> uses;
+    public ArrayList<Node> functions;
+
+    public void accept(Visitor v) {
+        v.visit(this);
     }
 }

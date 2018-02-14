@@ -14,6 +14,7 @@ public class Value extends Expression {
         ARRAY,
     }
     
+    private ArrayList<Node> children;
     private ValueType vtype;
     private long value;
     
@@ -47,25 +48,7 @@ public class Value extends Expression {
         this.value = 0;
     }
 
-    public String toString() {
-        switch (vtype) {
-            case INTEGER: {
-                return Long.toString(value);
-            }
-            case BOOLEAN: {
-                return value == TRUE ? "true" : "false";
-            }
-            case ARRAY: {
-                StringBuilder sb = new StringBuilder();
-                sb.append("(");
-                for (Node child : children) {
-                    sb.append(child.toString() + " ");
-                }
-                sb.append(")");
-                return sb.toString();
-            }
-        }
-        assert false;
-        return null;
+    public void accept(Visitor v) {
+        v.visit(this);
     }
 }
