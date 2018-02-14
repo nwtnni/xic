@@ -168,7 +168,6 @@ UnicodeEscape = \\u{HexDigit}{4}
     ">="                { return tokenize(GTE); }
     ">"                 { return tokenize(GT); }
     "=="                { return tokenize(EQEQ); }
-    "="                 { return tokenize(EQ); }
     "!="                { return tokenize(NEQ); }
     "&"                 { return tokenize(LAND); }
     "|"                 { return tokenize(LOR); }
@@ -180,6 +179,7 @@ UnicodeEscape = \\u{HexDigit}{4}
     "]"                 { return tokenize(RBRACK); }
     "{"                 { return tokenize(LBRACE); }
     "}"                 { return tokenize(RBRACE); }
+    "="                 { return tokenize(EQ); }
     ":"                 { return tokenize(COLON); }
     ";"                 { return tokenize(SEMICOLON); }
     ","                 { return tokenize(COMMA); }

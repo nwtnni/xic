@@ -15,10 +15,10 @@ parser code {:
 /* Terminals (tokens returned by the scanner). */
 terminal                        USE, IF, WHILE, ELSE, RETURN, LENGTH;
 terminal                        INT, BOOL;
-terminal                        LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
-terminal                        LTE, LT, GTE, GT, EQEQ, EQ, NEQ, LAND, LOR; 
+terminal                        UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                        LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
 terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                        COLON, SEMICOLON, COMMA, DOT, UNDERSCORE;
+terminal                        EQ, COLON, SEMICOLON, COMMA, DOT, UNDERSCORE;
 terminal    Boolean             TRUE, FALSE; 
 terminal    String              IDENTIFIER;
 terminal    Long                INTEGER;
@@ -41,8 +41,18 @@ non terminal    UseDeclr, UseDeclarations, FunctionDeclarations;
 non terminal    Program;
 
 /* Precedences */
+precedence left     ELSE;
+precedence right    LOR;
+precedence left     LAND;
+precedence left     EQEQ, NEQ;
+precedence left     LTE, LT, GTE, GT;
+precedence left     ADD, MINUS;
+precedence left     MULT, HMULT, DIV, MOD;
+precedence left     UMINUS, LNEG;
 
 /* The grammar rules */
+start with          Program;
+
 // Expressions
 Expr ::= LPAREN Expr RPAREN
     | Expr UnaryOp Expr
