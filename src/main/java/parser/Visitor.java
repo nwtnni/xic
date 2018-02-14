@@ -20,4 +20,5 @@ public interface Visitor {
 
     public void visit(Multiple m);
 
+    public void visit(ArrayIndex ai);
 }
