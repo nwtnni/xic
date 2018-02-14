@@ -18,7 +18,7 @@ terminal                        INT, BOOL;
 terminal                        UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
 terminal                        LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
 terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                        EQ, COLON, SEMICOLON, COMMA, DOT, UNDERSCORE;
+terminal                        EQ, COLON, SEMICOLON, COMMA, UNDERSCORE;
 terminal    Boolean             TRUE, FALSE; 
 terminal    String              IDENTIFIER;
 terminal    Long                INTEGER;
@@ -55,7 +55,8 @@ start with          Program;
 
 // Expressions
 Expr ::= LPAREN Expr RPAREN
-    | Expr UnaryOp Expr
+    | UnaryOp Expr
+      %prec UMINUS
     | Expr BinaryOp Expr
     | FunctionCall
     | ArrayCall
@@ -89,7 +90,9 @@ BinaryOp ::= MULT
     ;
 
 // Function Calls
-FunctionCall ::= IDENTIFIER LPAREN Args RPAREN;
+FunctionCall ::= IDENTIFIER LPAREN Args RPAREN
+    | LENGTH LPAREN Args RPAREN
+    ;
 
 Args ::= 
     | Expr FArgs
