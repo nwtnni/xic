@@ -4,7 +4,7 @@ public class Variable extends Expression {
 
     public static final Variable UNDERSCORE = new Variable("_");
     
-    private String id;
+    public String id;
 
     public Variable(String id) {
         this.id = id; 

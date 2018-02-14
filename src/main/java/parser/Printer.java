@@ -177,34 +177,78 @@ public class Printer implements Visitor {
     }
 
     public void visit(Variable v){
+        printer.printAtom(v.id);
     }
 
     public void visit(Multiple m){
+        printer.startList();
+
+        for (Node value : m.values) {
+            value.accept(this);
+        }
+
+        printer.endList();
     }
 
     public void visit(Index i){
+        printer.startList();
+
+        printer.printAtom("[]");
+        i.array.accept(this);
+        i.index.accept(this);
+
+        printer.endList();
     }
 
     public void visit(Call c){
+        printer.startList();
+
+        c.id.accept(this);
+        
+        for (Node arg : c.args) {
+            arg.accept(this);
+        }
+
+        printer.endList();
     }
 
     public void visit(Type t) {
-    
+        if (t.primitive.equals(Type.Primitive.ARRAY)) {
+            printer.startList();
+            t.child.accept(this);
+            printer.endList();
+
+            if (t.size != null) {
+                t.size.accept(this);
+            }
+        } else {
+            printer.printAtom(t.primitive.toString());
+        }
     }
 
-    public void visit(XiInt i){
-        
+    public void visit(XiInt i) {
+        printer.printAtom(Long.toString(i.value));
     }
 
-    public void visit(XiBool b){
+    public void visit(XiBool b) {
+        printer.printAtom(Boolean.toString(b.value));
     }
 
-    public void visit(XiChar c){
+    public void visit(XiChar c) {
+        printer.printAtom(Character.toString(c.value));
     }
 
-    public void visit(XiString s){
+    public void visit(XiString s) {
+        printer.printAtom(s.value);
     }
 
-    public void visit(XiArray a){
+    public void visit(XiArray a) {
+        printer.startList();
+
+        for (Node value: a.values) {
+            value.accept(this);
+        }
+
+        printer.endList();
     }
 }

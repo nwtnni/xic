@@ -10,12 +10,22 @@ public class Type extends Node {
     public enum Primitive {
         ARRAY,
         BOOLEAN,
-        INTEGER,
+        INTEGER;
+
+        public String toString() {
+            switch (this) {
+                case ARRAY: return "[]";
+                case BOOLEAN: return "bool";
+                case INTEGER: return "int";
+            }
+            assert false;
+            return "";
+        }
     }
 
-    private Primitive primitive;
-    private Node size;
-    private Node child;
+    public Primitive primitive;
+    public Node size;
+    public Node child;
 
     private Type(Primitive primitive) {
         assert primitive != Primitive.ARRAY;
@@ -33,7 +43,7 @@ public class Type extends Node {
     public Type(Node child) {
         this.primitive = Primitive.ARRAY; 
         this.child = child;
-        this.size = new XiInt(-1);
+        this.size = null;
     }
 
     public void accept(Visitor v) {
