@@ -20,5 +20,7 @@ public interface Visitor {
 
     public void visit(Multiple m);
 
-    public void visit(ArrayIndex ai);
+    public void visit(Index i);
+
+    public void visit(Assign a);
 }

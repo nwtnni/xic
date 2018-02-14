@@ -1,11 +1,11 @@
 package parser;
 
-public class ArrayIndex extends Expression {
+public class Index extends Expression {
     
     public Node array;
     public Node index;
 
-    public ArrayIndex(Node array, Node index) {
+    public Index(Node array, Node index) {
         this.array = array; 
         this.index = index;
     }
