@@ -36,7 +36,7 @@ BinaryOp ::= MULT
 // Function Calls
 FunctionCall ::= IDENTIFIER LPAREN Args RPAREN;
 
-Args ::= empty
+Args ::= 
     | Expr FArgs
     ;
 
@@ -49,16 +49,16 @@ ArrayCall ::= FunctionCall LBRACK Expr RBRACK IndexList
     | IDENTIFIER LBRACK Expr RBRACK IndexList
     ;
 
-IndexList ::= empty 
+IndexList ::=  
     | IndexList LBRACK Expr RBRACK
     ;
 
 // Array List
-ArrayElems ::= empty
+ArrayElems ::= 
     | Expr FArrayElems
     ;
 
-FArrayElems ::= empty
+FArrayElems ::= 
     | COMMA
     | COMMA Expr FArrayElems
     ;
@@ -86,7 +86,7 @@ IDList ::= AssignName
     | AssignName FIDList
     ;
 
-FIDList ::= empty
+FIDList ::= 
     | COMMA AssignName FIDList
     ;
 
@@ -99,7 +99,7 @@ ExprList ::= Expr
     | Expr FExprList
     ;
 
-FExprList ::= empty
+FExprList ::= 
     | COMMA Expr FExprList
     ;
 
@@ -109,7 +109,7 @@ WhileStmt ::= WHILE Expr Block;
 // If Statement
 IfStmt ::= IF Expr Block ElseStmt;
 
-ElseStmt ::= empty
+ElseStmt ::= 
     | ELSE Expr Block
     ;
 
@@ -119,7 +119,7 @@ Block ::= Stmt
     | LBRACE StmtListNoReturn ReturnStmt RBRACE
     ;
 
-StmtListNoReturn ::= empty
+StmtListNoReturn ::= 
     | StmtNoReturn StmtList
     ;
 
@@ -147,19 +147,19 @@ FunctionDeclr ::= FunctionInit Block;
 
 FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
 
-ArgsTypeList ::= empty
+ArgsTypeList ::= 
     | IDENTIFIER COLON ArgsType FArgsTypeList
     ;
 
-FArgsTypeList ::= empty
+FArgsTypeList ::= 
     | COMMA IDENTIFIER COLON ArgsType FArgsTypeList
     ;
 
-ReturnTypeList ::= empty
+ReturnTypeList ::= 
     | Type FTypeList
     ;
 
-FReturnTypeList ::= empty
+FReturnTypeList ::= 
     | COMMA Type FTypeList
     ;
 
@@ -175,10 +175,10 @@ UseDeclr ::= USE IDENTIFIER | UseDeclr SEMICOLON;
 // Program
 Program ::= UseDeclarations FunctionDeclarations;
 
-UseDeclarations ::= empty
+UseDeclarations ::= 
     | UseDeclarations UseDeclr
     ;
 
-FunctionDeclarations ::= empty
+FunctionDeclarations ::= 
     | FunctionDeclr FunctionDeclarations
     ;
