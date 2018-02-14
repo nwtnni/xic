@@ -29,4 +29,10 @@ public interface Visitor {
     public void visit(Call c);
 
     public void visit(Block b);
+
+    public void visit(If i);
+
+    public void visit(Else e);
+
+    public void visit(While w);
 }
