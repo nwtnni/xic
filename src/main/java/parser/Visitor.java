@@ -35,13 +35,21 @@ public interface Visitor {
 
     public void visit(Unary u);
 
-    public void visit(Value v);
-
     public void visit(Variable v);
 
     public void visit(Multiple m);
 
     public void visit(Index i);
+
+    public void visit(XiInt i);
+
+    public void visit(XiBool b);
+
+    public void visit(XiChar c);
+
+    public void visit(XiString s);
+
+    public void visit(XiArray a);
 
     /*
      * Other nodes

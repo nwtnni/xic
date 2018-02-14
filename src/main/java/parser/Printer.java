@@ -107,7 +107,7 @@ public class Printer implements Visitor {
 
         printer.printAtom("return");
         
-        if (value != null) {
+        if (r.value != null) {
             r.value.accept(this);
         }
 
@@ -176,10 +176,6 @@ public class Printer implements Visitor {
         printer.endList();
     }
 
-    public void visit(Value v){
-        
-    }
-
     public void visit(Variable v){
     }
 
@@ -194,5 +190,21 @@ public class Printer implements Visitor {
 
     public void visit(Type t) {
     
+    }
+
+    public void visit(XiInt i){
+        
+    }
+
+    public void visit(XiBool b){
+    }
+
+    public void visit(XiChar c){
+    }
+
+    public void visit(XiString s){
+    }
+
+    public void visit(XiArray a){
     }
 }

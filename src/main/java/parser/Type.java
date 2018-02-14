@@ -33,7 +33,7 @@ public class Type extends Node {
     public Type(Node child) {
         this.primitive = Primitive.ARRAY; 
         this.child = child;
-        this.size = new Value(-1);
+        this.size = new XiInt(-1);
     }
 
     public void accept(Visitor v) {
