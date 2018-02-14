@@ -8,27 +8,93 @@ package parser;
 /** CUP generated class containing symbol constants. */
 public class XiSymbol {
   /* terminals */
-  public static final int UMINUS = 6;
-  public static final int NUMBER = 9;
-  public static final int TIMES = 5;
-  public static final int SEMI = 2;
-  public static final int LPAREN = 7;
-  public static final int RPAREN = 8;
+  public static final int ADD = 17;
+  public static final int UNDERSCORE = 38;
+  public static final int LENGTH = 7;
+  public static final int LNEG = 12;
+  public static final int LT = 20;
+  public static final int LAND = 26;
+  public static final int CHAR = 41;
   public static final int error = 1;
+  public static final int INT = 8;
+  public static final int MINUS = 18;
+  public static final int RETURN = 6;
+  public static final int MULT = 13;
+  public static final int SEMICOLON = 35;
+  public static final int ELSE = 5;
+  public static final int ID = 39;
   public static final int EOF = 0;
-  public static final int PLUS = 3;
-  public static final int MINUS = 4;
+  public static final int IF = 3;
+  public static final int INTEGER = 40;
+  public static final int COMMA = 36;
+  public static final int HMULT = 14;
+  public static final int MOD = 16;
+  public static final int USE = 2;
+  public static final int LPAREN = 28;
+  public static final int DOT = 37;
+  public static final int TRUE = 10;
+  public static final int COLON = 34;
+  public static final int RPAREN = 29;
+  public static final int EQ = 24;
+  public static final int GT = 22;
+  public static final int LOR = 27;
+  public static final int DIV = 15;
+  public static final int RBRACK = 31;
+  public static final int RBRACE = 33;
+  public static final int BOOL = 9;
+  public static final int LBRACK = 30;
+  public static final int EQEQ = 23;
+  public static final int GTE = 21;
+  public static final int STRING = 42;
+  public static final int WHILE = 4;
+  public static final int FALSE = 11;
+  public static final int NEQ = 25;
+  public static final int LTE = 19;
+  public static final int LBRACE = 32;
   public static final String[] terminalNames = new String[] {
   "EOF",
   "error",
-  "SEMI",
-  "PLUS",
+  "USE",
+  "IF",
+  "WHILE",
+  "ELSE",
+  "RETURN",
+  "LENGTH",
+  "INT",
+  "BOOL",
+  "TRUE",
+  "FALSE",
+  "LNEG",
+  "MULT",
+  "HMULT",
+  "DIV",
+  "MOD",
+  "ADD",
   "MINUS",
-  "TIMES",
-  "UMINUS",
+  "LTE",
+  "LT",
+  "GTE",
+  "GT",
+  "EQEQ",
+  "EQ",
+  "NEQ",
+  "LAND",
+  "LOR",
   "LPAREN",
   "RPAREN",
-  "NUMBER"
+  "LBRACK",
+  "RBRACK",
+  "LBRACE",
+  "RBRACE",
+  "COLON",
+  "SEMICOLON",
+  "COMMA",
+  "DOT",
+  "UNDERSCORE",
+  "ID",
+  "INTEGER",
+  "CHAR",
+  "STRING"
   };
 }
 

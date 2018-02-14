@@ -1,96 +1,70 @@
 package lexer;
 
-import static lexer.TokenType.*;
+import java_cup.runtime.*;
+import java_cup.runtime.ComplexSymbolFactory.Location;
+import static parser.XiSymbol.*;
 
 %%
 
 %public
 %class XiLexer
-%type Token
-%function nextToken
-%yylexthrow Exception
+%cup
+%cupsym XiSymbol
+%yylexthrow Exception, LexerError
 
 %pack
 
 %unicode
-
 %line
 %column
 
 %{
+    private String unit;
+    private ComplexSymbolFactory symbolFactory;
+    
     private StringBuilder value = new StringBuilder();
     private StringBuilder literal = new StringBuilder();
+    private int startColumn = 1;
+
+    public void init(String unit, ComplexSymbolFactory sf) {
+        this.unit = unit;
+        this.symbolFactory = sf;
+    }
 
     private int row() { return yyline + 1; }
 
     private int column() { return yycolumn + 1; }
-    
-    private int startColumn = 1;
 
-    private Token tokenize(TokenType tt) throws Exception {
-        switch (tt) {
-            case USE:
-            case IF:
-            case WHILE:
-            case ELSE:
-            case RETURN:
-            case LENGTH:
-            case INT:
-            case BOOL:
-            case TRUE:
-            case FALSE:
-            case LNEG:
-            case MULT:
-            case HMULT:
-            case DIV:
-            case MOD:
-            case ADD:
-            case MINUS:
-            case LTE:
-            case LT:
-            case GTE:
-            case GT:
-            case EQEQ:
-            case EQ:
-            case NEQ:
-            case LAND:
-            case LOR:
-            case LPAREN:
-            case RPAREN:
-            case LBRACK:
-            case RBRACK:
-            case LBRACE:
-            case RBRACE:
-            case COLON:
-            case SEMICOLON:
-            case COMMA:
-            case UNDERSCORE:
-            case EOF:
-                return new Token(tt, row(), column(), yytext());
-            case ID:
-                return new IDToken(row(), column(), yytext());
+    private Symbol tokenize(int id) throws Exception {
+        Location l = new Location(unit, row(), column());
+        Location r = new Location(unit, row(), column() + yylength());
+        switch (id) {
             case INTEGER:
-                return new IntToken(row(), column(), yytext());
+                Long value = Long.valueOf(yytext());
+                return symbolFactory.newSymbol(yytext(), INTEGER, l, r, value);
             default:
-                throw new Exception("Unknown token type.");
+                return symbolFactory.newSymbol(yytext(), id, l, r);
         }
     }
 
-    private Token tokenize(char c) throws Exception {
+    private Symbol tokenize(char c) throws Exception {
         yybegin(YYINITIAL);
-        String literal = escape(stripQuote(yytext()), c);
-        return new CharToken(row(), startColumn, literal, c);
+        Location l = new Location(unit, row(), startColumn);
+        Location r = new Location(unit, row(), column());
+        String literal = yytext().substring(0, yylength() - 1);      
+        String name = escape(literal, c);
+        return symbolFactory.newSymbol(name, CHAR, l, r, c);
     }
 
-    private Token tokenize() {
+    private Symbol tokenize() {
         yybegin(YYINITIAL);
-        return new StringToken(row(), startColumn, literal.toString(), value.toString());
+        Location l = new Location(unit, row(), startColumn);
+        Location r = new Location(unit, row(), column());
+        return symbolFactory.newSymbol(literal.toString(), STRING, l, r, value.toString());
     }
 
-    private Token logError(int r, int c, String msg) throws Exception {
-        throw new Exception(
-            String.format("%d:%d error:%s", r, c, msg)
-        );
+    private Symbol logError(int r, int c, String msg) throws Exception {
+        throw new LexerError(String.format("%d:%d error:%s", r, c, msg));
     }
 
     private String escape(String source, char c) {
@@ -115,10 +89,6 @@ import static lexer.TokenType.*;
             return source;
         }
         return Character.toString(c);
-    }
-
-    private String stripQuote(String s) {
-        return s.substring(0, s.length() - 1);
     }
 
 %}
