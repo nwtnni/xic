@@ -26,7 +26,12 @@ terminal    Long                CHAR;
 terminal    ArrayList<Long>     STRING;
 
 /* Non terminals */
-non terminal        expr;
+non terminal    Expr;
+non terminal    UnaryOp, BinaryOp;
+non terminal    FunctionCall, Args, FArgs; 
+non terminal    ArrayCall, IndexList;
+non terminal    VarDeclr, VarType, FVarType, KeyType;
+
 
 /* Precedences */
 

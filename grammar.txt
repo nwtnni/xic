@@ -1,10 +1,10 @@
 // Expressions
-Expr ::= (Expr)
+Expr ::= LPAREN Expr RPAREN
     | Expr UnaryOp Expr
     | Expr BinaryOp Expr
     | FunctionCall
     | ArrayCall
-    | LBRACE ArrayList RBRACE
+    | LBRACE ArrayElems RBRACE
     | TRUE
     | FALSE
     | INTEGER
@@ -54,8 +54,8 @@ IndexList ::= empty
     ;
 
 // Array List
-ArrayList ::= empty
-    | Expr COMMA ArrayList
+ArrayElems ::= empty
+    | Expr COMMA ArrayElems
 
 // Variable Declaration
 VarDeclr ::= IDENTIFIER COLON VarType;
