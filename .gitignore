@@ -2,12 +2,7 @@
 .gradle/
 buildSrc/.gradle/
 buildSrc/build/
-*.class
 build/
-bin/
-.classpath
-.project
-.settings/
 
 
 # JFlex and CUP generated files
@@ -16,7 +11,14 @@ src/main/java/parser/XiParser.java
 src/main/java/parser/Symbol.java
 
 
-# Generated files
+# VS Code generated nonsense
+.classpath
+.project
+.settings/
+bin/
+
+
+# Binary and zip files
 /xic
 /xic.zip
 
