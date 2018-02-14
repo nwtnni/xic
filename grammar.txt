@@ -10,7 +10,7 @@ Expr ::= (Expr)
     | INTEGER
     | CHAR
     | STRING
-    | ID
+    | IDENTIFIER
     ;
 
 UnaryOp ::= LNEG
@@ -34,7 +34,7 @@ BinaryOp ::= MULT
     ;
 
 // Function Calls
-FunctionCall ::= ID LPAREN Args RPAREN;
+FunctionCall ::= IDENTIFIER LPAREN Args RPAREN;
 
 Args ::= empty
     | Expr FArgs
@@ -46,7 +46,7 @@ FArgs ::= COMMA Expr
 
 // Array Calls
 ArrayCall ::= FunctionCall LBRACK Expr RBRACK IndexList
-    | ID LBRACK Expr RBRACK IndexList
+    | IDENTIFIER LBRACK Expr RBRACK IndexList
     ;
 
 IndexList ::= empty 
@@ -58,7 +58,7 @@ ArrayList ::= empty
     | Expr COMMA ArrayList
 
 // Variable Declaration
-VarDeclr ::= ID COLON VarType;
+VarDeclr ::= IDENTIFIER COLON VarType;
 
 VarType ::= VarType LBRACK RBRACK
     | FVarType
@@ -85,7 +85,7 @@ FIDList ::= empty
     ;
 
 AssignName ::= UNDERSCORE
-    | ID
+    | IDENTIFIER
     | VarDeclr
     ;
 
@@ -139,14 +139,14 @@ Stmt ::= ReturnStmt
 // Function Declaration
 FunctionDeclr ::= FunctionInit Block;
 
-FunctionDef ::= ID LPAREN ArgsTypeList RPAREN ReturnTypeList;
+FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
 
 ArgsTypeList ::= empty
-    | ID COLON ArgsType FArgsTypeList
+    | IDENTIFIER COLON ArgsType FArgsTypeList
     ;
 
 FArgsTypeList ::= empty
-    | COMMA ID COLON ArgsType FArgsTypeList
+    | COMMA IDENTIFIER COLON ArgsType FArgsTypeList
     ;
 
 ReturnTypeList ::= empty
@@ -164,7 +164,7 @@ ArgsType ::= INT
     ;
 
 // Use Declaration
-UseDeclr ::= USE ID | UseDeclr SEMICOLON;
+UseDeclr ::= USE IDENTIFIER | UseDeclr SEMICOLON;
 
 // Program
 Program ::= UseDeclarations FunctionDeclarations;
