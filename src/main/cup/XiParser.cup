@@ -31,8 +31,8 @@ non terminal    UnaryOp, BinaryOp;
 non terminal    FunctionCall, Args, FArgs; 
 non terminal    ArrayCall, IndexList;
 non terminal    ArrayElems, FArrayElems;
-non terminal    VarDeclr, VarType, FVarType, KeyType;
-non terminal    Assign, IDList, FIDList, AssignName, ExprList, FExprList;
+non terminal    VarDeclr, VarType, KeyType;
+non terminal    Assign, IDList, FIDList, AssignName;
 non terminal    WhileStmt, IfStmt, ElseStmt;
 non terminal    BlockNoReturn, SingleStmtNoReturn, Procedure, StmtListNoReturn, StmtNoReturn;
 non terminal    BlockReturn, StmtList;
@@ -127,11 +127,8 @@ FArrayElems ::=
 VarDeclr ::= IDENTIFIER COLON VarType;
 
 VarType ::= VarType LBRACK RBRACK
-    | FVarType LBRACK RBRACK
-    ;
-
-FVarType ::= KeyType
-    | FVarType LBRACK Expr RBRACK
+    | VarType LBRACK Expr RBRACK
+    | KeyType
     ;
 
 KeyType ::= INT
@@ -139,7 +136,7 @@ KeyType ::= INT
     ;
 
 // Assignment
-Assign ::= IDList EQ ExprList;
+Assign ::= IDList EQ Expr;
 
 IDList ::= AssignName FIDList;
 
@@ -149,13 +146,8 @@ FIDList ::=
 
 AssignName ::= UNDERSCORE
     | IDENTIFIER
+    | ArrayCall
     | VarDeclr
-    ;
-
-ExprList ::= Expr FExprList;
-
-FExprList ::= 
-    | COMMA Expr FExprList
     ;
 
 // While Statement
