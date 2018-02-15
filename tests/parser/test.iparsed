@@ -1,6 +1,0 @@
-(((foo () (bool))
-  (foobar ((id ([] int)) (abc ([] ([] ([] ([] ([] int)))))))
-   (([] ([] ([] bool)))))
-  (readln () (([] int)))
-  (getchar () (int))
-  (eof () (bool))))

@@ -30,8 +30,6 @@ terminal    StringWrapper   STRING;
 /* Non terminals */
 non terminal    Node                Expr;
 non terminal    ArrayList<Node>     ExprList, FExprList;
-non terminal    Unary.UnaryType     UnaryOp; 
-non terminal    Binary.BinaryType   BinaryOp;
 non terminal    Node                FunctionCall;
 non terminal    ArrayList<Node>     Args, FArgs; 
 non terminal    Node                ArrayCall;
@@ -56,14 +54,14 @@ non terminal    Node                Program;
 non terminal                        OptSemicolon;
 
 /* Precedences */
-precedence left     ELSE;
-precedence right    LOR;
-precedence left     LAND;
-precedence left     EQEQ, NEQ;
-precedence left     LTE, LT, GTE, GT;
-precedence left     ADD, MINUS;
-precedence left     MULT, HMULT, DIV, MOD;
-precedence left     UMINUS, LNEG;
+precedence nonassoc     ELSE;
+precedence left         LOR;
+precedence left         LAND;
+precedence left         EQEQ, NEQ;
+precedence left         LTE, LT, GTE, GT;
+precedence left         ADD, MINUS;
+precedence left         MULT, HMULT, DIV, MOD;
+precedence right        UMINUS, LNEG;
 
 /* The grammar rules */
 start with      Program;
@@ -571,13 +569,70 @@ Expr ::=
         {:
             RESULT = e;
         :}
-    | UnaryOp:uop Expr:e
+    | LNEG:l Expr:e
         {:
-            RESULT = new Unary(uopxleft, uop, e);
+            RESULT = new Unary(lxleft, Unary.UnaryType.LNEGATE, e);
         :}
-    | Expr:e1 BinaryOp:bop Expr:e2
+    | MINUS:m Expr:e
         {:
-            RESULT = new Binary(e1xleft, bop,e1,e2);
+            RESULT = new Unary(mxleft, Unary.UnaryType.INEGATE, e);
+        :}
+        %prec UMINUS
+    | Expr:e1 MULT:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.TIMES, e1,e2);
+        :}
+    | Expr:e1 HMULT:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.HIGH_TIMES, e1,e2);
+        :}
+    | Expr:e1 DIV:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.DIVISION, e1,e2);
+        :}
+    | Expr:e1 MOD:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.MODULO, e1,e2);
+        :}
+    | Expr:e1 ADD:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.PLUS, e1,e2);
+        :}
+    | Expr:e1 MINUS:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.MINUS, e1,e2);
+        :}
+    | Expr:e1 LTE:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.LT, e1,e2);
+        :}
+    | Expr:e1 LT:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.LT, e1,e2);
+        :}
+    | Expr:e1 GTE:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.GE, e1,e2);
+        :}
+    | Expr:e1 GT:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.GT, e1,e2);
+        :}
+    | Expr:e1 EQEQ:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.EQ, e1,e2);
+        :}
+    | Expr:e1 NEQ:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.NE, e1,e2);
+        :}
+    | Expr:e1 LAND:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.AND, e1,e2);
+        :}
+    | Expr:e1 LOR:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.OR, e1,e2);
         :}
     | FunctionCall:fc
         {:
@@ -614,76 +669,5 @@ Expr ::=
     | IDENTIFIER:id
         {:
             RESULT = new Variable(idxleft, id);
-        :}
-    ;
-
-UnaryOp ::= 
-    LNEG:l
-        {:
-            RESULT = Unary.UnaryType.LNEGATE;
-        :}
-    | MINUS:m
-        {:
-            RESULT = Unary.UnaryType.INEGATE;
-        :}
-    %prec UMINUS
-    ;
-
-BinaryOp ::= 
-    MULT:b
-        {:
-            RESULT = Binary.BinaryType.TIMES;
-        :}
-    | HMULT:b
-        {:
-            RESULT = Binary.BinaryType.HIGH_TIMES;
-        :}
-    | DIV:b
-        {:
-            RESULT = Binary.BinaryType.DIVISION;
-        :}
-    | MOD:b
-        {:
-            RESULT = Binary.BinaryType.MODULO;
-        :}
-    | ADD:b
-        {:
-            RESULT = Binary.BinaryType.PLUS;
-        :}
-    | MINUS:b
-        {:
-            RESULT = Binary.BinaryType.MINUS;
-        :}
-    | LTE:b
-        {:
-            RESULT = Binary.BinaryType.LE;
-        :}
-    | LT:b
-        {:
-            RESULT = Binary.BinaryType.LT;
-        :}
-    | GTE:b
-        {:
-            RESULT = Binary.BinaryType.GE;
-        :}
-    | GT:b
-        {:
-            RESULT = Binary.BinaryType.GT;
-        :}
-    | EQEQ:b
-        {:
-            RESULT = Binary.BinaryType.EQ;
-        :}
-    | NEQ:b
-        {:
-            RESULT = Binary.BinaryType.NE;
-        :}
-    | LAND:b
-        {:
-            RESULT = Binary.BinaryType.AND;
-        :}
-    | LOR:b
-        {:
-            RESULT = Binary.BinaryType.OR;
         :}
     ;

@@ -1,9 +1,0 @@
-foo() : bool
-foobar(id: int[], abc: int[][][][][]) : bool[][][]
-
-// I/O support
-
-readln() : int[]      // Read from standard input until a newline.
-getchar() : int       // Read a single character from standard input.
-                      // Returns -1 if the end of input has been reached.
-eof() : bool          // Test for end of file on standard input.
