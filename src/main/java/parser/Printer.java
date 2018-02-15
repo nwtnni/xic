@@ -72,7 +72,8 @@ public class Printer implements Visitor {
         printer.endList();
 
         // Statement block
-        f.block.accept(this);
+        if (f.block != null)
+            f.block.accept(this);
 
         printer.endList();
     }

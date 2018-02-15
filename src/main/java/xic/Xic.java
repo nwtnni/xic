@@ -191,6 +191,7 @@ public class Xic {
             }
             else throw new Exception();
         } catch (Exception e){
+            e.printStackTrace();
             BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
             w.append(e.getMessage());
             w.close();
