@@ -1,5 +1,6 @@
 package parser;
 
+import java_cup.runtime.ComplexSymbolFactory.Location;
 import java.util.ArrayList;
 
 public class Binary extends Expression {
@@ -35,7 +36,8 @@ public class Binary extends Expression {
     public Node lhs;
     public Node rhs;
 
-    public Binary(BinaryType type, Node lhs, Node rhs) {
+    public Binary(Location location, BinaryType type, Node lhs, Node rhs) {
+        this.location = location;
         this.btype = type; 
         this.lhs = lhs;
         this.rhs = rhs;

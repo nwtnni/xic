@@ -1,11 +1,10 @@
 package parser;
 
+import java_cup.runtime.ComplexSymbolFactory.Location;
+
 import java.util.ArrayList;
 
 public class Type extends Node {
-
-    public static final Type INTEGER = new Type(Primitive.INTEGER);
-    public static final Type BOOLEAN = new Type(Primitive.BOOLEAN);
 
     public enum Primitive {
         ARRAY,
@@ -27,20 +26,23 @@ public class Type extends Node {
     public Node size;
     public Node child;
 
-    private Type(Primitive primitive) {
+    private Type(Location location, Primitive primitive) {
         assert primitive != Primitive.ARRAY;
+        this.location = location;
         this.primitive = primitive; 
         this.child = null;
         this.size = null;
     }
 
-    public Type(Node child, Node size) {
+    public Type(Location location, Node child, Node size) {
+        this.location = location;
         this.primitive = Primitive.ARRAY;
         this.child = child;
         this.size = size;
     }
 
-    public Type(Node child) {
+    public Type(Location location, Node child) {
+        this.location = location;
         this.primitive = Primitive.ARRAY; 
         this.child = child;
         this.size = null;

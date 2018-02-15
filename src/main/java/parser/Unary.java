@@ -1,5 +1,7 @@
 package parser;
 
+import java_cup.runtime.ComplexSymbolFactory.Location;
+
 import java.util.ArrayList;
 
 public class Unary extends Expression {
@@ -22,7 +24,8 @@ public class Unary extends Expression {
     public UnaryType utype;
     public Node child; 
 
-    public Unary(UnaryType utype, Node child) {
+    public Unary(Location location, UnaryType utype, Node child) {
+        this.location = location;
         this.utype = utype; 
         this.child = child;
     }

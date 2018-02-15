@@ -1,11 +1,14 @@
 package parser;
 
+import java_cup.runtime.ComplexSymbolFactory.Location;
+
 import java.util.ArrayList;
 
 public class Multiple extends Expression {
     public ArrayList<Node> values;
 
-    public Multiple(ArrayList<Node> values) {
+    public Multiple(Location location, ArrayList<Node> values) {
+        this.location = location;
         this.values = values;
     }
 

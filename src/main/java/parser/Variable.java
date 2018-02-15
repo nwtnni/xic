@@ -1,12 +1,13 @@
 package parser;
 
-public class Variable extends Expression {
+import java_cup.runtime.ComplexSymbolFactory.Location;
 
-    public static final Variable UNDERSCORE = new Variable("_");
+public class Variable extends Expression {
     
     public String id;
 
-    public Variable(String id) {
+    public Variable(Location location, String id) {
+        this.location = location;
         this.id = id; 
     }
 
