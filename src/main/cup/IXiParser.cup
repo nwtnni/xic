@@ -8,9 +8,13 @@ parser code {:
     XiLexer lex;
     IXiParser(XiLexer lex, ComplexSymbolFactory sf) {
         super(lex, sf);
+        System.out.println("Start");
         this.lex = lex;
     }
 :};
+
+init with {: System.out.println("init"); :};
+scan with {:return lex.next_token(); :};
 
 /* Terminals (tokens returned by the scanner). */
 terminal            INT, BOOL;
@@ -25,14 +29,20 @@ non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
 non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
 non terminal    Node                FunType;
 non terminal    Node                Interface;
+non terminal    String              Test;
 
 /* The grammar rules */
-start with      Interface;
+start with      Test;
 
+Test ::= {:
+        System.out.println("IT WORKED");
+        RESULT = "WOW";
+    :}
+    ;
 
 // Function Definitions
 FunctionDef ::= 
-    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN ReturnTypeList:rtl
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
         {: 
             RESULT = new Function(idxleft, id, atl, rtl, null);
         :}
@@ -118,9 +128,9 @@ FunctionDefList ::=
         :}
     ;
 
-Interface ::=
-    FunctionDefList:fdl
+Interface ::= FunctionDefList:fdl
         {:
+            System.out.println("Interface");
             RESULT = new Program(fdlxleft, new ArrayList<Node>(), fdl);
         :}
     ;
