@@ -195,7 +195,7 @@ FReturnTypeList ::=
     {:
         ArrayList<Node> freturns = new ArrayList<Node>();
         freturns.add(type);
-        freturns.addAll(freturns);
+        freturns.addAll(frtl);
         RESULT = freturns;
     :}
     ;
@@ -547,11 +547,15 @@ WhileStmt ::= WHILE:w Expr:e BlockNoReturn:block
 // If Statement
 IfStmt ::= IF:i Expr:e BlockNoReturn:block ElseStmt:el
     {:
-        RESULT = new If(ixleft, e, block);
+        RESULT = new If(ixleft, e, block, el);
     :}
     ;
 
 ElseStmt ::= 
+    //TODO
+    {: 
+        RESULT = null;
+    :}
     | ELSE:el BlockNoReturn:block 
     {:
         RESULT = new Else(elxleft,block);
