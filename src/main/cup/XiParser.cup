@@ -118,38 +118,108 @@ FunctionDeclarations ::=
     ;
 
 // Function and Procedure Declaration
-FunctionDeclr ::= FunctionDef BlockReturn;
-
-FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
-
-ProcedureDeclr ::= ProcedureDef BlockVoidReturn
+FunctionDeclr ::= 
+    FunctionDef:def BlockReturn:block
+    {:
+        RESULT = new Function(defxleft, (Function) def, block);
+    :}
     ;
 
-ProcedureDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN
+FunctionDef ::= 
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN ReturnTypeList:rtl
+    {:
+        RESULT = new Function(idxleft,id,atl,rtl);
+    :}
+    ;
+
+ProcedureDeclr ::= 
+    ProcedureDef:def BlockVoidReturn:block
+    {:
+        RESULT = new Function(defxleft, (Function) def, block);
+    :}
+    ;
+
+ProcedureDef ::= 
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
+    {:
+        RESULT = new Function(idxleft, id, atl);
+    :}
     ;
 
 ArgsTypeList ::= 
-    | IDENTIFIER COLON FunType FArgsTypeList
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
+    {:
+        ArrayList<Node> args = new ArrayList<Node>();
+        args.add(new Declare(idxleft,new Variable(idxleft,id), type));
+        args.addAll(fatl);
+        RESULT = args;
+    :}
     ;
 
 FArgsTypeList ::= 
-    | COMMA IDENTIFIER COLON FunType FArgsTypeList
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
+    {:
+        ArrayList<Node> fargs = new ArrayList<Node>();
+        fargs.add(new Declare(idxleft,new Variable(idxleft,id),type));
+        fargs.addAll(fatl);
+        RESULT = fargs;
+    :}
     ;
 
-ReturnTypeList ::= FunType FReturnTypeList;
+ReturnTypeList ::= 
+    FunType:type FReturnTypeList:frtl
+    {:
+        ArrayList<Node> returns = new ArrayList<Node>();
+        returns.add(type);
+        returns.addAll(frtl);
+        RESULT = returns;
+    :}
+    ;
 
 FReturnTypeList ::= 
-    | COMMA FunType FReturnTypeList
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA FunType:type FReturnTypeList:frtl
+    {:
+        ArrayList<Node> freturns = new ArrayList<Node>();
+        freturns.add(type);
+        freturns.addAll(freturns);
+        RESULT = freturns;
+    :}
     ;
 
-FunType ::= INT
-    | BOOL
-    | FunType LBRACK RBRACK
+FunType ::= 
+    INT:i
+    {:
+        RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+    :}
+    | BOOL:b
+    {:
+        RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+    :}
+    | FunType:type LBRACK RBRACK
+    {:
+        //TODO
+    :}
     ;
 
 // Return Block
-BlockReturn ::= RETURN Expr
-    | LBRACE StmtList RBRACE
+BlockReturn ::= 
+    RETURN:r Expr:e
+    {:
+        RESULT = new Block(rxleft, new Return(rxleft, e));
+    :}
+    | LBRACE:l StmtList:sl RBRACE:r
+    {:
+        RESULT = new Block(lxleft, sl);
+    :}
     ;
 
 StmtList ::= StmtListNoReturn

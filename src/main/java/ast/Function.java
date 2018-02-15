@@ -53,6 +53,15 @@ public class Function extends Node {
         this.block = null;
     }
 
+    public Function(Location location, Function f, Node block) {
+        this.kind = f.kind;
+        this.location = location;
+        this.id = f.id;
+        this.args = f.args;
+        this.types = f.types;
+        this.block = block;
+    }
+
     public boolean isFunction() {
         return kind == Kind.FUNCTION || kind == Kind.FUNCTION_HEADER; 
     }

@@ -12,6 +12,12 @@ public class Block extends Node {
         this.statements = statements;
     }
 
+    public Block(Location location, Node statement) {
+        this.location = location;
+        this.statements = new ArrayList<Node>();
+        statements.add(statement);
+    }
+
     public void accept(Visitor v) {
         v.visit(this);
     }
