@@ -13,35 +13,35 @@ parser code {:
 :};
 
 /* Terminals (tokens returned by the scanner). */
-terminal                        USE, IF, WHILE, ELSE, RETURN, LENGTH;
-terminal                        INT, BOOL;
-terminal                        UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
-terminal                        LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
-terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                        EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
-terminal    Boolean             TRUE, FALSE; 
-terminal    String              IDENTIFIER;
-terminal    Long                INTEGER;
-terminal    CharWrapper         CHAR;
-terminal    StringWrapper       STRING;
+terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                    INT, BOOL;
+terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
+terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
+terminal    Boolean         TRUE, FALSE; 
+terminal    String          IDENTIFIER;
+terminal    Long            INTEGER;
+terminal    CharWrapper     CHAR;
+terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Expr;
-non terminal    UnaryOp, BinaryOp;
-non terminal    FunctionCall, Args, FArgs; 
-non terminal    ArrayCall, IndexList;
-non terminal    ArrayElems, FArrayElems;
-non terminal    VarDeclr, VarType, KeyType;
-non terminal    Assign, IDList, FIDList, AssignName;
-non terminal    WhileStmt, IfStmt, ElseStmt;
-non terminal    BlockNoReturn, SingleStmtNoReturn, Procedure, StmtListNoReturn, StmtNoReturn;
-non terminal    BlockReturn, StmtList;
-non terminal    BlockVoidReturn, StmtListVoid;
-non terminal    FunctionDeclr, FunctionDef;
-non terminal    ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList, FunType;
-non terminal    ProcedureDeclr, ProcedureDef;
-non terminal    UseDeclr, UseDeclarations, FunctionDeclarations;
-non terminal    Program;
+non terminal    Node    Expr;
+non terminal    Node    UnaryOp, BinaryOp;
+non terminal    Node    FunctionCall, Args, FArgs; 
+non terminal    Node    ArrayCall, IndexList;
+non terminal    Node    ArrayElems, FArrayElems;
+non terminal    Node    VarDeclr, VarType, KeyType;
+non terminal    Node    Assign, IDList, FIDList, AssignName;
+non terminal    Node    WhileStmt, IfStmt, ElseStmt;
+non terminal    Node    BlockNoReturn, SingleStmtNoReturn, Procedure, StmtListNoReturn, StmtNoReturn;
+non terminal    Node    BlockReturn, StmtList;
+non terminal    Node    BlockVoidReturn, StmtListVoid;
+non terminal    Node    FunctionDeclr, FunctionDef;
+non terminal    Node    ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList, FunType;
+non terminal    Node    ProcedureDeclr, ProcedureDef;
+non terminal    Node    UseDeclr, UseDeclarations, FunctionDeclarations;
+non terminal    Node    Program;
 
 /* Precedences */
 precedence left     ELSE;
@@ -54,7 +54,7 @@ precedence left     MULT, HMULT, DIV, MOD;
 precedence left     UMINUS, LNEG;
 
 /* The grammar rules */
-start with          Program;
+start with      Program;
 
 // Expressions
 Expr ::= LPAREN Expr RPAREN
@@ -226,15 +226,20 @@ FunType ::= INT
     ;
 
 // Procedure Declaration
-ProcedureDeclr ::= ProcedureDef BlockVoidReturn;
+ProcedureDeclr ::= ProcedureDef BlockVoidReturn
+    ;
 
-ProcedureDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN;
+ProcedureDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN
+    ;
 
 // Use Declaration
-UseDeclr ::= USE IDENTIFIER | UseDeclr SEMICOLON;
+UseDeclr ::= USE IDENTIFIER 
+    | UseDeclr SEMICOLON
+    ;
 
 // Program
-Program ::= UseDeclarations FunctionDeclarations;
+Program ::= UseDeclarations FunctionDeclarations
+    ;
 
 UseDeclarations ::= 
     | UseDeclarations UseDeclr
