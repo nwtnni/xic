@@ -12,43 +12,77 @@ import lexer.*;
 import parser.*;
 
 public class Xic {
-    public static void main(String [] args) {
-        if (args.length > 1 && args[0].equals("--lex")) {
-            try {
-                for(int i = 1; i < args.length; i++) {
-                    lex(args[i]);
-                } 
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("Invalid input for --lex. See --help for correct usage.");
-            }
-        }
-        else if(args.length > 1 && args[0].equals("--parse")){
-            try {
-                for(int i=1;i<args.length;i++) {
-                    String source = args[i];
-                    String output = FilenameUtils.removeExtension(source) + ".parsed";
-                    String ext = FilenameUtils.getExtension(source);
-                    BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
-                    if (ext.equals("xi")){
-
-                    }
-                    else if (ext.equals("ixi")){
-
-                    }
-                    else throw new Exception ();
+    // public static void main(String [] args) {
+    //     if (args.length > 1 && args[0].equals("--lex")) {
+    //         try {
+    //             for(int i = 1; i < args.length; i++) {
+    //                 lex(args[i]);
+    //             } 
+    //         } catch (Exception e) {
+    //             e.printStackTrace();
+    //             System.out.println("Invalid input for --lex. See --help for correct usage.");
+    //         }
+    //     }
+    //     else if(args.length > 1 && args[0].equals("--parse")){
+    //         try {
+    //             for(int i=1;i<args.length;i++) {
+    //                 String source = args[i];
                     
-                } 
-            } catch (Exception e) {
-                System.out.println("Invalid input for --parse. See --help for correct usage.");
-            }
+    //                 String ext = FilenameUtils.getExtension(source);
+    //                 BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
+    //                 if (ext.equals("xi")){
+    //                     String output = FilenameUtils.removeExtension(source) + ".parsed";
+    //                 }
+    //                 else if (ext.equals("ixi")){
 
+    //                 }
+    //                 else throw new Exception ();
+                    
+    //             } 
+    //         } catch (Exception e) {
+    //             System.out.println("Invalid input for --parse. See --help for correct usage.");
+    //         }
+
+    //     }
+    //     else if (args.length == 1 && args[0].equals("--help") || true) {
+    //       System.out.println("Usage: xic [options] <source-files>");
+    //       System.out.println("  --help:                 Print a synopsis of options");
+    //       System.out.println("  --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed");
+    //       System.out.println("  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
+    //     }
+    // }
+
+
+    public static void main(String [] args) {
+        boolean lexFlag = false;
+        boolean parseFlag = false;
+        boolean helpFlag = false;
+
+        for (int i = 0; i < args.length; i++){
+            if (args[i].equals("--lex")){
+                lexFlag = true;
+            }
+            else if (args[i].equals("--parse")){
+                parseFlag = true;
+            }
+            else if (args[i].equals("--help")){
+                helpFlag = true;
+            }
         }
-        else if (args.length == 1 && args[0].equals("--help") || true) {
-          System.out.println("Usage: xic [options] <source-files>");
-          System.out.println("  --help:                 Print a synopsis of options");
-          System.out.println("  --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed");
-          System.out.println("  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
+
+        if (helpFlag == true || (lexFlag == false && parseFlag == false)){
+            System.out.println("Usage: xic [options] <source-files>");
+            System.out.println("  --help:                 Print a synopsis of options");
+            System.out.println("  --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed");
+            System.out.println("  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
+        }
+        else {
+            if (lexFlag == true){
+                lex(source);
+            }
+            if (parseFlag == true){
+                parse(source);
+            }
         }
     }
 
@@ -91,5 +125,20 @@ public class Xic {
         }
         Location l = s.getLeft();
         return l.getLine() + ":" + l.getColumn() + " " + label + s.getName();   
+    }
+
+    private static void parse(String source) throws IOException {
+        String ext = FilenameUtils.getExtension(source);
+        String output = FilenameUtils.removeExtension(source) + ".parsed";
+        OutputStream stream = new FileOutputStream(output);
+        if (ext.equals("xi")){
+            /* add the pretty print */
+
+        }
+        else if (ext.equals("ixi")){
+            output = FilenameUtils.removeExtension(source) + ".iparsed";
+        }
+        else throw new Exception();
+        
     }
 }
