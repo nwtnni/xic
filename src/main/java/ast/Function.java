@@ -53,9 +53,12 @@ public class Function extends Node {
         this.block = null;
     }
 
+    public boolean isFunction() {
+        return kind == Kind.FUNCTION || kind == Kind.FUNCTION_HEADER; 
+    }
+
     public boolean isDefinition() {
-        return kind == Kind.FUNCTION
-            || kind == Kind.PROCEDURE;
+        return kind == Kind.FUNCTION || kind == Kind.PROCEDURE;
     }
 
     public void accept(Visitor v) {

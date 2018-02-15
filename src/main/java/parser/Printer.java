@@ -70,8 +70,10 @@ public class Printer implements Visitor {
 
         // Function return types
         printer.startList();
-        for (Node type : f.types) {
-            type.accept(this);
+        if (f.isFunction()) {
+            for (Node type : f.types) {
+                type.accept(this);
+            }
         }
         printer.endList();
 
@@ -110,7 +112,7 @@ public class Printer implements Visitor {
 
         printer.printAtom("return");
         
-        if (r.value != null) {
+        if r.hasValue() {
             r.value.accept(this);
         }
 
