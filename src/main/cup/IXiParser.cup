@@ -1,0 +1,62 @@
+import java_cup.runtime.*;
+import java.util.ArrayList;
+
+import lexer.*;
+
+parser code {:
+    // Connect this parser to a scanner!
+    XiLexer lex;
+    IXiParser(XiLexer lex, ComplexSymbolFactory sf) {
+        super(lex, sf);
+        this.lex = lex;
+    }
+:};
+
+/* Terminals (tokens returned by the scanner). */
+terminal                        USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                        INT, BOOL;
+terminal                        UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                        LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
+terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                        EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
+terminal    Boolean             TRUE, FALSE; 
+terminal    String              IDENTIFIER;
+terminal    Long                INTEGER;
+terminal    Long                CHAR;
+terminal    ArrayList<Long>     STRING;
+
+/* Non terminals */
+non terminal FunctionDef;
+non terminal ArgsTypeList, FArgsTypeList;
+non terminal ReturnTypeList, FReturnTypeList;
+non terminal FunType;
+non terminal Interface;
+
+/* The grammar rules */
+start with          Interface;
+
+
+// Function Definitions
+FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
+
+ArgsTypeList ::= 
+    | IDENTIFIER COLON FunType FArgsTypeList
+    ;
+
+FArgsTypeList ::= 
+    | COMMA IDENTIFIER COLON FunType FArgsTypeList
+    ;
+
+ReturnTypeList ::= FunType FReturnTypeList;
+
+FReturnTypeList ::= 
+    | COMMA FunType FReturnTypeList
+    ;
+
+FunType ::= INT
+    | BOOL
+    | FunType LBRACK RBRACK
+    ;
+
+// Interface
+Interface ::= Interface FunctionDef;
