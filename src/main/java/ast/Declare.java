@@ -13,7 +13,16 @@ public class Declare extends Node {
         this.type = type;
     }
 
+    public Declare(Location location) {
+        //TODO
+        this.location = location;
+        this.id = null;
+        this.type = null;
+    }
+
     public void accept(Visitor v) {
         v.visit(this);
     }
+
+
 }
