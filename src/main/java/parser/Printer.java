@@ -91,8 +91,14 @@ public class Printer implements Visitor {
     public void visit(Declare d){
         printer.startList(); 
 
-        d.id.accept(this);
-        d.type.accept(this);
+        //TODO
+        if(d.id != null && d.type != null) {
+            d.id.accept(this);
+            d.type.accept(this);
+        }
+        else {
+            printer.printAtom("_");
+        }
 
         printer.endList();
     }
