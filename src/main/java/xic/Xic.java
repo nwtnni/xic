@@ -132,11 +132,21 @@ public class Xic {
         String output = FilenameUtils.removeExtension(source) + ".parsed";
         OutputStream stream = new FileOutputStream(output);
         if (ext.equals("xi")){
+
             /* add the pretty print */
+            XiLexer lexer = new XiLexer(new FileReader(source));
+            ComplexSymbolFactory sf = new ComplexSymbolFactory();
+            lexer.init(source, new ComplexSymbolFactory());
+            XiParser parser = new XiParser(lexer, sf);
+
 
         }
         else if (ext.equals("ixi")){
             output = FilenameUtils.removeExtension(source) + ".iparsed";
+            XiLexer lexer = new XiLexer(new FileReader(source));
+            ComplexSymbolFactory sf = new ComplexSymbolFactory();
+            lexer.init(source, new ComplexSymbolFactory());
+            IXiParser parser = new IXiParser(lexer, sf);
         }
         else throw new Exception();
         
