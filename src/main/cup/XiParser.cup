@@ -31,7 +31,8 @@ non terminal    Node                Expr;
 non terminal    Node                UnaryOp, BinaryOp;
 non terminal    Node                FunctionCall;
 non terminal    ArrayList<Node>     Args, FArgs; 
-non terminal    Node                ArrayCall, IndexList;
+non terminal    Node                ArrayCall;
+non terminal    ArrayList<Node>     IndexList;
 non terminal    ArrayList<Node>     ArrayElems, FArrayElems;
 non terminal    Node                VarDeclr, VarType, KeyType;
 non terminal    Node                Assign, AssignName;
@@ -206,7 +207,7 @@ FunType ::=
     :}
     | FunType:type LBRACK RBRACK
     {:
-        //TODO
+        RESULT = new Type(typexleft, type);
     :}
     ;
 
@@ -222,40 +223,109 @@ BlockReturn ::=
     :}
     ;
 
-StmtList ::= StmtListNoReturn
-    | StmtListNoReturn RETURN Expr
+StmtList ::= 
+    StmtListNoReturn:slnr
+    {:
+        RESULT = slnr;
+    :}
+    | StmtListNoReturn:slnr RETURN:r Expr:e
+    {:
+        ArrayList<Node> sl = new ArrayList<Node>();
+        sl.addAll(slnr);
+        sl.add(new Return(rxleft,e));
+        RESULT = sl;
+    :}
     ;
 
 // Void Return Block
-BlockVoidReturn ::= RETURN
-    | LBRACE StmtListVoid RBRACE
+BlockVoidReturn ::= 
+    RETURN:r
+    {:
+        RESULT = new Block(rxleft, new Return(rxleft));
+    :}
+    | LBRACE:l StmtListVoid:slv RBRACE:r
+    {:
+        RESULT = new Block(lxleft, slv);
+    :}
     ;
 
-StmtListVoid ::= StmtListNoReturn
-    | StmtListNoReturn RETURN
+StmtListVoid ::= 
+    StmtListNoReturn:slnr
+    {:
+        RESULT = slnr;
+    :}
+    | StmtListNoReturn:slnr RETURN:r
+    {:
+        ArrayList<Node> sl = new ArrayList<Node>();
+        sl.addAll(slnr);
+        sl.add(new Return(rxleft));
+        RESULT = sl;
+    :}
     ; 
 
 // No Return Block
-BlockNoReturn ::= SingleStmtNoReturn
-    | LBRACE StmtListNoReturn RBRACE
+BlockNoReturn ::= 
+    SingleStmtNoReturn:ssnr
+    {:
+        RESULT = new Block(ssnrxleft, ssnr);
+    :}
+    | LBRACE StmtListNoReturn:slnr RBRACE
+    {:
+        RESULT = new Block(slnrxleft, slnr);
+    :}
     ;
 
-SingleStmtNoReturn ::= Assign
-    | IfStmt
-    | WhileStmt
-    | Procedure
-    | VarDeclr
+SingleStmtNoReturn ::= 
+    Assign:a
+    {:
+        RESULT = a;
+    :}
+    | IfStmt:i
+    {:
+        RESULT = i;
+    :}
+    | WhileStmt:w
+    {:
+        RESULT = w;
+    :}
+    | Procedure:p
+    {:
+        RESULT = p;
+    :}
+    | VarDeclr:v
+    {:
+        RESULT = v;
+    :}
     | SEMICOLON
     ;
 
-Procedure ::= FunctionCall;
+Procedure ::= FunctionCall:f
+    {:
+        RESULT = f;
+    :};
 
 StmtListNoReturn ::= 
-    | StmtNoReturn StmtListNoReturn
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | StmtNoReturn:snr StmtListNoReturn:slnr
+    {:
+        ArrayList<Node> stmts = new ArrayList<Node>();
+        stmts.add(snr);
+        stmts.addAll(slnr);
+        RESULT = stmts;
+    :}
     ;
 
-StmtNoReturn ::= SingleStmtNoReturn
-    | LBRACE StmtList RBRACE
+StmtNoReturn ::= 
+    SingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    | LBRACE:l StmtList:sl RBRACE:r
+    {:
+        RESULT = new Block(lxleft, sl);
+    :}
     ;
 
 // Function Calls
@@ -305,76 +375,159 @@ FArgs ::=
 ArrayCall ::= 
     FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
-            
+            Index index = new Index(fcxleft, fc,e);
+            for(Node n: il) {
+                index = new Index(fcxleft, index, n);
+            }
+            RESULT = index;
         :}
     | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
         {:
-            // Index arr1 = new Index(idxleft, id, e);
-            // if (il != null) {
-            //     Index arr2 = (Index) il;
-            //     arr2.array = arr1;
-            //     RESULT = arr2;
-            // } else {
-            //     RESULT = arr1;
-            // }
+            Index index = new Index(idxleft, new Variable(idxleft, id), e);
+            for(Node n: il) {
+                index = new Index(idxleft, index, n);
+            }
+            RESULT = index;
         :}
     ;
 
 IndexList ::=
         {:
-
+            RESULT = new ArrayList<Node>();
         :}
     | LBRACK Expr:e RBRACK IndexList:il
         {:
-            
+            ArrayList<Node> indexlist = new ArrayList<Node>();
+            indexlist.add(e);
+            indexlist.addAll(il);
+            RESULT = indexlist;
         :}
     ;
 
 // Array List
 ArrayElems ::= 
-    | Expr FArrayElems
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | Expr:e FArrayElems:fae
+    {:
+        ArrayList<Node> elems = new ArrayList<Node>();
+        elems.add(e);
+        elems.addAll(fae);
+        RESULT = elems;
+    :}
     ;
 
 FArrayElems ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
     | COMMA
-    | COMMA Expr FArrayElems
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA Expr:e FArrayElems:fae
+    {:
+        ArrayList<Node> elems = new ArrayList<Node>();
+        elems.add(e);
+        elems.addAll(fae);
+        RESULT = elems;
+    :}
     ;
 
 // Variable Declaration
-VarDeclr ::= IDENTIFIER COLON VarType;
+VarDeclr ::= 
+    IDENTIFIER:id COLON VarType:type
+    {:
+        RESULT = new Declare(idxleft, new Variable(idxleft, id), type);
+    :};
 
-VarType ::= VarType LBRACK RBRACK
+VarType ::= 
+    VarType LBRACK RBRACK
     | VarType LBRACK Expr RBRACK
-    | KeyType
+    | KeyType:type 
+    {:
+        RESULT = type;
+    :}
     ;
 
-KeyType ::= INT
-    | BOOL
+KeyType ::= 
+    INT:i
+    {:
+        RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+    :}
+    | BOOL:b
+    {:
+        RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+    :}
     ;
 
 // Assignment
-Assign ::= IDList EQ Expr;
+Assign ::= 
+    IDList:il EQ Expr:e
+    {:
+        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il), e);
+    :};
 
-IDList ::= AssignName FIDList;
+IDList ::= 
+    AssignName:an FIDList:fl
+    {:
+        ArrayList<Node> idlist = new ArrayList<Node>();
+        idlist.add(an);
+        idlist.addAll(fl);
+        RESULT = idlist;
+    :};
 
 FIDList ::= 
-    | COMMA AssignName FIDList
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA AssignName:an FIDList:fl
+    {:
+        ArrayList<Node> idlist = new ArrayList<Node>();
+        idlist.add(an);
+        idlist.addAll(fl);
+        RESULT = idlist;
+    :}
     ;
 
-AssignName ::= UNDERSCORE
-    | IDENTIFIER
-    | ArrayCall
-    | VarDeclr
+AssignName ::= 
+    UNDERSCORE:u
+    {:
+        RESULT = new Declare(uxleft);
+    :}
+    | IDENTIFIER:id
+    {:
+        RESULT = new Variable(idxleft, id);
+    :}
+    | ArrayCall:a
+    {:
+        RESULT = a;
+    :}
+    | VarDeclr:v
+    {:
+        RESULT = v;
+    :}
     ;
 
 // While Statement
-WhileStmt ::= WHILE Expr BlockNoReturn;
+WhileStmt ::= WHILE:w Expr:e BlockNoReturn:block
+    {:
+        RESULT = new While(wxleft, e, block);
+    :};
 
 // If Statement
-IfStmt ::= IF Expr BlockNoReturn ElseStmt;
+IfStmt ::= IF:i Expr:e BlockNoReturn:block ElseStmt:el
+    {:
+        RESULT = new If(ixleft, e, block);
+    :}
+    ;
 
 ElseStmt ::= 
-    | ELSE Expr BlockNoReturn
+    | ELSE:el BlockNoReturn:block 
+    {:
+        RESULT = new Else(elxleft,block);
+    :}
     ;
 
 // Expressions
@@ -504,10 +657,3 @@ BinaryOp ::=
             RESULT = new Binary(bxleft, Binary.BinaryType.OR, null, null);
         :}
     ;
-
-
-
-
-
-
-
