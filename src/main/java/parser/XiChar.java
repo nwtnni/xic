@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class XiChar extends Expression {
+public class XiChar extends Node {
 
     public String escaped;
     public long value;

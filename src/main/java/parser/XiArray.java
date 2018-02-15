@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 
 import java.util.ArrayList;
 
-public class XiArray extends Expression {
+public class XiArray extends Node {
 
     public ArrayList<Node> values;
 

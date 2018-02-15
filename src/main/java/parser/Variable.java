@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class Variable extends Expression {
+public class Variable extends Node {
     
     public String id;
 

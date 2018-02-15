@@ -3,7 +3,7 @@ package parser;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import java.util.ArrayList;
 
-public class Block extends Statement {
+public class Block extends Node {
     
     public ArrayList<Node> statements;
 

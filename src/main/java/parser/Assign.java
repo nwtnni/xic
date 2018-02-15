@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class Assign extends Statement {
+public class Assign extends Node {
     
     public Node lhs;
     public Node rhs;

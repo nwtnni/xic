@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 
 import java.util.ArrayList;
 
-public class Unary extends Expression {
+public class Unary extends Node {
     
     public enum UnaryType {
         INEGATE("-"),

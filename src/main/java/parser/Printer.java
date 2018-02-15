@@ -26,11 +26,13 @@ public class Printer implements Visitor {
         printer.startUnifiedList();
         
         // Use statements
-        printer.startUnifiedList();
-        for (Node use : p.uses) {
-            use.accept(this);
+        if (p.isProgram()) {
+            printer.startUnifiedList();
+            for (Node use : p.uses) {
+                use.accept(this);
+            }
+            printer.endList();
         }
-        printer.endList();
 
         // Function declarations
         printer.startUnifiedList();
@@ -72,8 +74,9 @@ public class Printer implements Visitor {
         printer.endList();
 
         // Statement block
-        if (f.block != null)
+        if (f.isDefinition()) {
             f.block.accept(this);
+        }
 
         printer.endList();
     }
@@ -84,10 +87,7 @@ public class Printer implements Visitor {
     public void visit(Declare d){
         printer.startList(); 
 
-        // Variable name
         d.id.accept(this);
-
-        // Type
         d.type.accept(this);
 
         printer.endList();
@@ -97,7 +97,6 @@ public class Printer implements Visitor {
         printer.startList();
 
         printer.printAtom("=");
-
         a.lhs.accept(this);
         a.rhs.accept(this);
 
@@ -114,10 +113,6 @@ public class Printer implements Visitor {
         }
 
         printer.endList();
-    }
-
-    public void visit(ProcedureCall p) {
-        p.id.accept(this);
     }
 
     public void visit(Block b){
@@ -163,7 +158,7 @@ public class Printer implements Visitor {
     /*
      * Expression nodes
      */
-    public void visit(FunctionCall c){
+    public void visit(Call c){
         printer.startList();
 
         c.id.accept(this);

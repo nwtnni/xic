@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class XiBool extends Expression {
+public class XiBool extends Node {
 
     public boolean value;
 

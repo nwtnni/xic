@@ -3,7 +3,7 @@ package parser;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import java.util.ArrayList;
 
-public class Binary extends Expression {
+public class Binary extends Node {
 
     public enum BinaryType {
         TIMES("*"),

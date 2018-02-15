@@ -197,12 +197,12 @@ FunctionCall ::=
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
             Variable v = new Variable(idxleft, id);
-            RESULT = new FunctionCall(idxleft, v, args);
+            RESULT = new Call(idxleft, v, args);
         :}
     | LENGTH:l LPAREN Args:args RPAREN
         {:
             Variable v = new Variable(lxleft, "length");
-            RESULT = new FunctionCall(lxleft, v, args);
+            RESULT = new Call(lxleft, v, args);
         :}
     ;
 

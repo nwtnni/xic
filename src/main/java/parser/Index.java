@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class Index extends Expression {
+public class Index extends Node {
     
     public Node array;
     public Node index;

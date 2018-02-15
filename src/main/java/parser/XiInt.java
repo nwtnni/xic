@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class XiInt extends Expression {
+public class XiInt extends Node {
 
     public long value;
 

@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class If extends Statement {
+public class If extends Node {
 
     public Node guard;
     public Node block;

@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class While extends Statement {
+public class While extends Node {
 
     public Node guard;
     public Node block;

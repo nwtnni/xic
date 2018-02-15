@@ -40,7 +40,7 @@ start with      Interface;
 FunctionDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
         {: 
-            RESULT = new Function(idxleft, id, atl, rtl, null);
+            RESULT = new Function(idxleft, id, atl, rtl);
         :}
     ;
 
@@ -127,6 +127,6 @@ FunctionDefList ::=
 Interface ::=
     FunctionDefList:fdl
         {:
-            RESULT = new Program(fdlxleft, new ArrayList<Node>(), fdl);
+            RESULT = new Program(fdlxleft, fdl);
         :}
     ;

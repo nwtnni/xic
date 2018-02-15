@@ -2,7 +2,7 @@ package parser;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class Declare extends Statement {
+public class Declare extends Node {
 
     public Node id;
     public Node type;

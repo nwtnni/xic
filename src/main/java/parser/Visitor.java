@@ -20,8 +20,6 @@ public interface Visitor {
 
     public void visit(Return r);
 
-    public void visit(ProcedureCall p);
-
     public void visit(Block b);
 
     public void visit(If i);
@@ -33,7 +31,7 @@ public interface Visitor {
     /*
      * Expression nodes
      */
-    public void visit(FunctionCall c);
+    public void visit(Call c);
 
     public void visit(Binary b);
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class XiString extends Expression {
+public class XiString extends Node {
 
     public String escaped;
     public ArrayList<Long> value;
