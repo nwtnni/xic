@@ -114,6 +114,10 @@ public class Printer implements Visitor {
         printer.endList();
     }
 
+    public void visit(ProcedureCall p) {
+        p.id.accept(this);
+    }
+
     public void visit(Block b){
         printer.startUnifiedList();
 
@@ -157,6 +161,18 @@ public class Printer implements Visitor {
     /*
      * Expression nodes
      */
+    public void visit(FunctionCall c){
+        printer.startList();
+
+        c.id.accept(this);
+        
+        for (Node arg : c.args) {
+            arg.accept(this);
+        }
+
+        printer.endList();
+    }
+
     public void visit(Binary b){
         printer.startList();
 
@@ -196,18 +212,6 @@ public class Printer implements Visitor {
         printer.printAtom("[]");
         i.array.accept(this);
         i.index.accept(this);
-
-        printer.endList();
-    }
-
-    public void visit(Call c){
-        printer.startList();
-
-        c.id.accept(this);
-        
-        for (Node arg : c.args) {
-            arg.accept(this);
-        }
 
         printer.endList();
     }

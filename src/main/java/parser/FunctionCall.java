@@ -2,12 +2,12 @@ package parser;
 
 import java.util.ArrayList;
 
-public class Call extends Expression {
+public class FunctionCall extends Expression {
     
     public Node id;
     public ArrayList<Node> args; 
     
-    public Call(Node id, ArrayList<Node> args) {
+    public FunctionCall(Node id, ArrayList<Node> args) {
         this.id = id; 
         this.args = args;
     }
