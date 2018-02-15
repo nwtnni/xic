@@ -1,5 +1,6 @@
 import java_cup.runtime.*;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import lexer.*;
 import ast.*;
@@ -397,17 +398,19 @@ FArgs ::=
 ArrayCall ::= 
     FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
-            Index index = new Index(fcxleft, fc,e);
-            for(Node n: il) {
-                index = new Index(fcxleft, index, n);
+            il.add(0,e);
+            Index index = new Index(fcxleft, fc,il.get(0));
+            for(int i =1; i<il.size();i++) {
+                index = new Index(fcxleft, index, il.get(i));
             }
             RESULT = index;
         :}
     | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
         {:
-            Index index = new Index(idxleft, new Variable(idxleft, id), e);
-            for(Node n: il) {
-                index = new Index(idxleft, index, n);
+            il.add(0,e);
+            Index index = new Index(idxleft, new Variable(idxleft,id),il.get(0));
+            for(int i =1; i<il.size();i++) {
+                index = new Index(idxleft, index, il.get(i));
             }
             RESULT = index;
         :}
