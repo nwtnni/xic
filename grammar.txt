@@ -1,144 +1,184 @@
 // Expressions
-Expr ::= (Expr)
-| Expr UnaryOp Expr
-| Expr BinaryOp Expr
-| FunctionCall
-| ArrayCall
-| LBRACE ExprList RBRACE
-| INT
-| TRUE
-| FALSE
-| CHAR
-| STRING
-| ID
+Expr ::= LPAREN Expr RPAREN
+    | Expr UnaryOp Expr
+    | Expr BinaryOp Expr
+    | FunctionCall
+    | ArrayCall
+    | LBRACE ArrayElems RBRACE
+    | TRUE
+    | FALSE
+    | INTEGER
+    | CHAR
+    | STRING
+    | IDENTIFIER
+    ;
 
 UnaryOp ::= LNEG
-| MINUS 
+    | MINUS 
+    ;
 
 BinaryOp ::= MULT
-| HMULT
-| DIV
-| MOD
-| ADD
-| MINUS
-| LTE
-| LT
-| GTE
-| GT
-| EQEQ
-| NEQ
-| LAND
-| LOR
+    | HMULT
+    | DIV
+    | MOD
+    | ADD
+    | MINUS
+    | LTE
+    | LT
+    | GTE
+    | GT
+    | EQEQ
+    | NEQ
+    | LAND
+    | LOR
+    ;
 
 // Function Calls
-FunctionCall ::= ID LPAREN Args RPAREN 
+FunctionCall ::= IDENTIFIER LPAREN Args RPAREN;
 
-Args ::= empty
-| Expr FArgs
+Args ::= 
+    | Expr FArgs
+    ;
 
 FArgs ::= COMMA Expr
-| COMMA Expr FArgs
+    | COMMA Expr FArgs
+    ;
 
 // Array Calls
 ArrayCall ::= FunctionCall LBRACK Expr RBRACK IndexList
-| ID LBRACK Expr RBRACK IndexList
+    | IDENTIFIER LBRACK Expr RBRACK IndexList
+    ;
 
-IndexList ::= empty 
-| IndexList LBRACK Expr RBRACK
+IndexList ::=  
+    | IndexList LBRACK Expr RBRACK
+    ;
+
+// Array List
+ArrayElems ::= 
+    | Expr FArrayElems
+    ;
+
+FArrayElems ::= 
+    | COMMA
+    | COMMA Expr FArrayElems
+    ;
 
 // Variable Declaration
-VarDeclr ::= ID COLON VarType 
+VarDeclr ::= IDENTIFIER COLON VarType;
 
 VarType ::= VarType LBRACK RBRACK
-| FVarType
+    | FVarType
+    ;
 
 FVarType ::= KeyType
-| FVarType LBRACK EXPR RBRACK
+    | FVarType LBRACK EXPR RBRACK
+    ;
 
 KeyType ::= INT
-| BOOL
-| CHAR
+    | BOOL
+    | CHAR
+    ;
 
 // Assignment
-Assign ::= IDList EQ ExprList
+Assign ::= IDList EQ ExprList;
 
 IDList ::= AssignName
-| AssignName FIDList
+    | AssignName FIDList
+    ;
 
-FIDList ::= empty
-| COMMA AssignName FIDList
+FIDList ::= 
+    | COMMA AssignName FIDList
+    ;
 
 AssignName ::= UNDERSCORE
-| ID
-| VarDeclr
+    | IDENTIFIER
+    | VarDeclr
+    ;
 
 ExprList ::= Expr
-| Expr FExprList
+    | Expr FExprList
+    ;
 
-FExprList ::= empty
-| COMMA Expr FExprList
+FExprList ::= 
+    | COMMA Expr FExprList
+    ;
 
 // While Statement
-WhileStmt ::= WHILE Expr Block
+WhileStmt ::= WHILE Expr Block;
 
 // If Statement
-IfStmt ::= IF Expr Block ElseStmt
+IfStmt ::= IF Expr Block ElseStmt;
 
-ElseStmt ::= empty
-| ELSE Expr Block
+ElseStmt ::= 
+    | ELSE Expr Block
+    ;
 
 // Block
 Block ::= Stmt
-| LBRACE StmtListNoReturn RBRACE
-| LBRACE StmtListNoReturn ReturnStmt RBRACE
+    | LBRACE StmtListNoReturn RBRACE
+    | LBRACE StmtListNoReturn ReturnStmt RBRACE
+    ;
 
-StmtListNoReturn ::= empty
-| StmtNoReturn StmtList
+StmtListNoReturn ::= 
+    | StmtNoReturn StmtList
+    ;
 
 ReturnStmt ::= RETURN Expr 
-| RETURN
+    | RETURN
+    ;
 
 StmtNoReturn ::= Assign
-| IfStmt
-| WhileStmt
-| FunctionCall
-| Block
-| VarDeclr
-| SEMICOLON
+    | IfStmt
+    | WhileStmt
+    | Procedure
+    | Block
+    | VarDeclr
+    | SEMICOLON
+    ;
+
+Procedure ::= FunctionCall;
 
 Stmt ::= ReturnStmt
-| StmtNoReturn
+    | StmtNoReturn
+    ;
 
 // Function Declaration
-FunctionDeclr ::= FunctionInit Block
+FunctionDeclr ::= FunctionInit Block;
 
-FunctionDef ::= ID LPAREN ArgsTypeList RPAREN ReturnTypeList
+FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
 
-ArgsTypeList ::= empty
-| ID COLON ArgsType FArgsTypeList
+ArgsTypeList ::= 
+    | IDENTIFIER COLON ArgsType FArgsTypeList
+    ;
 
-FArgsTypeList ::= empty
-| COMMA ID COLON ArgsType FArgsTypeList
+FArgsTypeList ::= 
+    | COMMA IDENTIFIER COLON ArgsType FArgsTypeList
+    ;
 
-ReturnTypeList ::= empty
-| Type FTypeList
+ReturnTypeList ::= 
+    | Type FTypeList
+    ;
 
-FReturnTypeList ::= empty
-| COMMA Type FTypeList
+FReturnTypeList ::= 
+    | COMMA Type FTypeList
+    ;
 
 ArgsType ::= INT
-| BOOL
-| CHAR
-| ArgsType LBRACK RBRACK
+    | BOOL
+    | CHAR
+    | ArgsType LBRACK RBRACK
+    ;
 
 // Use Declaration
-UseDeclr ::= USE ID | UseDeclr SEMICOLON
+UseDeclr ::= USE IDENTIFIER | UseDeclr SEMICOLON;
 
 // Program
-Program ::= UseDeclarations FunctionDeclarations
+Program ::= UseDeclarations FunctionDeclarations;
 
-UseDeclarations ::= empty
-| UseDeclarations UseDeclr
+UseDeclarations ::= 
+    | UseDeclarations UseDeclr
+    ;
 
-FunctionDeclarations ::= empty
-| FunctionDeclr FunctionDeclarations
+FunctionDeclarations ::= 
+    | FunctionDeclr FunctionDeclarations
+    ;

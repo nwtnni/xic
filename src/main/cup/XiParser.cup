@@ -1,40 +1,246 @@
-/* Simple +/-/* expression language; parser evaluates constant expressions on the fly*/
 import java_cup.runtime.*;
+import java.util.ArrayList;
+
+import lexer.*;
 
 parser code {:
     // Connect this parser to a scanner!
-    XiScanner s;
-    XiParser(XiScanner s) {
-        this.s = s;
+    XiLexer lex;
+    XiParser(XiLexer lex, ComplexSymbolFactory sf) {
+        super(lex, sf);
+        this.lex = lex;
     }
-:}
-
-/* define how to connect to the scanner! */
-init with {: s.init(); :};
-scan with {: return s.next_token(); :};
+:};
 
 /* Terminals (tokens returned by the scanner). */
-terminal            SEMI, PLUS, MINUS, TIMES, UMINUS, LPAREN, RPAREN;
-terminal Integer    NUMBER;        // our scanner provides numbers as integers
+terminal                        USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                        INT, BOOL;
+terminal                        UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                        LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
+terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                        EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
+terminal    Boolean             TRUE, FALSE; 
+terminal    String              IDENTIFIER;
+terminal    Long                INTEGER;
+terminal    Long                CHAR;
+terminal    ArrayList<Long>     STRING;
 
 /* Non terminals */
-non terminal            expr_list;
-non terminal Integer    expr;      // used to store evaluated subexpressions
+non terminal    Expr;
+non terminal    UnaryOp, BinaryOp;
+non terminal    FunctionCall, Args, FArgs; 
+non terminal    ArrayCall, IndexList;
+non terminal    ArrayElems, FArrayElems;
+non terminal    VarDeclr, VarType, KeyType;
+non terminal    Assign, IDList, FIDList, AssignName;
+non terminal    WhileStmt, IfStmt, ElseStmt;
+non terminal    BlockNoReturn, SingleStmtNoReturn, Procedure, StmtListNoReturn, StmtNoReturn;
+non terminal    BlockReturn, StmtList;
+non terminal    BlockVoidReturn, StmtListVoid;
+non terminal    FunctionDeclr, FunctionDef;
+non terminal    ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList, FunType;
+non terminal    ProcedureDeclr, ProcedureDef;
+non terminal    UseDeclr, UseDeclarations, FunctionDeclarations;
+non terminal    Program;
 
 /* Precedences */
-precedence left PLUS, MINUS;
-precedence left TIMES;
-precedence left UMINUS;
+precedence left     ELSE;
+precedence right    LOR;
+precedence left     LAND;
+precedence left     EQEQ, NEQ;
+precedence left     LTE, LT, GTE, GT;
+precedence left     ADD, MINUS;
+precedence left     MULT, HMULT, DIV, MOD;
+precedence left     UMINUS, LNEG;
 
 /* The grammar rules */
-expr_list ::=             expr_list expr:e SEMI         {: System.out.println(e); :}
-                        | expr:e SEMI                   {: System.out.println(e); :}
-                        ;
-expr      ::=             expr:e1 PLUS  expr:e2         {: RESULT = e1+e2;        :}
-                        | expr:e1 MINUS expr:e2         {: RESULT = e1-e2;        :}
-                        | expr:e1 TIMES expr:e2         {: RESULT = e1*e2;        :}
-                        | MINUS expr:e                  {: RESULT = -e;           :}
-%prec UMINUS
-                        | LPAREN expr:e RPAREN	        {: RESULT = e;            :}
-                        | NUMBER:n	                    {: RESULT = n;            :}
-                        ;
+start with          Program;
+
+// Expressions
+Expr ::= LPAREN Expr RPAREN
+    | UnaryOp Expr
+    | Expr BinaryOp Expr
+    | FunctionCall
+    | ArrayCall
+    | LBRACE ArrayElems RBRACE
+    | TRUE
+    | FALSE
+    | INTEGER
+    | CHAR
+    | STRING
+    | IDENTIFIER
+    ;
+
+UnaryOp ::= LNEG
+    | MINUS
+    %prec UMINUS
+    ;
+
+BinaryOp ::= MULT
+    | HMULT
+    | DIV
+    | MOD
+    | ADD
+    | MINUS
+    | LTE
+    | LT
+    | GTE
+    | GT
+    | EQEQ
+    | NEQ
+    | LAND
+    | LOR
+    ;
+
+// Function Calls
+FunctionCall ::= IDENTIFIER LPAREN Args RPAREN
+    | LENGTH LPAREN Args RPAREN;
+
+Args ::= 
+    | Expr FArgs
+    ;
+
+FArgs ::= COMMA Expr
+    | COMMA Expr FArgs
+    ;
+
+// Array Calls
+ArrayCall ::= FunctionCall LBRACK Expr RBRACK IndexList
+    | IDENTIFIER LBRACK Expr RBRACK IndexList
+    ;
+
+IndexList ::=  
+    | IndexList LBRACK Expr RBRACK
+    ;
+
+// Array List
+ArrayElems ::= 
+    | Expr FArrayElems
+    ;
+
+FArrayElems ::= 
+    | COMMA
+    | COMMA Expr FArrayElems
+    ;
+
+// Variable Declaration
+VarDeclr ::= IDENTIFIER COLON VarType;
+
+VarType ::= VarType LBRACK RBRACK
+    | VarType LBRACK Expr RBRACK
+    | KeyType
+    ;
+
+KeyType ::= INT
+    | BOOL
+    ;
+
+// Assignment
+Assign ::= IDList EQ Expr;
+
+IDList ::= AssignName FIDList;
+
+FIDList ::= 
+    | COMMA AssignName FIDList
+    ;
+
+AssignName ::= UNDERSCORE
+    | IDENTIFIER
+    | ArrayCall
+    | VarDeclr
+    ;
+
+// While Statement
+WhileStmt ::= WHILE Expr BlockNoReturn;
+
+// If Statement
+IfStmt ::= IF Expr BlockNoReturn ElseStmt;
+
+ElseStmt ::= 
+    | ELSE Expr BlockNoReturn
+    ;
+
+// No Return Block
+BlockNoReturn ::= SingleStmtNoReturn
+    | LBRACE StmtListNoReturn RBRACE
+    ;
+
+SingleStmtNoReturn ::= Assign
+    | IfStmt
+    | WhileStmt
+    | Procedure
+    | VarDeclr
+    | SEMICOLON
+    ;
+
+Procedure ::= FunctionCall;
+
+StmtListNoReturn ::= 
+    | StmtNoReturn StmtListNoReturn
+    ;
+
+StmtNoReturn ::= SingleStmtNoReturn
+    | LBRACE StmtList RBRACE
+    ;
+
+// Return Block
+BlockReturn ::= RETURN Expr
+    | LBRACE StmtList RBRACE
+    ;
+
+StmtList ::= StmtListNoReturn
+    | StmtListNoReturn RETURN Expr
+    ;
+
+// Void Return Block
+BlockVoidReturn ::= RETURN
+    | LBRACE StmtListVoid RBRACE
+    ;
+
+StmtListVoid ::= StmtListNoReturn
+    | StmtListNoReturn RETURN
+    ; 
+
+// Function Declaration
+FunctionDeclr ::= FunctionDef BlockReturn;
+
+FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
+
+ArgsTypeList ::= 
+    | IDENTIFIER COLON FunType FArgsTypeList
+    ;
+
+FArgsTypeList ::= 
+    | COMMA IDENTIFIER COLON FunType FArgsTypeList
+    ;
+
+ReturnTypeList ::= FunType FReturnTypeList;
+
+FReturnTypeList ::= 
+    | COMMA FunType FReturnTypeList
+    ;
+
+FunType ::= INT
+    | BOOL
+    | FunType LBRACK RBRACK
+    ;
+
+// Procedure Declaration
+ProcedureDeclr ::= ProcedureDef BlockVoidReturn;
+
+ProcedureDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN;
+
+// Use Declaration
+UseDeclr ::= USE IDENTIFIER | UseDeclr SEMICOLON;
+
+// Program
+Program ::= UseDeclarations FunctionDeclarations;
+
+UseDeclarations ::= 
+    | UseDeclarations UseDeclr
+    ;
+
+FunctionDeclarations ::= 
+    | FunctionDeclr FunctionDeclarations
+    | ProcedureDeclr FunctionDeclarations
+    ;
