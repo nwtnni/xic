@@ -28,6 +28,7 @@ terminal    StringWrapper   STRING;
 
 /* Non terminals */
 non terminal    Node                Expr;
+non terminal    ArrayList<Node>     ExprList, FExprList;
 non terminal    Unary.UnaryType     UnaryOp; 
 non terminal    Binary.BinaryType   BinaryOp;
 non terminal    Node                FunctionCall;
@@ -51,6 +52,7 @@ non terminal    Node                ProcedureDeclr, ProcedureDef;
 non terminal    Node                UseDeclr;
 non terminal    ArrayList<Node>     UseDeclarations, FunctionDeclarations;
 non terminal    Node                Program;
+non terminal                        OptSemicolon;
 
 /* Precedences */
 precedence left     ELSE;
@@ -64,6 +66,11 @@ precedence left     UMINUS, LNEG;
 
 /* The grammar rules */
 start with      Program;
+
+// Optional Semicolon
+OptSemicolon ::=
+    | SEMICOLON
+    ;
 
 // Program
 Program ::= UseDeclarations:uds FunctionDeclarations:fds
@@ -88,13 +95,9 @@ UseDeclarations ::=
 
 // Use Declaration
 UseDeclr ::= 
-    USE:u IDENTIFIER:id
+    USE:u IDENTIFIER:id OptSemicolon
     {:
         RESULT = new Use(uxleft, id);
-    :}
-    | UseDeclr:ud SEMICOLON
-    {:
-        RESULT = ud;
     :}
     ;
 
@@ -128,7 +131,7 @@ FunctionDeclr ::=
     ;
 
 FunctionDef ::= 
-    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN ReturnTypeList:rtl
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
         RESULT = new Function(idxleft,id,atl,rtl);
     :}
@@ -192,7 +195,7 @@ FReturnTypeList ::=
     {:
         ArrayList<Node> freturns = new ArrayList<Node>();
         freturns.add(type);
-        freturns.addAll(freturns);
+        freturns.addAll(frtl);
         RESULT = freturns;
     :}
     ;
@@ -214,7 +217,7 @@ FunType ::=
 
 // Return Block
 BlockReturn ::= 
-    RETURN:r Expr:e
+    RETURN:r Expr:e OptSemicolon
     {:
         RESULT = new Block(rxleft, new Return(rxleft, e));
     :}
@@ -225,22 +228,44 @@ BlockReturn ::=
     ;
 
 StmtList ::= 
-    StmtListNoReturn:slnr
-    {:
-        RESULT = slnr;
-    :}
-    | StmtListNoReturn:slnr RETURN:r Expr:e
+    StmtListNoReturn:slnr RETURN:r ExprList:e OptSemicolon
     {:
         ArrayList<Node> sl = new ArrayList<Node>();
         sl.addAll(slnr);
-        sl.add(new Return(rxleft,e));
+        sl.add(new Return(rxleft,new Multiple(exleft, e)));
         RESULT = sl;
+    :}
+    ;
+
+ExprList ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | Expr:e FExprList:fel
+    {:
+        ArrayList<Node> exprlist = new ArrayList<Node>();
+        exprlist.add(e);
+        exprlist.addAll(fel); 
+        RESULT = exprlist;
+    :}
+    ;
+
+FExprList ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA Expr:e FExprList:fel 
+    {:
+        ArrayList<Node> exprlist = new ArrayList<Node>();
+        exprlist.add(e);
+        exprlist.addAll(fel); 
+        RESULT = exprlist;  
     :}
     ;
 
 // Void Return Block
 BlockVoidReturn ::= 
-    RETURN:r
+    RETURN:r OptSemicolon
     {:
         RESULT = new Block(rxleft, new Return(rxleft));
     :}
@@ -277,7 +302,7 @@ BlockNoReturn ::=
     ;
 
 SingleStmtNoReturn ::= 
-    Assign:a
+    Assign:a OptSemicolon
     {:
         RESULT = a;
     :}
@@ -285,19 +310,18 @@ SingleStmtNoReturn ::=
     {:
         RESULT = i;
     :}
-    | WhileStmt:w
+    | WhileStmt:w 
     {:
         RESULT = w;
     :}
-    | Procedure:p
+    | Procedure:p OptSemicolon
     {:
         RESULT = p;
     :}
-    | VarDeclr:v
+    | VarDeclr:v OptSemicolon
     {:
         RESULT = v;
     :}
-    | SEMICOLON
     ;
 
 Procedure ::= FunctionCall:f
@@ -323,7 +347,7 @@ StmtNoReturn ::=
     {:
         RESULT = ssnr;
     :}
-    | LBRACE:l StmtList:sl RBRACE:r
+    | LBRACE:l StmtListNoReturn:sl RBRACE:r
     {:
         RESULT = new Block(lxleft, sl);
     :}
@@ -348,7 +372,7 @@ Args ::=
             RESULT = new ArrayList<Node>();
         :}
     | Expr:e FArgs:fargs
-        {:
+        {:  
             ArrayList<Node> args = new ArrayList<Node>();
             args.add(e);
             args.addAll(fargs);
@@ -356,13 +380,10 @@ Args ::=
         :}
     ;
 
-FArgs ::= 
-    COMMA Expr:e
-        {:
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(e);
-            RESULT = args;
-        :}
+FArgs ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :} 
     | COMMA Expr:e FArgs:fargs
         {:
             ArrayList<Node> args = new ArrayList<Node>();
@@ -526,11 +547,15 @@ WhileStmt ::= WHILE:w Expr:e BlockNoReturn:block
 // If Statement
 IfStmt ::= IF:i Expr:e BlockNoReturn:block ElseStmt:el
     {:
-        RESULT = new If(ixleft, e, block);
+        RESULT = new If(ixleft, e, block, el);
     :}
     ;
 
 ElseStmt ::= 
+    //TODO
+    {: 
+        RESULT = null;
+    :}
     | ELSE:el BlockNoReturn:block 
     {:
         RESULT = new Else(elxleft,block);

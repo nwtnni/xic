@@ -33,3 +33,4 @@ xthScript.results
 # xic output
 *.lexed
 *.parsed
+*.iparsed

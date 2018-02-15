@@ -89,12 +89,19 @@ public class Printer implements Visitor {
      * Statement nodes
      */
     public void visit(Declare d){
-        printer.startList(); 
+        
 
-        d.id.accept(this);
-        d.type.accept(this);
+        //TODO
+        if(d.id != null && d.type != null) {
+            printer.startList(); 
+            d.id.accept(this);
+            d.type.accept(this);
+            printer.endList();
+        }
+        else {
+            printer.printAtom("_");
+        }
 
-        printer.endList();
     }
 
     public void visit(Assign a){
@@ -136,6 +143,10 @@ public class Printer implements Visitor {
         
         i.guard.accept(this);
         i.block.accept(this);
+        //TODO
+        if (i.elseBlock != null) {
+            i.elseBlock.accept(this);
+        }
 
         printer.endList();
     }
@@ -143,7 +154,6 @@ public class Printer implements Visitor {
     public void visit(Else e){
         printer.startUnifiedList();
 
-        printer.printAtom("else");
         e.block.accept(this);
 
         printer.endList();
@@ -198,13 +208,18 @@ public class Printer implements Visitor {
     }
 
     public void visit(Multiple m){
-        printer.startList();
-
-        for (Node value : m.values) {
+        if (m.values.size() == 1) {
+            for (Node value : m.values) {
             value.accept(this);
+            }
         }
-
-        printer.endList();
+        else {
+            printer.startList();
+            for (Node value : m.values) {
+                value.accept(this);
+            }
+            printer.endList();
+        }
     }
 
     public void visit(Index i){
@@ -222,11 +237,11 @@ public class Printer implements Visitor {
             printer.startList();
             printer.printAtom("[]");
             t.child.accept(this);
-            printer.endList();
 
             if (t.size != null) {
                 t.size.accept(this);
             }
+            printer.endList();
         } else {
             printer.printAtom(t.primitive.toString());
         }
@@ -241,11 +256,11 @@ public class Printer implements Visitor {
     }
 
     public void visit(XiChar c) {
-        printer.printAtom(c.escaped);
+        printer.printAtom("\'"+c.escaped+"\'");
     }
 
     public void visit(XiString s) {
-        printer.printAtom(s.escaped);
+        printer.printAtom("\""+s.escaped+"\"");
     }
 
     public void visit(XiArray a) {
