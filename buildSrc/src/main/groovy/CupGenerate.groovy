@@ -10,6 +10,8 @@ class CupGenerate extends DefaultTask {
     static final String pkg = 'parser'
     static final String parser = 'XiParser'
     static final String symbol = 'XiSymbol'
+    static final String iparser = 'IXiParser'
+    static final String isymbol = 'IXiSymbol'
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @InputDirectory
@@ -24,7 +26,9 @@ class CupGenerate extends DefaultTask {
         try {
             project.delete(output)
             def args = ['-destdir', sink, '-parser', parser, '-symbols', symbol, '-package', pkg, project.file(source + parser + '.cup')] as String[]
+            def iargs = ['-destdir', sink, '-parser', iparser, '-symbols', isymbol, '-package', pkg, project.file(source + iparser + '.cup')] as String[]
             Main.main(args)
+            Main.main(iargs)
         } catch (Exception e) {
             throw new StopActionException("Error during CUP code generation.")
         }
