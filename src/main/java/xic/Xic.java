@@ -1,6 +1,7 @@
 package xic;
 
 import java.io.*;
+import java.io.FileInputStream;
 import org.apache.commons.io.FilenameUtils;
 
 import java_cup.runtime.*;
@@ -11,7 +12,9 @@ import parser.XiSymbol;
 import lexer.*;
 import parser.*;
 
-public static class Xic {
+import java.util.*;
+
+public class Xic {
     // public static void main(String [] args) {
     //     if (args.length > 1 && args[0].equals("--lex")) {
     //         try {
@@ -92,16 +95,20 @@ public static class Xic {
             System.out.println("  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
         }
         else {
-            if (lexFlag == true){
-                for (String source : sourceFiles){
-                    lex(source, sourcePath, dPath);
-                }
+            try {
+                if (lexFlag == true){
+                    for (String source : sourceFiles){
+                        lex(source, sourcePath, dPath);
+                    }
                 
-            }
-            if (parseFlag == true){
-                for (String source : sourceFiles){
-                    parse(source, sourcePath, dPath);
                 }
+                if (parseFlag == true){
+                    for (String source : sourceFiles){
+                        parse(source, sourcePath, dPath);
+                    }
+                }
+            } catch (IOException e){
+                System.out.println("Could not find file");
             }
         }
     }
@@ -161,23 +168,25 @@ public static class Xic {
                 OutputStream stream = new FileOutputStream(output);
                 XiLexer lexer = new XiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();
-                lexer.init(source, new ComplexSymbolFactory());
+                lexer.init(source, sf);
                 XiParser parser = new XiParser(lexer, sf);
                 
                 Printer pp = new Printer(stream);
-                pp.print(parser.parse());
+                pp.print(parser.parse().value());
 
 
             }
             else if (ext.equals("ixi")){
+                System.out.println("HELLO WORLD");
                 OutputStream stream = new FileOutputStream(output);
                 XiLexer lexer = new XiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();
-                lexer.init(source, new ComplexSymbolFactory());
+                lexer.init(source, sf);
                 IXiParser parser = new IXiParser(lexer, sf);
+                
 
-                Printer pp = new Printer(stream);
-                pp.print(parser.parse());
+                // Printer pp = new Printer(stream);
+                // pp.print(null);
             }
             else throw new Exception();
         } catch (Exception e){
