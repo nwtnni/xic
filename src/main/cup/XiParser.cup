@@ -604,7 +604,7 @@ Expr ::=
         :}
     | Expr:e1 LTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.LT, e1,e2);
+            RESULT = new Binary(bxleft, Binary.BinaryType.LE, e1,e2);
         :}
     | Expr:e1 LT:b Expr:e2
         {:
