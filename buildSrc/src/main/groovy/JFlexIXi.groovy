@@ -5,10 +5,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.tasks.*;
 
-class JFlexGenerate extends DefaultTask {
+class JFlexIXi extends DefaultTask {
 
-    String lexer = 'XiLexer'
-    String ilexer = 'IXiLexer'
+    String lexer = 'IXiLexer'
     String source = 'src/main/jflex/'
     String sink = 'src/main/java/lexer/'
 
@@ -17,17 +16,15 @@ class JFlexGenerate extends DefaultTask {
     File input = project.file(source)
 
     @PathSensitive(PathSensitivity.RELATIVE)
-    @OutputFile
-    File output = project.file(sink + lexer + '.java')
+    @OutputDirectory
+    File output = project.file(sink)
 
     @TaskAction
     void generate() {
         try {
-            project.delete(output)
+            project.delete(project.file(sink + lexer + '.java'))
             def args = ['-d', sink, project.file(source + lexer + '.jflex')] as String[]
-            def iargs = ['-d', sink, project.file(source + ilexer + '.jflex')] as String[]
             Main.generate(args)
-            Main.generate(iargs)
         } catch (GeneratorException e) {
             throw new StopActionException("Error during JFlex code generation.")
         }
