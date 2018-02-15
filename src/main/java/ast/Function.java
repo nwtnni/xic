@@ -54,7 +54,17 @@ public class Function extends Node {
     }
 
     public Function(Location location, Function f, Node block) {
-        this.kind = f.kind;
+        if (f.kind == Kind.FUNCTION_HEADER) {
+            this.kind = Kind.FUNCTION;
+        }
+        else if (f.kind == Kind.PROCEDURE_HEADER) {
+            this.kind = Kind.PROCEDURE;
+        }
+        else {
+            // TODO
+            // Should Have error handling
+            // throw new Exception("WHAT");
+        }
         this.location = location;
         this.id = f.id;
         this.args = f.args;

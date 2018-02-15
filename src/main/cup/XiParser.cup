@@ -28,7 +28,8 @@ terminal    StringWrapper   STRING;
 
 /* Non terminals */
 non terminal    Node                Expr;
-non terminal    Node                UnaryOp, BinaryOp;
+non terminal    Unary.UnaryType     UnaryOp; 
+non terminal    Binary.BinaryType   BinaryOp;
 non terminal    Node                FunctionCall;
 non terminal    ArrayList<Node>     Args, FArgs; 
 non terminal    Node                ArrayCall;
@@ -62,7 +63,7 @@ precedence left     MULT, HMULT, DIV, MOD;
 precedence left     UMINUS, LNEG;
 
 /* The grammar rules */
-start with      Program;
+start with      ProcedureDeclr;
 
 // Program
 Program ::= UseDeclarations:uds FunctionDeclarations:fds
@@ -443,8 +444,14 @@ VarDeclr ::=
     :};
 
 VarType ::= 
-    VarType LBRACK RBRACK
-    | VarType LBRACK Expr RBRACK
+    VarType:type LBRACK RBRACK
+    {:
+        RESULT = new Type(typexleft, type);
+    :}
+    | VarType:type LBRACK Expr:e RBRACK
+    {:
+        RESULT = new Type(typexleft, type, e);
+    :}
     | KeyType:type 
     {:
         RESULT = type;
@@ -538,16 +545,11 @@ Expr ::=
         :}
     | UnaryOp:uop Expr:e
         {:
-            Unary u = (Unary) uop;
-            u.child = e;
-            RESULT = u;
+            RESULT = new Unary(uopxleft, uop, e);
         :}
     | Expr:e1 BinaryOp:bop Expr:e2
         {:
-            Binary b = (Binary) bop;
-            b.lhs = e1;
-            b.rhs = e2;
-            RESULT = b;
+            RESULT = new Binary(e1xleft, bop,e1,e2);
         :}
     | FunctionCall:fc
         {:
@@ -590,11 +592,11 @@ Expr ::=
 UnaryOp ::= 
     LNEG:l
         {:
-            RESULT = new Unary(lxleft, Unary.UnaryType.LNEGATE, null);
+            RESULT = Unary.UnaryType.LNEGATE;
         :}
     | MINUS:m
         {:
-            RESULT = new Unary(mxleft, Unary.UnaryType.INEGATE, null);
+            RESULT = Unary.UnaryType.INEGATE;
         :}
     %prec UMINUS
     ;
@@ -602,58 +604,58 @@ UnaryOp ::=
 BinaryOp ::= 
     MULT:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.TIMES, null, null);
+            RESULT = Binary.BinaryType.TIMES;
         :}
     | HMULT:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.HIGH_TIMES, null, null);
+            RESULT = Binary.BinaryType.HIGH_TIMES;
         :}
     | DIV:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.DIVISION, null, null);
+            RESULT = Binary.BinaryType.DIVISION;
         :}
     | MOD:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.MODULO, null, null);
+            RESULT = Binary.BinaryType.MODULO;
         :}
     | ADD:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.PLUS, null, null);
+            RESULT = Binary.BinaryType.PLUS;
         :}
     | MINUS:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.MINUS, null, null);
+            RESULT = Binary.BinaryType.MINUS;
         :}
     | LTE:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.LE, null, null);
+            RESULT = Binary.BinaryType.LE;
         :}
     | LT:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.LT, null, null);
+            RESULT = Binary.BinaryType.LT;
         :}
     | GTE:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.GE, null, null);
+            RESULT = Binary.BinaryType.GE;
         :}
     | GT:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.GT, null, null);
+            RESULT = Binary.BinaryType.GT;
         :}
     | EQEQ:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.EQ, null, null);
+            RESULT = Binary.BinaryType.EQ;
         :}
     | NEQ:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.NE, null, null);
+            RESULT = Binary.BinaryType.NE;
         :}
     | LAND:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.AND, null, null);
+            RESULT = Binary.BinaryType.AND;
         :}
     | LOR:b
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.OR, null, null);
+            RESULT = Binary.BinaryType.OR;
         :}
     ;
