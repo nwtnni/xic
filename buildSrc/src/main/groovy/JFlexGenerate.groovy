@@ -8,6 +8,7 @@ import org.gradle.api.tasks.*;
 class JFlexGenerate extends DefaultTask {
 
     String lexer = 'XiLexer'
+    String ilexer = 'IXiLexer'
     String source = 'src/main/jflex/'
     String sink = 'src/main/java/lexer/'
 
@@ -24,7 +25,9 @@ class JFlexGenerate extends DefaultTask {
         try {
             project.delete(output)
             def args = ['-d', sink, project.file(source + lexer + '.jflex')] as String[]
+            def iargs = ['-d', sink, project.file(source + ilexer + '.jflex')] as String[]
             Main.generate(args)
+            Main.generate(iargs)
         } catch (GeneratorException e) {
             throw new StopActionException("Error during JFlex code generation.")
         }

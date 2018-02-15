@@ -12,6 +12,8 @@ parser code {:
     }
 :};
 
+scan with {: return lex.next_token(); :};
+
 /* Terminals (tokens returned by the scanner). */
 terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
 terminal                    INT, BOOL;
@@ -26,22 +28,28 @@ terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Node    Expr;
-non terminal    Node    UnaryOp, BinaryOp;
-non terminal    Node    FunctionCall, Args, FArgs; 
-non terminal    Node    ArrayCall, IndexList;
-non terminal    Node    ArrayElems, FArrayElems;
-non terminal    Node    VarDeclr, VarType, KeyType;
-non terminal    Node    Assign, IDList, FIDList, AssignName;
-non terminal    Node    WhileStmt, IfStmt, ElseStmt;
-non terminal    Node    BlockNoReturn, SingleStmtNoReturn, Procedure, StmtListNoReturn, StmtNoReturn;
-non terminal    Node    BlockReturn, StmtList;
-non terminal    Node    BlockVoidReturn, StmtListVoid;
-non terminal    Node    FunctionDeclr, FunctionDef;
-non terminal    Node    ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList, FunType;
-non terminal    Node    ProcedureDeclr, ProcedureDef;
-non terminal    Node    UseDeclr, UseDeclarations, FunctionDeclarations;
-non terminal    Node    Program;
+non terminal    Node                Expr;
+non terminal    Node                UnaryOp, BinaryOp;
+non terminal    Node                FunctionCall;
+non terminal    ArrayList<Node>     Args, FArgs; 
+non terminal    Node                ArrayCall, IndexList;
+non terminal    ArrayList<Node>     ArrayElems, FArrayElems;
+non terminal    Node                VarDeclr, VarType, KeyType;
+non terminal    Node                Assign, AssignName;
+non terminal    ArrayList<Node>     IDList, FIDList;
+non terminal    Node                WhileStmt, IfStmt, ElseStmt;
+non terminal    Node                BlockNoReturn, SingleStmtNoReturn, Procedure, StmtNoReturn;
+non terminal    ArrayList<Node>     StmtListNoReturn, StmtList;
+non terminal    Node                BlockReturn;
+non terminal    Node                BlockVoidReturn;
+non terminal    ArrayList<Node>     StmtListVoid;
+non terminal    Node                FunctionDeclr, FunctionDef;
+non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
+non terminal    Node                FunType;
+non terminal    Node                ProcedureDeclr, ProcedureDef;
+non terminal    Node                UseDeclr;
+non terminal    ArrayList<Node>     UseDeclarations, FunctionDeclarations;
+non terminal    Node                Program;
 
 /* Precedences */
 precedence left     ELSE;
@@ -57,60 +65,203 @@ precedence left     UMINUS, LNEG;
 start with      Program;
 
 // Expressions
-Expr ::= LPAREN Expr RPAREN
-    | UnaryOp Expr
-    | Expr BinaryOp Expr
-    | FunctionCall
-    | ArrayCall
-    | LBRACE ArrayElems RBRACE
-    | TRUE
-    | FALSE
-    | INTEGER
-    | CHAR
-    | STRING
-    | IDENTIFIER
+Expr ::= 
+    LPAREN Expr:e RPAREN
+        {:
+            RESULT = e;
+        :}
+    | UnaryOp:uop Expr:e
+        {:
+            Unary u = (Unary) uop;
+            u.child = e;
+            RESULT = u;
+        :}
+    | Expr:e1 BinaryOp:bop Expr:e2
+        {:
+            Binary b = (Binary) bop;
+            b.lhs = e1;
+            b.rhs = e2;
+            RESULT = b;
+        :}
+    | FunctionCall:fc
+        {:
+            RESULT = fc;
+        :}
+    | ArrayCall:ac
+        {:
+            RESULT = ac;
+        :}
+    | LBRACE ArrayElems:ae RBRACE
+        {:
+            RESULT = new XiArray(aexleft, ae);
+        :}
+    | TRUE:t
+        {:
+            RESULT = new XiBool(txleft, t); 
+        :}
+    | FALSE:f
+        {:
+            RESULT = new XiBool(fxleft, f);
+        :}
+    | INTEGER:i
+        {:
+            RESULT = new XiInt(ixleft, i);
+        :}
+    | CHAR:c
+        {:
+            RESULT = new XiChar(cxleft, c.name, c.value);
+        :}
+    | STRING:s
+        {:
+            RESULT = new XiString(sxleft, s.name, s.value);
+        :}
+    | IDENTIFIER:id
+        {:
+            RESULT = new Variable(idxleft, id);
+        :}
     ;
 
-UnaryOp ::= LNEG
-    | MINUS
+UnaryOp ::= 
+    LNEG:l
+        {:
+            RESULT = new Unary(lxleft, Unary.UnaryType.LNEGATE, null);
+        :}
+    | MINUS:m
+        {:
+            RESULT = new Unary(mxleft, Unary.UnaryType.INEGATE, null);
+        :}
     %prec UMINUS
     ;
 
-BinaryOp ::= MULT
-    | HMULT
-    | DIV
-    | MOD
-    | ADD
-    | MINUS
-    | LTE
-    | LT
-    | GTE
-    | GT
-    | EQEQ
-    | NEQ
-    | LAND
-    | LOR
+BinaryOp ::= 
+    MULT:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.TIMES, null, null);
+        :}
+    | HMULT:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.HIGH_TIMES, null, null);
+        :}
+    | DIV:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.DIVISION, null, null);
+        :}
+    | MOD:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.MODULO, null, null);
+        :}
+    | ADD:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.PLUS, null, null);
+        :}
+    | MINUS:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.MINUS, null, null);
+        :}
+    | LTE:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.LE, null, null);
+        :}
+    | LT:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.LT, null, null);
+        :}
+    | GTE:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.GE, null, null);
+        :}
+    | GT:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.GT, null, null);
+        :}
+    | EQEQ:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.EQ, null, null);
+        :}
+    | NEQ:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.NE, null, null);
+        :}
+    | LAND:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.AND, null, null);
+        :}
+    | LOR:b
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.OR, null, null);
+        :}
     ;
 
 // Function Calls
-FunctionCall ::= IDENTIFIER LPAREN Args RPAREN
-    | LENGTH LPAREN Args RPAREN;
-
-Args ::= 
-    | Expr FArgs
+FunctionCall ::= 
+    IDENTIFIER:id LPAREN Args:args RPAREN
+        {:
+            Variable v = new Variable(idxleft, id);
+            RESULT = new FunctionCall(idxleft, v, args);
+        :}
+    | LENGTH:l LPAREN Args:args RPAREN
+        {:
+            Variable v = new Variable(lxleft, "length");
+            RESULT = new FunctionCall(lxleft, v, args);
+        :}
     ;
 
-FArgs ::= COMMA Expr
-    | COMMA Expr FArgs
+Args ::= 
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | Expr:e FArgs:fargs
+        {:
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(e);
+            args.addAll(fargs);
+            RESULT = args;
+        :}
+    ;
+
+FArgs ::= 
+    COMMA Expr:e
+        {:
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(e);
+            RESULT = args;
+        :}
+    | COMMA Expr:e FArgs:fargs
+        {:
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(e);
+            args.addAll(fargs);
+            RESULT = args;
+        :}
     ;
 
 // Array Calls
-ArrayCall ::= FunctionCall LBRACK Expr RBRACK IndexList
-    | IDENTIFIER LBRACK Expr RBRACK IndexList
+ArrayCall ::= 
+    FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
+        {:
+            
+        :}
+    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+        {:
+            // Index arr1 = new Index(idxleft, id, e);
+            // if (il != null) {
+            //     Index arr2 = (Index) il;
+            //     arr2.array = arr1;
+            //     RESULT = arr2;
+            // } else {
+            //     RESULT = arr1;
+            // }
+        :}
     ;
 
-IndexList ::=  
-    | IndexList LBRACK Expr RBRACK
+IndexList ::=
+        {:
+
+        :}
+    | LBRACK Expr:e RBRACK IndexList:il
+        {:
+            
+        :}
     ;
 
 // Array List

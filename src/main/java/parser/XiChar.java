@@ -4,10 +4,12 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 
 public class XiChar extends Expression {
 
-    public char value;
+    public String escaped;
+    public long value;
 
-    public XiChar(Location location, char value) {
+    public XiChar(Location location, String escaped, long value) {
         this.location = location;
+        this.escaped = escaped;
         this.value = value;
     }
 

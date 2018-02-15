@@ -1,13 +1,17 @@
 package parser;
 
+import java.util.ArrayList;
+
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
 public class XiString extends Expression {
 
-    public String value;
+    public String escaped;
+    public ArrayList<Long> value;
 
-    public XiString(Location location, String value) {
+    public XiString(Location location, String escaped, ArrayList<Long> value) {
         this.location = location;
+        this.escaped = escaped;
         this.value = value;
     }
 

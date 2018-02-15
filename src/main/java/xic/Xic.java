@@ -185,8 +185,9 @@ public class Xic {
                 IXiParser parser = new IXiParser(lexer, sf);
                 
 
-                // Printer pp = new Printer(stream);
-                // pp.print(null);
+                Printer pp = new Printer(stream);
+                Node v = parser.parse().value();
+                pp.print(v);
             }
             else throw new Exception();
         } catch (Exception e){

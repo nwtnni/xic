@@ -16,6 +16,7 @@ public class Printer implements Visitor {
 
     public void print(Node n) {
         n.accept(this);
+        printer.flush();
     }
 
     /*
@@ -239,11 +240,11 @@ public class Printer implements Visitor {
     }
 
     public void visit(XiChar c) {
-        printer.printAtom(Character.toString(c.value));
+        printer.printAtom(c.escaped);
     }
 
     public void visit(XiString s) {
-        printer.printAtom(s.value);
+        printer.printAtom(s.escaped);
     }
 
     public void visit(XiArray a) {

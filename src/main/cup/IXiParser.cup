@@ -13,10 +13,17 @@ parser code {:
 :};
 
 /* Terminals (tokens returned by the scanner). */
-terminal            INT, BOOL;
-terminal            LPAREN, RPAREN, LBRACK, RBRACK;
-terminal            COLON, COMMA;
-terminal    String  IDENTIFIER;
+terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                    INT, BOOL;
+terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
+terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
+terminal    Boolean         TRUE, FALSE; 
+terminal    String          IDENTIFIER;
+terminal    Long            INTEGER;
+terminal    CharWrapper     CHAR;
+terminal    StringWrapper   STRING;
 
 /* Non terminals */
 non terminal    Node                FunctionDef;
@@ -29,10 +36,9 @@ non terminal    Node                Interface;
 /* The grammar rules */
 start with      Interface;
 
-
 // Function Definitions
 FunctionDef ::= 
-    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN ReturnTypeList:rtl
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
         {: 
             RESULT = new Function(idxleft, id, atl, rtl, null);
         :}
