@@ -63,7 +63,7 @@ precedence left     MULT, HMULT, DIV, MOD;
 precedence left     UMINUS, LNEG;
 
 /* The grammar rules */
-start with      ProcedureDeclr;
+start with      Program;
 
 // Program
 Program ::= UseDeclarations:uds FunctionDeclarations:fds

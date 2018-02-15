@@ -1,5 +1,6 @@
-use foo
+use foo;
 use bar;
+
 use freddie1
 use charlie_qian
 use frank'lin

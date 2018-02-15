@@ -1,25 +1,26 @@
 // simple procedures
 
-afunc();
-
-bfunc() {
+afunc() {
 
 }
 
-cfunc(x: int);
+bfunc(x: int)
+    int i = 1;
 
-dfunc(y: bool) {
-
-}
-
-efunc(x: int, y: int);
-
-ffunc(x: bool, y: int) {
+cfunc(y: bool) {
 
 }
 
-gfunc(arr1: int[]);
+dfunc(x: int, y: int)
+    int z = x + y;
 
-hfunc(arr2: bool[][]) {
-    
+efunc(x: bool, y: int) {
+
+}
+
+ffunc(arr1: int[])
+    int i = arr1[0];
+
+gfunc(arr2: bool[][]) {
+
 }
