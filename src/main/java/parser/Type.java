@@ -26,7 +26,7 @@ public class Type extends Node {
     public Node size;
     public Node child;
 
-    private Type(Location location, Primitive primitive) {
+    public Type(Location location, Primitive primitive) {
         assert primitive != Primitive.ARRAY;
         this.location = location;
         this.primitive = primitive; 

@@ -25,8 +25,8 @@ class CupGenerate extends DefaultTask {
     void generate() {
         try {
             project.delete(output)
-            def args = ['-destdir', sink, '-parser', parser, '-symbols', symbol, '-package', pkg, project.file(source + parser + '.cup')] as String[]
-            def iargs = ['-destdir', sink, '-parser', iparser, '-symbols', isymbol, '-package', pkg, project.file(source + iparser + '.cup')] as String[]
+            def args = ['-locations', '-destdir', sink, '-parser', parser, '-symbols', symbol, '-package', pkg, project.file(source + parser + '.cup')] as String[]
+            def iargs = ['-locations', '-destdir', sink, '-parser', iparser, '-symbols', isymbol, '-package', pkg, project.file(source + iparser + '.cup')] as String[]
             Main.main(args)
             Main.main(iargs)
         } catch (Exception e) {
