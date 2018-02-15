@@ -3,6 +3,7 @@ package xic;
 import java.io.*;
 import org.apache.commons.io.FilenameUtils;
 import lexer.*;
+import parser.*;
 
 public class Xic {
     public static void main(String [] args) {
@@ -31,10 +32,54 @@ public class Xic {
             }
 
         }
+        else if(args.length > 1 && args[0].equals("--parse")){
+            try {
+                for(int i=1;i<args.length;i++) {
+                    String source = args[i];
+                    String output = FilenameUtils.removeExtension(source) + ".parsed";
+                    String ext = FilenameUtils.getExtension(source);
+                    BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
+                    if (ext.equals("xi")){
+
+                    }
+                    else if (ext.equals("ixi")){
+
+                    }
+                    else throw new Exception ();
+                    
+                } 
+            } catch (Exception e) {
+                System.out.println("Invalid input for --parse. See --help for correct usage.");
+            }
+
+        }
+        else if(args.length > 1 && ((args[0].equals("--parse") && args[1].equals("--lex") || (args[1].equals("--parse") && args[0].equals("--lex")){
+            // try {
+            //     for(int i=1;i<args.length;i++) {
+            //         String source = args[i];
+            //         String output = FilenameUtils.removeExtension(source) + ".parsed";
+            //         String ext = FilenameUtils.getExtension(source);
+            //         BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
+            //         if (ext.equals("xi")){
+
+            //         }
+            //         else if (ext.equals("ixi")){
+
+            //         }
+            //         else throw new Exception ();
+                    
+            //     } 
+            // } catch (Exception e) {
+            //     System.out.println("Invalid input for --parse. See --help for correct usage.");
+            // }
+
+        }
         else if (args.length == 1 && args[0].equals("--help") || true) {
           System.out.println("Usage: xic [options] <source-files>");
           System.out.println("  --help:                 Print a synopsis of options");
           System.out.println("  --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed");
+          System.out.println("  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
         }
+        
     }
 }
