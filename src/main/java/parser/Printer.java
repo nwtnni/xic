@@ -89,18 +89,19 @@ public class Printer implements Visitor {
      * Statement nodes
      */
     public void visit(Declare d){
-        printer.startList(); 
+        
 
         //TODO
         if(d.id != null && d.type != null) {
+            printer.startList(); 
             d.id.accept(this);
             d.type.accept(this);
+            printer.endList();
         }
         else {
             printer.printAtom("_");
         }
 
-        printer.endList();
     }
 
     public void visit(Assign a){
