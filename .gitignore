@@ -28,4 +28,7 @@ bin/
 
 # Test files
 xthScript.results
+
+# xic output
 *.lexed
+*.parsed
