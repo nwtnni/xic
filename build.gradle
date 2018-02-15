@@ -13,6 +13,7 @@ repositories {
 dependencies {
     compile files("libs/java_cup.jar")
     compile files("libs/commons-io-2.6.jar")
+    compile files("libs/sexp-printer.jar")
 }
 
 jar {
