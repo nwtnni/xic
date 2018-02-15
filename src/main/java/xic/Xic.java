@@ -174,16 +174,13 @@ public class Xic {
                 
                 Printer pp = new Printer(stream);
                 pp.print(parser.parse().value());
-
-
             }
             else if (ext.equals("ixi")){
                 OutputStream stream = new FileOutputStream(output);
-                XiLexer lexer = new XiLexer(new FileReader(source));
+                IXiLexer lexer = new IXiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();
                 lexer.init(source, sf);
                 IXiParser parser = new IXiParser(lexer, sf);
-                
 
                 Printer pp = new Printer(stream);
                 Node v = parser.parse().value();

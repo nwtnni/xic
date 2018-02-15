@@ -13,8 +13,6 @@ parser code {:
     }
 :};
 
-scan with {: return lex.next_token(); :};
-
 /* Terminals (tokens returned by the scanner). */
 terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
 terminal                    INT, BOOL;
@@ -64,6 +62,250 @@ precedence left     UMINUS, LNEG;
 
 /* The grammar rules */
 start with      Program;
+
+// Program
+Program ::= UseDeclarations:uds FunctionDeclarations:fds
+    {:
+        RESULT = new Program(udsxleft, uds, fds);
+    :}
+    ;
+
+// Uses
+UseDeclarations ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | UseDeclarations:uds UseDeclr:u
+    {:
+        ArrayList<Node> useDecs = new ArrayList<Node>();
+        useDecs.addAll(uds);
+        useDecs.add(u);
+        RESULT = useDecs;
+    :}
+    ;
+
+// Use Declaration
+UseDeclr ::= 
+    USE:u IDENTIFIER:id
+    {:
+        RESULT = new Use(uxleft, id);
+    :}
+    | UseDeclr:ud SEMICOLON
+    {:
+        RESULT = ud;
+    :}
+    ;
+
+// Functions
+FunctionDeclarations ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FunctionDeclr:f FunctionDeclarations:fds
+    {:
+        ArrayList<Node> funDecs = new ArrayList<Node>();
+        funDecs.add(f);
+        funDecs.addAll(fds);
+        RESULT = funDecs;
+    :}
+    | ProcedureDeclr:f FunctionDeclarations:fds
+    {:
+        ArrayList<Node> funDecs = new ArrayList<Node>();
+        funDecs.add(f);
+        funDecs.addAll(fds);
+        RESULT = funDecs;
+    :}
+    ;
+
+// Function and Procedure Declaration
+FunctionDeclr ::= FunctionDef BlockReturn;
+
+FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
+
+ProcedureDeclr ::= ProcedureDef BlockVoidReturn
+    ;
+
+ProcedureDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN
+    ;
+
+ArgsTypeList ::= 
+    | IDENTIFIER COLON FunType FArgsTypeList
+    ;
+
+FArgsTypeList ::= 
+    | COMMA IDENTIFIER COLON FunType FArgsTypeList
+    ;
+
+ReturnTypeList ::= FunType FReturnTypeList;
+
+FReturnTypeList ::= 
+    | COMMA FunType FReturnTypeList
+    ;
+
+FunType ::= INT
+    | BOOL
+    | FunType LBRACK RBRACK
+    ;
+
+// Return Block
+BlockReturn ::= RETURN Expr
+    | LBRACE StmtList RBRACE
+    ;
+
+StmtList ::= StmtListNoReturn
+    | StmtListNoReturn RETURN Expr
+    ;
+
+// Void Return Block
+BlockVoidReturn ::= RETURN
+    | LBRACE StmtListVoid RBRACE
+    ;
+
+StmtListVoid ::= StmtListNoReturn
+    | StmtListNoReturn RETURN
+    ; 
+
+// No Return Block
+BlockNoReturn ::= SingleStmtNoReturn
+    | LBRACE StmtListNoReturn RBRACE
+    ;
+
+SingleStmtNoReturn ::= Assign
+    | IfStmt
+    | WhileStmt
+    | Procedure
+    | VarDeclr
+    | SEMICOLON
+    ;
+
+Procedure ::= FunctionCall;
+
+StmtListNoReturn ::= 
+    | StmtNoReturn StmtListNoReturn
+    ;
+
+StmtNoReturn ::= SingleStmtNoReturn
+    | LBRACE StmtList RBRACE
+    ;
+
+// Function Calls
+FunctionCall ::= 
+    IDENTIFIER:id LPAREN Args:args RPAREN
+        {:
+            Variable v = new Variable(idxleft, id);
+            RESULT = new Call(idxleft, v, args);
+        :}
+    | LENGTH:l LPAREN Args:args RPAREN
+        {:
+            Variable v = new Variable(lxleft, "length");
+            RESULT = new Call(lxleft, v, args);
+        :}
+    ;
+
+Args ::= 
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | Expr:e FArgs:fargs
+        {:
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(e);
+            args.addAll(fargs);
+            RESULT = args;
+        :}
+    ;
+
+FArgs ::= 
+    COMMA Expr:e
+        {:
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(e);
+            RESULT = args;
+        :}
+    | COMMA Expr:e FArgs:fargs
+        {:
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(e);
+            args.addAll(fargs);
+            RESULT = args;
+        :}
+    ;
+
+// Array Calls
+ArrayCall ::= 
+    FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
+        {:
+            
+        :}
+    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+        {:
+            // Index arr1 = new Index(idxleft, id, e);
+            // if (il != null) {
+            //     Index arr2 = (Index) il;
+            //     arr2.array = arr1;
+            //     RESULT = arr2;
+            // } else {
+            //     RESULT = arr1;
+            // }
+        :}
+    ;
+
+IndexList ::=
+        {:
+
+        :}
+    | LBRACK Expr:e RBRACK IndexList:il
+        {:
+            
+        :}
+    ;
+
+// Array List
+ArrayElems ::= 
+    | Expr FArrayElems
+    ;
+
+FArrayElems ::= 
+    | COMMA
+    | COMMA Expr FArrayElems
+    ;
+
+// Variable Declaration
+VarDeclr ::= IDENTIFIER COLON VarType;
+
+VarType ::= VarType LBRACK RBRACK
+    | VarType LBRACK Expr RBRACK
+    | KeyType
+    ;
+
+KeyType ::= INT
+    | BOOL
+    ;
+
+// Assignment
+Assign ::= IDList EQ Expr;
+
+IDList ::= AssignName FIDList;
+
+FIDList ::= 
+    | COMMA AssignName FIDList
+    ;
+
+AssignName ::= UNDERSCORE
+    | IDENTIFIER
+    | ArrayCall
+    | VarDeclr
+    ;
+
+// While Statement
+WhileStmt ::= WHILE Expr BlockNoReturn;
+
+// If Statement
+IfStmt ::= IF Expr BlockNoReturn ElseStmt;
+
+ElseStmt ::= 
+    | ELSE Expr BlockNoReturn
+    ;
 
 // Expressions
 Expr ::= 
@@ -193,211 +435,9 @@ BinaryOp ::=
         :}
     ;
 
-// Function Calls
-FunctionCall ::= 
-    IDENTIFIER:id LPAREN Args:args RPAREN
-        {:
-            Variable v = new Variable(idxleft, id);
-            RESULT = new Call(idxleft, v, args);
-        :}
-    | LENGTH:l LPAREN Args:args RPAREN
-        {:
-            Variable v = new Variable(lxleft, "length");
-            RESULT = new Call(lxleft, v, args);
-        :}
-    ;
 
-Args ::= 
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
-    | Expr:e FArgs:fargs
-        {:
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(e);
-            args.addAll(fargs);
-            RESULT = args;
-        :}
-    ;
 
-FArgs ::= 
-    COMMA Expr:e
-        {:
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(e);
-            RESULT = args;
-        :}
-    | COMMA Expr:e FArgs:fargs
-        {:
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(e);
-            args.addAll(fargs);
-            RESULT = args;
-        :}
-    ;
 
-// Array Calls
-ArrayCall ::= 
-    FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
-        {:
-            
-        :}
-    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
-        {:
-            // Index arr1 = new Index(idxleft, id, e);
-            // if (il != null) {
-            //     Index arr2 = (Index) il;
-            //     arr2.array = arr1;
-            //     RESULT = arr2;
-            // } else {
-            //     RESULT = arr1;
-            // }
-        :}
-    ;
 
-IndexList ::=
-        {:
 
-        :}
-    | LBRACK Expr:e RBRACK IndexList:il
-        {:
-            
-        :}
-    ;
 
-// Array List
-ArrayElems ::= 
-    | Expr FArrayElems
-    ;
-
-FArrayElems ::= 
-    | COMMA
-    | COMMA Expr FArrayElems
-    ;
-
-// Variable Declaration
-VarDeclr ::= IDENTIFIER COLON VarType;
-
-VarType ::= VarType LBRACK RBRACK
-    | VarType LBRACK Expr RBRACK
-    | KeyType
-    ;
-
-KeyType ::= INT
-    | BOOL
-    ;
-
-// Assignment
-Assign ::= IDList EQ Expr;
-
-IDList ::= AssignName FIDList;
-
-FIDList ::= 
-    | COMMA AssignName FIDList
-    ;
-
-AssignName ::= UNDERSCORE
-    | IDENTIFIER
-    | ArrayCall
-    | VarDeclr
-    ;
-
-// While Statement
-WhileStmt ::= WHILE Expr BlockNoReturn;
-
-// If Statement
-IfStmt ::= IF Expr BlockNoReturn ElseStmt;
-
-ElseStmt ::= 
-    | ELSE Expr BlockNoReturn
-    ;
-
-// No Return Block
-BlockNoReturn ::= SingleStmtNoReturn
-    | LBRACE StmtListNoReturn RBRACE
-    ;
-
-SingleStmtNoReturn ::= Assign
-    | IfStmt
-    | WhileStmt
-    | Procedure
-    | VarDeclr
-    | SEMICOLON
-    ;
-
-Procedure ::= FunctionCall;
-
-StmtListNoReturn ::= 
-    | StmtNoReturn StmtListNoReturn
-    ;
-
-StmtNoReturn ::= SingleStmtNoReturn
-    | LBRACE StmtList RBRACE
-    ;
-
-// Return Block
-BlockReturn ::= RETURN Expr
-    | LBRACE StmtList RBRACE
-    ;
-
-StmtList ::= StmtListNoReturn
-    | StmtListNoReturn RETURN Expr
-    ;
-
-// Void Return Block
-BlockVoidReturn ::= RETURN
-    | LBRACE StmtListVoid RBRACE
-    ;
-
-StmtListVoid ::= StmtListNoReturn
-    | StmtListNoReturn RETURN
-    ; 
-
-// Function Declaration
-FunctionDeclr ::= FunctionDef BlockReturn;
-
-FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
-
-ArgsTypeList ::= 
-    | IDENTIFIER COLON FunType FArgsTypeList
-    ;
-
-FArgsTypeList ::= 
-    | COMMA IDENTIFIER COLON FunType FArgsTypeList
-    ;
-
-ReturnTypeList ::= FunType FReturnTypeList;
-
-FReturnTypeList ::= 
-    | COMMA FunType FReturnTypeList
-    ;
-
-FunType ::= INT
-    | BOOL
-    | FunType LBRACK RBRACK
-    ;
-
-// Procedure Declaration
-ProcedureDeclr ::= ProcedureDef BlockVoidReturn
-    ;
-
-ProcedureDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN
-    ;
-
-// Use Declaration
-UseDeclr ::= USE IDENTIFIER 
-    | UseDeclr SEMICOLON
-    ;
-
-// Program
-Program ::= UseDeclarations FunctionDeclarations
-    ;
-
-UseDeclarations ::= 
-    | UseDeclarations UseDeclr
-    ;
-
-FunctionDeclarations ::= 
-    | FunctionDeclr FunctionDeclarations
-    | ProcedureDeclr FunctionDeclarations
-    ;

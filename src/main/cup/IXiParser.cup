@@ -6,8 +6,8 @@ import ast.*;
 
 parser code {:
     // Connect this parser to a scanner!
-    XiLexer lex;
-    IXiParser(XiLexer lex, ComplexSymbolFactory sf) {
+    IXiLexer lex;
+    IXiParser(IXiLexer lex, ComplexSymbolFactory sf) {
         super(lex, sf);
         this.lex = lex;
     }
