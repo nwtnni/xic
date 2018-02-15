@@ -1,2 +1,0 @@
-use hi
-use bye;

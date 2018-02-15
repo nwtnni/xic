@@ -1,0 +1,25 @@
+// simple procedures
+
+afunc();
+
+bfunc() {
+
+}
+
+cfunc(x: int);
+
+dfunc(y: bool) {
+
+}
+
+efunc(x: int, y: int);
+
+ffunc(x: bool, y: int) {
+
+}
+
+gfunc(arr1: int[]);
+
+hfunc(arr2: bool[][]) {
+    
+}
