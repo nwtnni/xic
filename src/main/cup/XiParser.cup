@@ -22,8 +22,8 @@ terminal                        EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE
 terminal    Boolean             TRUE, FALSE; 
 terminal    String              IDENTIFIER;
 terminal    Long                INTEGER;
-terminal    Long                CHAR;
-terminal    ArrayList<Long>     STRING;
+terminal    CharWrapper         CHAR;
+terminal    StringWrapper       STRING;
 
 /* Non terminals */
 non terminal    Expr;

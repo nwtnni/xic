@@ -95,14 +95,16 @@ import static parser.XiSymbol.*;
         Location r = new Location(unit, row(), column());
         String literal = yytext().substring(0, yylength() - 1);      
         String name = escape(literal, c);
-        return symbolFactory.newSymbol(name, CHAR, l, r, new Long((long) c));
+        CharWrapper v = new CharWrapper(name, (long) c);
+        return symbolFactory.newSymbol(name, CHAR, l, r, v);
     }
 
     private Symbol tokenize() {
         yybegin(YYINITIAL);
         Location l = new Location(unit, row(), startColumn);
         Location r = new Location(unit, row(), column());
-        return symbolFactory.newSymbol(literal.toString(), STRING, l, r, value);
+        StringWrapper v = new StringWrapper(literal.toString(), value);
+        return symbolFactory.newSymbol(literal.toString(), STRING, l, r, v);
     }
 
     private Symbol logError(int r, int c, String msg) throws Exception {
