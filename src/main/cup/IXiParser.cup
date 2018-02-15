@@ -130,6 +130,13 @@ FunctionDefList ::=
             funcs.add(f);
             RESULT = funcs;
         :}
+    | FunctionDefList:fdl ProcedureDef:f
+        {:
+            ArrayList<Node> funcs = new ArrayList<Node>();
+            funcs.addAll(fdl);
+            funcs.add(f);
+            RESULT = funcs;
+        :}
     ;
 
 Interface ::=

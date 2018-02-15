@@ -178,7 +178,6 @@ public class Xic {
 
             }
             else if (ext.equals("ixi")){
-                System.out.println("HELLO WORLD");
                 OutputStream stream = new FileOutputStream(output);
                 XiLexer lexer = new XiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();

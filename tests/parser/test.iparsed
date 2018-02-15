@@ -1,5 +1,4 @@
-(()
- ((foo () (bool))
+(((foo () (bool))
   (foobar ((id ([] int)) (abc ([] ([] ([] ([] ([] int)))))))
    (([] ([] ([] bool)))))
   (readln () (([] int)))
