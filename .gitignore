@@ -10,6 +10,7 @@ src/main/java/lexer/XiLexer.java
 src/main/java/lexer/IXiLexer.java
 src/main/java/parser/XiParser.java
 src/main/java/parser/XiSymbol.java
+src/main/java/lexer/IXiLexer.java
 src/main/java/parser/IXiParser.java
 src/main/java/parser/IXiSymbol.java
 
