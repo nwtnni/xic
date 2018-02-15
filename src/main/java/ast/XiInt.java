@@ -1,14 +1,14 @@
-package parser;
+package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class XiBool extends Node {
+public class XiInt extends Node {
 
-    public boolean value;
+    public long value;
 
-    public XiBool(Location location, boolean value) {
+    public XiInt(Location location, long value) {
         this.location = location;
-        this.value = value;
+        this.value = value; 
     }
 
     public void accept(Visitor v) {

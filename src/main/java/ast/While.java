@@ -1,15 +1,15 @@
-package parser;
+package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class If extends Node {
+public class While extends Node {
 
     public Node guard;
     public Node block;
 
-    public If(Location location, Node guard, Node block) {
+    public While(Location location, Node guard, Node block) {
         this.location = location;
-        this.guard = guard; 
+        this.guard = guard;
         this.block = block;
     }
 

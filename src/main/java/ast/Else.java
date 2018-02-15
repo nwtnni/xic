@@ -1,15 +1,13 @@
-package parser;
+package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class While extends Node {
+public class Else extends Node {
 
-    public Node guard;
     public Node block;
 
-    public While(Location location, Node guard, Node block) {
+    public Else(Location location, Node block) { 
         this.location = location;
-        this.guard = guard;
         this.block = block;
     }
 
@@ -17,3 +15,4 @@ public class While extends Node {
         v.visit(this);
     }
 }
+

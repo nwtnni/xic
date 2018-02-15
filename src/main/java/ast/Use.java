@@ -1,14 +1,14 @@
-package parser;
+package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class XiInt extends Node {
+public class Use extends Node {
+    
+    public String file;
 
-    public long value;
-
-    public XiInt(Location location, long value) {
+    public Use(Location location, String file) {
         this.location = location;
-        this.value = value; 
+        this.file = file; 
     }
 
     public void accept(Visitor v) {

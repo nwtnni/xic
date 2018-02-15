@@ -1,13 +1,15 @@
-package parser;
+package ast;
+
+import java.util.ArrayList;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class XiChar extends Node {
+public class XiString extends Node {
 
     public String escaped;
-    public long value;
+    public ArrayList<Long> value;
 
-    public XiChar(Location location, String escaped, long value) {
+    public XiString(Location location, String escaped, ArrayList<Long> value) {
         this.location = location;
         this.escaped = escaped;
         this.value = value;

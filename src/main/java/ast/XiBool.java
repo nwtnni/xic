@@ -1,18 +1,17 @@
-package parser;
+package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-public class Else extends Node {
+public class XiBool extends Node {
 
-    public Node block;
+    public boolean value;
 
-    public Else(Location location, Node block) { 
+    public XiBool(Location location, boolean value) {
         this.location = location;
-        this.block = block;
+        this.value = value;
     }
 
     public void accept(Visitor v) {
         v.visit(this);
     }
 }
-

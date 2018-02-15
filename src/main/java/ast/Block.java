@@ -1,4 +1,4 @@
-package parser;
+package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import java.util.ArrayList;

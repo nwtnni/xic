@@ -5,6 +5,8 @@ import polyglot.util.OptimalCodeWriter;
 
 import java.io.OutputStream;
 
+import ast.*;
+
 public class Printer implements Visitor {
 
     private static final int WIDTH = 80;
