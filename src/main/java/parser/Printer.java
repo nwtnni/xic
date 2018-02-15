@@ -112,7 +112,7 @@ public class Printer implements Visitor {
 
         printer.printAtom("return");
         
-        if r.hasValue() {
+        if (r.hasValue()) {
             r.value.accept(this);
         }
 

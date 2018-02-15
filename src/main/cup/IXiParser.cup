@@ -27,7 +27,7 @@ terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Node                FunctionDef;
+non terminal    Node                FunctionDef, ProcedureDef;
 non terminal    ArrayList<Node>     FunctionDefList;
 non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
 non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
@@ -42,6 +42,13 @@ FunctionDef ::=
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
         {: 
             RESULT = new Function(idxleft, id, atl, rtl);
+        :}
+    ;
+
+ProcedureDef ::= 
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
+        {: 
+            RESULT = new Function(idxleft, id, atl, new ArrayList<Node>());
         :}
     ;
 
