@@ -76,7 +76,7 @@ ReturnTypeList ::=
     FunType:type FReturnTypeList:rtl
         {:
             ArrayList<Node> returns = new ArrayList<Node>();
-            returns.add(new Type(typexleft, type));
+            returns.add(type);
             returns.addAll(rtl);
             RESULT = returns;
         :}
@@ -89,7 +89,7 @@ FReturnTypeList ::=
     | COMMA FunType:type FReturnTypeList:rtl
         {:
             ArrayList<Node> returns = new ArrayList<Node>();
-            returns.add(new Type(typexleft, type));
+            returns.add(type);
             returns.addAll(rtl);
             RESULT = returns; 
         :}

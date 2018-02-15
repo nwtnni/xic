@@ -221,6 +221,7 @@ public class Printer implements Visitor {
     public void visit(Type t) {
         if (t.primitive.equals(Type.Primitive.ARRAY)) {
             printer.startList();
+            printer.printAtom("[]");
             t.child.accept(this);
             printer.endList();
 
