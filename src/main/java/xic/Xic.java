@@ -73,8 +73,13 @@ public class Xic {
     }
 
     private static void lex(String source, String sourceDir, String outputDir) throws IOException {
+        String ext = FilenameUtils.getExtension(source);
+        if (!ext.equals("xi") && !ext.equals("ixi")) {
+            displayHelp();
+            return;
+        }
+
         String output = FilenameUtils.concat(outputDir, FilenameUtils.removeExtension(source) + ".lexed");
-        
         source = FilenameUtils.concat(sourceDir, source);
         
         BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
@@ -118,13 +123,14 @@ public class Xic {
 
     private static void parse(String source, String sourceDir, String outputDir) throws IOException {
         String ext = FilenameUtils.getExtension(source);
-        String output = FilenameUtils.concat(outputDir, FilenameUtils.removeExtension(source));
+        
+        String output;
         if (ext.equals("ixi")){
-            output = output + ".iparsed";
+            output = ".iparsed";
         } else {
-            output = output + ".parsed";
+            output = ".parsed";
         }
-
+        output = FilenameUtils.concat(outputDir, FilenameUtils.removeExtension(source) + output);
         source = FilenameUtils.concat(sourceDir, source);
           
         try {
