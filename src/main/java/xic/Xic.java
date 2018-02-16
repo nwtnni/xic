@@ -11,6 +11,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import parser.XiSymbol;
 import lexer.*;
 import parser.*;
+import ast.*;
 
 import java.util.*;
 
@@ -165,6 +166,7 @@ public class Xic {
           
         try {
             if (ext.equals("xi")){
+                System.out.println("XI");
                 OutputStream stream = new FileOutputStream(output);
                 XiLexer lexer = new XiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();
@@ -173,23 +175,22 @@ public class Xic {
                 
                 Printer pp = new Printer(stream);
                 pp.print(parser.parse().value());
-
-
             }
             else if (ext.equals("ixi")){
-                System.out.println("HELLO WORLD");
+                System.out.println("IXI");
                 OutputStream stream = new FileOutputStream(output);
-                XiLexer lexer = new XiLexer(new FileReader(source));
+                IXiLexer lexer = new IXiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();
                 lexer.init(source, sf);
                 IXiParser parser = new IXiParser(lexer, sf);
-                
 
-                // Printer pp = new Printer(stream);
-                // pp.print(null);
+                Printer pp = new Printer(stream);
+                Node v = parser.parse().value();
+                pp.print(v);
             }
             else throw new Exception();
         } catch (Exception e){
+            e.printStackTrace();
             BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
             w.append(e.getMessage());
             w.close();

@@ -25,13 +25,19 @@ jar {
     }
 }
 
-task jflexGenerate(type: JFlexGenerate) {}
-task cupGenerate(type: CupGenerate) {}
+task jflexIXi(type: JFlexIXi) {}
+task jflexXi(type: JFlexXi) {}
+
+task cupIXi(type: CupIXi) {}
+task cupXi(type: CupXi) {}
+
 task xic(type: Exec) {
     executable "sh"
     args "-c", "cat resources/stub.sh build/libs/xic-0.1.0.jar >> xic && chmod 777 xic"
 }
 
-compileJava.dependsOn cupGenerate
-compileJava.dependsOn jflexGenerate
+compileJava.dependsOn jflexIXi
+compileJava.dependsOn jflexXi
+compileJava.dependsOn cupIXi
+compileJava.dependsOn cupXi
 xic.dependsOn jar

@@ -2,11 +2,12 @@ import java_cup.runtime.*;
 import java.util.ArrayList;
 
 import lexer.*;
+import ast.*;
 
 parser code {:
     // Connect this parser to a scanner!
-    XiLexer lex;
-    IXiParser(XiLexer lex, ComplexSymbolFactory sf) {
+    IXiLexer lex;
+    IXiParser(IXiLexer lex, ComplexSymbolFactory sf) {
         super(lex, sf);
         System.out.println("Start");
         this.lex = lex;
@@ -17,13 +18,20 @@ init with {: System.out.println("init"); :};
 scan with {:return lex.next_token(); :};
 
 /* Terminals (tokens returned by the scanner). */
-terminal            INT, BOOL;
-terminal            LPAREN, RPAREN, LBRACK, RBRACK;
-terminal            COLON, COMMA;
-terminal    String  IDENTIFIER;
+terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                    INT, BOOL;
+terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
+terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
+terminal    Boolean         TRUE, FALSE; 
+terminal    String          IDENTIFIER;
+terminal    Long            INTEGER;
+terminal    CharWrapper     CHAR;
+terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Node                FunctionDef;
+non terminal    Node                FunctionDef, ProcedureDef;
 non terminal    ArrayList<Node>     FunctionDefList;
 non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
 non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
@@ -34,17 +42,18 @@ non terminal    String              Test;
 /* The grammar rules */
 start with      Test;
 
-Test ::= {:
-        System.out.println("IT WORKED");
-        RESULT = "WOW";
-    :}
-    ;
-
 // Function Definitions
 FunctionDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
         {: 
-            RESULT = new Function(idxleft, id, atl, rtl, null);
+            RESULT = new Function(idxleft, id, atl, rtl);
+        :}
+    ;
+
+ProcedureDef ::= 
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
+        {: 
+            RESULT = new Function(idxleft, id, atl, new ArrayList<Node>());
         :}
     ;
 
@@ -80,7 +89,7 @@ ReturnTypeList ::=
     FunType:type FReturnTypeList:rtl
         {:
             ArrayList<Node> returns = new ArrayList<Node>();
-            returns.add(new Type(typexleft, type));
+            returns.add(type);
             returns.addAll(rtl);
             RESULT = returns;
         :}
@@ -93,7 +102,7 @@ FReturnTypeList ::=
     | COMMA FunType:type FReturnTypeList:rtl
         {:
             ArrayList<Node> returns = new ArrayList<Node>();
-            returns.add(new Type(typexleft, type));
+            returns.add(type);
             returns.addAll(rtl);
             RESULT = returns; 
         :}
@@ -126,11 +135,22 @@ FunctionDefList ::=
             funcs.add(f);
             RESULT = funcs;
         :}
+    | FunctionDefList:fdl ProcedureDef:f
+        {:
+            ArrayList<Node> funcs = new ArrayList<Node>();
+            funcs.addAll(fdl);
+            funcs.add(f);
+            RESULT = funcs;
+        :}
     ;
 
 Interface ::= FunctionDefList:fdl
         {:
+<<<<<<< HEAD
             System.out.println("Interface");
             RESULT = new Program(fdlxleft, new ArrayList<Node>(), fdl);
+=======
+            RESULT = new Program(fdlxleft, fdl);
+>>>>>>> c05a20de1d18ca1eee7138a8da53e0bc231506b1
         :}
     ;

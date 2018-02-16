@@ -2,6 +2,7 @@ import java_cup.runtime.*;
 import java.util.ArrayList;
 
 import lexer.*;
+import ast.*;
 
 parser code {:
     // Connect this parser to a scanner!
@@ -26,226 +27,644 @@ terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Node    Expr;
-non terminal    Node    UnaryOp, BinaryOp;
-non terminal    Node    FunctionCall, Args, FArgs; 
-non terminal    Node    ArrayCall, IndexList;
-non terminal    Node    ArrayElems, FArrayElems;
-non terminal    Node    VarDeclr, VarType, KeyType;
-non terminal    Node    Assign, IDList, FIDList, AssignName;
-non terminal    Node    WhileStmt, IfStmt, ElseStmt;
-non terminal    Node    BlockNoReturn, SingleStmtNoReturn, Procedure, StmtListNoReturn, StmtNoReturn;
-non terminal    Node    BlockReturn, StmtList;
-non terminal    Node    BlockVoidReturn, StmtListVoid;
-non terminal    Node    FunctionDeclr, FunctionDef;
-non terminal    Node    ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList, FunType;
-non terminal    Node    ProcedureDeclr, ProcedureDef;
-non terminal    Node    UseDeclr, UseDeclarations, FunctionDeclarations;
-non terminal    Node    Program;
+non terminal    Node                Expr;
+non terminal    ArrayList<Node>     ExprList, FExprList;
+non terminal    Node                FunctionCall;
+non terminal    ArrayList<Node>     Args, FArgs; 
+non terminal    Node                ArrayCall;
+non terminal    ArrayList<Node>     IndexList;
+non terminal    ArrayList<Node>     ArrayElems, FArrayElems;
+non terminal    Node                VarDeclr, VarType, KeyType;
+non terminal    Node                Assign, AssignName;
+non terminal    ArrayList<Node>     IDList, FIDList;
+non terminal    Node                WhileStmt, IfStmt, ElseStmt;
+non terminal    Node                BlockNoReturn, SingleStmtNoReturn, Procedure, StmtNoReturn;
+non terminal    ArrayList<Node>     StmtListNoReturn, StmtList;
+non terminal    Node                BlockReturn;
+non terminal    Node                BlockVoidReturn;
+non terminal    ArrayList<Node>     StmtListVoid;
+non terminal    Node                FunctionDeclr, FunctionDef;
+non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
+non terminal    Node                FunType;
+non terminal    Node                ProcedureDeclr, ProcedureDef;
+non terminal    Node                UseDeclr;
+non terminal    ArrayList<Node>     UseDeclarations, FunctionDeclarations;
+non terminal    Node                Program;
+non terminal                        OptSemicolon;
 
 /* Precedences */
-precedence left     ELSE;
-precedence right    LOR;
-precedence left     LAND;
-precedence left     EQEQ, NEQ;
-precedence left     LTE, LT, GTE, GT;
-precedence left     ADD, MINUS;
-precedence left     MULT, HMULT, DIV, MOD;
-precedence left     UMINUS, LNEG;
+precedence nonassoc     ELSE;
+precedence left         LOR;
+precedence left         LAND;
+precedence left         EQEQ, NEQ;
+precedence left         LTE, LT, GTE, GT;
+precedence left         ADD, MINUS;
+precedence left         MULT, HMULT, DIV, MOD;
+precedence right        UMINUS, LNEG;
 
 /* The grammar rules */
 start with      Program;
 
-// Expressions
-Expr ::= LPAREN Expr RPAREN
-    | UnaryOp Expr
-    | Expr BinaryOp Expr
-    | FunctionCall
-    | ArrayCall
-    | LBRACE ArrayElems RBRACE
-    | TRUE
-    | FALSE
-    | INTEGER
-    | CHAR
-    | STRING
-    | IDENTIFIER
+// Optional Semicolon
+OptSemicolon ::=
+    | SEMICOLON
     ;
 
-UnaryOp ::= LNEG
-    | MINUS
-    %prec UMINUS
+// Program
+Program ::= UseDeclarations:uds FunctionDeclarations:fds
+    {:
+        RESULT = new Program(udsxleft, uds, fds);
+    :}
     ;
 
-BinaryOp ::= MULT
-    | HMULT
-    | DIV
-    | MOD
-    | ADD
-    | MINUS
-    | LTE
-    | LT
-    | GTE
-    | GT
-    | EQEQ
-    | NEQ
-    | LAND
-    | LOR
+// Uses
+UseDeclarations ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | UseDeclarations:uds UseDeclr:u
+    {:
+        ArrayList<Node> useDecs = new ArrayList<Node>();
+        useDecs.addAll(uds);
+        useDecs.add(u);
+        RESULT = useDecs;
+    :}
+    ;
+
+// Use Declaration
+UseDeclr ::= 
+    USE:u IDENTIFIER:id OptSemicolon
+    {:
+        RESULT = new Use(uxleft, id);
+    :}
+    ;
+
+// Functions
+FunctionDeclarations ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FunctionDeclr:f FunctionDeclarations:fds
+    {:
+        ArrayList<Node> funDecs = new ArrayList<Node>();
+        funDecs.add(f);
+        funDecs.addAll(fds);
+        RESULT = funDecs;
+    :}
+    | ProcedureDeclr:f FunctionDeclarations:fds
+    {:
+        ArrayList<Node> funDecs = new ArrayList<Node>();
+        funDecs.add(f);
+        funDecs.addAll(fds);
+        RESULT = funDecs;
+    :}
+    ;
+
+// Function and Procedure Declaration
+FunctionDeclr ::= 
+    FunctionDef:def BlockReturn:block
+    {:
+        RESULT = new Function(defxleft, (Function) def, block);
+    :}
+    ;
+
+FunctionDef ::= 
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
+    {:
+        RESULT = new Function(idxleft,id,atl,rtl);
+    :}
+    ;
+
+ProcedureDeclr ::= 
+    ProcedureDef:def BlockVoidReturn:block
+    {:
+        RESULT = new Function(defxleft, (Function) def, block);
+    :}
+    ;
+
+ProcedureDef ::= 
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
+    {:
+        RESULT = new Function(idxleft, id, atl);
+    :}
+    ;
+
+ArgsTypeList ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
+    {:
+        ArrayList<Node> args = new ArrayList<Node>();
+        args.add(new Declare(idxleft,new Variable(idxleft,id), type));
+        args.addAll(fatl);
+        RESULT = args;
+    :}
+    ;
+
+FArgsTypeList ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
+    {:
+        ArrayList<Node> fargs = new ArrayList<Node>();
+        fargs.add(new Declare(idxleft,new Variable(idxleft,id),type));
+        fargs.addAll(fatl);
+        RESULT = fargs;
+    :}
+    ;
+
+ReturnTypeList ::= 
+    FunType:type FReturnTypeList:frtl
+    {:
+        ArrayList<Node> returns = new ArrayList<Node>();
+        returns.add(type);
+        returns.addAll(frtl);
+        RESULT = returns;
+    :}
+    ;
+
+FReturnTypeList ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA FunType:type FReturnTypeList:frtl
+    {:
+        ArrayList<Node> freturns = new ArrayList<Node>();
+        freturns.add(type);
+        freturns.addAll(frtl);
+        RESULT = freturns;
+    :}
+    ;
+
+FunType ::= 
+    INT:i
+    {:
+        RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+    :}
+    | BOOL:b
+    {:
+        RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+    :}
+    | FunType:type LBRACK RBRACK
+    {:
+        RESULT = new Type(typexleft, type);
+    :}
+    ;
+
+// Return Block
+BlockReturn ::= 
+    RETURN:r Expr:e OptSemicolon
+    {:
+        RESULT = new Block(rxleft, new Return(rxleft, e));
+    :}
+    | LBRACE:l StmtList:sl RBRACE:r
+    {:
+        RESULT = new Block(lxleft, sl);
+    :}
+    ;
+
+StmtList ::= 
+    StmtListNoReturn:slnr RETURN:r ExprList:e OptSemicolon
+    {:
+        ArrayList<Node> sl = new ArrayList<Node>();
+        sl.addAll(slnr);
+        sl.add(new Return(rxleft,new Multiple(exleft, e)));
+        RESULT = sl;
+    :}
+    ;
+
+ExprList ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | Expr:e FExprList:fel
+    {:
+        ArrayList<Node> exprlist = new ArrayList<Node>();
+        exprlist.add(e);
+        exprlist.addAll(fel); 
+        RESULT = exprlist;
+    :}
+    ;
+
+FExprList ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA Expr:e FExprList:fel 
+    {:
+        ArrayList<Node> exprlist = new ArrayList<Node>();
+        exprlist.add(e);
+        exprlist.addAll(fel); 
+        RESULT = exprlist;  
+    :}
+    ;
+
+// Void Return Block
+BlockVoidReturn ::= 
+    RETURN:r OptSemicolon
+    {:
+        RESULT = new Block(rxleft, new Return(rxleft));
+    :}
+    | LBRACE:l StmtListVoid:slv RBRACE:r
+    {:
+        RESULT = new Block(lxleft, slv);
+    :}
+    ;
+
+StmtListVoid ::= 
+    StmtListNoReturn:slnr
+    {:
+        RESULT = slnr;
+    :}
+    | StmtListNoReturn:slnr RETURN:r
+    {:
+        ArrayList<Node> sl = new ArrayList<Node>();
+        sl.addAll(slnr);
+        sl.add(new Return(rxleft));
+        RESULT = sl;
+    :}
+    ; 
+
+// No Return Block
+BlockNoReturn ::= 
+    SingleStmtNoReturn:ssnr
+    {:
+        RESULT = new Block(ssnrxleft, ssnr);
+    :}
+    | LBRACE StmtListNoReturn:slnr RBRACE
+    {:
+        RESULT = new Block(slnrxleft, slnr);
+    :}
+    ;
+
+SingleStmtNoReturn ::= 
+    Assign:a OptSemicolon
+    {:
+        RESULT = a;
+    :}
+    | IfStmt:i
+    {:
+        RESULT = i;
+    :}
+    | WhileStmt:w 
+    {:
+        RESULT = w;
+    :}
+    | Procedure:p OptSemicolon
+    {:
+        RESULT = p;
+    :}
+    | VarDeclr:v OptSemicolon
+    {:
+        RESULT = v;
+    :}
+    ;
+
+Procedure ::= FunctionCall:f
+    {:
+        RESULT = f;
+    :};
+
+StmtListNoReturn ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | StmtNoReturn:snr StmtListNoReturn:slnr
+    {:
+        ArrayList<Node> stmts = new ArrayList<Node>();
+        stmts.add(snr);
+        stmts.addAll(slnr);
+        RESULT = stmts;
+    :}
+    ;
+
+StmtNoReturn ::= 
+    SingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    | LBRACE:l StmtListNoReturn:sl RBRACE:r
+    {:
+        RESULT = new Block(lxleft, sl);
+    :}
     ;
 
 // Function Calls
-FunctionCall ::= IDENTIFIER LPAREN Args RPAREN
-    | LENGTH LPAREN Args RPAREN;
-
-Args ::= 
-    | Expr FArgs
+FunctionCall ::= 
+    IDENTIFIER:id LPAREN Args:args RPAREN
+        {:
+            Variable v = new Variable(idxleft, id);
+            RESULT = new Call(idxleft, v, args);
+        :}
+    | LENGTH:l LPAREN Args:args RPAREN
+        {:
+            Variable v = new Variable(lxleft, "length");
+            RESULT = new Call(lxleft, v, args);
+        :}
     ;
 
-FArgs ::= COMMA Expr
-    | COMMA Expr FArgs
+Args ::= 
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | Expr:e FArgs:fargs
+        {:  
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(e);
+            args.addAll(fargs);
+            RESULT = args;
+        :}
+    ;
+
+FArgs ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :} 
+    | COMMA Expr:e FArgs:fargs
+        {:
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(e);
+            args.addAll(fargs);
+            RESULT = args;
+        :}
     ;
 
 // Array Calls
-ArrayCall ::= FunctionCall LBRACK Expr RBRACK IndexList
-    | IDENTIFIER LBRACK Expr RBRACK IndexList
+ArrayCall ::= 
+    FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
+        {:
+            Index index = new Index(fcxleft, fc,e);
+            for(Node n: il) {
+                index = new Index(fcxleft, index, n);
+            }
+            RESULT = index;
+        :}
+    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+        {:
+            Index index = new Index(idxleft, new Variable(idxleft, id), e);
+            for(Node n: il) {
+                index = new Index(idxleft, index, n);
+            }
+            RESULT = index;
+        :}
     ;
 
-IndexList ::=  
-    | IndexList LBRACK Expr RBRACK
+IndexList ::=
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | LBRACK Expr:e RBRACK IndexList:il
+        {:
+            ArrayList<Node> indexlist = new ArrayList<Node>();
+            indexlist.add(e);
+            indexlist.addAll(il);
+            RESULT = indexlist;
+        :}
     ;
 
 // Array List
 ArrayElems ::= 
-    | Expr FArrayElems
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | Expr:e FArrayElems:fae
+    {:
+        ArrayList<Node> elems = new ArrayList<Node>();
+        elems.add(e);
+        elems.addAll(fae);
+        RESULT = elems;
+    :}
     ;
 
 FArrayElems ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
     | COMMA
-    | COMMA Expr FArrayElems
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA Expr:e FArrayElems:fae
+    {:
+        ArrayList<Node> elems = new ArrayList<Node>();
+        elems.add(e);
+        elems.addAll(fae);
+        RESULT = elems;
+    :}
     ;
 
 // Variable Declaration
-VarDeclr ::= IDENTIFIER COLON VarType;
+VarDeclr ::= 
+    IDENTIFIER:id COLON VarType:type
+    {:
+        RESULT = new Declare(idxleft, new Variable(idxleft, id), type);
+    :};
 
-VarType ::= VarType LBRACK RBRACK
-    | VarType LBRACK Expr RBRACK
-    | KeyType
+VarType ::= 
+    VarType:type LBRACK RBRACK
+    {:
+        RESULT = new Type(typexleft, type);
+    :}
+    | VarType:type LBRACK Expr:e RBRACK
+    {:
+        RESULT = new Type(typexleft, type, e);
+    :}
+    | KeyType:type 
+    {:
+        RESULT = type;
+    :}
     ;
 
-KeyType ::= INT
-    | BOOL
+KeyType ::= 
+    INT:i
+    {:
+        RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+    :}
+    | BOOL:b
+    {:
+        RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+    :}
     ;
 
 // Assignment
-Assign ::= IDList EQ Expr;
+Assign ::= 
+    IDList:il EQ Expr:e
+    {:
+        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il), e);
+    :};
 
-IDList ::= AssignName FIDList;
+IDList ::= 
+    AssignName:an FIDList:fl
+    {:
+        ArrayList<Node> idlist = new ArrayList<Node>();
+        idlist.add(an);
+        idlist.addAll(fl);
+        RESULT = idlist;
+    :};
 
 FIDList ::= 
-    | COMMA AssignName FIDList
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA AssignName:an FIDList:fl
+    {:
+        ArrayList<Node> idlist = new ArrayList<Node>();
+        idlist.add(an);
+        idlist.addAll(fl);
+        RESULT = idlist;
+    :}
     ;
 
-AssignName ::= UNDERSCORE
-    | IDENTIFIER
-    | ArrayCall
-    | VarDeclr
+AssignName ::= 
+    UNDERSCORE:u
+    {:
+        RESULT = new Declare(uxleft);
+    :}
+    | IDENTIFIER:id
+    {:
+        RESULT = new Variable(idxleft, id);
+    :}
+    | ArrayCall:a
+    {:
+        RESULT = a;
+    :}
+    | VarDeclr:v
+    {:
+        RESULT = v;
+    :}
     ;
 
 // While Statement
-WhileStmt ::= WHILE Expr BlockNoReturn;
+WhileStmt ::= WHILE:w Expr:e BlockNoReturn:block
+    {:
+        RESULT = new While(wxleft, e, block);
+    :};
 
 // If Statement
-IfStmt ::= IF Expr BlockNoReturn ElseStmt;
+IfStmt ::= IF:i Expr:e BlockNoReturn:block ElseStmt:el
+    {:
+        RESULT = new If(ixleft, e, block, el);
+    :}
+    ;
 
 ElseStmt ::= 
-    | ELSE Expr BlockNoReturn
+    //TODO
+    {: 
+        RESULT = null;
+    :}
+    | ELSE:el BlockNoReturn:block 
+    {:
+        RESULT = new Else(elxleft,block);
+    :}
     ;
 
-// No Return Block
-BlockNoReturn ::= SingleStmtNoReturn
-    | LBRACE StmtListNoReturn RBRACE
-    ;
-
-SingleStmtNoReturn ::= Assign
-    | IfStmt
-    | WhileStmt
-    | Procedure
-    | VarDeclr
-    | SEMICOLON
-    ;
-
-Procedure ::= FunctionCall;
-
-StmtListNoReturn ::= 
-    | StmtNoReturn StmtListNoReturn
-    ;
-
-StmtNoReturn ::= SingleStmtNoReturn
-    | LBRACE StmtList RBRACE
-    ;
-
-// Return Block
-BlockReturn ::= RETURN Expr
-    | LBRACE StmtList RBRACE
-    ;
-
-StmtList ::= StmtListNoReturn
-    | StmtListNoReturn RETURN Expr
-    ;
-
-// Void Return Block
-BlockVoidReturn ::= RETURN
-    | LBRACE StmtListVoid RBRACE
-    ;
-
-StmtListVoid ::= StmtListNoReturn
-    | StmtListNoReturn RETURN
-    ; 
-
-// Function Declaration
-FunctionDeclr ::= FunctionDef BlockReturn;
-
-FunctionDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN ReturnTypeList;
-
-ArgsTypeList ::= 
-    | IDENTIFIER COLON FunType FArgsTypeList
-    ;
-
-FArgsTypeList ::= 
-    | COMMA IDENTIFIER COLON FunType FArgsTypeList
-    ;
-
-ReturnTypeList ::= FunType FReturnTypeList;
-
-FReturnTypeList ::= 
-    | COMMA FunType FReturnTypeList
-    ;
-
-FunType ::= INT
-    | BOOL
-    | FunType LBRACK RBRACK
-    ;
-
-// Procedure Declaration
-ProcedureDeclr ::= ProcedureDef BlockVoidReturn
-    ;
-
-ProcedureDef ::= IDENTIFIER LPAREN ArgsTypeList RPAREN
-    ;
-
-// Use Declaration
-UseDeclr ::= USE IDENTIFIER 
-    | UseDeclr SEMICOLON
-    ;
-
-// Program
-Program ::= UseDeclarations FunctionDeclarations
-    ;
-
-UseDeclarations ::= 
-    | UseDeclarations UseDeclr
-    ;
-
-FunctionDeclarations ::= 
-    | FunctionDeclr FunctionDeclarations
-    | ProcedureDeclr FunctionDeclarations
+// Expressions
+Expr ::= 
+    LPAREN Expr:e RPAREN
+        {:
+            RESULT = e;
+        :}
+    | LNEG:l Expr:e
+        {:
+            RESULT = new Unary(lxleft, Unary.UnaryType.LNEGATE, e);
+        :}
+    | MINUS:m Expr:e
+        {:
+            RESULT = new Unary(mxleft, Unary.UnaryType.INEGATE, e);
+        :}
+        %prec UMINUS
+    | Expr:e1 MULT:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.TIMES, e1,e2);
+        :}
+    | Expr:e1 HMULT:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.HIGH_TIMES, e1,e2);
+        :}
+    | Expr:e1 DIV:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.DIVISION, e1,e2);
+        :}
+    | Expr:e1 MOD:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.MODULO, e1,e2);
+        :}
+    | Expr:e1 ADD:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.PLUS, e1,e2);
+        :}
+    | Expr:e1 MINUS:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.MINUS, e1,e2);
+        :}
+    | Expr:e1 LTE:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.LT, e1,e2);
+        :}
+    | Expr:e1 LT:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.LT, e1,e2);
+        :}
+    | Expr:e1 GTE:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.GE, e1,e2);
+        :}
+    | Expr:e1 GT:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.GT, e1,e2);
+        :}
+    | Expr:e1 EQEQ:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.EQ, e1,e2);
+        :}
+    | Expr:e1 NEQ:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.NE, e1,e2);
+        :}
+    | Expr:e1 LAND:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.AND, e1,e2);
+        :}
+    | Expr:e1 LOR:b Expr:e2
+        {:
+            RESULT = new Binary(bxleft, Binary.BinaryType.OR, e1,e2);
+        :}
+    | FunctionCall:fc
+        {:
+            RESULT = fc;
+        :}
+    | ArrayCall:ac
+        {:
+            RESULT = ac;
+        :}
+    | LBRACE ArrayElems:ae RBRACE
+        {:
+            RESULT = new XiArray(aexleft, ae);
+        :}
+    | TRUE:t
+        {:
+            RESULT = new XiBool(txleft, t); 
+        :}
+    | FALSE:f
+        {:
+            RESULT = new XiBool(fxleft, f);
+        :}
+    | INTEGER:i
+        {:
+            RESULT = new XiInt(ixleft, i);
+        :}
+    | CHAR:c
+        {:
+            RESULT = new XiChar(cxleft, c.name, c.value);
+        :}
+    | STRING:s
+        {:
+            RESULT = new XiString(sxleft, s.name, s.value);
+        :}
+    | IDENTIFIER:id
+        {:
+            RESULT = new Variable(idxleft, id);
+        :}
     ;

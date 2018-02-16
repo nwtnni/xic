@@ -5,6 +5,8 @@ import polyglot.util.OptimalCodeWriter;
 
 import java.io.OutputStream;
 
+import ast.*;
+
 public class Printer implements Visitor {
 
     private static final int WIDTH = 80;
@@ -16,6 +18,7 @@ public class Printer implements Visitor {
 
     public void print(Node n) {
         n.accept(this);
+        printer.flush();
     }
 
     /*
@@ -25,11 +28,13 @@ public class Printer implements Visitor {
         printer.startUnifiedList();
         
         // Use statements
-        printer.startUnifiedList();
-        for (Node use : p.uses) {
-            use.accept(this);
+        if (p.isProgram()) {
+            printer.startUnifiedList();
+            for (Node use : p.uses) {
+                use.accept(this);
+            }
+            printer.endList();
         }
-        printer.endList();
 
         // Function declarations
         printer.startUnifiedList();
@@ -65,13 +70,17 @@ public class Printer implements Visitor {
 
         // Function return types
         printer.startList();
-        for (Node type : f.types) {
-            type.accept(this);
+        if (f.isFunction()) {
+            for (Node type : f.types) {
+                type.accept(this);
+            }
         }
         printer.endList();
 
         // Statement block
-        f.block.accept(this);
+        if (f.isDefinition()) {
+            f.block.accept(this);
+        }
 
         printer.endList();
     }
@@ -80,22 +89,25 @@ public class Printer implements Visitor {
      * Statement nodes
      */
     public void visit(Declare d){
-        printer.startList(); 
+        
 
-        // Variable name
-        d.id.accept(this);
+        //TODO
+        if(d.id != null && d.type != null) {
+            printer.startList(); 
+            d.id.accept(this);
+            d.type.accept(this);
+            printer.endList();
+        }
+        else {
+            printer.printAtom("_");
+        }
 
-        // Type
-        d.type.accept(this);
-
-        printer.endList();
     }
 
     public void visit(Assign a){
         printer.startList();
 
         printer.printAtom("=");
-
         a.lhs.accept(this);
         a.rhs.accept(this);
 
@@ -107,15 +119,11 @@ public class Printer implements Visitor {
 
         printer.printAtom("return");
         
-        if (r.value != null) {
+        if (r.hasValue()) {
             r.value.accept(this);
         }
 
         printer.endList();
-    }
-
-    public void visit(ProcedureCall p) {
-        p.id.accept(this);
     }
 
     public void visit(Block b){
@@ -135,6 +143,10 @@ public class Printer implements Visitor {
         
         i.guard.accept(this);
         i.block.accept(this);
+        //TODO
+        if (i.elseBlock != null) {
+            i.elseBlock.accept(this);
+        }
 
         printer.endList();
     }
@@ -142,7 +154,6 @@ public class Printer implements Visitor {
     public void visit(Else e){
         printer.startUnifiedList();
 
-        printer.printAtom("else");
         e.block.accept(this);
 
         printer.endList();
@@ -161,7 +172,7 @@ public class Printer implements Visitor {
     /*
      * Expression nodes
      */
-    public void visit(FunctionCall c){
+    public void visit(Call c){
         printer.startList();
 
         c.id.accept(this);
@@ -197,13 +208,18 @@ public class Printer implements Visitor {
     }
 
     public void visit(Multiple m){
-        printer.startList();
-
-        for (Node value : m.values) {
+        if (m.values.size() == 1) {
+            for (Node value : m.values) {
             value.accept(this);
+            }
         }
-
-        printer.endList();
+        else {
+            printer.startList();
+            for (Node value : m.values) {
+                value.accept(this);
+            }
+            printer.endList();
+        }
     }
 
     public void visit(Index i){
@@ -219,12 +235,13 @@ public class Printer implements Visitor {
     public void visit(Type t) {
         if (t.primitive.equals(Type.Primitive.ARRAY)) {
             printer.startList();
+            printer.printAtom("[]");
             t.child.accept(this);
-            printer.endList();
 
             if (t.size != null) {
                 t.size.accept(this);
             }
+            printer.endList();
         } else {
             printer.printAtom(t.primitive.toString());
         }
@@ -239,11 +256,11 @@ public class Printer implements Visitor {
     }
 
     public void visit(XiChar c) {
-        printer.printAtom(Character.toString(c.value));
+        printer.printAtom("\'"+c.escaped+"\'");
     }
 
     public void visit(XiString s) {
-        printer.printAtom(s.value);
+        printer.printAtom("\""+s.escaped+"\"");
     }
 
     public void visit(XiArray a) {
