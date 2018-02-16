@@ -246,10 +246,7 @@ StmtList ::=
     ;
 
 ExprList ::= 
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | Expr:e FExprList:fel
+    Expr:e FExprList:fel
     {:
         ArrayList<Node> exprlist = new ArrayList<Node>();
         exprlist.add(e);
