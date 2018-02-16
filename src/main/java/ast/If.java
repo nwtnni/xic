@@ -4,11 +4,11 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 
 public class If extends Node {
 
-    private enum Kind {
+    public enum Kind {
         IF, IF_ELSE 
     }
 
-    private Kind kind;
+    public Kind kind;
     public Node guard;
     public Node block;
     public Node elseBlock;
