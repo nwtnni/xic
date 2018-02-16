@@ -1,7 +1,7 @@
 package lexer;
 
 import java_cup.runtime.*;
-import java_cup.runtime.ComplexSymbolFactory.Location;
+import java_cup.runtime.ComplexSymbolFactory.*;
 import java.util.ArrayList;
 
 import static parser.IXiSymbol.*;
