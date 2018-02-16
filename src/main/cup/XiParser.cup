@@ -231,7 +231,7 @@ StmtList ::=
     {:
         ArrayList<Node> sl = new ArrayList<Node>();
         sl.addAll(slnr);
-        sl.add(new Return(rxleft,new Multiple(exleft, e)));
+        sl.add(new Return(rxleft,new Multiple(exleft, e, Multiple.Kind.RETURN)));
         RESULT = sl;
     :}
     ;
@@ -495,7 +495,7 @@ KeyType ::=
 Assign ::= 
     IDList:il EQ Expr:e
     {:
-        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il), e);
+        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), e);
     :};
 
 IDList ::= 

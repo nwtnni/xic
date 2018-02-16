@@ -204,18 +204,15 @@ public class Printer implements Visitor {
     }
 
     public void visit(Multiple m){
-        if (m.values.size() == 1) {
-            for (Node value : m.values) {
+        boolean isParen = m.isAssign() && m.values.size() > 1;
+
+        if (isParen) { printer.startList(); }
+
+        for (Node value : m.values) {
             value.accept(this);
-            }
         }
-        else {
-            printer.startList();
-            for (Node value : m.values) {
-                value.accept(this);
-            }
-            printer.endList();
-        }
+
+        if (isParen) { printer.endList(); }
     }
 
     public void visit(Index i){
