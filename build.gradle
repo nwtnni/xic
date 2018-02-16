@@ -13,6 +13,7 @@ repositories {
 dependencies {
     compile files("libs/java_cup.jar")
     compile files("libs/commons-io-2.6.jar")
+    compile files("libs/sexp-printer.jar")
 }
 
 jar {
@@ -24,13 +25,34 @@ jar {
     }
 }
 
-task jflexGenerate(type: JFlexGenerate) {}
-task cupGenerate(type: CupGenerate) {}
+task jflexIXi(type: JFlexIXi) {}
+task jflexXi(type: JFlexXi) {}
+
+task cupIXi(type: CupIXi) {}
+task cupXi(type: CupXi) {}
+
+task zip(type: Zip) {
+    archiveName = 'xic.zip'
+    from(projectDir) {
+        exclude 'build/'
+        exclude 'watch'
+        exclude 'src/**/IXiLexer.java'
+        exclude 'src/**/IXiParser.java'
+        exclude 'src/**/IXiSymbol.java'
+        exclude 'src/**/XiLexer.java'
+        exclude 'src/**/XiParser.java'
+        exclude 'src/**/XiSymbol.java'
+    }
+
+}
+
 task xic(type: Exec) {
     executable "sh"
     args "-c", "cat resources/stub.sh build/libs/xic-0.1.0.jar >> xic && chmod 777 xic"
 }
 
-compileJava.dependsOn cupGenerate
-compileJava.dependsOn jflexGenerate
+compileJava.dependsOn jflexIXi
+compileJava.dependsOn jflexXi
+compileJava.dependsOn cupIXi
+compileJava.dependsOn cupXi
 xic.dependsOn jar

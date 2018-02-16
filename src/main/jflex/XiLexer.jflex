@@ -1,97 +1,44 @@
 package lexer;
 
-import static lexer.TokenType.*;
+import java_cup.runtime.*;
+import java_cup.runtime.ComplexSymbolFactory.*;
+import java.util.ArrayList;
+
+import static parser.XiSymbol.*;
 
 %%
 
 %public
 %class XiLexer
-%type Token
-%function nextToken
-%yylexthrow Exception
+
+%cupsym XiSymbol
+%cup
+%yylexthrow Exception, LexerError
 
 %pack
-
 %unicode
-
 %line
 %column
 
 %{
-    private StringBuilder value = new StringBuilder();
+    private String unit;
+    private ComplexSymbolFactory symbolFactory;
+    
     private StringBuilder literal = new StringBuilder();
+    private ArrayList<Long> value = new ArrayList<Long>();
+    
+    private int startColumn = 1;
+
+    public void init(String unit, ComplexSymbolFactory sf) {
+        this.unit = unit;
+        this.symbolFactory = sf;
+    }
+
+    /* Utility methods */
 
     private int row() { return yyline + 1; }
 
     private int column() { return yycolumn + 1; }
-    
-    private int startColumn = 1;
-
-    private Token tokenize(TokenType tt) throws Exception {
-        switch (tt) {
-            case USE:
-            case IF:
-            case WHILE:
-            case ELSE:
-            case RETURN:
-            case LENGTH:
-            case INT:
-            case BOOL:
-            case TRUE:
-            case FALSE:
-            case LNEG:
-            case MULT:
-            case HMULT:
-            case DIV:
-            case MOD:
-            case ADD:
-            case MINUS:
-            case LTE:
-            case LT:
-            case GTE:
-            case GT:
-            case EQEQ:
-            case EQ:
-            case NEQ:
-            case LAND:
-            case LOR:
-            case LPAREN:
-            case RPAREN:
-            case LBRACK:
-            case RBRACK:
-            case LBRACE:
-            case RBRACE:
-            case COLON:
-            case SEMICOLON:
-            case COMMA:
-            case UNDERSCORE:
-            case EOF:
-                return new Token(tt, row(), column(), yytext());
-            case ID:
-                return new IDToken(row(), column(), yytext());
-            case INTEGER:
-                return new IntToken(row(), column(), yytext());
-            default:
-                throw new Exception("Unknown token type.");
-        }
-    }
-
-    private Token tokenize(char c) throws Exception {
-        yybegin(YYINITIAL);
-        String literal = escape(stripQuote(yytext()), c);
-        return new CharToken(row(), startColumn, literal, c);
-    }
-
-    private Token tokenize() {
-        yybegin(YYINITIAL);
-        return new StringToken(row(), startColumn, literal.toString(), value.toString());
-    }
-
-    private Token logError(int r, int c, String msg) throws Exception {
-        throw new Exception(
-            String.format("%d:%d error:%s", r, c, msg)
-        );
-    }
 
     private String escape(String source, char c) {
         if (c == 0x08) {
@@ -117,13 +64,63 @@ import static lexer.TokenType.*;
         return Character.toString(c);
     }
 
-    private String stripQuote(String s) {
-        return s.substring(0, s.length() - 1);
+    private void buildString(String l, char c) {
+        literal.append(l);
+        value.add((long) c);
     }
 
+    /* Symbol factory methods */
+
+    private Symbol tokenize(int id) throws LexerError {
+        Location l = new Location(unit, row(), column());
+        Location r = new Location(unit, row(), column() + yylength());
+        switch (id) {
+            case TRUE:
+                return symbolFactory.newSymbol(yytext(), TRUE, l, r, true);
+            case FALSE:
+                return symbolFactory.newSymbol(yytext(), FALSE, l, r, false);
+            case IDENTIFIER:
+                return symbolFactory.newSymbol(yytext(), IDENTIFIER, l, r, yytext());
+            case INTEGER:
+                try {
+                    Long value = Long.valueOf(yytext());
+                    return symbolFactory.newSymbol(yytext(), INTEGER, l, r, value);
+                } catch (NumberFormatException e) {
+                    throwLexError(row(), column(), "invalid integer literal");
+                }
+            default:
+                return symbolFactory.newSymbol(yytext(), id, l, r);
+        }
+    }
+
+    private Symbol tokenize(char c) {
+        yybegin(YYINITIAL);
+        Location l = new Location(unit, row(), startColumn);
+        Location r = new Location(unit, row(), column());
+        String literal = yytext().substring(0, yylength() - 1);      
+        String name = escape(literal, c);
+        CharWrapper v = new CharWrapper(name, (long) c);
+        return symbolFactory.newSymbol(name, CHAR, l, r, v);
+    }
+
+    private Symbol tokenize() {
+        yybegin(YYINITIAL);
+        Location l = new Location(unit, row(), startColumn);
+        Location r = new Location(unit, row(), column());
+        StringWrapper v = new StringWrapper(literal.toString(), value);
+        return symbolFactory.newSymbol(literal.toString(), STRING, l, r, v);
+    }
+
+    private Symbol throwLexError(int row, int col, String msg) throws LexerError {
+        msg = String.format("%d:%d error:%s", row, col, msg);
+        Location l = new Location(unit, row, col);
+        Location r = new Location(unit, row, col + yylength());
+        ComplexSymbol err = (ComplexSymbol) symbolFactory.newSymbol(yytext(), error, l, r);
+        throw new LexerError(err, msg);
+    }
 %}
 
-/* main character classes*/
+/* main character classes */
 EOL = \r|\n|\r\n
 InputCharacter = [^\r\n]
 
@@ -140,8 +137,7 @@ Identifier = {Letter}({Digit}|{Letter}|_|')*
 
 Integer = "0"|[1-9]{Digit}*
 
-SingleChar = [^\r\n\'\\]
-StringChar = [^\r\n\"\\]
+SingleChar = [^\r\n\"\'\\]
 
 OctEscape = \\[0-3]?{OctDigit}?{OctDigit}
 HexEscape = \\x{HexDigit}?{HexDigit}
@@ -163,7 +159,7 @@ UnicodeEscape = \\u{HexDigit}{4}
     "return"            { return tokenize(RETURN); }
     "length"            { return tokenize(LENGTH); }
 
-    // primatives
+    // primitives
     "int"               { return tokenize(INT); }
     "bool"              { return tokenize(BOOL); }
     "true"              { return tokenize(TRUE); }
@@ -182,7 +178,6 @@ UnicodeEscape = \\u{HexDigit}{4}
     ">="                { return tokenize(GTE); }
     ">"                 { return tokenize(GT); }
     "=="                { return tokenize(EQEQ); }
-    "="                 { return tokenize(EQ); }
     "!="                { return tokenize(NEQ); }
     "&"                 { return tokenize(LAND); }
     "|"                 { return tokenize(LOR); }
@@ -194,12 +189,13 @@ UnicodeEscape = \\u{HexDigit}{4}
     "]"                 { return tokenize(RBRACK); }
     "{"                 { return tokenize(LBRACE); }
     "}"                 { return tokenize(RBRACE); }
+    "="                 { return tokenize(EQ); }
     ":"                 { return tokenize(COLON); }
     ";"                 { return tokenize(SEMICOLON); }
     ","                 { return tokenize(COMMA); }
     "_"                 { return tokenize(UNDERSCORE); }
 
-    {Identifier}        { return tokenize(ID); } 
+    {Identifier}        { return tokenize(IDENTIFIER); } 
 
     {Integer}           { return tokenize(INTEGER); } 
 
@@ -211,8 +207,8 @@ UnicodeEscape = \\u{HexDigit}{4}
 
     \"                  {
                             startColumn = column();
-                            value.setLength(0);
                             literal.setLength(0);
+                            value.clear();
                             yybegin(YYSTRING);
                         }
 
@@ -220,6 +216,7 @@ UnicodeEscape = \\u{HexDigit}{4}
 
 <YYCHARLITERAL> {
     {SingleChar}\'      { return tokenize(yytext().charAt(0)); }
+    \"\'                { return tokenize('\"'); }
 
     // escape sequences
     "\\t"\'             { return tokenize('\t'); }
@@ -245,70 +242,41 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
-    \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
-    [^]                 { logError(row(), startColumn, "Invalid character literal"); }
+    \\                  { throwLexError(row(), column(), "Invalid escape sequence"); }
+    [^]                 { throwLexError(row(), column(), "Invalid character literal"); }
 }
 
 <YYSTRING> {
     \"                  { return tokenize(); }
-    {StringChar}+       {
-                            value.append(yytext());
-                            literal.append(yytext());
-                        }
-    "\\b"               {
-                            value.append('\b');
-                            literal.append("\\b");
-                        }
-    "\\t"               {
-                            value.append('\t');
-                            literal.append("\\t");
-                        }
-    "\\n"               {
-                            value.append('\n');
-                            literal.append("\\n");
-                        }
-    "\\f"               {
-                            value.append('\f');
-                            literal.append("\\f");
-                        }
-    "\\r"               {
-                            value.append('\r');
-                            literal.append("\\r");
-                        }
-    "\\'"               {
-                            value.append('\'');
-                            literal.append("\\'");
-                        }
-    "\\\""              {
-                            value.append('\"');
-                            literal.append("\\\"");
-                        }
-    "\\\\"              {
-                            value.append('\\');
-                            literal.append("\\\\");
-                        }
+    {SingleChar}        { buildString(yytext(), yytext().charAt(0)); }
+    \'                  { buildString("\\\'", '\''); }
+    "\\b"               { buildString("\\b", '\b'); }
+    "\\t"               { buildString("\\t", '\t'); }
+    "\\n"               { buildString("\\n", '\n'); }
+    "\\f"               { buildString("\\f", '\f'); }
+    "\\r"               { buildString("\\r", '\r'); }
+    "\\'"               { buildString("\\\'", '\''); }
+    "\\\""              { buildString("\\\"", '\"'); }
+    "\\\\"              { buildString("\\\\", '\\'); }
     {OctEscape}         { 
                             String s = yytext().substring(1, yylength());
                             char c = (char) Integer.parseInt(s, 8);
-                            value.append(c);
-                            literal.append(escape(yytext(), c));
+                            buildString(escape(yytext(), c), c);
                         }
     {HexEscape}         { 
                             String s = yytext().substring(2, yylength());
                             char c = (char) Integer.parseInt(s, 16);
-                            value.append(c);
-                            literal.append(escape(yytext(), c));
+                            buildString(escape(yytext(), c), c);
                         }
     {UnicodeEscape}     {
                             String s = yytext().substring(2, yylength());
                             char c = (char) Integer.parseInt(s, 16);
-                            value.append(c);
-                            literal.append(escape(yytext(), c));
+                            buildString(escape(yytext(), c), c);
                         }
-    \\                  { logError(row(), startColumn, "Invalid escape sequence"); }
-    {EOL}               { logError(row(), startColumn, "String literal not properly terminated"); }
-    <<EOF>>             { logError(row(), startColumn, "String literal not properly terminated"); }
+    \\                  { throwLexError(row(), column(), "Invalid escape sequence"); }
+    {EOL}               { throwLexError(row(), column(), "String literal not properly terminated"); }
+    <<EOF>>             { throwLexError(row(), column(), "String literal not properly terminated"); }
 }
 
-[^]                     { logError(row(), column(), "Invalid syntax"); } 
+[^]                     { throwLexError(row(), column(), "Invalid syntax"); } 
 <<EOF>>                 { return tokenize(EOF); }

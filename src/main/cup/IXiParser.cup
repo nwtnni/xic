@@ -1,0 +1,156 @@
+import java_cup.runtime.*;
+import java_cup.runtime.ComplexSymbolFactory.*;
+import java.util.ArrayList;
+
+import lexer.*;
+import ast.*;
+
+parser code {:
+
+    IXiLexer lex;
+    IXiParser(IXiLexer lex, ComplexSymbolFactory sf) {
+        super(lex, sf);
+        this.lex = lex;
+    }
+
+    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
+        done_parsing();
+        ComplexSymbol sym = (ComplexSymbol) cur_token;
+        throw new ParserError(sym, "Unexpected token " + sym.getName());
+    }
+
+    public void syntax_error(Symbol cur_token) {}
+
+:};
+
+/* Terminals (tokens returned by the scanner). */
+terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                    INT, BOOL;
+terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
+terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
+terminal    Boolean         TRUE, FALSE; 
+terminal    String          IDENTIFIER;
+terminal    Long            INTEGER;
+terminal    CharWrapper     CHAR;
+terminal    StringWrapper   STRING;
+
+/* Non terminals */
+non terminal    Node                FunctionDef, ProcedureDef;
+non terminal    ArrayList<Node>     FunctionDefList;
+non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
+non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
+non terminal    Node                FunType;
+non terminal    Node                Interface;
+
+/* The grammar rules */
+start with      Interface;
+
+// Function Definitions
+FunctionDef ::= 
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
+        {: 
+            RESULT = new Function(idxleft, id, atl, rtl);
+        :}
+    ;
+
+ProcedureDef ::= 
+    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
+        {: 
+            RESULT = new Function(idxleft, id, atl, new ArrayList<Node>());
+        :}
+    ;
+
+ArgsTypeList ::= 
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | IDENTIFIER:id COLON FunType:type FArgsTypeList:atl
+        {:
+            Variable v = new Variable(idxleft, id);
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(new Declare(idxleft, v, type));
+            args.addAll(atl);
+            RESULT = args;
+        :}
+    ;
+
+FArgsTypeList ::=
+        {:
+            RESULT = new ArrayList<Node>();
+        :} 
+    | COMMA IDENTIFIER:id COLON FunType:type FArgsTypeList:atl
+        {:
+            Variable v = new Variable(idxleft, id);
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(new Declare(idxleft, v, type));
+            args.addAll(atl);
+            RESULT = args;
+        :}
+    ;
+
+ReturnTypeList ::= 
+    FunType:type FReturnTypeList:rtl
+        {:
+            ArrayList<Node> returns = new ArrayList<Node>();
+            returns.add(type);
+            returns.addAll(rtl);
+            RESULT = returns;
+        :}
+    ;
+
+FReturnTypeList ::= 
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | COMMA FunType:type FReturnTypeList:rtl
+        {:
+            ArrayList<Node> returns = new ArrayList<Node>();
+            returns.add(type);
+            returns.addAll(rtl);
+            RESULT = returns; 
+        :}
+    ;
+
+FunType ::= 
+    INT:i
+        {:
+            RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+        :}
+    | BOOL:b
+        {:
+            RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+        :}
+    | FunType:type LBRACK RBRACK
+        {:
+            RESULT = new Type(typexleft, type);
+        :}
+    ;
+
+// Interface
+FunctionDefList ::= 
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | FunctionDefList:fdl FunctionDef:f
+        {:
+            ArrayList<Node> funcs = new ArrayList<Node>();
+            funcs.addAll(fdl);
+            funcs.add(f);
+            RESULT = funcs;
+        :}
+    | FunctionDefList:fdl ProcedureDef:f
+        {:
+            ArrayList<Node> funcs = new ArrayList<Node>();
+            funcs.addAll(fdl);
+            funcs.add(f);
+            RESULT = funcs;
+        :}
+    ;
+
+Interface ::= FunctionDefList:fdl
+        {:
+            RESULT = new Program(fdlxleft, fdl);
+        :}
+    ;
