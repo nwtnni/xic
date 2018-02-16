@@ -210,11 +210,9 @@ public class Printer implements Visitor {
             }
         }
         else {
-            printer.startList();
             for (Node value : m.values) {
                 value.accept(this);
             }
-            printer.endList();
         }
     }
 
