@@ -9,9 +9,13 @@ parser code {:
     IXiLexer lex;
     IXiParser(IXiLexer lex, ComplexSymbolFactory sf) {
         super(lex, sf);
+        System.out.println("Start");
         this.lex = lex;
     }
 :};
+
+init with {: System.out.println("init"); :};
+scan with {:return lex.next_token(); :};
 
 /* Terminals (tokens returned by the scanner). */
 terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
@@ -33,9 +37,10 @@ non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
 non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
 non terminal    Node                FunType;
 non terminal    Node                Interface;
+non terminal    String              Test;
 
 /* The grammar rules */
-start with      Interface;
+start with      Test;
 
 // Function Definitions
 FunctionDef ::= 
@@ -139,9 +144,13 @@ FunctionDefList ::=
         :}
     ;
 
-Interface ::=
-    FunctionDefList:fdl
+Interface ::= FunctionDefList:fdl
         {:
+<<<<<<< HEAD
+            System.out.println("Interface");
+            RESULT = new Program(fdlxleft, new ArrayList<Node>(), fdl);
+=======
             RESULT = new Program(fdlxleft, fdl);
+>>>>>>> c05a20de1d18ca1eee7138a8da53e0bc231506b1
         :}
     ;
