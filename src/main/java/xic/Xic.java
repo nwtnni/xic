@@ -16,7 +16,7 @@ import ast.*;
 import java.util.*;
 
 public class Xic {
-    
+
     public static void main(String [] args) {
         boolean lexFlag = false;
         boolean parseFlag = false;
