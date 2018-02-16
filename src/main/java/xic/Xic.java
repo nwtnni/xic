@@ -166,7 +166,7 @@ public class Xic {
           
         try {
             if (ext.equals("xi")){
-                System.out.println("XI");
+                System.out.println("Parsing .xi file");
                 OutputStream stream = new FileOutputStream(output);
                 XiLexer lexer = new XiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();
@@ -177,7 +177,7 @@ public class Xic {
                 pp.print(parser.parse().value());
             }
             else if (ext.equals("ixi")){
-                System.out.println("IXI");
+                System.out.println("Parsing .ixi file");
                 OutputStream stream = new FileOutputStream(output);
                 IXiLexer lexer = new IXiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();

@@ -1,15 +1,22 @@
 import java_cup.runtime.*;
+import java_cup.runtime.ComplexSymbolFactory.*;
 import java.util.ArrayList;
 
 import lexer.*;
 import ast.*;
 
 parser code {:
-    // Connect this parser to a scanner!
     XiLexer lex;
     XiParser(XiLexer lex, ComplexSymbolFactory sf) {
         super(lex, sf);
         this.lex = lex;
+    }
+
+    @override
+    public void report_fatal_error(String message, Object info) throws Exception {
+        done_parsing();
+        ComplexSymbol sym = (ComplexSymbol) info;
+        throw new ParserError(sym, "Unexpected token " + sym.getName());
     }
 :};
 
