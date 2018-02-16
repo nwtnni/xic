@@ -174,7 +174,9 @@ public class Xic {
                 XiParser parser = new XiParser(lexer, sf);
                 
                 Printer pp = new Printer(stream);
-                pp.print(parser.parse().value());
+                Node ast = parser.parse().value();
+                Invariant.check(ast);
+                pp.print(ast);
             }
             else if (ext.equals("ixi")){
                 System.out.println("Parsing .ixi file");
@@ -185,8 +187,9 @@ public class Xic {
                 IXiParser parser = new IXiParser(lexer, sf);
 
                 Printer pp = new Printer(stream);
-                Node v = parser.parse().value();
-                pp.print(v);
+                Node ast = parser.parse().value();
+                Invariant.check(ast);
+                pp.print(ast);
             }
             else throw new Exception();
         } catch (Exception e){

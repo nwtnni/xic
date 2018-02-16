@@ -1,6 +1,7 @@
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import lexer.*;
 import ast.*;
@@ -237,7 +238,7 @@ StmtList ::=
     {:
         ArrayList<Node> sl = new ArrayList<Node>();
         sl.addAll(slnr);
-        sl.add(new Return(rxleft,new Multiple(exleft, e)));
+        sl.add(new Return(rxleft,new Multiple(exleft, e, Multiple.Kind.RETURN)));
         RESULT = sl;
     :}
     ;
@@ -402,17 +403,19 @@ FArgs ::=
 ArrayCall ::= 
     FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
-            Index index = new Index(fcxleft, fc,e);
-            for(Node n: il) {
-                index = new Index(fcxleft, index, n);
+            il.add(0,e);
+            Index index = new Index(fcxleft, fc,il.get(0));
+            for(int i =1; i<il.size();i++) {
+                index = new Index(fcxleft, index, il.get(i));
             }
             RESULT = index;
         :}
     | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
         {:
-            Index index = new Index(idxleft, new Variable(idxleft, id), e);
-            for(Node n: il) {
-                index = new Index(idxleft, index, n);
+            il.add(0,e);
+            Index index = new Index(idxleft, new Variable(idxleft,id),il.get(0));
+            for(int i =1; i<il.size();i++) {
+                index = new Index(idxleft, index, il.get(i));
             }
             RESULT = index;
         :}
@@ -499,7 +502,7 @@ KeyType ::=
 Assign ::= 
     IDList:il EQ Expr:e
     {:
-        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il), e);
+        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), e);
     :};
 
 IDList ::= 
@@ -552,7 +555,8 @@ WhileStmt ::= WHILE:w Expr:e BlockNoReturn:block
 // If Statement
 IfStmt ::= IF:i Expr:e BlockNoReturn:block ElseStmt:el
     {:
-        RESULT = new If(ixleft, e, block, el);
+        If node = (el == null) ? new If(ixleft, e, block) : new If(ixleft, e, block, el);
+        RESULT = node;
     :}
     ;
 
@@ -608,7 +612,7 @@ Expr ::=
         :}
     | Expr:e1 LTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.LT, e1,e2);
+            RESULT = new Binary(bxleft, Binary.BinaryType.LE, e1,e2);
         :}
     | Expr:e1 LT:b Expr:e2
         {:
