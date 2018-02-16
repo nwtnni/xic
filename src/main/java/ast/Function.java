@@ -6,12 +6,12 @@ import java.util.ArrayList;
 
 public class Function extends Node {
     
-    private enum Kind {
+    public enum Kind {
         FUNCTION, FUNCTION_HEADER,
         PROCEDURE, PROCEDURE_HEADER
     }
 
-    private Kind kind;
+    public Kind kind;
     public String id;
     public ArrayList<Node> args;
     public ArrayList<Node> types;
