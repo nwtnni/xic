@@ -548,7 +548,8 @@ WhileStmt ::= WHILE:w Expr:e BlockNoReturn:block
 // If Statement
 IfStmt ::= IF:i Expr:e BlockNoReturn:block ElseStmt:el
     {:
-        RESULT = new If(ixleft, e, block, el);
+        If node = (el == null) ? new If(ixleft, e, block) : new If(ixleft, e, block, el);
+        RESULT = node;
     :}
     ;
 
