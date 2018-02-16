@@ -13,14 +13,14 @@ parser code {:
         this.lex = lex;
     }
 
-    public void report_fatal_error(ComplexSymbol sym) throws Exception {
+    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
         done_parsing();
+        ComplexSymbol sym = (ComplexSymbol) cur_token;
         throw new ParserError(sym, "Unexpected token " + sym.getName());
     }
 
-    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
-        report_fatal_error((ComplexSymbol) cur_token);
-    }
+    public void syntax_error(Symbol cur_token) {}
+
 :};
 
 /* Terminals (tokens returned by the scanner). */

@@ -50,11 +50,8 @@ public class Xic {
             }
         }
 
-        if (helpFlag == true || (lexFlag == false && parseFlag == false)){
-            System.out.println("Usage: xic [options] <source-files>");
-            System.out.println("  --help:                 Print a synopsis of options");
-            System.out.println("  --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed");
-            System.out.println("  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
+        if (helpFlag == true || (lexFlag == false && parseFlag == false)) {
+            displayHelp();
         }
         else {
             try {
@@ -77,7 +74,9 @@ public class Xic {
 
     private static void lex(String source, String sourceDir, String outputDir) throws IOException {
         String output = FilenameUtils.concat(outputDir, FilenameUtils.removeExtension(source) + ".lexed");
+        
         source = FilenameUtils.concat(sourceDir, source);
+        
         BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
         XiLexer lexer = new XiLexer(new FileReader(source));
         lexer.init(source, new ComplexSymbolFactory());
@@ -119,15 +118,17 @@ public class Xic {
 
     private static void parse(String source, String sourceDir, String outputDir) throws IOException {
         String ext = FilenameUtils.getExtension(source);
-        String output = FilenameUtils.concat(sourceDir, FilenameUtils.removeExtension(source) + ".parsed");
-        source = FilenameUtils.concat(sourceDir, source);
+        String output = FilenameUtils.concat(outputDir, FilenameUtils.removeExtension(source));
         if (ext.equals("ixi")){
-            output = FilenameUtils.removeExtension(source) + ".iparsed";
+            output = output + ".iparsed";
+        } else {
+            output = output + ".parsed";
         }
+
+        source = FilenameUtils.concat(sourceDir, source);
           
         try {
             if (ext.equals("xi")){
-                System.out.println("Parsing .xi file");
                 OutputStream stream = new FileOutputStream(output);
                 XiLexer lexer = new XiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();
@@ -140,7 +141,6 @@ public class Xic {
                 pp.print(ast);
             }
             else if (ext.equals("ixi")){
-                System.out.println("Parsing .ixi file");
                 OutputStream stream = new FileOutputStream(output);
                 IXiLexer lexer = new IXiLexer(new FileReader(source));
                 ComplexSymbolFactory sf = new ComplexSymbolFactory();
@@ -152,7 +152,9 @@ public class Xic {
                 Invariant.check(ast);
                 pp.print(ast);
             }
-            else throw new Exception();
+            else {
+                displayHelp();
+            }
         } catch (Exception e){
             BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
             w.append(e.toString());
@@ -160,7 +162,12 @@ public class Xic {
             System.out.println(e.toString());
 
         }
-        
-        
+    }
+
+    private static void displayHelp() {
+        System.out.println("Usage: xic [options] <source-files>");
+        System.out.println("  --help:                 Print a synopsis of options");
+        System.out.println("  --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed");
+        System.out.println("  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
     }
 }
