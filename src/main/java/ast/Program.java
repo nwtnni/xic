@@ -6,11 +6,11 @@ import java.util.ArrayList;
 
 public class Program extends Node {
 
-    private enum Kind {
+    public enum Kind {
         PROGRAM, INTERFACE 
     }
 
-    private Kind kind;
+    public Kind kind;
     public ArrayList<Node> uses;
     public ArrayList<Node> functions;
 

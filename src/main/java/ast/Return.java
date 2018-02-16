@@ -4,11 +4,11 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 
 public class Return extends Node {
 
-    private enum Kind {
+    public enum Kind {
         VALUE, VOID  
     }
 
-    private Kind kind;
+    public Kind kind;
     public Node value;
 
     public Return(Location location, Node value) {

@@ -154,7 +154,7 @@ public class Invariant implements Visitor {
     //
     public void visit(Block b) {
         assert b.location != null;
-        assert b.statements != null && b.statements.size() > 1;
+        assert b.statements != null && b.statements.size() > 0;
         for (Node statement : b.statements) {
             statement.accept(this);
         }
