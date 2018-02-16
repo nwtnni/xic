@@ -152,11 +152,7 @@ public class Printer implements Visitor {
     }
 
     public void visit(Else e){
-        printer.startUnifiedList();
-
         e.block.accept(this);
-
-        printer.endList();
     }
 
     public void visit(While w){
