@@ -1,17 +1,26 @@
 import java_cup.runtime.*;
+import java_cup.runtime.ComplexSymbolFactory.*;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import lexer.*;
 import ast.*;
 
 parser code {:
-    // Connect this parser to a scanner!
+
     XiLexer lex;
     XiParser(XiLexer lex, ComplexSymbolFactory sf) {
         super(lex, sf);
         this.lex = lex;
     }
+
+    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
+        done_parsing();
+        ComplexSymbol sym = (ComplexSymbol) cur_token;
+        throw new ParserError(sym, "Unexpected token " + sym.getName());
+    }
+
+    public void syntax_error(Symbol cur_token) {}
+
 :};
 
 /* Terminals (tokens returned by the scanner). */

@@ -1,21 +1,27 @@
 import java_cup.runtime.*;
+import java_cup.runtime.ComplexSymbolFactory.*;
 import java.util.ArrayList;
 
 import lexer.*;
 import ast.*;
 
 parser code {:
-    // Connect this parser to a scanner!
+
     IXiLexer lex;
     IXiParser(IXiLexer lex, ComplexSymbolFactory sf) {
         super(lex, sf);
-        System.out.println("Start");
         this.lex = lex;
     }
-:};
 
-init with {: System.out.println("init"); :};
-scan with {:return lex.next_token(); :};
+    public void report_fatal_error(ComplexSymbol sym) throws Exception {
+        done_parsing();
+        throw new ParserError(sym, "Unexpected token " + sym.getName());
+    }
+
+    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
+        report_fatal_error((ComplexSymbol) cur_token);
+    }
+:};
 
 /* Terminals (tokens returned by the scanner). */
 terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
@@ -37,10 +43,9 @@ non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
 non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
 non terminal    Node                FunType;
 non terminal    Node                Interface;
-non terminal    String              Test;
 
 /* The grammar rules */
-start with      Test;
+start with      Interface;
 
 // Function Definitions
 FunctionDef ::= 
@@ -146,11 +151,6 @@ FunctionDefList ::=
 
 Interface ::= FunctionDefList:fdl
         {:
-<<<<<<< HEAD
-            System.out.println("Interface");
-            RESULT = new Program(fdlxleft, new ArrayList<Node>(), fdl);
-=======
             RESULT = new Program(fdlxleft, fdl);
->>>>>>> c05a20de1d18ca1eee7138a8da53e0bc231506b1
         :}
     ;
