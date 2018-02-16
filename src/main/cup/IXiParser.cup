@@ -37,10 +37,9 @@ non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
 non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
 non terminal    Node                FunType;
 non terminal    Node                Interface;
-non terminal    String              Test;
 
 /* The grammar rules */
-start with      Test;
+start with      Interface;
 
 // Function Definitions
 FunctionDef ::= 
@@ -146,11 +145,7 @@ FunctionDefList ::=
 
 Interface ::= FunctionDefList:fdl
         {:
-<<<<<<< HEAD
             System.out.println("Interface");
             RESULT = new Program(fdlxleft, new ArrayList<Node>(), fdl);
-=======
-            RESULT = new Program(fdlxleft, fdl);
->>>>>>> c05a20de1d18ca1eee7138a8da53e0bc231506b1
         :}
     ;
