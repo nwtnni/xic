@@ -1,5 +1,9 @@
 package ast;
 
+/* Visits a constructed AST and checks all node invariants.
+ * 
+ * Note: must run with the -ea flag to enable assertions.
+ */
 public class Invariant implements Visitor {
 
     public static final Invariant CHECKER = new Invariant();
@@ -8,9 +12,13 @@ public class Invariant implements Visitor {
         ast.accept(CHECKER);
     }
 
-    /*
-     * Top-level AST nodes
-     */
+    // Program invariants:
+    //
+    // [p.uses]      non-null for .xi file && Use nodes
+    //               null for .ixi
+    //
+    // [p.functions] non-null && list of Function nodes
+    //
     public void visit(Program p) {
         if (p.isProgram()) {
             assert p.uses != null; 
@@ -28,16 +36,33 @@ public class Invariant implements Visitor {
         }
     }
 
+    // Use invariants:
+    //
+    // [u.location] non-null
+    //
+    // [u.file]     non-null
+    //
     public void visit(Use u) {
         assert u.location != null;
         assert u.file != null; 
     }
 
+    // Function invariants:
+    //
+    // [f.location] non-null
+    //
+    // [f.id]       non-null
+    //
+    // [f.args]     non-null && Declare nodes
+    //
+    // [f.types]    non-null && Type nodes if Kind.FUNCTION || Kind.FUNCTION_HEADER
+    //              null otherwise
+    //
+    // [f.block]    non-null && Block node if Kind.FUNCTION || Kind.PROCEDURE
+    //              null otherwise
+    //
     public void visit(Function f) {
         assert f.location != null;
-
-        boolean is_definition = f.isDefinition(); 
-        boolean is_function = f.isFunction();
     
         assert f.id != null;
         assert f.args != null;
@@ -47,14 +72,7 @@ public class Invariant implements Visitor {
             arg.accept(this);
         }
 
-        if (is_definition) {
-            assert f.block instanceof Block;
-            f.block.accept(this);
-        } else {
-            assert f.block == null; 
-        }
-
-        if (is_function) {
+        if (f.isFunction()) {
             assert f.types != null;
             for (Node type : f.types) {
                 assert type instanceof Type; 
@@ -63,11 +81,25 @@ public class Invariant implements Visitor {
         } else {
             assert f.types == null;
         }
+
+        if (f.isDefinition()) {
+            assert f.block instanceof Block;
+            f.block.accept(this);
+        } else {
+            assert f.block == null; 
+        }
     }
 
-    /*
-     * Statement nodes
-     */
+    // Declare invariants:
+    //
+    // [d.location] non-null
+    //
+    // [d.id]       null if Kind.UNDERSCORE
+    //              non-null && Variable node otherwise
+    //
+    // [d.type]     null if Kind.UNDERSCORE
+    //              non-null && Type node otherwise
+    //
     public void visit(Declare d) {
         assert d.location != null;
         if (d.isUnderscore()) {
@@ -81,6 +113,14 @@ public class Invariant implements Visitor {
         }
     }
 
+    // Assign invariants:
+    //
+    // [a.location] non-null
+    //
+    // [a.lhs]      non-null
+    //
+    // [a.rhs]      non-null
+    //
     public void visit(Assign a) {
         assert a.location != null;
         assert a.lhs != null;   
@@ -89,6 +129,13 @@ public class Invariant implements Visitor {
         a.rhs.accept(this);
     }
 
+    // Return invariants:
+    //
+    // [r.location] non-null
+    //
+    // [r.value]    non-null if Kind.VALUE
+    //              null otherwise
+    //
     public void visit(Return r) {
         assert r.location != null;
         if (r.hasValue()) {
@@ -99,14 +146,31 @@ public class Invariant implements Visitor {
         }
     }
 
+    // Block invariants:
+    //
+    // [b.location] non-null
+    //
+    // [b.statements] non-null && length > 1
+    //
     public void visit(Block b) {
         assert b.location != null;
-        assert b.statements != null; 
+        assert b.statements != null && b.statements.size() > 1;
         for (Node statement : b.statements) {
             statement.accept(this);
         }
     }
 
+    // If invariants:
+    //
+    // [i.location]  non-null
+    //
+    // [i.guard]     non-null
+    //
+    // [i.block]     non-null && Block node
+    //
+    // [i.elseBlock] non-null && Block node if Kind.IF_ELSE
+    //               null otherwise
+    //
     public void visit(If i) {
         assert i.location != null;
         assert i.guard != null; 
@@ -123,21 +187,40 @@ public class Invariant implements Visitor {
         }
     }
 
+    // Else invariants:
+    //
+    // [e.location] non-null
+    //
+    // [e.block]    non-null && Block node
+    //
     public void visit(Else e) {
         assert e.location != null;
         assert e.block instanceof Block;
         e.block.accept(this);
     }
 
+    // While invariants:
+    //
+    // [i.location] non-null
+    //
+    // [i.guard]    non-null
+    //
+    // [i.block]    non-null && Block node
+    //
     public void visit(While w) {
         assert w.location != null;
         assert w.guard != null; 
         assert w.block instanceof Block;
     }
 
-    /*
-     * Expression nodes
-     */
+    // Call invariants:
+    //
+    // [c.location] non-null
+    //
+    // [c.id]       non-null
+    //
+    // [c.args]     non-null
+    //
     public void visit(Call c) {
         assert c.location != null;
         assert c.id != null; 
@@ -148,6 +231,14 @@ public class Invariant implements Visitor {
         }
     }
 
+    // Binary invariants:
+    //
+    // [b.location] non-null
+    //
+    // [b.lhs]      non-null
+    //
+    // [b.rhs]      non-null
+    //
     public void visit(Binary b) {
         assert b.location != null;
         assert b.lhs != null; 
@@ -156,17 +247,35 @@ public class Invariant implements Visitor {
         b.rhs.accept(this);
     }
 
+    // Unary invariants:
+    //
+    // [u.location] non-null
+    //
+    // [u.child]    non-null
+    //
     public void visit(Unary u) {
         assert u.location != null;    
         assert u.child != null;
         u.child.accept(this);
     }
 
+    // Variable invariants:
+    //
+    // [v.location] non-null
+    //
+    // [v.id]       non-null
+    //
     public void visit(Variable v) {
         assert v.location != null;  
         assert v.id != null;  
     }
 
+    // Multiple invariants:
+    //
+    // [m.location] non-null
+    //
+    // [m.values]   non-null
+    //
     public void visit(Multiple m) {
         assert m.location != null; 
         assert m.values != null;
@@ -176,6 +285,14 @@ public class Invariant implements Visitor {
         }
     }
 
+    // Index invariants:
+    //
+    // [i.location] non-null
+    // 
+    // [i.array]    non-null
+    //
+    // [i.index]    non-null
+    //
     public void visit(Index i) {
         assert i.location != null; 
         assert i.array != null; 
@@ -185,25 +302,47 @@ public class Invariant implements Visitor {
         i.index.accept(this);
     }
 
+    // XiInt invariants:
+    //
+    // [i.location] non-null
+    //
     public void visit(XiInt i) {
         assert i.location != null; 
     }
 
+    // XiBool invariants:
+    //
+    // [b.location] non-null
+    //
     public void visit(XiBool b) {
         assert b.location != null; 
     }
 
+    // XiChar invariants:
+    //
+    // [c.location] non-null
+    //
     public void visit(XiChar c) {
         assert c.location != null; 
         assert c.escaped != null;
     }
 
+    // XiString invariants:
+    //
+    // [s.location] non-null
+    //
     public void visit(XiString s) {
         assert s.location != null; 
         assert s.escaped != null;
         assert s.value != null;
     }
 
+    // XiArray invariants:
+    //
+    // [a.location] non-null
+    //
+    // [a.values]   non-null
+    //
     public void visit(XiArray a) {
         assert a.location != null; 
         assert a.values != null;
@@ -212,10 +351,6 @@ public class Invariant implements Visitor {
             value.accept(this);
         }
     }
-
-    /*
-     * Other nodes
-     */
 
     public void visit(Type t) {
         //TODO
