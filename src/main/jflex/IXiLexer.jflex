@@ -112,7 +112,6 @@ import static parser.IXiSymbol.*;
     }
 
     private Symbol throwLexError(int row, int col, String msg) throws LexerError {
-        msg = String.format("%d:%d error:%s", row, col, msg);
         Location l = new Location(unit, row, col);
         Location r = new Location(unit, row, col + yylength());
         ComplexSymbol err = (ComplexSymbol) symbolFactory.newSymbol(yytext(), error, l, r);

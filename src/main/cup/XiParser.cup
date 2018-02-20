@@ -94,10 +94,8 @@ UseDeclarations ::=
     :}
     | UseDeclarations:uds UseDeclr:u
     {:
-        ArrayList<Node> useDecs = new ArrayList<Node>();
-        useDecs.addAll(uds);
-        useDecs.add(u);
-        RESULT = useDecs;
+        uds.add(0, u);
+        RESULT = uds;
     :}
     ;
 
@@ -116,17 +114,13 @@ FunctionDeclarations ::=
     :}
     | FunctionDeclr:f FunctionDeclarations:fds
     {:
-        ArrayList<Node> funDecs = new ArrayList<Node>();
-        funDecs.add(f);
-        funDecs.addAll(fds);
-        RESULT = funDecs;
+        fds.add(0, f);
+        RESULT = fds;
     :}
     | ProcedureDeclr:f FunctionDeclarations:fds
     {:
-        ArrayList<Node> funDecs = new ArrayList<Node>();
-        funDecs.add(f);
-        funDecs.addAll(fds);
-        RESULT = funDecs;
+        fds.add(0, f);
+        RESULT = fds;
     :}
     ;
 
@@ -165,10 +159,8 @@ ArgsTypeList ::=
     :}
     | IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
     {:
-        ArrayList<Node> args = new ArrayList<Node>();
-        args.add(new Declare(idxleft,new Variable(idxleft,id), type));
-        args.addAll(fatl);
-        RESULT = args;
+        fatl.add(0, new Declare(idxleft,new Variable(idxleft,id), type));
+        RESULT = fatl;
     :}
     ;
 
@@ -178,20 +170,16 @@ FArgsTypeList ::=
     :}
     | COMMA IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
     {:
-        ArrayList<Node> fargs = new ArrayList<Node>();
-        fargs.add(new Declare(idxleft,new Variable(idxleft,id),type));
-        fargs.addAll(fatl);
-        RESULT = fargs;
+        fatl.add(0, new Declare(idxleft,new Variable(idxleft,id),type));
+        RESULT = fatl;
     :}
     ;
 
 ReturnTypeList ::= 
     FunType:type FReturnTypeList:frtl
     {:
-        ArrayList<Node> returns = new ArrayList<Node>();
-        returns.add(type);
-        returns.addAll(frtl);
-        RESULT = returns;
+        frtl.add(0, type);
+        RESULT = frtl;
     :}
     ;
 
@@ -201,10 +189,8 @@ FReturnTypeList ::=
     :}
     | COMMA FunType:type FReturnTypeList:frtl
     {:
-        ArrayList<Node> freturns = new ArrayList<Node>();
-        freturns.add(type);
-        freturns.addAll(frtl);
-        RESULT = freturns;
+        frtl.add(0, type);
+        RESULT = frtl;
     :}
     ;
 
@@ -238,20 +224,16 @@ BlockReturn ::=
 StmtList ::= 
     StmtListNoReturn:slnr RETURN:r ExprList:e OptSemicolon
     {:
-        ArrayList<Node> sl = new ArrayList<Node>();
-        sl.addAll(slnr);
-        sl.add(new Return(rxleft,new Multiple(exleft, e, Multiple.Kind.RETURN)));
-        RESULT = sl;
+        slnr.add(new Return(rxleft, new Multiple(exleft, e, Multiple.Kind.RETURN)));
+        RESULT = slnr;
     :}
     ;
 
 ExprList ::= 
     Expr:e FExprList:fel
     {:
-        ArrayList<Node> exprlist = new ArrayList<Node>();
-        exprlist.add(e);
-        exprlist.addAll(fel); 
-        RESULT = exprlist;
+        fel.add(0, e);
+        RESULT = fel;
     :}
     ;
 
@@ -261,10 +243,8 @@ FExprList ::=
     :}
     | COMMA Expr:e FExprList:fel 
     {:
-        ArrayList<Node> exprlist = new ArrayList<Node>();
-        exprlist.add(e);
-        exprlist.addAll(fel); 
-        RESULT = exprlist;  
+        fel.add(0, e);
+        RESULT = fel;
     :}
     ;
 
@@ -287,10 +267,8 @@ StmtListVoid ::=
     :}
     | StmtListNoReturn:slnr RETURN:r
     {:
-        ArrayList<Node> sl = new ArrayList<Node>();
-        sl.addAll(slnr);
-        sl.add(new Return(rxleft));
-        RESULT = sl;
+        slnr.add(new Return(rxleft));
+        RESULT = slnr;
     :}
     ; 
 
@@ -340,10 +318,8 @@ StmtListNoReturn ::=
     :}
     | StmtNoReturn:snr StmtListNoReturn:slnr
     {:
-        ArrayList<Node> stmts = new ArrayList<Node>();
-        stmts.add(snr);
-        stmts.addAll(slnr);
-        RESULT = stmts;
+        slnr.add(0, snr);
+        RESULT = slnr;
     :}
     ;
 
@@ -378,10 +354,8 @@ Args ::=
         :}
     | Expr:e FArgs:fargs
         {:  
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(e);
-            args.addAll(fargs);
-            RESULT = args;
+            fargs.add(0, e);
+            RESULT = fargs;
         :}
     ;
 
@@ -391,30 +365,40 @@ FArgs ::=
     :} 
     | COMMA Expr:e FArgs:fargs
         {:
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(e);
-            args.addAll(fargs);
-            RESULT = args;
+            fargs.add(0, e);
+            RESULT = fargs;
         :}
     ;
 
 // Array Calls
 ArrayCall ::= 
-    FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
+    STRING:s LBRACK Expr:e RBRACK IndexList:il 
         {:
-            il.add(0,e);
-            Index index = new Index(fcxleft, fc,il.get(0));
-            for(int i =1; i<il.size();i++) {
-                index = new Index(fcxleft, index, il.get(i));
+            il.add(0, e);
+            Index index = new Index(sxleft, new XiString(sxleft, s.name, s.value), il.get(0));
+            for (int i = 1; i < il.size(); i++) {
+                Node n = il.get(i);
+                index = new Index(n.location, index, n);
+            }
+            RESULT = index;
+        :}
+    | FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
+        {:
+            il.add(0, e);
+            Index index = new Index(fcxleft, fc, il.get(0));
+            for(int i =1; i<il.size(); i++) {
+                Node n = il.get(i);
+                index = new Index(n.location, index, n);
             }
             RESULT = index;
         :}
     | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
         {:
-            il.add(0,e);
-            Index index = new Index(idxleft, new Variable(idxleft,id),il.get(0));
-            for(int i =1; i<il.size();i++) {
-                index = new Index(idxleft, index, il.get(i));
+            il.add(0, e);
+            Index index = new Index(idxleft, new Variable(idxleft, id), il.get(0));
+            for(int i =1; i<il.size(); i++) {
+                Node n = il.get(i);
+                index = new Index(n.location, index, n);
             }
             RESULT = index;
         :}
@@ -426,10 +410,8 @@ IndexList ::=
         :}
     | LBRACK Expr:e RBRACK IndexList:il
         {:
-            ArrayList<Node> indexlist = new ArrayList<Node>();
-            indexlist.add(e);
-            indexlist.addAll(il);
-            RESULT = indexlist;
+            il.add(0, e);
+            RESULT = il;
         :}
     ;
 
@@ -440,10 +422,8 @@ ArrayElems ::=
     :}
     | Expr:e FArrayElems:fae
     {:
-        ArrayList<Node> elems = new ArrayList<Node>();
-        elems.add(e);
-        elems.addAll(fae);
-        RESULT = elems;
+        fae.add(0, e);
+        RESULT = fae;
     :}
     ;
 
@@ -457,10 +437,8 @@ FArrayElems ::=
     :}
     | COMMA Expr:e FArrayElems:fae
     {:
-        ArrayList<Node> elems = new ArrayList<Node>();
-        elems.add(e);
-        elems.addAll(fae);
-        RESULT = elems;
+        fae.add(0, e);
+        RESULT = fae;
     :}
     ;
 
@@ -507,10 +485,8 @@ Assign ::=
 IDList ::= 
     AssignName:an FIDList:fl
     {:
-        ArrayList<Node> idlist = new ArrayList<Node>();
-        idlist.add(an);
-        idlist.addAll(fl);
-        RESULT = idlist;
+        fl.add(0, an);
+        RESULT = fl;
     :};
 
 FIDList ::= 
@@ -519,10 +495,8 @@ FIDList ::=
     :}
     | COMMA AssignName:an FIDList:fl
     {:
-        ArrayList<Node> idlist = new ArrayList<Node>();
-        idlist.add(an);
-        idlist.addAll(fl);
-        RESULT = idlist;
+        fl.add(0, an);
+        RESULT = fl;
     :}
     ;
 

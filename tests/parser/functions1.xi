@@ -49,9 +49,9 @@ g_'func(arr1: int[]) : int[]
     return {1, 2};
 
 hfunc(arr2: bool[][]) : bool[][] {
-    return {{true, false}, {true false}}
+    return {{true, false}, {true, false}}
 }
 
 hfunc(arr2: bool[][]) : bool[][] {
-    return {{true, false}, {true false}};
+    return {{true, false}, {true, false}};
 }

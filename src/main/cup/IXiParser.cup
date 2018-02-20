@@ -69,10 +69,8 @@ ArgsTypeList ::=
     | IDENTIFIER:id COLON FunType:type FArgsTypeList:atl
         {:
             Variable v = new Variable(idxleft, id);
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(new Declare(idxleft, v, type));
-            args.addAll(atl);
-            RESULT = args;
+            atl.add(0, new Declare(idxleft, v, type));
+            RESULT = atl;
         :}
     ;
 
@@ -83,20 +81,16 @@ FArgsTypeList ::=
     | COMMA IDENTIFIER:id COLON FunType:type FArgsTypeList:atl
         {:
             Variable v = new Variable(idxleft, id);
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(new Declare(idxleft, v, type));
-            args.addAll(atl);
-            RESULT = args;
+            atl.add(0, new Declare(idxleft, v, type));
+            RESULT = atl;
         :}
     ;
 
 ReturnTypeList ::= 
     FunType:type FReturnTypeList:rtl
         {:
-            ArrayList<Node> returns = new ArrayList<Node>();
-            returns.add(type);
-            returns.addAll(rtl);
-            RESULT = returns;
+            rtl.add(0, type);
+            RESULT = rtl;
         :}
     ;
 
@@ -106,10 +100,8 @@ FReturnTypeList ::=
         :}
     | COMMA FunType:type FReturnTypeList:rtl
         {:
-            ArrayList<Node> returns = new ArrayList<Node>();
-            returns.add(type);
-            returns.addAll(rtl);
-            RESULT = returns; 
+            rtl.add(0, type);
+            RESULT = rtl;
         :}
     ;
 
@@ -135,17 +127,13 @@ FunctionDefList ::=
         :}
     | FunctionDefList:fdl FunctionDef:f
         {:
-            ArrayList<Node> funcs = new ArrayList<Node>();
-            funcs.addAll(fdl);
-            funcs.add(f);
-            RESULT = funcs;
+            fdl.add(f);
+            RESULT = fdl;
         :}
     | FunctionDefList:fdl ProcedureDef:f
         {:
-            ArrayList<Node> funcs = new ArrayList<Node>();
-            funcs.addAll(fdl);
-            funcs.add(f);
-            RESULT = funcs;
+            fdl.add(f);
+            RESULT = fdl;
         :}
     ;
 
