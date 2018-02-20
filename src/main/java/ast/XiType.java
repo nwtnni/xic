@@ -4,9 +4,9 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 
 import java.util.ArrayList;
 
-public class Type extends Node {
+public class XiType extends Node {
 
-    public enum Primitive {
+    public enum Kind {
         ARRAY,
         BOOLEAN,
         INTEGER;
@@ -22,28 +22,28 @@ public class Type extends Node {
         }
     }
 
-    public Primitive primitive;
+    public Kind kind;
     public Node size;
     public Node child;
 
-    public Type(Location location, Primitive primitive) {
-        assert primitive != Primitive.ARRAY;
+    public XiType(Location location, Kind kind) {
+        assert kind != Kind.ARRAY;
         this.location = location;
-        this.primitive = primitive; 
+        this.kind = kind; 
         this.child = null;
         this.size = null;
     }
 
-    public Type(Location location, Node child, Node size) {
+    public XiType(Location location, Node child, Node size) {
         this.location = location;
-        this.primitive = Primitive.ARRAY;
+        this.kind = Kind.ARRAY;
         this.child = child;
         this.size = size;
     }
 
-    public Type(Location location, Node child) {
+    public XiType(Location location, Node child) {
         this.location = location;
-        this.primitive = Primitive.ARRAY; 
+        this.kind = Kind.ARRAY; 
         this.child = child;
         this.size = null;
     }

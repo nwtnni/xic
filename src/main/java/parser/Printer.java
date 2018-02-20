@@ -225,8 +225,8 @@ public class Printer implements Visitor {
         printer.endList();
     }
 
-    public void visit(Type t) {
-        if (t.primitive.equals(Type.Primitive.ARRAY)) {
+    public void visit(XiType t) {
+        if (t.kind.equals(XiType.Kind.ARRAY)) {
             printer.startList();
             printer.printAtom("[]");
             t.child.accept(this);
@@ -236,7 +236,7 @@ public class Printer implements Visitor {
             }
             printer.endList();
         } else {
-            printer.printAtom(t.primitive.toString());
+            printer.printAtom(t.kind.toString());
         }
     }
 

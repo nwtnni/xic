@@ -211,15 +211,15 @@ FReturnTypeList ::=
 FunType ::= 
     INT:i
     {:
-        RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+        RESULT = new XiType(ixleft, XiType.Kind.INTEGER);
     :}
     | BOOL:b
     {:
-        RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+        RESULT = new XiType(bxleft, XiType.Kind.BOOLEAN);
     :}
     | FunType:type LBRACK RBRACK
     {:
-        RESULT = new Type(typexleft, type);
+        RESULT = new XiType(typexleft, type);
     :}
     ;
 
@@ -474,11 +474,11 @@ VarDeclr ::=
 VarType ::= 
     VarType:type LBRACK RBRACK
     {:
-        RESULT = new Type(typexleft, type);
+        RESULT = new XiType(typexleft, type);
     :}
     | VarType:type LBRACK Expr:e RBRACK
     {:
-        RESULT = new Type(typexleft, type, e);
+        RESULT = new XiType(typexleft, type, e);
     :}
     | KeyType:type 
     {:
@@ -489,11 +489,11 @@ VarType ::=
 KeyType ::= 
     INT:i
     {:
-        RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+        RESULT = new XiType(ixleft, XiType.Kind.INTEGER);
     :}
     | BOOL:b
     {:
-        RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+        RESULT = new XiType(bxleft, XiType.Kind.BOOLEAN);
     :}
     ;
 

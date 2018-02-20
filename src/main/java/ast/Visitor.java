@@ -57,5 +57,5 @@ public interface Visitor {
      * Other nodes
      */
 
-    public void visit(Type t);
+    public void visit(XiType t);
 }
