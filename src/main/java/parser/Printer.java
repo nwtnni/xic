@@ -183,7 +183,7 @@ public class Printer implements Visitor {
     public void visit(Binary b){
         printer.startList();
 
-        printer.printAtom(b.btype.toString());
+        printer.printAtom(b.kind.toString());
         b.lhs.accept(this);
         b.rhs.accept(this);
 
@@ -193,7 +193,7 @@ public class Printer implements Visitor {
     public void visit(Unary u){
         printer.startList();
 
-        printer.printAtom(u.utype.toString());
+        printer.printAtom(u.kind.toString());
         u.child.accept(this);
 
         printer.endList();

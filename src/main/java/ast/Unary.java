@@ -6,13 +6,13 @@ import java.util.ArrayList;
 
 public class Unary extends Node {
     
-    public enum UnaryType {
+    public enum Kind {
         INEGATE("-"),
         LNEGATE("!");
     
         private String token;
 
-        private UnaryType(String token) {
+        private Kind(String token) {
             this.token = token; 
         }
 
@@ -21,12 +21,12 @@ public class Unary extends Node {
         }
     }
 
-    public UnaryType utype;
+    public Kind kind;
     public Node child; 
 
-    public Unary(Location location, UnaryType utype, Node child) {
+    public Unary(Location location, Kind kind, Node child) {
         this.location = location;
-        this.utype = utype; 
+        this.kind = kind; 
         this.child = child;
     }
 
