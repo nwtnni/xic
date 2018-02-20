@@ -1,0 +1,23 @@
+build
+
+xic ("Test --help") "--help" {
+    ;
+}
+
+xic ("Test --lex") "--lex" {
+    foo.ixi;
+    functions1.xi;
+    functions2.xi;
+    if-while.xi;
+    interface1.ixi;
+    nestedblocks.xi;
+    precedence.xi;
+    procedures1.xi;
+    use1.xi;
+    errors/bad_fun_def.ixi;
+    errors/bad_function.xi;
+    bad_neg_maxint.xi;
+    bad_procedure.xi;
+    bad_use_statement_loc.xi;
+    bad_use.ixi;
+}
