@@ -183,7 +183,7 @@ public class Printer implements Visitor {
     public void visit(Binary b){
         printer.startList();
 
-        printer.printAtom(b.btype.toString());
+        printer.printAtom(b.kind.toString());
         b.lhs.accept(this);
         b.rhs.accept(this);
 
@@ -193,7 +193,7 @@ public class Printer implements Visitor {
     public void visit(Unary u){
         printer.startList();
 
-        printer.printAtom(u.utype.toString());
+        printer.printAtom(u.kind.toString());
         u.child.accept(this);
 
         printer.endList();
@@ -225,8 +225,8 @@ public class Printer implements Visitor {
         printer.endList();
     }
 
-    public void visit(Type t) {
-        if (t.primitive.equals(Type.Primitive.ARRAY)) {
+    public void visit(XiType t) {
+        if (t.kind.equals(XiType.Kind.ARRAY)) {
             printer.startList();
             printer.printAtom("[]");
             t.child.accept(this);
@@ -236,7 +236,7 @@ public class Printer implements Visitor {
             }
             printer.endList();
         } else {
-            printer.printAtom(t.primitive.toString());
+            printer.printAtom(t.kind.toString());
         }
     }
 

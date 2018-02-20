@@ -197,15 +197,15 @@ FReturnTypeList ::=
 FunType ::= 
     INT:i
     {:
-        RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+        RESULT = new XiType(ixleft, XiType.Kind.INTEGER);
     :}
     | BOOL:b
     {:
-        RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+        RESULT = new XiType(bxleft, XiType.Kind.BOOLEAN);
     :}
     | FunType:type LBRACK RBRACK
     {:
-        RESULT = new Type(typexleft, type);
+        RESULT = new XiType(typexleft, type);
     :}
     ;
 
@@ -452,11 +452,11 @@ VarDeclr ::=
 VarType ::= 
     VarType:type LBRACK RBRACK
     {:
-        RESULT = new Type(typexleft, type);
+        RESULT = new XiType(typexleft, type);
     :}
     | VarType:type LBRACK Expr:e RBRACK
     {:
-        RESULT = new Type(typexleft, type, e);
+        RESULT = new XiType(typexleft, type, e);
     :}
     | KeyType:type 
     {:
@@ -467,11 +467,11 @@ VarType ::=
 KeyType ::= 
     INT:i
     {:
-        RESULT = new Type(ixleft, Type.Primitive.INTEGER);
+        RESULT = new XiType(ixleft, XiType.Kind.INTEGER);
     :}
     | BOOL:b
     {:
-        RESULT = new Type(bxleft, Type.Primitive.BOOLEAN);
+        RESULT = new XiType(bxleft, XiType.Kind.BOOLEAN);
     :}
     ;
 
@@ -552,68 +552,68 @@ Expr ::=
         :}
     | LNEG:l Expr:e
         {:
-            RESULT = new Unary(lxleft, Unary.UnaryType.LNEGATE, e);
+            RESULT = new Unary(lxleft, Unary.Kind.LNEGATE, e);
         :}
     | MINUS:m Expr:e
         {:
-            RESULT = new Unary(mxleft, Unary.UnaryType.INEGATE, e);
+            RESULT = new Unary(mxleft, Unary.Kind.INEGATE, e);
         :}
         %prec UMINUS
     | Expr:e1 MULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.TIMES, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.TIMES, e1,e2);
         :}
     | Expr:e1 HMULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.HIGH_TIMES, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.HIGH_TIMES, e1,e2);
         :}
     | Expr:e1 DIV:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.DIVISION, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.DIVISION, e1,e2);
         :}
     | Expr:e1 MOD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.MODULO, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.MODULO, e1,e2);
         :}
     | Expr:e1 ADD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.PLUS, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.PLUS, e1,e2);
         :}
     | Expr:e1 MINUS:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.MINUS, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.MINUS, e1,e2);
         :}
     | Expr:e1 LTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.LE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.LE, e1,e2);
         :}
     | Expr:e1 LT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.LT, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.LT, e1,e2);
         :}
     | Expr:e1 GTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.GE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.GE, e1,e2);
         :}
     | Expr:e1 GT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.GT, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.GT, e1,e2);
         :}
     | Expr:e1 EQEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.EQ, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.EQ, e1,e2);
         :}
     | Expr:e1 NEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.NE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.NE, e1,e2);
         :}
     | Expr:e1 LAND:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.AND, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.AND, e1,e2);
         :}
     | Expr:e1 LOR:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.BinaryType.OR, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.OR, e1,e2);
         :}
     | FunctionCall:fc
         {:

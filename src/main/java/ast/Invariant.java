@@ -55,7 +55,7 @@ public class Invariant implements Visitor {
     //
     // [f.args]     non-null && Declare nodes
     //
-    // [f.types]    non-null && Type nodes if Kind.FUNCTION || Kind.FUNCTION_HEADER
+    // [f.types]    non-null && XiType nodes if Kind.FUNCTION || Kind.FUNCTION_HEADER
     //              null otherwise
     //
     // [f.block]    non-null && Block node if Kind.FUNCTION || Kind.PROCEDURE
@@ -75,7 +75,7 @@ public class Invariant implements Visitor {
         if (f.isFunction()) {
             assert f.types != null;
             for (Node type : f.types) {
-                assert type instanceof Type; 
+                assert type instanceof XiType; 
                 type.accept(this);
             }
         } else {
@@ -98,7 +98,7 @@ public class Invariant implements Visitor {
     //              non-null && Variable node otherwise
     //
     // [d.type]     null if Kind.UNDERSCORE
-    //              non-null && Type node otherwise
+    //              non-null && XiType node otherwise
     //
     public void visit(Declare d) {
         assert d.location != null;
@@ -107,7 +107,7 @@ public class Invariant implements Visitor {
             assert d.type == null;
         } else {
             assert d.id instanceof Variable;
-            assert d.type instanceof Type;
+            assert d.type instanceof XiType;
             d.id.accept(this);
             d.type.accept(this);
         }
@@ -352,7 +352,7 @@ public class Invariant implements Visitor {
         }
     }
 
-    public void visit(Type t) {
+    public void visit(XiType t) {
         //TODO
         return;
     }

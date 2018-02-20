@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Binary extends Node {
 
-    public enum BinaryType {
+    public enum Kind {
         TIMES("*"),
         HIGH_TIMES("*>>"),
         DIVISION("/"),
@@ -23,22 +23,22 @@ public class Binary extends Node {
 
         private String token;
 
-        private BinaryType(String token) {
+        private Kind(String token) {
             this.token = token;
         }
 
         public String toString() {
-            return token; 
+            return token;
         }
     }
 
-    public BinaryType btype;
+    public Kind kind;
     public Node lhs;
     public Node rhs;
 
-    public Binary(Location location, BinaryType type, Node lhs, Node rhs) {
+    public Binary(Location location, Kind kind, Node lhs, Node rhs) {
         this.location = location;
-        this.btype = type; 
+        this.kind = kind;
         this.lhs = lhs;
         this.rhs = rhs;
     }
