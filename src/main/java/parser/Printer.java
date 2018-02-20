@@ -7,7 +7,7 @@ import java.io.OutputStream;
 
 import ast.*;
 
-public class Printer implements Visitor {
+public class Printer implements Visitor<Void> {
 
     private static final int WIDTH = 80;
     private SExpPrinter printer;
@@ -24,7 +24,7 @@ public class Printer implements Visitor {
     /*
      * Top-level AST nodes
      */
-    public void visit(Program p){
+    public Void visit(Program p){
         printer.startUnifiedList();
         
         // Use statements
@@ -44,18 +44,20 @@ public class Printer implements Visitor {
         printer.endList();
 
         printer.endList();
+        return null;
     }
 
-    public void visit(Use u){
+    public Void visit(Use u){
         printer.startList();
 
         printer.printAtom("use");
         printer.printAtom(u.file);
 
         printer.endList();
+        return null;
     }
 
-    public void visit(Function f){
+    public Void visit(Function f){
         printer.startList();
 
         // Function name
@@ -83,28 +85,26 @@ public class Printer implements Visitor {
         }
 
         printer.endList();
+        return null;
     }
 
     /*
      * Statement nodes
      */
-    public void visit(Declare d){
-        
-
-        //TODO
-        if(d.id != null && d.type != null) {
+    public Void visit(Declare d){
+        if (d.isUnderscore()) {
+            printer.printAtom("_");
+        }
+        else {
             printer.startList(); 
             d.id.accept(this);
             d.type.accept(this);
             printer.endList();
         }
-        else {
-            printer.printAtom("_");
-        }
-
+        return null;
     }
 
-    public void visit(Assign a){
+    public Void visit(Assign a){
         printer.startList();
 
         printer.printAtom("=");
@@ -112,9 +112,10 @@ public class Printer implements Visitor {
         a.rhs.accept(this);
 
         printer.endList();
+        return null;
     }
 
-    public void visit(Return r){
+    public Void visit(Return r){
         printer.startList();
 
         printer.printAtom("return");
@@ -124,9 +125,10 @@ public class Printer implements Visitor {
         }
 
         printer.endList();
+        return null;
     }
 
-    public void visit(Block b){
+    public Void visit(Block b){
         printer.startUnifiedList();
 
         for (Node statement : b.statements) {
@@ -134,28 +136,31 @@ public class Printer implements Visitor {
         }
 
         printer.endList();
+        return null;
     }
 
-    public void visit(If i){
+    public Void visit(If i){
         printer.startUnifiedList();
 
         printer.printAtom("if");
         
         i.guard.accept(this);
         i.block.accept(this);
-        //TODO
-        if (i.elseBlock != null) {
+
+        if (i.hasElse()) {
             i.elseBlock.accept(this);
         }
 
         printer.endList();
+        return null;
     }
 
-    public void visit(Else e){
+    public Void visit(Else e){
         e.block.accept(this);
+        return null;
     }
 
-    public void visit(While w){
+    public Void visit(While w){
         printer.startUnifiedList();
 
         printer.printAtom("while");
@@ -163,12 +168,13 @@ public class Printer implements Visitor {
         w.block.accept(this);
 
         printer.endList();
+        return null;
     }
 
     /*
      * Expression nodes
      */
-    public void visit(Call c){
+    public Void visit(Call c){
         printer.startList();
 
         c.id.accept(this);
@@ -178,9 +184,10 @@ public class Printer implements Visitor {
         }
 
         printer.endList();
+        return null;
     }
 
-    public void visit(Binary b){
+    public Void visit(Binary b){
         printer.startList();
 
         printer.printAtom(b.kind.toString());
@@ -188,22 +195,25 @@ public class Printer implements Visitor {
         b.rhs.accept(this);
 
         printer.endList();
+        return null;
     }
 
-    public void visit(Unary u){
+    public Void visit(Unary u){
         printer.startList();
 
         printer.printAtom(u.kind.toString());
         u.child.accept(this);
 
         printer.endList();
+        return null;
     }
 
-    public void visit(Variable v){
+    public Void visit(Variable v){
         printer.printAtom(v.id);
+        return null;
     }
 
-    public void visit(Multiple m){
+    public Void visit(Multiple m){
         boolean isParen = m.isAssign() && m.values.size() > 1;
 
         if (isParen) { printer.startList(); }
@@ -213,9 +223,10 @@ public class Printer implements Visitor {
         }
 
         if (isParen) { printer.endList(); }
+        return null;
     }
 
-    public void visit(Index i){
+    public Void visit(Index i){
         printer.startList();
 
         printer.printAtom("[]");
@@ -223,9 +234,10 @@ public class Printer implements Visitor {
         i.index.accept(this);
 
         printer.endList();
+        return null;
     }
 
-    public void visit(XiType t) {
+    public Void visit(XiType t) {
         if (t.kind.equals(XiType.Kind.ARRAY)) {
             printer.startList();
             printer.printAtom("[]");
@@ -238,25 +250,30 @@ public class Printer implements Visitor {
         } else {
             printer.printAtom(t.kind.toString());
         }
+        return null;
     }
 
-    public void visit(XiInt i) {
+    public Void visit(XiInt i) {
         printer.printAtom(Long.toString(i.value));
+        return null;
     }
 
-    public void visit(XiBool b) {
+    public Void visit(XiBool b) {
         printer.printAtom(Boolean.toString(b.value));
+        return null;
     }
 
-    public void visit(XiChar c) {
+    public Void visit(XiChar c) {
         printer.printAtom("\'"+c.escaped+"\'");
+        return null;
     }
 
-    public void visit(XiString s) {
+    public Void visit(XiString s) {
         printer.printAtom("\""+s.escaped+"\"");
+        return null;
     }
 
-    public void visit(XiArray a) {
+    public Void visit(XiArray a) {
         printer.startList();
 
         for (Node value: a.values) {
@@ -264,5 +281,6 @@ public class Printer implements Visitor {
         }
 
         printer.endList();
+        return null;
     }
 }

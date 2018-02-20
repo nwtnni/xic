@@ -1,61 +1,61 @@
 package ast;
 
-public interface Visitor {
+public interface Visitor<T> {
 
     /*
      * Top-level AST nodes
      */
-    public void visit(Program p);
+    public T visit(Program p);
 
-    public void visit(Use u);
+    public T visit(Use u);
 
-    public void visit(Function f);
+    public T visit(Function f);
 
     /*
      * Statement nodes
      */
-    public void visit(Declare d);
+    public T visit(Declare d);
 
-    public void visit(Assign a);
+    public T visit(Assign a);
 
-    public void visit(Return r);
+    public T visit(Return r);
 
-    public void visit(Block b);
+    public T visit(Block b);
 
-    public void visit(If i);
+    public T visit(If i);
 
-    public void visit(Else e);
+    public T visit(Else e);
 
-    public void visit(While w);
+    public T visit(While w);
 
     /*
      * Expression nodes
      */
-    public void visit(Call c);
+    public T visit(Call c);
 
-    public void visit(Binary b);
+    public T visit(Binary b);
 
-    public void visit(Unary u);
+    public T visit(Unary u);
 
-    public void visit(Variable v);
+    public T visit(Variable v);
 
-    public void visit(Multiple m);
+    public T visit(Multiple m);
 
-    public void visit(Index i);
+    public T visit(Index i);
 
-    public void visit(XiInt i);
+    public T visit(XiInt i);
 
-    public void visit(XiBool b);
+    public T visit(XiBool b);
 
-    public void visit(XiChar c);
+    public T visit(XiChar c);
 
-    public void visit(XiString s);
+    public T visit(XiString s);
 
-    public void visit(XiArray a);
+    public T visit(XiArray a);
 
     /*
      * Other nodes
      */
 
-    public void visit(XiType t);
+    public T visit(XiType t);
 }
