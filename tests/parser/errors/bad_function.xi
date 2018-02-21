@@ -1,3 +1,2 @@
-foo():int {
-    return
-}
+foo():int
+    return 1
