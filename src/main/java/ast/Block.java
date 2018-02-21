@@ -5,17 +5,35 @@ import java.util.ArrayList;
 
 public class Block extends Node {
     
-    public ArrayList<Node> statements;
-
-    public Block(Location location, ArrayList<Node> statements) {
-        this.location = location;
-        this.statements = statements;
+    public enum Kind {
+        RETURN, NO_RETURN
     }
 
-    public Block(Location location, Node statement) {
+    public Kind kind;
+    public ArrayList<Node> statements;
+    public Node returns;
+
+    public Block(Location location, ArrayList<Node> statements) {
+        this.kind = Kind.NO_RETURN;
         this.location = location;
-        this.statements = new ArrayList<Node>();
-        statements.add(statement);
+        this.statements = statements;
+        this.returns = null;
+    }
+
+    public Block(ArrayList<Node> statements) {
+        this.kind = Kind.NO_RETURN;
+        this.statements = statements;
+        this.returns = null;
+    }
+
+    public Block(ArrayList<Node> statements, Node returns) {
+        this.kind = Kind.RETURN;
+        this.statements = statements;
+        this.returns = returns;
+    }
+
+    public boolean hasReturn() {
+        return kind == Kind.RETURN; 
     }
 
     public void accept(Visitor v) {

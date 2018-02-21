@@ -134,6 +134,10 @@ public class Printer implements Visitor<Void> {
         for (Node statement : b.statements) {
             statement.accept(this);
         }
+        
+        if (b.hasReturn()) {
+            b.returns.accept(this);
+        }
 
         printer.endList();
         return null;

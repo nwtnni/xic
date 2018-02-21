@@ -154,15 +154,23 @@ public class Invariant implements Visitor<Void> {
 
     // Block invariants:
     //
-    // [b.location] non-null
+    // [b.location]   non-null
     //
-    // [b.statements] non-null && length > 1
+    // [b.statements] non-null && size >= 1
+    //
+    // [b.return]     non-null if Kind.RETURN
+    //                null otherwise
     //
     public Void visit(Block b) {
         assert b.location != null;
         assert b.statements != null && b.statements.size() > 0;
         for (Node statement : b.statements) {
             statement.accept(this);
+        }
+
+        if (b.hasReturn()) {
+            assert b.returns != null; 
+            b.returns.accept(this);
         }
         return null;
     }
@@ -288,11 +296,12 @@ public class Invariant implements Visitor<Void> {
     //
     // [m.location] non-null
     //
-    // [m.values]   non-null
+    // [m.values]   non-null && size > 1
     //
     public Void visit(Multiple m) {
         assert m.location != null; 
         assert m.values != null;
+        assert m.values.size() > 1;
 
         for (Node value : m.values) {
             value.accept(this);

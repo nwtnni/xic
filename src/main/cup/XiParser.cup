@@ -48,11 +48,9 @@ non terminal    Node                VarDeclr, VarType, KeyType;
 non terminal    Node                Assign, AssignName;
 non terminal    ArrayList<Node>     IDList, FIDList;
 non terminal    Node                WhileStmt, IfStmt, ElseStmt;
-non terminal    Node                BlockNoReturn, SingleStmtNoReturn, Procedure, StmtNoReturn;
-non terminal    ArrayList<Node>     StmtListNoReturn, StmtList;
-non terminal    Node                BlockReturn;
-non terminal    Node                BlockVoidReturn;
-non terminal    ArrayList<Node>     StmtListVoid;
+non terminal    Node                BlockOptBraces, BlockStmts;
+non terminal    Node                SingleStmtNoReturn, Procedure, StmtNoReturn;
+non terminal    ArrayList<Node>     StmtListNoReturn;
 non terminal    Node                FunctionDeclr, FunctionDef;
 non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
 non terminal    Node                FunType;
@@ -126,8 +124,11 @@ FunctionDeclarations ::=
 
 // Function and Procedure Declaration
 FunctionDeclr ::= 
-    FunctionDef:def BlockReturn:block
+    FunctionDef:def LBRACE:l BlockStmts:block RBRACE
     {:
+        //TODO because only 1 lookahead--is it possible to refactor?
+        block.location = lxleft;
+
         RESULT = new Function(defxleft, (Function) def, block);
     :}
     ;
@@ -140,8 +141,11 @@ FunctionDef ::=
     ;
 
 ProcedureDeclr ::= 
-    ProcedureDef:def BlockVoidReturn:block
+    ProcedureDef:def LBRACE:l BlockStmts:block RBRACE
     {:
+        //TODO because only 1 lookahead--is it possible to refactor?
+        block.location = lxleft;
+
         RESULT = new Function(defxleft, (Function) def, block);
     :}
     ;
@@ -209,23 +213,37 @@ FunType ::=
     :}
     ;
 
-// Return Block
-BlockReturn ::= 
-    RETURN:r Expr:e OptSemicolon
+// Block with braces OR single non-return statement
+BlockOptBraces ::=
+    LBRACE:l BlockStmts:bs RBRACE
     {:
-        RESULT = new Block(rxleft, new Return(rxleft, e));
+        bs.location = lxleft;
+        RESULT = bs;
     :}
-    | LBRACE:l StmtList:sl RBRACE:r
+    | SingleStmtNoReturn:ssnr
     {:
-        RESULT = new Block(lxleft, sl);
+        ArrayList<Node> block = new ArrayList<>();
+        block.add(ssnr);
+        RESULT = new Block(ssnrxleft, block);
     :}
     ;
 
-StmtList ::= 
-    StmtListNoReturn:slnr RETURN:r ExprList:e OptSemicolon
+// Block of statements with possible return at the end
+BlockStmts ::= 
+    StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
     {:
-        slnr.add(new Return(rxleft, new Multiple(exleft, e, Multiple.Kind.RETURN)));
-        RESULT = slnr;
+        if (el.size() == 0) {
+            RESULT = new Block(slnr, new Return(rxleft));
+        } else if (el.size() == 1) {
+            RESULT = new Block(slnr, new Return(rxleft, el.get(0)));
+        } else {
+            Multiple m = new Multiple(elxleft, el, Multiple.Kind.RETURN);
+            RESULT = new Block(slnr, new Return(rxleft, m));
+        }
+    :}
+    | StmtListNoReturn:slnr
+    {:
+        RESULT = new Block(slnr);
     :}
     ;
 
@@ -245,42 +263,6 @@ FExprList ::=
     {:
         fel.add(0, e);
         RESULT = fel;
-    :}
-    ;
-
-// Void Return Block
-BlockVoidReturn ::= 
-    RETURN:r OptSemicolon
-    {:
-        RESULT = new Block(rxleft, new Return(rxleft));
-    :}
-    | LBRACE:l StmtListVoid:slv RBRACE:r
-    {:
-        RESULT = new Block(lxleft, slv);
-    :}
-    ;
-
-StmtListVoid ::= 
-    StmtListNoReturn:slnr
-    {:
-        RESULT = slnr;
-    :}
-    | StmtListNoReturn:slnr RETURN:r
-    {:
-        slnr.add(new Return(rxleft));
-        RESULT = slnr;
-    :}
-    ; 
-
-// No Return Block
-BlockNoReturn ::= 
-    SingleStmtNoReturn:ssnr
-    {:
-        RESULT = new Block(ssnrxleft, ssnr);
-    :}
-    | LBRACE StmtListNoReturn:slnr RBRACE
-    {:
-        RESULT = new Block(slnrxleft, slnr);
     :}
     ;
 
@@ -324,13 +306,16 @@ StmtListNoReturn ::=
     ;
 
 StmtNoReturn ::= 
-    SingleStmtNoReturn:ssnr
+    LBRACE:l BlockStmts:block RBRACE
+    {:
+        //TODO because only 1 lookahead--is it possible to refactor?
+        block.location = lxleft;
+
+        RESULT = block;
+    :}
+    | SingleStmtNoReturn:ssnr
     {:
         RESULT = ssnr;
-    :}
-    | LBRACE:l StmtListNoReturn:sl RBRACE:r
-    {:
-        RESULT = new Block(lxleft, sl);
     :}
     ;
 
@@ -479,7 +464,11 @@ KeyType ::=
 Assign ::= 
     IDList:il EQ Expr:e
     {:
-        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), e);
+        if (il.size() == 1) {
+            RESULT = new Assign(ilxleft, il.get(0), e);
+        } else {
+            RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), e);
+        }
     :};
 
 IDList ::= 
@@ -520,13 +509,13 @@ AssignName ::=
     ;
 
 // While Statement
-WhileStmt ::= WHILE:w Expr:e BlockNoReturn:block
+WhileStmt ::= WHILE:w Expr:e BlockOptBraces:block
     {:
         RESULT = new While(wxleft, e, block);
     :};
 
 // If Statement
-IfStmt ::= IF:i Expr:e BlockNoReturn:block ElseStmt:el
+IfStmt ::= IF:i Expr:e BlockOptBraces:block ElseStmt:el
     {:
         If node = (el == null) ? new If(ixleft, e, block) : new If(ixleft, e, block, el);
         RESULT = node;
@@ -534,11 +523,10 @@ IfStmt ::= IF:i Expr:e BlockNoReturn:block ElseStmt:el
     ;
 
 ElseStmt ::= 
-    //TODO
     {: 
         RESULT = null;
     :}
-    | ELSE:el BlockNoReturn:block 
+    | ELSE:el BlockOptBraces:block 
     {:
         RESULT = new Else(elxleft,block);
     :}
