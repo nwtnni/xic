@@ -115,11 +115,6 @@ FunctionDeclarations ::=
         fds.add(0, f);
         RESULT = fds;
     :}
-    | ProcedureDeclr:f FunctionDeclarations:fds
-    {:
-        fds.add(0, f);
-        RESULT = fds;
-    :}
     ;
 
 // Function and Procedure Declaration
@@ -138,22 +133,9 @@ FunctionDef ::=
     {:
         RESULT = new Function(idxleft,id,atl,rtl);
     :}
-    ;
-
-ProcedureDeclr ::= 
-    ProcedureDef:def LBRACE:l BlockStmts:block RBRACE
+    | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        //TODO because only 1 lookahead--is it possible to refactor?
-        block.location = lxleft;
-
-        RESULT = new Function(defxleft, (Function) def, block);
-    :}
-    ;
-
-ProcedureDef ::= 
-    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
-    {:
-        RESULT = new Function(idxleft, id, atl);
+        RESULT = new Function(idxleft,id,atl);
     :}
     ;
 
@@ -248,7 +230,10 @@ BlockStmts ::=
     ;
 
 ExprList ::= 
-    Expr:e FExprList:fel
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | Expr:e FExprList:fel
     {:
         fel.add(0, e);
         RESULT = fel;
@@ -279,7 +264,7 @@ SingleStmtNoReturn ::=
     {:
         RESULT = w;
     :}
-    | Procedure:p OptSemicolon
+    | FunctionCall:p OptSemicolon //Procedure
     {:
         RESULT = p;
     :}
@@ -288,11 +273,6 @@ SingleStmtNoReturn ::=
         RESULT = v;
     :}
     ;
-
-Procedure ::= FunctionCall:f
-    {:
-        RESULT = f;
-    :};
 
 StmtListNoReturn ::= 
     {:

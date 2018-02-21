@@ -4,7 +4,7 @@ xic ("Test --help") "--help" {
     ;
 }
 
-xic ("Test --lex") "--lex" {
+xic ("Test --parse") "--parse" {
     foo.ixi;
     functions1.xi;
     functions2.xi;
@@ -16,8 +16,8 @@ xic ("Test --lex") "--lex" {
     use1.xi;
     errors/bad_fun_def.ixi;
     errors/bad_function.xi;
-    bad_neg_maxint.xi;
-    bad_procedure.xi;
-    bad_use_statement_loc.xi;
-    bad_use.ixi;
+    errors/bad_neg_maxint.xi;
+    errors/bad_procedure.xi;
+    errors/bad_use_statement_loc.xi;
+    errors/bad_use.ixi;
 }
