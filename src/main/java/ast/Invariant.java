@@ -156,14 +156,14 @@ public class Invariant implements Visitor<Void> {
     //
     // [b.location]   non-null
     //
-    // [b.statements] non-null && size >= 1
+    // [b.statements] non-null
     //
     // [b.return]     non-null if Kind.RETURN
     //                null otherwise
     //
     public Void visit(Block b) {
         assert b.location != null;
-        assert b.statements != null && b.statements.size() > 0;
+        assert b.statements != null;
         for (Node statement : b.statements) {
             statement.accept(this);
         }

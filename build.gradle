@@ -66,6 +66,11 @@ task xic(type: Exec) {
     args "-c", "cat resources/stub.sh build/libs/xic-0.1.0.jar >> xic && chmod 777 xic"
 }
 
+task xth(type: Exec) {
+    executable "sh"    
+    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript"
+}
+
 compileJava.dependsOn jflexIXi
 compileJava.dependsOn jflexXi
 compileJava.dependsOn cupIXi
