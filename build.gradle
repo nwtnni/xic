@@ -16,6 +16,22 @@ dependencies {
     compile files("libs/sexp-printer.jar")
 }
 
+clean.doFirst {
+    FileTree garbage = fileTree(projectDir) {
+        include "**/*.iparsed"
+        include "**/*.parsed"
+        include "**/*.lexed"
+        include "**/IXiLexer.java"
+        include "**/IXiParser.java"
+        include "**/IXiSymbol.java"
+        include "**/XiLexer.java"
+        include "**/XiParser.java"
+        include "**/XiSymbol.java"
+        include "xic"
+    }
+    delete garbage
+}
+
 jar {
     manifest {
         attributes 'Main-Class': 'xic.Xic'
@@ -25,26 +41,25 @@ jar {
     }
 }
 
-task jflexIXi(type: JFlexIXi) {}
-task jflexXi(type: JFlexXi) {}
-
-task cupIXi(type: CupIXi) {}
-task cupXi(type: CupXi) {}
-
 task zip(type: Zip) {
     archiveName = 'xic.zip'
     from(projectDir) {
         exclude 'build/'
         exclude 'watch'
-        exclude 'src/**/IXiLexer.java'
-        exclude 'src/**/IXiParser.java'
-        exclude 'src/**/IXiSymbol.java'
-        exclude 'src/**/XiLexer.java'
-        exclude 'src/**/XiParser.java'
-        exclude 'src/**/XiSymbol.java'
+        exclude '**/IXiLexer.java'
+        exclude '**/IXiParser.java'
+        exclude '**/IXiSymbol.java'
+        exclude '**/XiLexer.java'
+        exclude '**/XiParser.java'
+        exclude '**/XiSymbol.java'
     }
-
 }
+
+task jflexIXi(type: JFlexIXi) {}
+task jflexXi(type: JFlexXi) {}
+
+task cupIXi(type: CupIXi) {}
+task cupXi(type: CupXi) {}
 
 task xic(type: Exec) {
     executable "sh"
