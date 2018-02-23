@@ -252,7 +252,7 @@ public class Printer implements Visitor<Void> {
             }
             printer.endList();
         } else {
-            printer.printAtom(t.kind.toString());
+            printer.printAtom(t.id);
         }
         return null;
     }

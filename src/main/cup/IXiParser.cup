@@ -108,11 +108,11 @@ FReturnTypeList ::=
 FunType ::= 
     INT:i
         {:
-            RESULT = new XiType(ixleft, XiType.Kind.INTEGER);
+            RESULT = new XiType(ixleft, "int");
         :}
     | BOOL:b
         {:
-            RESULT = new XiType(bxleft, XiType.Kind.BOOLEAN);
+            RESULT = new XiType(bxleft, "bool");
         :}
     | FunType:type LBRACK RBRACK
         {:

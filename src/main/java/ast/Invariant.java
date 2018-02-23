@@ -382,8 +382,30 @@ public class Invariant implements Visitor<Void> {
         return null;
     }
 
+    // XiType invariants:
+    //
+    // [t.location] non-null
+    //
+    // [t.size]     possibly non-null if Kind.ARRAY
+    //              null otherwise
+    //
+    // [t.child]    non-null if Kind.Array
+    //              null otherwise
+    //
+    // [t.id]       non-null if Kind.CLASS
+    //              null otherwise
+    //
     public Void visit(XiType t) {
-        //TODO
+        assert t.location != null;  
+        
+        if (t.isClass()) {
+            assert t.size == null; 
+            assert t.child == null; 
+            assert t.id != null;
+        } else {
+            assert t.child != null;
+            assert t.id == null;
+        }
         return null;
     }
 }
