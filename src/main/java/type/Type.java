@@ -23,6 +23,12 @@ public class Type {
         this.id = id; 
         this.child = null;
     }
+
+    public Type(Type child) {
+        this.kind = Kind.ARRAY; 
+        this.id = null;
+        this.child = child;
+    }
     
     public Type(XiType xt) {
         if (xt.isClass()) {

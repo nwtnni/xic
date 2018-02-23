@@ -33,4 +33,8 @@ public class Unary extends Node {
     public <T> T accept(Visitor<T> v) {
         return v.visit(this);
     }
+
+    public boolean isLogical() {
+        return kind == Kind.LNEGATE; 
+    }
 }

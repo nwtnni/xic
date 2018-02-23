@@ -46,4 +46,47 @@ public class Binary extends Node {
     public <T> T accept(Visitor<T> v) {
         return v.visit(this);
     }
+
+    public boolean isBool() {
+        switch (kind) {
+            case TIMES:
+            case HIGH_TIMES:
+            case DIVISION:
+            case MODULO:
+            case PLUS:
+            case MINUS:
+                return false;
+            case LT:
+            case LE:
+            case GE:
+            case GT:
+            case EQ:
+            case NE:
+            case AND:
+            case OR:
+                return true;
+        }
+        assert false;
+        return false;
+    }
+
+    public boolean isInt() {
+        return !(kind == Kind.AND || kind == Kind.OR);
+    }
+
+    public boolean isList() {
+        return kind == Kind.PLUS;
+    }
+
+    public boolean returnsBool() {
+        return isBool();         
+    }
+
+    public boolean returnsInt() {
+        return !isBool(); 
+    }
+
+    public boolean returnsList() {
+        return isList();
+    }
 }
