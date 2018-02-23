@@ -389,7 +389,7 @@ public class Invariant implements Visitor<Void> {
     // [t.size]     possibly non-null if Kind.ARRAY
     //              null otherwise
     //
-    // [t.child]    non-null if Kind.Array
+    // [t.child]    non-null && XiType if Kind.Array
     //              null otherwise
     //
     // [t.id]       non-null if Kind.CLASS
@@ -403,7 +403,7 @@ public class Invariant implements Visitor<Void> {
             assert t.child == null; 
             assert t.id != null;
         } else {
-            assert t.child != null;
+            assert t.child instanceof XiType;
             assert t.id == null;
         }
         return null;
