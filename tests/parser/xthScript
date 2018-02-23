@@ -9,6 +9,7 @@ xic ("Test --parse") "--parse" {
     functions2.xi;
     if-while.xi;
     interface1.ixi;
+    nested_return.xi;
     nestedblocks.xi;
     precedence.xi;
     procedures1.xi;
