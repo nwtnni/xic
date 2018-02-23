@@ -1,3 +1,4 @@
 foo() {
-    int i = 1;
+    {return}
+    return
 }

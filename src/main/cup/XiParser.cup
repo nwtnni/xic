@@ -264,7 +264,7 @@ SingleStmtNoReturn ::=
     {:
         RESULT = w;
     :}
-    | FunctionCall:p OptSemicolon //Procedure
+    | FunctionCall:p OptSemicolon // Procedure
     {:
         RESULT = p;
     :}
@@ -286,7 +286,7 @@ StmtListNoReturn ::=
     ;
 
 StmtNoReturn ::= 
-    LBRACE:l BlockStmts:block RBRACE
+    LBRACE:l BlockStmts:block RBRACE OptSemicolon
     {:
         //TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;

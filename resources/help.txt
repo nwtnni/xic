@@ -1,3 +1,4 @@
 Usage: xic [options] <source-files>
   --help:                 Print a synopsis of options
   --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed
+  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed
