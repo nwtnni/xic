@@ -14,11 +14,11 @@ xic ("Test --parse") "--parse" {
     precedence.xi;
     procedures1.xi;
     use1.xi;
-    errors/bad_fun_def.ixi;
-    errors/bad_function.xi;
-    errors/bad_neg_maxint.xi;
-    errors/bad_procedure.xi;
-    errors/bad_program.xi;
-    errors/bad_use_statement_loc.xi;
-    errors/bad_use.ixi;
+    /* errors/bad_fun_def.ixi; */
+    /* errors/bad_function.xi; */
+    /* errors/bad_neg_maxint.xi; */
+    /* errors/bad_procedure.xi; */
+    /* errors/bad_program.xi; */
+    /* errors/bad_use_statement_loc.xi; */
+    /* errors/bad_use.ixi; */
 }
