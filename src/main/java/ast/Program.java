@@ -32,7 +32,7 @@ public class Program extends Node {
         return kind == Kind.PROGRAM; 
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) {
+        return v.visit(this);
     }
 }

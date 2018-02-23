@@ -80,7 +80,7 @@ public class Function extends Node {
         return kind == Kind.FUNCTION || kind == Kind.PROCEDURE;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) {
+        return v.visit(this);
     }
 }

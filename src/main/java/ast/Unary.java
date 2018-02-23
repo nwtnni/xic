@@ -30,7 +30,7 @@ public class Unary extends Node {
         this.child = child;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) {
+        return v.visit(this);
     }
 }

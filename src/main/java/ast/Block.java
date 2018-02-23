@@ -36,7 +36,7 @@ public class Block extends Node {
         return kind == Kind.RETURN; 
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) {
+        return v.visit(this);
     }
 }

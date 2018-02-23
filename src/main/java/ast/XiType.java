@@ -39,8 +39,8 @@ public class XiType extends Node {
         this.size = null;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) {
+        return v.visit(this);
     }
 
     public boolean isClass() {

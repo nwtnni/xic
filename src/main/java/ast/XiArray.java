@@ -13,7 +13,7 @@ public class XiArray extends Node {
         this.values = values;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) {
+        return v.visit(this);
     }
 }

@@ -27,7 +27,7 @@ public class Return extends Node {
         return kind == Kind.VALUE; 
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) {
+        return v.visit(this);
     }
 }

@@ -13,7 +13,7 @@ public class XiChar extends Node {
         this.value = value;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) {
+        return v.visit(this);
     }
 }
