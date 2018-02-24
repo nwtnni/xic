@@ -1,5 +1,15 @@
 package lexer;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+
+import org.apache.commons.io.FilenameUtils;
+
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
 import java.util.ArrayList;
@@ -21,20 +31,70 @@ import static parser.XiSymbol.*;
 %column
 
 %{
+    /* Exposed Interface */
+
+    // TODO: Throw XicException
+    public static XiLexer from(String source, String unit) {
+        try {
+            String input = FilenameUtils.concat(source, unit);
+            XiLexer lexer = new XiLexer(new FileReader(input));
+            lexer.init(unit, new ComplexSymbolFactory());
+            return lexer;
+        } catch (IOException e) {
+            System.out.println(e.toString());
+            return null;
+        }
+    }
+
+    // TODO: Throw XicException
+    public void write(String sink) {
+        String lexed = FilenameUtils.removeExtension(unit) + ".lexed";
+        String output = FilenameUtils.concat(sink, lexed);
+
+        BufferedWriter writer = null;
+        
+        try {
+            writer = new BufferedWriter(new FileWriter(output, false));
+        } catch (Exception e) {
+            System.out.println(e.toString());
+            return;
+        }
+
+        try {
+            ComplexSymbol s = (ComplexSymbol) next_token();
+            while (s.sym != EOF) {
+                writer.append(format(s) + "\n");
+                s = (ComplexSymbol) next_token();
+            }
+            writer.close();
+        } catch (Exception e) {
+            /* if (writer != null) { */
+            /*     writer.append(e.toString()); */
+            /*     writer.close(); */
+            /* } */
+            System.out.println(e.toString());
+            return;
+        }
+    }
+
+    public ComplexSymbolFactory getSymbolFactory() {
+        return symbolFactory;   
+    }
+
+    /* JFlex Fields */
+
     private String unit;
     private ComplexSymbolFactory symbolFactory;
-    
     private StringBuilder literal = new StringBuilder();
     private ArrayList<Long> value = new ArrayList<Long>();
-    
     private int startColumn = 1;
 
-    public void init(String unit, ComplexSymbolFactory sf) {
+    /* Utility methods */
+
+    private void init(String unit, ComplexSymbolFactory sf) {
         this.unit = unit;
         this.symbolFactory = sf;
     }
-
-    /* Utility methods */
 
     private int row() { return yyline + 1; }
 
@@ -62,6 +122,28 @@ import static parser.XiSymbol.*;
             return source;
         }
         return Character.toString(c);
+    }
+
+    private static String format(ComplexSymbol s) {
+        String label;
+        switch (s.sym) {
+            case IDENTIFIER:
+                label = "id ";
+                break;
+            case INTEGER:
+                label = "integer ";
+                break;
+            case CHAR:
+                label = "character ";
+                break;
+            case STRING:
+                label = "string ";
+                break;
+            default:
+                label = "";
+        }
+        Location l = s.getLeft();
+        return l.getLine() + ":" + l.getColumn() + " " + label + s.getName();
     }
 
     private void buildString(String l, char c) {

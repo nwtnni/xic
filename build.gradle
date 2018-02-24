@@ -3,7 +3,7 @@ version = '0.1.0'
 
 apply plugin: 'java'
 apply plugin: 'application'
-mainClassName = 'xic.Xic'
+mainClassName = 'xic.Main'
 
 repositories {
     mavenCentral()
@@ -35,7 +35,7 @@ clean.doFirst {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'xic.Xic'
+        attributes 'Main-Class': 'xic.Main'
     }
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
@@ -67,7 +67,12 @@ task xic(type: Exec) {
     args "-c", "cat resources/stub.sh build/libs/xic-0.1.0.jar >> xic && chmod 777 xic"
 }
 
-task xth(type: Exec) {
+task testLexer(type: Exec) {
+    executable "sh"    
+    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript"
+}
+
+task testParser(type: Exec) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript"
 }
