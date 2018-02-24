@@ -7,9 +7,25 @@ import ast.*;
 
 parser code {:
 
+    /* Exposed Interface */
+
+    //TODO: throw XicException
+    public static Node invoke(String source, String unit) {
+        IXiLexer lexer = IXiLexer.from(source, unit);
+        IXiParser parser = new IXiParser(lexer);
+        try {
+            return parser.parse().value();
+        } catch (Exception e) {
+            return null;   
+        }
+    }
+
+    /* Private Utility Functions */
+
     IXiLexer lex;
-    IXiParser(IXiLexer lex, ComplexSymbolFactory sf) {
-        super(lex, sf);
+
+    IXiParser(IXiLexer lex) {
+        super(lex, lex.getSymbolFactory());
         this.lex = lex;
     }
 

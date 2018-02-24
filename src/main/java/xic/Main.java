@@ -105,44 +105,13 @@ public class Main {
 	private static void parse(String source, String sourceDir, String outputDir) throws IOException {
 		String ext = FilenameUtils.getExtension(source);
 
-		String output;
-		if (ext.equals("ixi")) {
-			output = ".iparsed";
-		} else {
-			output = ".parsed";
-		}
-		output = FilenameUtils.concat(outputDir, FilenameUtils.removeExtension(source) + output);
-		source = FilenameUtils.concat(sourceDir, source);
-
-		try {
-			if (ext.equals("xi")) {
-				OutputStream stream = new FileOutputStream(output);
-                XiLexer lexer = XiLexer.from(sourceDir, source);
-				XiParser parser = new XiParser(lexer, new ComplexSymbolFactory());
-
-				Printer pp = new Printer(stream);
-				Node ast = parser.parse().value();
-				Invariant.check(ast);
-				pp.print(ast);
-			} else if (ext.equals("ixi")) {
-				OutputStream stream = new FileOutputStream(output);
-				IXiLexer lexer = IXiLexer.from(sourceDir, source);
-				IXiParser parser = new IXiParser(lexer, new ComplexSymbolFactory());
-
-				Printer pp = new Printer(stream);
-				Node ast = parser.parse().value();
-				Invariant.check(ast);
-				pp.print(ast);
-			} else {
-				displayHelp();
-			}
-		} catch (Exception e) {
-			BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
-			w.append(e.toString());
-			w.close();
-			System.out.println(e.toString());
-
-		}
+        if (ext.equals("xi")) {
+            Printer.writeSource(sourceDir, outputDir, source);
+        } else if (ext.equals("ixi")) {
+            Printer.writeInterface(sourceDir, outputDir, source);
+        } else {
+            displayHelp();
+        }
 	}
 
 	private static void displayHelp() {

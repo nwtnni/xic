@@ -77,6 +77,10 @@ import static parser.IXiSymbol.*;
         }
     }
 
+    public ComplexSymbolFactory getSymbolFactory() {
+        return symbolFactory;
+    }
+
     /* JFlex Fields */
 
     private String unit;

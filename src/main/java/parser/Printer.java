@@ -2,23 +2,55 @@ package parser;
 
 import edu.cornell.cs.cs4120.util.*;
 import polyglot.util.OptimalCodeWriter;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 
 import ast.*;
 
 public class Printer extends Visitor<Void> {
 
+    public static void writeSource(String source, String sink, String unit) {
+        Node ast = XiParser.invoke(source, unit);
+        String parsed = FilenameUtils.removeExtension(unit) + ".parsed";
+        String output = FilenameUtils.concat(sink, parsed);
+        write(ast, output);
+    }
+
+    public static void writeInterface(String source, String sink, String unit) {
+        Node ast = IXiParser.invoke(source, unit);
+        String parsed = FilenameUtils.removeExtension(unit) + ".iparsed";
+        String output = FilenameUtils.concat(sink, parsed);
+        write(ast, output);
+    }
+
+    // TODO: Throw XicException
+    private static void write(Node ast, String output) {
+        OutputStream out = null;
+        try {
+            out = new FileOutputStream(output);
+            Printer printer = new Printer(out);
+            ast.accept(printer);
+        } catch (Exception e) {
+            try {
+                if (out != null) {
+                    BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
+                    w.append(e.toString());
+                    w.close();
+                }
+            } catch (Exception io) {}
+            System.out.println(e.toString());
+        }
+    }
+
     private static final int WIDTH = 80;
     private SExpPrinter printer;
 
-    public Printer(OutputStream stream) {
+    private Printer(OutputStream stream) {
         printer = new CodeWriterSExpPrinter(new OptimalCodeWriter(stream, WIDTH));
-    }
-
-    public void print(Node n) {
-        n.accept(this);
-        printer.flush();
     }
 
     /*
@@ -44,6 +76,7 @@ public class Printer extends Visitor<Void> {
         printer.endList();
 
         printer.endList();
+        printer.flush();
         return null;
     }
 
