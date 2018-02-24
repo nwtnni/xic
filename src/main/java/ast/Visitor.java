@@ -13,7 +13,7 @@ public abstract class Visitor<T> {
         return null;
     }
 
-    public T visit(Function f) {
+    public T visit(Fn f) {
         return null;
     }
 

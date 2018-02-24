@@ -39,7 +39,7 @@ terminal    StringWrapper   STRING;
 /* Non terminals */
 non terminal    Node                Expr;
 non terminal    ArrayList<Node>     ExprList, FExprList;
-non terminal    Node                FunctionCall;
+non terminal    Node                FnCall;
 non terminal    ArrayList<Node>     Args, FArgs; 
 non terminal    Node                ArrayCall;
 non terminal    ArrayList<Node>     IndexList;
@@ -51,12 +51,12 @@ non terminal    Node                WhileStmt, IfStmt, ElseStmt;
 non terminal    Node                BlockOptBraces, BlockStmts;
 non terminal    Node                SingleStmtNoReturn, Procedure, StmtNoReturn;
 non terminal    ArrayList<Node>     StmtListNoReturn;
-non terminal    Node                FunctionDeclr, FunctionDef;
+non terminal    Node                FnDeclr, FnDef;
 non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
-non terminal    Node                FunType;
+non terminal    Node                FnType;
 non terminal    Node                ProcedureDeclr, ProcedureDef;
 non terminal    Node                UseDeclr;
-non terminal    ArrayList<Node>     UseDeclarations, FunctionDeclarations;
+non terminal    ArrayList<Node>     UseDeclarations, FnDeclarations;
 non terminal    Node                Program;
 non terminal                        OptSemicolon;
 
@@ -79,7 +79,7 @@ OptSemicolon ::=
     ;
 
 // Program
-Program ::= UseDeclarations:uds FunctionDeclarations:fds
+Program ::= UseDeclarations:uds FnDeclarations:fds
     {:
         RESULT = new Program(udsxleft, uds, fds);
     :}
@@ -106,11 +106,11 @@ UseDeclr ::=
     ;
 
 // Functions
-FunctionDeclarations ::= 
+FnDeclarations ::= 
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | FunctionDeclr:f FunctionDeclarations:fds
+    | FnDeclr:f FnDeclarations:fds
     {:
         fds.add(0, f);
         RESULT = fds;
@@ -118,24 +118,24 @@ FunctionDeclarations ::=
     ;
 
 // Function and Procedure Declaration
-FunctionDeclr ::= 
-    FunctionDef:def LBRACE:l BlockStmts:block RBRACE
+FnDeclr ::= 
+    FnDef:def LBRACE:l BlockStmts:block RBRACE
     {:
         //TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
 
-        RESULT = new Function(defxleft, (Function) def, block);
+        RESULT = new Fn(defxleft, (Fn) def, block);
     :}
     ;
 
-FunctionDef ::= 
+FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-        RESULT = new Function(idxleft,id,atl,rtl);
+        RESULT = new Fn(idxleft,id,atl,rtl);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        RESULT = new Function(idxleft,id,atl);
+        RESULT = new Fn(idxleft,id,atl);
     :}
     ;
 
@@ -143,7 +143,7 @@ ArgsTypeList ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
+    | IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
         fatl.add(0, new Declare(idxleft,new Variable(idxleft,id), type));
         RESULT = fatl;
@@ -154,7 +154,7 @@ FArgsTypeList ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
+    | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
         fatl.add(0, new Declare(idxleft,new Variable(idxleft,id),type));
         RESULT = fatl;
@@ -162,7 +162,7 @@ FArgsTypeList ::=
     ;
 
 ReturnTypeList ::= 
-    FunType:type FReturnTypeList:frtl
+    FnType:type FReturnTypeList:frtl
     {:
         frtl.add(0, type);
         RESULT = frtl;
@@ -173,14 +173,14 @@ FReturnTypeList ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA FunType:type FReturnTypeList:frtl
+    | COMMA FnType:type FReturnTypeList:frtl
     {:
         frtl.add(0, type);
         RESULT = frtl;
     :}
     ;
 
-FunType ::= 
+FnType ::= 
     INT:i
     {:
         RESULT = new XiType(ixleft, "int");
@@ -189,7 +189,7 @@ FunType ::=
     {:
         RESULT = new XiType(bxleft, "bool");
     :}
-    | FunType:type LBRACK RBRACK
+    | FnType:type LBRACK RBRACK
     {:
         RESULT = new XiType(typexleft, type);
     :}
@@ -264,7 +264,7 @@ SingleStmtNoReturn ::=
     {:
         RESULT = w;
     :}
-    | FunctionCall:p OptSemicolon // Procedure
+    | FnCall:p OptSemicolon // Procedure
     {:
         RESULT = p;
     :}
@@ -300,7 +300,7 @@ StmtNoReturn ::=
     ;
 
 // Function Calls
-FunctionCall ::= 
+FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
             Variable v = new Variable(idxleft, id);
@@ -347,7 +347,7 @@ ArrayCall ::=
             }
             RESULT = index;
         :}
-    | FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
+    | FnCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
             il.add(0, e);
             Index index = new Index(fcxleft, fc, il.get(0));
@@ -583,7 +583,7 @@ Expr ::=
         {:
             RESULT = new Binary(bxleft, Binary.Kind.OR, e1,e2);
         :}
-    | FunctionCall:fc
+    | FnCall:fc
         {:
             RESULT = fc;
         :}

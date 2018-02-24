@@ -36,10 +36,10 @@ public class Printer extends Visitor<Void> {
             printer.endList();
         }
 
-        // Function declarations
+        // Fn declarations
         printer.startUnifiedList();
-        for (Node function : p.functions) {
-            function.accept(this);
+        for (Node f : p.fns) {
+            f.accept(this);
         }
         printer.endList();
 
@@ -57,30 +57,30 @@ public class Printer extends Visitor<Void> {
         return null;
     }
 
-    public Void visit(Function f){
+    public Void visit(Fn f){
         printer.startList();
 
-        // Function name
+        // Fn name
         printer.printAtom(f.id);
         
-        // Function arguments
+        // Fn arguments
         printer.startList();
         for (Node arg : f.args) {
             arg.accept(this);
         }
         printer.endList();
 
-        // Function return types
+        // Fn return types
         printer.startList();
-        if (f.isFunction()) {
-            for (Node type : f.types) {
+        if (f.isFn()) {
+            for (Node type : f.returns) {
                 type.accept(this);
             }
         }
         printer.endList();
 
         // Statement block
-        if (f.isDefinition()) {
+        if (f.isDef()) {
             f.block.accept(this);
         }
 

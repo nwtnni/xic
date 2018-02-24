@@ -17,7 +17,7 @@ public class Invariant extends Visitor<Void> {
     // [p.uses]      non-null for .xi file && Use nodes
     //               null for .ixi
     //
-    // [p.functions] non-null && list of Function nodes
+    // [p.fns] non-null && list of Fn nodes
     //
     public Void visit(Program p) {
         if (p.isProgram()) {
@@ -29,10 +29,10 @@ public class Invariant extends Visitor<Void> {
         } else {
             assert p.uses == null; 
         }
-        assert p.functions != null;
-        for (Node function : p.functions) {
-            assert function instanceof Function;
-            function.accept(this);
+        assert p.fns != null;
+        for (Node f : p.fns) {
+            assert f instanceof Fn;
+            f.accept(this);
         }
         return null;
     }
@@ -49,7 +49,7 @@ public class Invariant extends Visitor<Void> {
         return null;
     }
 
-    // Function invariants:
+    // Fn invariants:
     //
     // [f.location] non-null
     //
@@ -57,13 +57,13 @@ public class Invariant extends Visitor<Void> {
     //
     // [f.args]     non-null && Declare nodes
     //
-    // [f.types]    non-null && XiType nodes if Kind.FUNCTION || Kind.FUNCTION_HEADER
+    // [f.returns]  non-null && XiType nodes if Kind.FN || Kind.FN_HEADER
     //              null otherwise
     //
-    // [f.block]    non-null && Block node if Kind.FUNCTION || Kind.PROCEDURE
+    // [f.block]    non-null && Block node if Kind.FN || Kind.PROC
     //              null otherwise
     //
-    public Void visit(Function f) {
+    public Void visit(Fn f) {
         assert f.location != null;
     
         assert f.id != null;
@@ -74,17 +74,17 @@ public class Invariant extends Visitor<Void> {
             arg.accept(this);
         }
 
-        if (f.isFunction()) {
-            assert f.types != null;
-            for (Node type : f.types) {
+        if (f.isFn()) {
+            assert f.returns != null;
+            for (Node type : f.returns) {
                 assert type instanceof XiType; 
                 type.accept(this);
             }
         } else {
-            assert f.types == null;
+            assert f.returns == null;
         }
 
-        if (f.isDefinition()) {
+        if (f.isDef()) {
             assert f.block instanceof Block;
             f.block.accept(this);
         } else {

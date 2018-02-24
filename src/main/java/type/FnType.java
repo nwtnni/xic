@@ -4,12 +4,12 @@ import java.util.ArrayList;
 
 import ast.*;
 
-public class FunctionType {
+public class FnType {
 
     public ArrayList<Type> args;
     public ArrayList<Type> returns;
 
-    public FunctionType(Function f) {
+    public FnType(Fn f) {
 
         ArrayList<Type> args = new ArrayList<>(); 
         ArrayList<Type> returns = new ArrayList<>();
@@ -18,8 +18,8 @@ public class FunctionType {
             args.add(new Type((XiType) arg));
         }
 
-        if (f.isFunction()) {
-            for (Node type : f.types) {
+        if (f.isFn()) {
+            for (Node type : f.returns) {
                 returns.add(new Type((XiType) type));
             }
         }

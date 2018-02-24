@@ -31,7 +31,7 @@ public class TypeCheck extends Visitor<Type> {
         return null;
     }
 
-    public Type visit(Function f) {
+    public Type visit(Fn f) {
         //TODO
         return null;
     }
