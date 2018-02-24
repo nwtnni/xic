@@ -63,7 +63,7 @@ public abstract class Visitor<T> {
         return null;
     }
 
-    public T visit(Variable v) {
+    public T visit(Var v) {
         return null;
     }
 

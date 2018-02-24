@@ -98,7 +98,7 @@ public class Invariant extends Visitor<Void> {
     // [d.location] non-null
     //
     // [d.id]       null if Kind.UNDERSCORE
-    //              non-null && Variable node otherwise
+    //              non-null && Var node otherwise
     //
     // [d.type]     null if Kind.UNDERSCORE
     //              non-null && XiType node otherwise
@@ -109,7 +109,7 @@ public class Invariant extends Visitor<Void> {
             assert d.id == null;
             assert d.type == null;
         } else {
-            assert d.id instanceof Variable;
+            assert d.id instanceof Var;
             assert d.type instanceof XiType;
             d.id.accept(this);
             d.type.accept(this);
@@ -280,13 +280,13 @@ public class Invariant extends Visitor<Void> {
         return null;
     }
 
-    // Variable invariants:
+    // Var invariants:
     //
     // [v.location] non-null
     //
     // [v.id]       non-null
     //
-    public Void visit(Variable v) {
+    public Void visit(Var v) {
         assert v.location != null;  
         assert v.id != null;  
         return null;

@@ -131,7 +131,7 @@ public class TypeCheck extends Visitor<Type> {
 
     // TODO
     // Context dependent
-    public Type visit(Variable v) {
+    public Type visit(Var v) {
         assert false;
         return null;
     }

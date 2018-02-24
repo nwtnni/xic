@@ -5,7 +5,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 public class Declare extends Node {
 
     public enum Kind {
-        VARIABLE, UNDERSCORE 
+        VAR, UNDERSCORE 
     }
 
     private Kind kind;
@@ -13,7 +13,7 @@ public class Declare extends Node {
     public Node type;
 
     public Declare(Location location, Node id, Node type) {
-        this.kind = Kind.VARIABLE;
+        this.kind = Kind.VAR;
         this.location = location;
         this.id = id; 
         this.type = type;

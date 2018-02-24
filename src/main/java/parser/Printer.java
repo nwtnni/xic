@@ -212,7 +212,7 @@ public class Printer extends Visitor<Void> {
         return null;
     }
 
-    public Void visit(Variable v){
+    public Void visit(Var v){
         printer.printAtom(v.id);
         return null;
     }

@@ -68,7 +68,7 @@ ArgsTypeList ::=
         :}
     | IDENTIFIER:id COLON FnType:type FArgsTypeList:atl
         {:
-            Variable v = new Variable(idxleft, id);
+            Var v = new Var(idxleft, id);
             atl.add(0, new Declare(idxleft, v, type));
             RESULT = atl;
         :}
@@ -80,7 +80,7 @@ FArgsTypeList ::=
         :} 
     | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:atl
         {:
-            Variable v = new Variable(idxleft, id);
+            Var v = new Var(idxleft, id);
             atl.add(0, new Declare(idxleft, v, type));
             RESULT = atl;
         :}
