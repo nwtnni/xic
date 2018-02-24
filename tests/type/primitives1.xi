@@ -1,6 +1,10 @@
 foo() {
     x:int = 1
     y:bool = true
+    z:int
+    x = z
+    y':bool
+    y' = y
     return
 }
 
@@ -23,4 +27,9 @@ foobar(x:int): bool,bool {
 
 foobar2(y:int): int, bool {
     return y, y == y
+}
+
+foobar3() {
+    v1:bool, v2:bool = foobar(1)
+    v3:int, v4:bool = foobar2(1)
 }
