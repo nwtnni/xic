@@ -1,26 +1,8 @@
 package xic;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 
 import org.apache.commons.io.FilenameUtils;
-
-import ast.Invariant;
-import ast.Node;
-import java_cup.runtime.ComplexSymbolFactory;
-import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
-import java_cup.runtime.ComplexSymbolFactory.Location;
-import lexer.IXiLexer;
-import lexer.XiLexer;
-import parser.IXiParser;
-import parser.Printer;
-import parser.XiParser;
-import parser.XiSymbol;
 
 public class Main {
 
@@ -48,70 +30,36 @@ public class Main {
 			}
 		}
 
-		if (helpFlag || (!lexFlag && !parseFlag)) {
-			displayHelp();
-		} else {
-			try {
-				if (lexFlag) {
-					for (String source : sourceFiles) {
-						lex(source, sourcePath, dPath);
-					}
-
-				}
-				if (parseFlag) {
-					for (String source : sourceFiles) {
-						parse(source, sourcePath, dPath);
-					}
-				}
-			} catch (IOException e) {
-				System.out.println("Could not find file");
-			}
-		}
-	}
-
-	private static void lex(String source, String sourceDir, String outputDir) throws IOException {
-		String ext = FilenameUtils.getExtension(source);
-		if (!ext.equals("xi") && !ext.equals("ixi")) {
-			displayHelp();
+		// Help flag given
+		if (helpFlag || !(lexFlag || parseFlag)) { 
+			displayHelp(); 
 			return;
 		}
-
-        XiLexer lexer = XiLexer.from(sourceDir, source);
-        lexer.write(outputDir);
-	}
-
-	private static String formatSymbol(ComplexSymbol s) {
-		String label;
-		switch (s.sym) {
-		case XiSymbol.IDENTIFIER:
-			label = "id ";
-			break;
-		case XiSymbol.INTEGER:
-			label = "integer ";
-			break;
-		case XiSymbol.CHAR:
-			label = "character ";
-			break;
-		case XiSymbol.STRING:
-			label = "string ";
-			break;
-		default:
-			label = "";
+		
+		// Invalid file given
+		for (String unit : sourceFiles) {
+			String ext = FilenameUtils.getExtension(unit);
+			if (!(ext.equals("ixi") || ext.equals("xi"))) {
+				displayHelp();
+				return;
+			}
 		}
-		Location l = s.getLeft();
-		return l.getLine() + ":" + l.getColumn() + " " + label + s.getName();
-	}
-
-	private static void parse(String source, String sourceDir, String outputDir) throws IOException {
-		String ext = FilenameUtils.getExtension(source);
-
-        if (ext.equals("xi")) {
-            Printer.writeSource(sourceDir, outputDir, source);
-        } else if (ext.equals("ixi")) {
-            Printer.writeInterface(sourceDir, outputDir, source);
-        } else {
-            displayHelp();
-        }
+		
+		Xic xic = new Xic(sourcePath, dPath);
+			
+		for (String unit : sourceFiles) {
+			if (lexFlag) {
+				xic.writeLex(unit);
+			}
+				
+			if (parseFlag) {
+				if (FilenameUtils.getExtension(unit).equals("ixi")) {
+					xic.writeInterface(unit);
+				} else {
+					xic.writeSource(unit);
+				}
+			}
+		}
 	}
 
 	private static void displayHelp() {
@@ -122,5 +70,4 @@ public class Main {
 		System.out.println(
 				"  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
 	}
-
 }
