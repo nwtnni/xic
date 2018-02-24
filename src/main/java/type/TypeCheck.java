@@ -6,16 +6,17 @@ import ast.*;
 
 public class TypeCheck extends Visitor<Type> {
 
-    public static final TypeCheck CHECKER = new TypeCheck();
+    private static final TypeCheck CHECKER = new TypeCheck();
 
-    private PMap<String, Type> context;
+    private static TypeContext types;
+    private static FnContext fns;
+    private static VarContext vars;
 
-    private TypeCheck() {
-        this.context = HashTreePMap.empty();
-    }
-
-    public static boolean check() {
-        return true;
+    public static void check(Node ast) {
+        fns = FnContextFactory.from(ast);
+        types = new TypeContext();
+        vars = new VarContext();
+        ast.accept(CHECKER);
     }
 
     /*
