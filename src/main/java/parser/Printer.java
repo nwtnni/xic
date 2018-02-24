@@ -7,7 +7,7 @@ import java.io.OutputStream;
 
 import ast.*;
 
-public class Printer implements Visitor<Void> {
+public class Printer extends Visitor<Void> {
 
     private static final int WIDTH = 80;
     private SExpPrinter printer;

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import org.pcollections.*;;
 import ast.*;
 
-public class TypeCheck implements Visitor<Type> {
+public class TypeCheck extends Visitor<Type> {
 
     public static final TypeCheck CHECKER = new TypeCheck();
 

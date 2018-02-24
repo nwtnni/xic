@@ -4,7 +4,7 @@ package ast;
  * 
  * Note: must run with the -ea flag to enable assertions.
  */
-public class Invariant implements Visitor<Void> {
+public class Invariant extends Visitor<Void> {
 
     public static final Invariant CHECKER = new Invariant();
 
