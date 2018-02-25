@@ -36,15 +36,6 @@ public class Main {
 			return;
 		}
 		
-		// Invalid file given
-		for (String unit : sourceFiles) {
-			String ext = FilenameUtils.getExtension(unit);
-			if (!(ext.equals("ixi") || ext.equals("xi"))) {
-				displayHelp();
-				return;
-			}
-		}
-		
 		Xic xic = new Xic(sourcePath, dPath);
 		
 		try {
