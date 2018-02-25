@@ -1,10 +1,10 @@
 package xic;
 
+import org.apache.commons.io.FilenameUtils;
 import ast.Invariant;
 import ast.Node;
 import lexer.XiLexer;
 import parser.IXiParser;
-import parser.Printer;
 import parser.XiParser;
 
 public class Xic {
@@ -21,28 +21,30 @@ public class Xic {
 		return XiLexer.from(source, unit);
 	}
 	
-	public Node parseSource(String unit) {
-		Node ast = XiParser.invoke(source, unit);
+	public Node parse(String unit) {
+		Node ast = null;
+		
+		switch (FilenameUtils.getExtension(unit)) {
+			case "xi":
+				ast = XiParser.from(source, unit);
+				break;
+			case "ixi":
+				ast = IXiParser.from(source, unit);
+				break;
+			default:
+				//TODO: throw XicException
+				return null;
+		}
+		
 		Invariant.check(ast);
 		return ast;
 	}
 	
-	public Node parseInterface(String unit) {
-		Node ast = IXiParser.invoke(source, unit); 
-		Invariant.check(ast);
-		return ast;
+	public void printLexed(String unit) {
+		lexer.Printer.print(source, sink, unit);
 	}
 	
-	public void writeLex(String unit) {
-		XiLexer lexer = lex(unit);
-		lexer.write(unit);
-	}
-	
-	public void writeSource(String unit) {
-		Printer.writeSource(source, sink, unit);
-	}
-	
-	public void writeInterface(String unit) {
-		Printer.writeInterface(source, sink, unit);
+	public void printParsed(String unit) {
+		parser.Printer.print(source, sink, unit);
 	}
 }

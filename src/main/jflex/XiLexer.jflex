@@ -46,37 +46,6 @@ import static parser.XiSymbol.*;
         }
     }
 
-    // TODO: Throw XicException
-    public void write(String sink) {
-        String lexed = FilenameUtils.removeExtension(unit) + ".lexed";
-        String output = FilenameUtils.concat(sink, lexed);
-
-        BufferedWriter writer = null;
-        
-        try {
-            writer = new BufferedWriter(new FileWriter(output, false));
-        } catch (Exception e) {
-            System.out.println(e.toString());
-            return;
-        }
-
-        try {
-            ComplexSymbol s = (ComplexSymbol) next_token();
-            while (s.sym != EOF) {
-                writer.append(format(s) + "\n");
-                s = (ComplexSymbol) next_token();
-            }
-            writer.close();
-        } catch (Exception e) {
-            /* if (writer != null) { */
-            /*     writer.append(e.toString()); */
-            /*     writer.close(); */
-            /* } */
-            System.out.println(e.toString());
-            return;
-        }
-    }
-
     public ComplexSymbolFactory getSymbolFactory() {
         return symbolFactory;   
     }
@@ -122,28 +91,6 @@ import static parser.XiSymbol.*;
             return source;
         }
         return Character.toString(c);
-    }
-
-    private static String format(ComplexSymbol s) {
-        String label;
-        switch (s.sym) {
-            case IDENTIFIER:
-                label = "id ";
-                break;
-            case INTEGER:
-                label = "integer ";
-                break;
-            case CHAR:
-                label = "character ";
-                break;
-            case STRING:
-                label = "string ";
-                break;
-            default:
-                label = "";
-        }
-        Location l = s.getLeft();
-        return l.getLine() + ":" + l.getColumn() + " " + label + s.getName();
     }
 
     private void buildString(String l, char c) {

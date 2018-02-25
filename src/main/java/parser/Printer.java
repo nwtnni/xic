@@ -13,23 +13,29 @@ import ast.*;
 
 public class Printer extends Visitor<Void> {
 
-    public static void writeSource(String source, String sink, String unit) {
-        Node ast = XiParser.invoke(source, unit);
-        String parsed = FilenameUtils.removeExtension(unit) + ".parsed";
-        String output = FilenameUtils.concat(sink, parsed);
-        write(ast, output);
-    }
-
-    public static void writeInterface(String source, String sink, String unit) {
-        Node ast = IXiParser.invoke(source, unit);
-        String parsed = FilenameUtils.removeExtension(unit) + ".iparsed";
-        String output = FilenameUtils.concat(sink, parsed);
-        write(ast, output);
-    }
-
     // TODO: Throw XicException
-    private static void write(Node ast, String output) {
+    public static void print(String source, String sink, String unit) {
+    	
+    	String ext = FilenameUtils.getExtension(unit);
+    	Node ast = null;
+    	String parsed = sink + FilenameUtils.removeExtension(unit);
+    	switch (ext) {
+    		case "xi":
+    			ast = XiParser.from(source, unit);
+    			parsed += ".parsed";
+    			break;
+    		case "ixi":
+    			ast = IXiParser.from(source, unit);
+    			parsed += ".iparsed";
+    			break;
+    		default:
+    			//TODO: Throw XicException "Unsupported file type"
+    			return;
+    	}
+    	
+    	String output = FilenameUtils.concat(sink, parsed);
         OutputStream out = null;
+        
         try {
             out = new FileOutputStream(output);
             Printer printer = new Printer(out);
@@ -37,6 +43,7 @@ public class Printer extends Visitor<Void> {
         } catch (Exception e) {
             try {
                 if (out != null) {
+                    out.close();
                     BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
                     w.append(e.toString());
                     w.close();

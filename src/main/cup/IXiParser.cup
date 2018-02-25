@@ -10,7 +10,7 @@ parser code {:
     /* Exposed Interface */
 
     //TODO: throw XicException
-    public static Node invoke(String source, String unit) {
+    public static Node from(String source, String unit) {
         IXiLexer lexer = IXiLexer.from(source, unit);
         IXiParser parser = new IXiParser(lexer);
         try {

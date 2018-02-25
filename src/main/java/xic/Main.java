@@ -48,17 +48,8 @@ public class Main {
 		Xic xic = new Xic(sourcePath, dPath);
 			
 		for (String unit : sourceFiles) {
-			if (lexFlag) {
-				xic.writeLex(unit);
-			}
-				
-			if (parseFlag) {
-				if (FilenameUtils.getExtension(unit).equals("ixi")) {
-					xic.writeInterface(unit);
-				} else {
-					xic.writeSource(unit);
-				}
-			}
+			if (lexFlag) { xic.printLexed(unit); }
+			if (parseFlag) { xic.printParsed(unit); }
 		}
 	}
 

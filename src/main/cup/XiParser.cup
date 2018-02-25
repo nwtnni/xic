@@ -10,13 +10,13 @@ parser code {:
     /* Exposed Interface */
 
     //TODO: throw XicException
-    public static Node invoke(String source, String unit) {
+    public static Node from(String source, String unit) {
         XiLexer lexer = XiLexer.from(source, unit);
         XiParser parser = new XiParser(lexer);
         try {
             return parser.parse().value();
         } catch (Exception e) {
-            return null;   
+            return null;
         }
     }
 
