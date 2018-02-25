@@ -1,6 +1,7 @@
 package type;
 
 import ast.*;
+import xic.Xic;
 import xic.XicException;
 
 public class TypeCheck extends Visitor<Type> {
@@ -11,8 +12,8 @@ public class TypeCheck extends Visitor<Type> {
     private static FnContext fns;
     private static VarContext vars;
 
-    public static void check(Node ast) throws XicException {
-        fns = FnContextFactory.from(ast);
+    public static void check(Xic xic, Node ast) throws XicException {
+        fns = Resolver.resolve(xic, ast);
         types = new TypeContext();
         vars = new VarContext();
         ast.accept(CHECKER);

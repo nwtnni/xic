@@ -1,11 +1,15 @@
 package type;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 import ast.*;
 
-public class TypeException extends Exception {
+@SuppressWarnings("serial")
+public class TypeException extends XicException {
 
     public enum Kind {
+    	
+    	DECLARATION_CONFLICT("conflicting declarations"),
         
         SYMBOL_NOT_FOUND("Symbol not found: ");
 
@@ -19,11 +23,12 @@ public class TypeException extends Exception {
             return message; 
         }
     }
-
-    private Kind kind;
-    private Location location;
     
+    public TypeException(Kind kind, Location location) {
+    	super(XicException.Kind.SEMANTIC, location, kind.toString());
+    }
+
     public TypeException(Kind kind, Node node) {
-        this.location = location; 
+    	super(XicException.Kind.SEMANTIC, node.location, kind.toString());
     }
 }

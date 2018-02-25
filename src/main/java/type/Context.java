@@ -10,7 +10,7 @@ public class Context<K, V> {
         this.context = ConsPStack.singleton(HashTreePMap.empty());
     }
 
-    public Context(Context c) {
+    public Context(Context<K, V> c) {
         this.context = c.context.plus(HashTreePMap.empty());
     }
 
