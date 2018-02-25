@@ -9,48 +9,46 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.BufferedWriter;
 
 import ast.*;
 
 public class Printer extends Visitor<Void> {
 
-    // TODO: Throw XicException
     public static void print(String source, String sink, String unit) throws XicException {
-    	
+
     	String ext = FilenameUtils.getExtension(unit);
+    	String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
     	Node ast = null;
-    	String parsed = sink + FilenameUtils.removeExtension(unit);
-    	switch (ext) {
-    		case "xi":
-    			ast = XiParser.from(source, unit);
-    			parsed += ".parsed";
-    			break;
-    		case "ixi":
-    			ast = IXiParser.from(source, unit);
-    			parsed += ".iparsed";
-    			break;
-    		default:
-    			throw XicException.unsupported(unit);
-    	}
-    	
-    	String output = FilenameUtils.concat(sink, parsed);
-        OutputStream out = null;
-        
+        OutputStream stream = null;
+
         try {
-            out = new FileOutputStream(output);
-            Printer printer = new Printer(out);
-            ast.accept(printer);
-        } catch (Exception e) {
-            try {
-                if (out != null) {
-                    out.close();
-                    BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
-                    w.append(e.toString());
-                    w.close();
-                }
-            } catch (Exception io) {}
-            System.out.println(e.toString());
+        	try {
+            	switch (ext) {
+	        		case "xi":
+	        			output += ".parsed";
+	        			ast = XiParser.from(source, unit);
+	        			break;
+	        		case "ixi":
+	        			output += ".iparsed";
+	        			ast = IXiParser.from(source, unit);
+	        			break;
+	        		default:
+	        			throw XicException.unsupported(unit);
+            	}
+    	
+	            stream = new FileOutputStream(output);
+	            Printer printer = new Printer(stream);
+	            ast.accept(printer);
+	    	} catch (XicException xic) {
+	            BufferedWriter w = new BufferedWriter(new FileWriter(output));
+	            w.write(xic.toWrite());
+	            w.close();
+	            throw xic;
+	    	}
+        } catch (IOException io) {
+        	throw XicException.write(output);
         }
     }
 

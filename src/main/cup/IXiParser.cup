@@ -14,31 +14,36 @@ parser code {:
     public static Node from(String source, String unit) throws XicException {
         IXiLexer lexer = IXiLexer.from(source, unit);
         IXiParser parser = new IXiParser(lexer);
+        
         try {
-            return parser.parse().value();
+        	return parser.parse().value();
+        } catch (XicException xic) {
+        	throw xic;
         } catch (Exception e) {
-            return null;   
+        	throw ParseException.internal(e);
         }
     }
 
     /* Private Utility Functions */
 
-    IXiLexer lex;
+    IXiLexer lexer;
 
-    IXiParser(IXiLexer lex) {
-        super(lex, lex.getSymbolFactory());
-        this.lex = lex;
+    IXiParser(IXiLexer lexer) {
+        super(lexer, lexer.getSymbolFactory());
+        this.lexer = lexer;
     }
 
-    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
+    public void unrecovered_syntax_error(Symbol cur_token) throws ParseException {
         done_parsing();
         ComplexSymbol sym = (ComplexSymbol) cur_token;
-        throw new ParserError(sym, "Unexpected token " + sym.getName());
+        throw new ParseException(sym);
     }
 
     public void syntax_error(Symbol cur_token) {}
 
 :};
+
+scan with {: return lexer.nextToken(); :};
 
 /* Terminals (tokens returned by the scanner). */
 terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
