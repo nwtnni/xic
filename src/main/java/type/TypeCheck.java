@@ -1,7 +1,7 @@
 package type;
 
 import java.util.ArrayList;
-import org.pcollections.*;;
+import org.pcollections.*;
 import ast.*;
 
 public class TypeCheck extends Visitor<Type> {
