@@ -2,6 +2,8 @@ package parser;
 
 import edu.cornell.cs.cs4120.util.*;
 import polyglot.util.OptimalCodeWriter;
+import xic.XicException;
+
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.OutputStream;
@@ -14,7 +16,7 @@ import ast.*;
 public class Printer extends Visitor<Void> {
 
     // TODO: Throw XicException
-    public static void print(String source, String sink, String unit) {
+    public static void print(String source, String sink, String unit) throws XicException {
     	
     	String ext = FilenameUtils.getExtension(unit);
     	Node ast = null;
@@ -29,8 +31,7 @@ public class Printer extends Visitor<Void> {
     			parsed += ".iparsed";
     			break;
     		default:
-    			//TODO: Throw XicException "Unsupported file type"
-    			return;
+    			throw XicException.unsupported(unit);
     	}
     	
     	String output = FilenameUtils.concat(sink, parsed);

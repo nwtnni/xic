@@ -1,5 +1,8 @@
 package lexer;
 
+import xic.XicException;
+import lexer.LexException.Kind;
+
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -23,7 +26,7 @@ import static parser.XiSymbol.*;
 
 %cupsym XiSymbol
 %cup
-%yylexthrow Exception, LexerError
+%yylexthrow LexException
 
 %pack
 %unicode
@@ -34,20 +37,27 @@ import static parser.XiSymbol.*;
     /* Exposed Interface */
 
     // TODO: Throw XicException
-    public static XiLexer from(String source, String unit) {
+    public static XiLexer from(String source, String unit) throws XicException {
+        String input = FilenameUtils.concat(source, unit);
         try {
-            String input = FilenameUtils.concat(source, unit);
             XiLexer lexer = new XiLexer(new FileReader(input));
             lexer.init(unit, new ComplexSymbolFactory());
             return lexer;
         } catch (IOException e) {
-            System.out.println(e.toString());
-            return null;
+            throw XicException.read(input);
         }
     }
 
     public ComplexSymbolFactory getSymbolFactory() {
         return symbolFactory;   
+    }
+    
+    public Symbol nextToken() throws LexException {
+    	try {
+    		return next_token();
+    	} catch (IOException io) {
+    		throw new LexException(Kind.IO);
+    	}
     }
 
     /* JFlex Fields */
@@ -100,7 +110,7 @@ import static parser.XiSymbol.*;
 
     /* Symbol factory methods */
 
-    private Symbol tokenize(int id) throws LexerError {
+    private Symbol tokenize(int id) throws LexException {
         Location l = new Location(unit, row(), column());
         Location r = new Location(unit, row(), column() + yylength());
         switch (id) {
@@ -115,7 +125,7 @@ import static parser.XiSymbol.*;
                     Long value = Long.valueOf(yytext());
                     return symbolFactory.newSymbol(yytext(), INTEGER, l, r, value);
                 } catch (NumberFormatException e) {
-                    throwLexError(row(), column(), "invalid integer literal");
+                    throwLexException(row(), column(), Kind.INVALID_INT_LITERAL);
                 }
             default:
                 return symbolFactory.newSymbol(yytext(), id, l, r);
@@ -140,11 +150,11 @@ import static parser.XiSymbol.*;
         return symbolFactory.newSymbol(literal.toString(), STRING, l, r, v);
     }
 
-    private Symbol throwLexError(int row, int col, String msg) throws LexerError {
+    private Symbol throwLexException(int row, int col, Kind kind) throws LexException {
         Location l = new Location(unit, row, col);
         Location r = new Location(unit, row, col + yylength());
-        ComplexSymbol err = (ComplexSymbol) symbolFactory.newSymbol(yytext(), error, l, r);
-        throw new LexerError(err, msg);
+        ComplexSymbol symbol = (ComplexSymbol) symbolFactory.newSymbol(yytext(), error, l, r);
+        throw new LexException(symbol, kind);
     }
 %}
 
@@ -270,8 +280,8 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
-    \\                  { throwLexError(row(), column(), "Invalid escape sequence"); }
-    [^]                 { throwLexError(row(), column(), "Invalid character literal"); }
+    \\                  { throwLexException(row(), column(), Kind.INVALID_ESCAPE_SEQUENCE); }
+    [^]                 { throwLexException(row(), column(), Kind.INVALID_CHAR_LITERAL); }
 }
 
 <YYSTRING> {
@@ -301,10 +311,10 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             buildString(escape(yytext(), c), c);
                         }
-    \\                  { throwLexError(row(), column(), "Invalid escape sequence"); }
-    {EOL}               { throwLexError(row(), column(), "String literal not properly terminated"); }
-    <<EOF>>             { throwLexError(row(), column(), "String literal not properly terminated"); }
+    \\                  { throwLexException(row(), column(), Kind.INVALID_ESCAPE_SEQUENCE); }
+    {EOL}               { throwLexException(row(), column(), Kind.INVALID_STRING_TERMINATOR); }
+    <<EOF>>             { throwLexException(row(), column(), Kind.INVALID_STRING_TERMINATOR); }
 }
 
-[^]                     { throwLexError(row(), column(), "Invalid syntax"); } 
+[^]                     { throwLexException(row(), column(), Kind.INVALID_SYNTAX); } 
 <<EOF>>                 { return tokenize(EOF); }

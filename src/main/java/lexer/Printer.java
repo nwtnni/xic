@@ -2,48 +2,40 @@ package lexer;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.io.IOException;
 
 import org.apache.commons.io.FilenameUtils;
 
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import parser.XiSymbol;
+import xic.XicException;
 
 public class Printer {
 
-    // TODO: Throw XicException
-	public static void print(String source, String sink, String unit) {
+	public static void print(String source, String sink, String unit) throws XicException {
 		XiLexer lexer = XiLexer.from(source, unit);
 
         String lexed = FilenameUtils.removeExtension(unit) + ".lexed";
         String output = FilenameUtils.concat(sink, lexed);
-
         BufferedWriter writer = null;
         
         try {
-            writer = new BufferedWriter(new FileWriter(output, false));
-        } catch (Exception e) {
-            System.out.println(e.toString());
-            return;
-        }
-
-        try {
-            ComplexSymbol s = (ComplexSymbol) lexer.next_token();
-            while (s.sym != XiSymbol.EOF) {
-                writer.append(format(s) + "\n");
-                s = (ComplexSymbol) lexer.next_token();
-            }
-            writer.close();
-        } catch (Exception e) {
         	try {
-                if (writer != null) {
-                    writer.append(e.toString());
-                    writer.close();
-               }
-        	} catch (Exception io) {}
-
-            System.out.println(e.toString());
-            return;
+	            writer = new BufferedWriter(new FileWriter(output, false));
+	            ComplexSymbol s = (ComplexSymbol) lexer.nextToken();
+	            while (s.sym != XiSymbol.EOF) {
+	                writer.append(format(s) + "\n");
+	                s = (ComplexSymbol) lexer.nextToken();
+	            }
+	            writer.close();
+        	} catch (LexException e) {
+                writer.append(e.toWrite());
+                writer.close();
+                throw e;
+        	}
+        } catch (IOException io) {
+        	throw XicException.write(output);
         }
 	}
 

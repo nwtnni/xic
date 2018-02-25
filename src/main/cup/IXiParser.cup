@@ -4,13 +4,14 @@ import java.util.ArrayList;
 
 import lexer.*;
 import ast.*;
+import xic.XicException;
 
 parser code {:
 
     /* Exposed Interface */
 
     //TODO: throw XicException
-    public static Node from(String source, String unit) {
+    public static Node from(String source, String unit) throws XicException {
         IXiLexer lexer = IXiLexer.from(source, unit);
         IXiParser parser = new IXiParser(lexer);
         try {

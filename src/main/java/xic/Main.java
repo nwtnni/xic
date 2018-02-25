@@ -46,10 +46,14 @@ public class Main {
 		}
 		
 		Xic xic = new Xic(sourcePath, dPath);
-			
-		for (String unit : sourceFiles) {
-			if (lexFlag) { xic.printLexed(unit); }
-			if (parseFlag) { xic.printParsed(unit); }
+		
+		try {
+			for (String unit : sourceFiles) {
+				if (lexFlag) { xic.printLexed(unit); }
+				if (parseFlag) { xic.printParsed(unit); }
+			}
+		} catch (XicException e) {
+			System.out.println(e.toPrint());
 		}
 	}
 

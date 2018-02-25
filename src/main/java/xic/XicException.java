@@ -28,11 +28,14 @@ public class XicException extends Exception {
 		this.description = description;
 	}
 	
-	public XicException(Kind kind, String description, Location location) {
+	public XicException(Kind kind, Location location, String description) {
 		this.kind = kind;
 		this.location = location;
 		this.description = description;
 	}
+	
+	@Deprecated
+	public String toString() { return description; }
 	
 	public String toWrite() {
 		if (kind == null || location == null) {
@@ -45,7 +48,6 @@ public class XicException extends Exception {
 				description
 			);
 		}
-		
 	}
 	
 	public String toPrint() {
@@ -60,5 +62,17 @@ public class XicException extends Exception {
 				description
 			);
 		}
+	}
+	
+	public static XicException read(String source) {
+		return new XicException("Could not read file: " + source);
+	}
+	
+	public static XicException write(String sink) {
+		return new XicException("Could not write file: " + sink);
+	}
+	
+	public static XicException unsupported(String source) {
+		return new XicException("Unsupported file type: " + source);
 	}
 }
