@@ -2,8 +2,6 @@ package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
-import java.util.ArrayList;
-
 public class XiType extends Node {
 
     public enum Kind {

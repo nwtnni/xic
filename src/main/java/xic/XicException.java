@@ -7,41 +7,58 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
  */
 @SuppressWarnings("serial")
 public class XicException extends Exception {
-	
-	private static final String prefix = "Xic raised exception: ";	
-	
-	private String message;
-	private Location location;
-	
-	// Require all XicExceptions to have at least a message
-	@SuppressWarnings("unused")
-	private XicException() {}
-	
-	public XicException(String message) {
-		this.message = message;
-		this.location = null;
-	}
-	
-	public XicException(String message, Location location) {
-		this.message = message;
-		this.location = location;
-	}
-	
-	@Override
-	public String toString() {
-		String error = prefix + message;
+
+	public enum Kind {
+		LEXICAL("Lexical"),
+		SYNTAX("Syntax"),
+		SEMANTIC("Semantic");
 		
-		if (location != null) {
-			error += String.format(
-				" in file %s, at line %d : column %d",
-				location.getUnit(),
+		private String s;
+		private Kind(String s) { this.s = s; }
+		public String toString() { return s; }
+	}
+
+	private Kind kind;
+	private Location location;
+	private String description;
+	
+	public XicException(String description) {
+		this.kind = null;
+		this.location = null;
+		this.description = description;
+	}
+	
+	public XicException(Kind kind, String description, Location location) {
+		this.kind = kind;
+		this.location = location;
+		this.description = description;
+	}
+	
+	public String toWrite() {
+		if (kind == null || location == null) {
+			return description;
+		} else {
+			return String.format(
+				"%d:%d error: %s", 
 				location.getLine(),
-				location.getColumn()
+				location.getColumn(),
+				description
 			);
 		}
 		
-		return error;
 	}
 	
-	
+	public String toPrint() {
+		if (kind == null || location == null) {
+			return description;
+		} else {
+			return String.format(
+				"%s error beginning at %d:%d: %s",
+				kind.toString(),
+				location.getLine(),
+				location.getColumn(),
+				description
+			);
+		}
+	}
 }
