@@ -1,6 +1,7 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
 public class Use extends Node {
     
@@ -11,7 +12,7 @@ public class Use extends Node {
         this.file = file; 
     }
 
-    public <T> T accept(Visitor<T> v) {
+    public <T> T accept(Visitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

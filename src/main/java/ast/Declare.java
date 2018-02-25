@@ -1,6 +1,7 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
 public class Declare extends Node {
 
@@ -30,7 +31,7 @@ public class Declare extends Node {
         return kind == Kind.UNDERSCORE; 
     }
 
-    public <T> T accept(Visitor<T> v) {
+    public <T> T accept(Visitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

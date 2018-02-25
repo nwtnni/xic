@@ -1,6 +1,7 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
 import java.util.ArrayList;
 
@@ -23,7 +24,7 @@ public class Multiple extends Node {
         return kind == Kind.ASSIGN; 
     }
 
-    public <T> T accept(Visitor<T> v) {
+    public <T> T accept(Visitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

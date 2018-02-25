@@ -1,6 +1,7 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
 import java.util.ArrayList;
 
@@ -80,7 +81,7 @@ public class Fn extends Node {
         return kind == Kind.FN || kind == Kind.PROC;
     }
 
-    public <T> T accept(Visitor<T> v) {
+    public <T> T accept(Visitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

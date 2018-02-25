@@ -1,6 +1,7 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
 public class Assign extends Node {
     
@@ -13,7 +14,7 @@ public class Assign extends Node {
         this.rhs = rhs;
     }
 
-    public <T> T accept(Visitor<T> v) {
+    public <T> T accept(Visitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

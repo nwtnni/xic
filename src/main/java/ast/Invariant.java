@@ -1,5 +1,7 @@
 package ast;
 
+import xic.XicException;
+
 /* Visits a constructed AST and checks all node invariants.
  * 
  * Note: must run with the -ea flag to enable assertions.
@@ -9,7 +11,12 @@ public class Invariant extends Visitor<Void> {
     public static final Invariant CHECKER = new Invariant();
 
     public static void check(Node ast) {
-        ast.accept(CHECKER);
+        try {
+			ast.accept(CHECKER);
+		} catch (Exception e) {
+			// TODO what should we do here?
+			e.printStackTrace();
+		}
     }
 
     // Program invariants:
@@ -19,7 +26,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [p.fns] non-null && list of Fn nodes
     //
-    public Void visit(Program p) {
+    public Void visit(Program p) throws XicException {
         if (p.isProgram()) {
             assert p.uses != null; 
             for (Node use : p.uses) {
@@ -43,7 +50,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [u.file]     non-null
     //
-    public Void visit(Use u) {
+    public Void visit(Use u) throws XicException {
         assert u.location != null;
         assert u.file != null; 
         return null;
@@ -63,7 +70,7 @@ public class Invariant extends Visitor<Void> {
     // [f.block]    non-null && Block node if Kind.FN || Kind.PROC
     //              null otherwise
     //
-    public Void visit(Fn f) {
+    public Void visit(Fn f) throws XicException {
         assert f.location != null;
     
         assert f.id != null;
@@ -103,7 +110,7 @@ public class Invariant extends Visitor<Void> {
     // [d.type]     null if Kind.UNDERSCORE
     //              non-null && XiType node otherwise
     //
-    public Void visit(Declare d) {
+    public Void visit(Declare d) throws XicException {
         assert d.location != null;
         if (d.isUnderscore()) {
             assert d.id == null;
@@ -125,7 +132,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [a.rhs]      non-null
     //
-    public Void visit(Assign a) {
+    public Void visit(Assign a) throws XicException {
         assert a.location != null;
         assert a.lhs != null;   
         assert a.rhs != null;   
@@ -141,7 +148,7 @@ public class Invariant extends Visitor<Void> {
     // [r.value]    non-null if Kind.VALUE
     //              null otherwise
     //
-    public Void visit(Return r) {
+    public Void visit(Return r) throws XicException {
         assert r.location != null;
         if (r.hasValue()) {
             assert r.value != null; 
@@ -161,7 +168,7 @@ public class Invariant extends Visitor<Void> {
     // [b.return]     non-null if Kind.RETURN
     //                null otherwise
     //
-    public Void visit(Block b) {
+    public Void visit(Block b) throws XicException {
         assert b.location != null;
         assert b.statements != null;
         for (Node statement : b.statements) {
@@ -186,7 +193,7 @@ public class Invariant extends Visitor<Void> {
     // [i.elseBlock] non-null && Block node if Kind.IF_ELSE
     //               null otherwise
     //
-    public Void visit(If i) {
+    public Void visit(If i) throws XicException {
         assert i.location != null;
         assert i.guard != null; 
         i.guard.accept(this);
@@ -209,7 +216,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [e.block]    non-null && Block node
     //
-    public Void visit(Else e) {
+    public Void visit(Else e) throws XicException {
         assert e.location != null;
         assert e.block instanceof Block;
         e.block.accept(this);
@@ -224,7 +231,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [i.block]    non-null && Block node
     //
-    public Void visit(While w) {
+    public Void visit(While w) throws XicException {
         assert w.location != null;
         assert w.guard != null; 
         assert w.block instanceof Block;
@@ -239,7 +246,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [c.args]     non-null
     //
-    public Void visit(Call c) {
+    public Void visit(Call c) throws XicException {
         assert c.location != null;
         assert c.id != null; 
         assert c.args != null;
@@ -258,7 +265,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [b.rhs]      non-null
     //
-    public Void visit(Binary b) {
+    public Void visit(Binary b) throws XicException {
         assert b.location != null;
         assert b.lhs != null; 
         assert b.rhs != null;
@@ -273,7 +280,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [u.child]    non-null
     //
-    public Void visit(Unary u) {
+    public Void visit(Unary u) throws XicException {
         assert u.location != null;    
         assert u.child != null;
         u.child.accept(this);
@@ -286,7 +293,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [v.id]       non-null
     //
-    public Void visit(Var v) {
+    public Void visit(Var v) throws XicException {
         assert v.location != null;  
         assert v.id != null;  
         return null;
@@ -298,7 +305,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [m.values]   non-null && size > 1
     //
-    public Void visit(Multiple m) {
+    public Void visit(Multiple m) throws XicException {
         assert m.location != null; 
         assert m.values != null;
         assert m.values.size() > 1;
@@ -317,7 +324,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [i.index]    non-null
     //
-    public Void visit(Index i) {
+    public Void visit(Index i) throws XicException {
         assert i.location != null; 
         assert i.array != null; 
         assert i.index != null;
@@ -331,7 +338,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [i.location] non-null
     //
-    public Void visit(XiInt i) {
+    public Void visit(XiInt i) throws XicException {
         assert i.location != null; 
         return null;
     }
@@ -340,7 +347,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [b.location] non-null
     //
-    public Void visit(XiBool b) {
+    public Void visit(XiBool b) throws XicException {
         assert b.location != null; 
         return null;
     }
@@ -349,7 +356,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [c.location] non-null
     //
-    public Void visit(XiChar c) {
+    public Void visit(XiChar c) throws XicException {
         assert c.location != null; 
         assert c.escaped != null;
         return null;
@@ -359,7 +366,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [s.location] non-null
     //
-    public Void visit(XiString s) {
+    public Void visit(XiString s) throws XicException {
         assert s.location != null; 
         assert s.escaped != null;
         assert s.value != null;
@@ -372,7 +379,7 @@ public class Invariant extends Visitor<Void> {
     //
     // [a.values]   non-null
     //
-    public Void visit(XiArray a) {
+    public Void visit(XiArray a) throws XicException {
         assert a.location != null; 
         assert a.values != null;
 
@@ -395,7 +402,7 @@ public class Invariant extends Visitor<Void> {
     // [t.id]       non-null if Kind.CLASS
     //              null otherwise
     //
-    public Void visit(XiType t) {
+    public Void visit(XiType t) throws XicException {
         assert t.location != null;  
         
         if (t.isClass()) {

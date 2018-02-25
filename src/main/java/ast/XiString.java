@@ -3,6 +3,7 @@ package ast;
 import java.util.ArrayList;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
 public class XiString extends Node {
 
@@ -15,7 +16,7 @@ public class XiString extends Node {
         this.value = value;
     }
 
-    public <T> T accept(Visitor<T> v) {
+    public <T> T accept(Visitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

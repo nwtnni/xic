@@ -1,6 +1,7 @@
 package type;
 
 import ast.*;
+import xic.XicException;
 
 public class TypeCheck extends Visitor<Type> {
 
@@ -10,7 +11,7 @@ public class TypeCheck extends Visitor<Type> {
     private static FnContext fns;
     private static VarContext vars;
 
-    public static void check(Node ast) {
+    public static void check(Node ast) throws XicException {
         fns = FnContextFactory.from(ast);
         types = new TypeContext();
         vars = new VarContext();
@@ -20,17 +21,17 @@ public class TypeCheck extends Visitor<Type> {
     /*
      * Top-level AST nodes
      */
-    public Type visit(Program p) {
+    public Type visit(Program p) throws XicException {
         //TODO
         return null;
     }
 
-    public Type visit(Use u) {
+    public Type visit(Use u) throws XicException {
         //TODO
         return null;
     }
 
-    public Type visit(Fn f) {
+    public Type visit(Fn f) throws XicException {
         //TODO
         return null;
     }
@@ -38,37 +39,37 @@ public class TypeCheck extends Visitor<Type> {
     /*
      * Statement nodes
      */
-    public Type visit(Declare d) {
+    public Type visit(Declare d) throws XicException {
         //TODO
         return null;
     }
 
-    public Type visit(Assign a) {
+    public Type visit(Assign a) throws XicException {
         //TODO
         return null;
     }
 
-    public Type visit(Return r) {
+    public Type visit(Return r) throws XicException {
         //TODO
         return null;
     }
 
-    public Type visit(Block b) {
+    public Type visit(Block b) throws XicException {
         //TODO
         return null;
     }
 
-    public Type visit(If i) {
+    public Type visit(If i) throws XicException {
         //TODO
         return null;
     }
 
-    public Type visit(Else e) {
+    public Type visit(Else e) throws XicException {
         //TODO
         return null;
     }
 
-    public Type visit(While w) {
+    public Type visit(While w) throws XicException {
         //TODO
         return null;
     }
@@ -79,12 +80,12 @@ public class TypeCheck extends Visitor<Type> {
 
     // TODO
     // Context dependent
-    public Type visit(Call c) {
+    public Type visit(Call c) throws XicException {
         assert false;
         return null;
     }
 
-    public Type visit(Binary b) {
+    public Type visit(Binary b) throws XicException {
         Type lt = b.lhs.accept(this);
         Type rt = b.rhs.accept(this);
 
@@ -111,7 +112,7 @@ public class TypeCheck extends Visitor<Type> {
         throw new RuntimeException("Invalid binary operation for these types");
     }
 
-    public Type visit(Unary u) {
+    public Type visit(Unary u) throws XicException {
         Type ut = u.child.accept(this);
         if (u.isLogical()) {
             if (ut.equals(Type.BOOL)) {
@@ -130,18 +131,18 @@ public class TypeCheck extends Visitor<Type> {
 
     // TODO
     // Context dependent
-    public Type visit(Var v) {
+    public Type visit(Var v) throws XicException {
         assert false;
         return null;
     }
 
     // Should cover this in first pass
-    public Type visit(Multiple m) {
+    public Type visit(Multiple m) throws XicException {
         assert false;
         return null;
     }
 
-    public Type visit(Index i) {
+    public Type visit(Index i) throws XicException {
         Type it = i.index.accept(this);
         Type at = i.array.accept(this);
         
@@ -154,23 +155,23 @@ public class TypeCheck extends Visitor<Type> {
         }
     }
 
-    public Type visit(XiInt i) {
+    public Type visit(XiInt i) throws XicException {
         return Type.INT;
     }
 
-    public Type visit(XiBool b) {
+    public Type visit(XiBool b) throws XicException {
         return Type.BOOL;
     }
 
-    public Type visit(XiChar c) {
+    public Type visit(XiChar c) throws XicException {
         return Type.INT;
     }
 
-    public Type visit(XiString s) {
+    public Type visit(XiString s) throws XicException {
         return new Type(Type.INT);
     }
 
-    public Type visit(XiArray a) {
+    public Type visit(XiArray a) throws XicException {
         if (a.values.size() == 0) {
             return Type.POLY; 
         } else {
@@ -189,7 +190,7 @@ public class TypeCheck extends Visitor<Type> {
      * Other nodes
      */
 
-    public Type visit(XiType t) {
+    public Type visit(XiType t) throws XicException {
         return new Type(t);
     }
 }
