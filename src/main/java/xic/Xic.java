@@ -52,4 +52,8 @@ public class Xic {
 	public void printParsed(String unit) throws XicException {
 		parser.Printer.print(source, sink, unit);
 	}
+
+	public void printTyped(String unit) throws XicException {
+		//TODO
+	}
 }

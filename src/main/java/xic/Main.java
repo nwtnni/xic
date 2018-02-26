@@ -9,6 +9,7 @@ public class Main {
 	public static void main(String[] args) {
 		boolean lexFlag = false;
 		boolean parseFlag = false;
+		boolean typeFlag = false;
 		boolean helpFlag = false;
 		String sourcePath = "";
 		String dPath = "";
@@ -19,6 +20,8 @@ public class Main {
 				lexFlag = true;
 			} else if (args[i].equals("--parse")) {
 				parseFlag = true;
+			} else if (args[i].equals("--typecheck")) {
+				typeFlag = true;
 			} else if (args[i].equals("--help")) {
 				helpFlag = true;
 			} else if (args[i].equals("-sourcepath") && i + 1 < args.length) {
@@ -42,6 +45,7 @@ public class Main {
 			for (String unit : sourceFiles) {
 				if (lexFlag) { xic.printLexed(unit); }
 				if (parseFlag) { xic.printParsed(unit); }
+				if (typeFlag) {System.out.println("Hi");}
 			}
 		} catch (XicException e) {
 			System.out.println(e.toPrint());
