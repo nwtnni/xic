@@ -116,9 +116,8 @@ public class Invariant extends Visitor<Void> {
             assert d.id == null;
             assert d.type == null;
         } else {
-            assert d.id instanceof Var;
+        	assert d.id != null;
             assert d.type instanceof XiType;
-            d.id.accept(this);
             d.type.accept(this);
         }
         return null;

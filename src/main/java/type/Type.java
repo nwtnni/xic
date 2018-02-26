@@ -22,7 +22,7 @@ public class Type {
     public String id;
     public ArrayList<Type> children;
 
-    private Type(String id) {
+    protected Type(String id) {
         this.kind = Kind.CLASS;
         this.id = id;
         this.children = null;
@@ -52,6 +52,12 @@ public class Type {
             this.children = new ArrayList<>(); 
             children.add(new Type((XiType) xt.child));
         }
+    }
+    
+    protected Type() {}
+    
+    public String getVariable() {
+    	return null;
     }
     
     @Override
