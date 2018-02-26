@@ -328,11 +328,13 @@ StmtNoReturn ::=
 FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
-            RESULT = new Call(idxleft, id, args);
+        	Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
+            RESULT = new Call(idxleft, id, arg);
         :}
     | LENGTH:l LPAREN Args:args RPAREN
         {:
-            RESULT = new Call(lxleft, "length", args);
+            Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
+            RESULT = new Call(lxleft, "length", arg);
         :}
     ;
 

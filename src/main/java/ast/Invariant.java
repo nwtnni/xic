@@ -237,10 +237,7 @@ public class Invariant extends Visitor<Void> {
         assert c.location != null;
         assert c.id != null; 
         assert c.args != null;
-
-        for (Node arg : c.args) {
-            arg.accept(this);
-        }
+        c.args.accept(this);
         return null;
     }
 

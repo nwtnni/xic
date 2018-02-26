@@ -108,12 +108,7 @@ public class TypeCheck extends Visitor<Type> {
      */
 
     public Type visit(Call c) throws XicException {
-    	
-    	ArrayList<Type> types = new ArrayList<>();
-    	for (Node arg : c.args) {
-    		types.add(arg.accept(this));
-    	}
-    	Type args = new Type(types);
+    	Type args = c.args.accept(this);
     	FnType fn = fns.lookup(c.id);
     	
     	if (args.equals(fn.args)) {

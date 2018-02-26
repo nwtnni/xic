@@ -216,9 +216,7 @@ public class Printer extends Visitor<Void> {
 
         printer.printAtom(c.id);
         
-        for (Node arg : c.args) {
-            arg.accept(this);
-        }
+        c.args.accept(this);
 
         printer.endList();
         return null;
