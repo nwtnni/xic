@@ -152,20 +152,14 @@ public class Invariant extends Visitor<Void> {
     //
     // [b.statements] non-null
     //
-    // [b.return]     non-null if Kind.RETURN
-    //                null otherwise
-    //
     public Void visit(Block b) throws XicException {
         assert b.location != null;
         assert b.statements != null;
+
         for (Node statement : b.statements) {
             statement.accept(this);
         }
 
-        if (b.hasReturn()) {
-            assert b.returns != null; 
-            b.returns.accept(this);
-        }
         return null;
     }
 
