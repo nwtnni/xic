@@ -11,7 +11,6 @@ public class Type {
     public static final Type UNIT = new Type("_unit");
     public static final Type VOID = new Type("_void");
     public static final Type POLY = new Type("_poly"); // For the empty array {}
-    public static final Type EMPTY = new Type("_empty");
 
     public static final Type[] TYPES = {INT, BOOL, UNIT, VOID, POLY};
 
@@ -56,6 +55,10 @@ public class Type {
     }
     
     protected Type() {}
+    
+    public boolean hasVariable() {
+    	return false;
+    }
     
     public String getVariable() {
     	return null;

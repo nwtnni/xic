@@ -31,7 +31,7 @@ public class FnType extends Visitor<Type> {
     }
     
     public Type visit(Multiple m) throws XicException {
-    	if (m.values.size() == 0) { return Type.EMPTY; }
+    	if (m.values.size() == 0) { return Type.UNIT; }
     	ArrayList<Type> types = new ArrayList<>();
     	for (Node value : m.values) {
     		types.add(value.accept(this));

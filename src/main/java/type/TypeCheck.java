@@ -63,11 +63,15 @@ public class TypeCheck extends Visitor<Type> {
     	switch (lhs.kind) {
 			case ARRAY:
 			case CLASS:
-				vars.add(lhs.getVariable(), lhs);
+				if (lhs.hasVariable()) {
+					vars.add(lhs.getVariable(), lhs);	
+				}
 				break;
 			case TUPLE:
 				for (Type child : lhs.children) {
-					vars.add(child.getVariable(), child);
+					if (child.hasVariable()) {
+						vars.add(child.getVariable(), child);
+					}
 				}
 				break;
 		}
@@ -78,7 +82,7 @@ public class TypeCheck extends Visitor<Type> {
 
     public Type visit(Return r) throws XicException {
     	if ((r.hasValue() && returns.equals(r.value.accept(this))) 
-    	|| (!r.hasValue() && returns.equals(Type.EMPTY))) {
+    	|| (!r.hasValue() && returns.equals(Type.UNIT))) {
     		r.type = Type.VOID;
     		return Type.VOID;
     	} else {
@@ -91,8 +95,13 @@ public class TypeCheck extends Visitor<Type> {
     	vars.push();
     	int last = b.statements.size() - 1;
     	for (int i = 0; i < last; i++) {
-    		if (b.statements.get(i).accept(this).equals(Type.VOID)) {
+    		Type st = b.statements.get(i).accept(this);
+    		if (st.equals(Type.VOID)) {
     			throw new RuntimeException("Unreachable statement");
+    		} else if (!st.equals(Type.UNIT)) {
+    			//TODO for debugging purposes
+    			assert st.hasVariable();
+    			vars.add(st.getVariable(), st);
     		}
     	}
     	
@@ -113,14 +122,29 @@ public class TypeCheck extends Visitor<Type> {
     }
 
     public Type visit(If i) throws XicException {
-        //TODO
+    	if (!i.guard.accept(this).equals(Type.BOOL)) {
+    		throw new RuntimeException("Guard expression must be a boolean");
+    	}
     	
-        return null;
+    	Type it = i.block.accept(this);
+    	Type et = i.hasElse() ? i.elseBlock.accept(this) : null;
+    	
+    	if (et != null && it.equals(Type.VOID) && et.equals(Type.VOID)) {
+    		i.type = Type.VOID;
+    	} else {
+    		i.type = Type.UNIT;
+    	}
+    	return i.type;
     }
     
     public Type visit(While w) throws XicException {
-        //TODO
-        return null;
+    	if (!w.guard.accept(this).equals(Type.BOOL)) {
+    		throw new RuntimeException("Guard expression must be a boolean");
+    	}
+    	
+    	w.block.accept(this);
+    	w.type = Type.UNIT;
+    	return w.type;
     }
 
     /*

@@ -15,4 +15,9 @@ public class VarType extends Type {
 	public String getVariable() {
 		return var;
 	}
+	
+	@Override 
+	public boolean hasVariable() {
+		return true;
+	}
 }
