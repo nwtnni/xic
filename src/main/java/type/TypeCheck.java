@@ -80,6 +80,9 @@ public class TypeCheck extends Visitor<Type> {
      * Statement nodes
      */
     public Type visit(Declare d) throws XicException {
+        if (vars.inContext(d.id) || fns.inContext(d.id)){
+            throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
+        }
     	if (d.isUnderscore()) {
     		d.type = new DeclareType("_", Type.UNIT);
     	}
@@ -261,7 +264,7 @@ public class TypeCheck extends Visitor<Type> {
 
     public Type visit(Multiple m) throws XicException {
     	if (m.values.size() == 0) { return Type.UNIT; }
-    	
+
 		ArrayList<Type> mt = new ArrayList<>();
 		for (Node value : m.values) {
 			mt.add(value.accept(this));
