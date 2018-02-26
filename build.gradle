@@ -80,7 +80,7 @@ task testParser(type: Exec) {
 
 task testType(type: Exec) {
     executable "sh"
-    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/type/pa3-tests tests/type/pa3-tests/xthScript"
+    args "-c", "xth/xth -compilerpath . -workpath tests/type/pa3-tests -testpath tests/type/pa3-tests tests/type/pa3-tests/xthScript"
 }
 
 compileJava.dependsOn jflexIXi
