@@ -40,7 +40,7 @@ public class FnType extends Visitor<Type> {
     }
 
     public Type visit(Declare d) throws XicException {
-    	return d.type.accept(this);
+    	return d.xiType.accept(this);
     }
 
     public Type visit(XiType xt) {

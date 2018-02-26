@@ -12,20 +12,20 @@ public class Declare extends Node {
 
     private Kind kind;
     public String id;
-    public Node type;
+    public Node xiType;
 
     public Declare(Location location, String id, Node type) {
         this.kind = Kind.VAR;
         this.location = location;
         this.id = id; 
-        this.type = type;
+        this.xiType = type;
     }
 
     public Declare(Location location) {
         this.kind = Kind.UNDERSCORE;
         this.location = location;
         this.id = null;
-        this.type = null;
+        this.xiType = null;
     }
 
     public boolean isUnderscore() {

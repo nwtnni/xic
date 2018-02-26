@@ -102,11 +102,11 @@ public class Invariant extends Visitor<Void> {
         assert d.location != null;
         if (d.isUnderscore()) {
             assert d.id == null;
-            assert d.type == null;
+            assert d.xiType == null;
         } else {
         	assert d.id != null;
-            assert d.type instanceof XiType;
-            d.type.accept(this);
+            assert d.xiType instanceof XiType;
+            d.xiType.accept(this);
         }
         return null;
     }
