@@ -11,6 +11,7 @@ public class Type {
     public static final Type UNIT = new Type("_unit");
     public static final Type VOID = new Type("_void");
     public static final Type POLY = new Type("_poly");
+    public static final Type EMPTY = new Type("_empty");
 
     public static final Type[] TYPES = {INT, BOOL, UNIT, VOID, POLY};
 

@@ -104,18 +104,12 @@ public class Printer extends Visitor<Void> {
         
         // Fn arguments
         printer.startList();
-        for (Node arg : f.args) {
-            arg.accept(this);
-        }
+        f.args.accept(this);
         printer.endList();
 
         // Fn return types
         printer.startList();
-        if (f.isFn()) {
-            for (Node type : f.returns) {
-                type.accept(this);
-            }
-        }
+        f.returns.accept(this);
         printer.endList();
 
         // Statement block
@@ -222,9 +216,7 @@ public class Printer extends Visitor<Void> {
 
         printer.printAtom(c.id);
         
-        for (Node arg : c.args) {
-            arg.accept(this);
-        }
+        c.args.accept(this);
 
         printer.endList();
         return null;

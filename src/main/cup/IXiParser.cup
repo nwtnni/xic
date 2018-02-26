@@ -73,14 +73,17 @@ start with      Interface;
 FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
         {: 
-            RESULT = new Fn(idxleft, id, atl, rtl);
+        	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+        	Node returns = rtl.size() == 1 ? rtl.get(0) : new Multiple(rtlxleft, rtl, Multiple.Kind.FN_RETURNS);
+            RESULT = new Fn(idxleft, id, args, returns);
         :}
     ;
 
 ProcedureDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
         {: 
-            RESULT = new Fn(idxleft, id, atl, new ArrayList<Node>());
+        	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+            RESULT = new Fn(idxleft, id, args);
         :}
     ;
 

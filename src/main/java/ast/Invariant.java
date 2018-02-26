@@ -62,11 +62,10 @@ public class Invariant extends Visitor<Void> {
     //
     // [f.id]       non-null
     //
-    // [f.args]     non-null && Declare nodes
+    // [f.args]     non-null
     //
-    // [f.returns]  non-null && XiType nodes if Kind.FN || Kind.FN_HEADER
-    //              null otherwise
-    //
+    // [f.returns]  non-null
+    //           
     // [f.block]    non-null && Block node if Kind.FN || Kind.PROC
     //              null otherwise
     //
@@ -75,21 +74,10 @@ public class Invariant extends Visitor<Void> {
     
         assert f.id != null;
         assert f.args != null;
-
-        for (Node arg : f.args) {
-            assert arg instanceof Declare;
-            arg.accept(this);
-        }
-
-        if (f.isFn()) {
-            assert f.returns != null;
-            for (Node type : f.returns) {
-                assert type instanceof XiType; 
-                type.accept(this);
-            }
-        } else {
-            assert f.returns == null;
-        }
+        assert f.returns != null;
+        
+        f.args.accept(this);
+        f.returns.accept(this);
 
         if (f.isDef()) {
             assert f.block instanceof Block;
@@ -249,10 +237,7 @@ public class Invariant extends Visitor<Void> {
         assert c.location != null;
         assert c.id != null; 
         assert c.args != null;
-
-        for (Node arg : c.args) {
-            arg.accept(this);
-        }
+        c.args.accept(this);
         return null;
     }
 
@@ -302,12 +287,12 @@ public class Invariant extends Visitor<Void> {
     //
     // [m.location] non-null
     //
-    // [m.values]   non-null && size > 1
+    // [m.values]   non-null && size != 1
     //
     public Void visit(Multiple m) throws XicException {
         assert m.location != null; 
         assert m.values != null;
-        assert m.values.size() > 1;
+        assert m.values.size() != 1;
 
         for (Node value : m.values) {
             value.accept(this);
