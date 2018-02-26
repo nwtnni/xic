@@ -3,6 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// An Xi integer
 public class XiInt extends Node {
 
     public long value;

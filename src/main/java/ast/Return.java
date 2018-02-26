@@ -3,6 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// A return statement
 public class Return extends Node {
 
     public enum Kind {

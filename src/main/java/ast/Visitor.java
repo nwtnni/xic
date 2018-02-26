@@ -2,6 +2,7 @@ package ast;
 
 import xic.XicException;
 
+// Boilerplate code to implement the visitor pattern
 public abstract class Visitor<T> {
 
     /*

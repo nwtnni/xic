@@ -3,6 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// Else Statement
 public class Else extends Node {
 
     public Node block;

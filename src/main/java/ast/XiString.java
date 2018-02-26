@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// An Xi String
 public class XiString extends Node {
 
     public String escaped;

@@ -5,6 +5,7 @@ import xic.XicException;
 
 import java.util.ArrayList;
 
+// The entire program
 public class Program extends Node {
 
     public enum Kind {

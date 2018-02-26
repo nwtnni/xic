@@ -3,6 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// An Xi type
 public class XiType extends Node {
 
     public enum Kind {
