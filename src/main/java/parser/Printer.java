@@ -188,11 +188,6 @@ public class Printer extends Visitor<Void> {
         return null;
     }
 
-    public Void visit(Else e) throws XicException{
-        e.block.accept(this);
-        return null;
-    }
-
     public Void visit(While w) throws XicException{
         printer.startUnifiedList();
 
