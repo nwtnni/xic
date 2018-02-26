@@ -26,12 +26,19 @@ public class Context<K, V> {
         map = map.plus(k, t);
         context = context.plus(map);
     }
-    
+
     public void push() {
     	context = context.plus(HashTreePMap.empty());
     }
-    
+
     public void pop() {
     	context = context.minus(0);
     }
+
+    public boolean inContext(K id) {
+		if (context.get(0).containsKey(id)){
+			return true;
+		}
+		return false;
+	}
 }
