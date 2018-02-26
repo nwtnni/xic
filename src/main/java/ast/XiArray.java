@@ -5,6 +5,7 @@ import xic.XicException;
 
 import java.util.ArrayList;
 
+// A Xi array
 public class XiArray extends Node {
 
     public ArrayList<Node> values;

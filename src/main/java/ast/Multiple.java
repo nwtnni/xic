@@ -5,6 +5,7 @@ import xic.XicException;
 
 import java.util.ArrayList;
 
+// Used to hold tuples (multiple assign/multiple return/function args/etc)
 public class Multiple extends Node {
 
     public enum Kind {

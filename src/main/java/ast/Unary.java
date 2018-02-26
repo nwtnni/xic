@@ -3,6 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// A unary operator
 public class Unary extends Node {
     
     public enum Kind {
