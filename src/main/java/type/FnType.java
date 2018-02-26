@@ -18,22 +18,25 @@ public class FnType extends Visitor<Type> {
 	public Type args;
 	public Type returns;
 
-	private FnType() {
-    	args = new Type(new ArrayList<Type>());
-    	returns = new Type(new ArrayList<Type>());
-	}
-
     public Type visit(Fn f) {
-    	location = f.location;
     	try {
-	    	for (Node declaration : f.args) {
-	    		args.children.add(declaration.accept(this));
-	    	}
-	    	for (Node type : f.returns) {
-	    		returns.children.add(type.accept(this));
-	    	}
-    	} catch (XicException xic) { assert false; }
+    		location = f.location;
+    		args = f.args.accept(this);
+    		returns = f.returns.accept(this);
+    	} catch (XicException xic) {
+    		//TODO assert unreachable?
+    		assert false;
+    	}
     	return null;
+    }
+    
+    public Type visit(Multiple m) throws XicException {
+    	if (m.values.size() == 0) { return Type.EMPTY; }
+    	ArrayList<Type> types = new ArrayList<>();
+    	for (Node value : m.values) {
+    		types.add(value.accept(this));
+    	}
+    	return new Type(types);
     }
 
     public Type visit(Declare d) throws XicException {
@@ -48,35 +51,11 @@ public class FnType extends Visitor<Type> {
     public boolean equals(Object o) {
     	if (!(o instanceof FnType)) { return false; }
     	FnType type = (FnType) o;
-
-    	if (type.args.children.size() != args.children.size()) { return false; }
-    	if (type.returns.children.size() != returns.children.size()) { return false; }
-
-    	for (int i = 0; i < args.children.size(); i++) {
-    		if (!type.args.children.get(i).equals(args.children.get(i))) {
-    			return false;
-    		}
-    	}
-
-    	for (int i = 0; i < returns.children.size(); i++) {
-    		if (!type.returns.children.get(i).equals(returns.children.get(i))) {
-    			return false;
-    		}
-    	}
-
-    	return true;
+    	return args.equals(type.args) && returns.equals(type.returns);
     }
 
     @Override
     public int hashCode() {
-    	int hash = 1;
-    	for (int i = 0; i < args.children.size(); i++) {
-    		hash *= args.children.get(i).hashCode();
-    	}
-
-    	for (int i = 0; i < returns.children.size(); i++) {
-    		hash *= returns.children.get(i).hashCode();
-    	}
-    	return hash;
+    	return args.hashCode() * returns.hashCode();
     }
 }
