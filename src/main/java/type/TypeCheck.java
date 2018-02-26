@@ -92,6 +92,8 @@ public class TypeCheck extends Visitor<Type> {
 
     public Type visit(Block b) throws XicException {
 
+    	if (b.statements.size() == 0) { return Type.UNIT; }
+    	
     	vars.push();
     	int last = b.statements.size() - 1;
     	for (int i = 0; i < last; i++) {
