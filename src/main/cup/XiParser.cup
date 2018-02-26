@@ -325,13 +325,11 @@ StmtNoReturn ::=
 FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
-            Var v = new Var(idxleft, id);
-            RESULT = new Call(idxleft, v, args);
+            RESULT = new Call(idxleft, id, args);
         :}
     | LENGTH:l LPAREN Args:args RPAREN
         {:
-            Var v = new Var(lxleft, "length");
-            RESULT = new Call(lxleft, v, args);
+            RESULT = new Call(lxleft, "length", args);
         :}
     ;
 

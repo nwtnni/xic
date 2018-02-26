@@ -220,7 +220,7 @@ public class Printer extends Visitor<Void> {
     public Void visit(Call c) throws XicException{
         printer.startList();
 
-        c.id.accept(this);
+        printer.printAtom(c.id);
         
         for (Node arg : c.args) {
             arg.accept(this);
