@@ -36,3 +36,4 @@ xthScript.results
 *.lexed
 *.parsed
 *.iparsed
+*.typed
