@@ -35,6 +35,7 @@ public class Type {
         this.children.add(child);
     }
     
+    // Tuple
     public Type(ArrayList<Type> children) {
     	this.kind = Kind.TUPLE;
     	this.id = null;

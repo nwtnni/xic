@@ -20,4 +20,16 @@ public class DeclareType extends Type {
 	public boolean isDeclaration() {
 		return true;
 	}
+
+	// Handles Underscores
+	public boolean equals(Object o) {
+		if (!(o instanceof Type)) { return false; }
+
+		Type t = (Type) o;
+
+		if (var.equals("_") && !t.kind.equals(Kind.TUPLE)) {
+			return true;
+		}
+		return super.equals(o);
+	}
 }
