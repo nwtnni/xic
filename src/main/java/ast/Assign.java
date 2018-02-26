@@ -3,6 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// Assign Statement
 public class Assign extends Node {
     
     public Node lhs;

@@ -5,6 +5,7 @@ import xic.XicException;
 
 import java.util.ArrayList;
 
+// A Block of statements
 public class Block extends Node {
     
     public enum Kind {

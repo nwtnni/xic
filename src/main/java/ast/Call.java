@@ -5,6 +5,7 @@ import xic.XicException;
 
 import java.util.ArrayList;
 
+// A Function Call
 public class Call extends Node {
     
     public String id;
