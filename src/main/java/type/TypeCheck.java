@@ -1,23 +1,28 @@
 package type;
 
+import java.util.ArrayList;
+
 import ast.*;
+import type.TypeException.Kind;
 import xic.Xic;
 import xic.XicException;
 
 public class TypeCheck extends Visitor<Type> {
 
-    private static final TypeCheck CHECKER = new TypeCheck();
-
-    private static TypeContext types;
-    private static FnContext fns;
-    private static VarContext vars;
-
-    public static void check(Xic xic, Node ast) throws XicException {
-        fns = Resolver.resolve(xic, ast);
-        types = new TypeContext();
-        vars = new VarContext();
-        ast.accept(CHECKER);
+    public static void check(String source, Node ast) throws XicException {
+    	ast.accept(new TypeCheck(source, ast));
     }
+    
+    private TypeCheck(String source, Node ast) throws XicException {
+    	this.fns = UseImporter.resolve(source, ast);
+    	this.types = new TypeContext();
+    	this.vars = new VarContext();
+    }
+
+    private TypeContext types;
+    private FnContext fns;
+    private VarContext vars;
+    private ArrayList<Type> expected;
 
     /*
      * Top-level AST nodes
@@ -79,11 +84,20 @@ public class TypeCheck extends Visitor<Type> {
      * Expression nodes
      */
 
-    // TODO
-    // Context dependent
     public Type visit(Call c) throws XicException {
-        assert false;
-        return null;
+    	
+    	ArrayList<Type> types = new ArrayList<>();
+    	for (Node arg : c.args) {
+    		types.add(arg.accept(this));
+    	}
+    	Type args = new Type(types);
+    	FnType fn = fns.lookup(c.id);
+    	
+    	if (args.equals(fn.args)) {
+    		return fn.returns;
+    	} else {
+    		throw new RuntimeException("Function call with incorrect arguments");
+    	}
     }
 
     public Type visit(Binary b) throws XicException {
@@ -91,22 +105,22 @@ public class TypeCheck extends Visitor<Type> {
         Type rt = b.rhs.accept(this);
 
         if (!lt.equals(rt)) { throw new RuntimeException("Mismatched types"); }
-        
+
         if (lt.equals(Type.INT) && b.isInt()) {
             if (b.returnsBool()) {
-                return Type.BOOL; 
+                return Type.BOOL;
             } else if (b.returnsInt()) {
-                return Type.INT; 
+                return Type.INT;
             } else {
                 throw new RuntimeException("Invalid integer operation");
             }
         }
 
         if (lt.equals(Type.BOOL) && b.isBool()) {
-            return Type.BOOL; 
+            return Type.BOOL;
         }
 
-        if (!lt.isClass() && b.isList()) {
+        if (lt.kind == Type.Kind.ARRAY && b.isList()) {
             return lt;
         }
 
@@ -117,7 +131,7 @@ public class TypeCheck extends Visitor<Type> {
         Type ut = u.child.accept(this);
         if (u.isLogical()) {
             if (ut.equals(Type.BOOL)) {
-                return Type.BOOL; 
+                return Type.BOOL;
             } else {
                 throw new RuntimeException("Expected boolean for logical negation");
             }
@@ -130,29 +144,32 @@ public class TypeCheck extends Visitor<Type> {
         }
     }
 
-    // TODO
-    // Context dependent
     public Type visit(Var v) throws XicException {
-        assert false;
-        return null;
+    	try {
+    		return vars.lookup(v.id);
+    	} catch (Exception todofixpls) {
+    		throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
+    	}
     }
 
-    // Should cover this in first pass
     public Type visit(Multiple m) throws XicException {
-        assert false;
-        return null;
+		ArrayList<Type> types = new ArrayList<>();
+		for (Node value : m.values) {
+			types.add(value.accept(this));
+		}
+		return new Type(types);
     }
 
     public Type visit(Index i) throws XicException {
         Type it = i.index.accept(this);
         Type at = i.array.accept(this);
-        
+
         if (!it.equals(Type.INT)) {
             throw new RuntimeException("Index is not integer");
-        } else if (at.isClass()) {
+        } else if (at.kind != Type.Kind.ARRAY) {
             throw new RuntimeException("Not an array, silly");
         } else {
-            return at.child;
+            return at.children.get(0);
         }
     }
 
@@ -174,7 +191,7 @@ public class TypeCheck extends Visitor<Type> {
 
     public Type visit(XiArray a) throws XicException {
         if (a.values.size() == 0) {
-            return Type.POLY; 
+            return Type.POLY;
         } else {
             Type t = a.values.get(0).accept(this);
 

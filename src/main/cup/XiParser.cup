@@ -167,7 +167,7 @@ ArgsTypeList ::=
     :}
     | IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft,new Var(idxleft,id), type));
+        fatl.add(0, new Declare(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -178,7 +178,7 @@ FArgsTypeList ::=
     :}
     | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft,new Var(idxleft,id),type));
+        fatl.add(0, new Declare(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -325,13 +325,11 @@ StmtNoReturn ::=
 FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
-            Var v = new Var(idxleft, id);
-            RESULT = new Call(idxleft, v, args);
+            RESULT = new Call(idxleft, id, args);
         :}
     | LENGTH:l LPAREN Args:args RPAREN
         {:
-            Var v = new Var(lxleft, "length");
-            RESULT = new Call(lxleft, v, args);
+            RESULT = new Call(lxleft, "length", args);
         :}
     ;
 
@@ -433,7 +431,7 @@ FArrayElems ::=
 VarDeclr ::= 
     IDENTIFIER:id COLON VarType:type
     {:
-        RESULT = new Declare(idxleft, new Var(idxleft, id), type);
+        RESULT = new Declare(idxleft, id, type);
     :};
 
 VarType ::= 
