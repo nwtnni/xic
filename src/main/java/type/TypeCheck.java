@@ -12,8 +12,8 @@ public class TypeCheck extends Visitor<Type> {
     private static FnContext fns;
     private static VarContext vars;
 
-    public static void check(Xic xic, Node ast) throws XicException {
-        fns = Resolver.resolve(xic, ast);
+    public static void check(String source, Node ast) throws XicException {
+        fns = UseImporter.resolve(source, ast);
         types = new TypeContext();
         vars = new VarContext();
         ast.accept(CHECKER);
@@ -91,19 +91,19 @@ public class TypeCheck extends Visitor<Type> {
         Type rt = b.rhs.accept(this);
 
         if (!lt.equals(rt)) { throw new RuntimeException("Mismatched types"); }
-        
+
         if (lt.equals(Type.INT) && b.isInt()) {
             if (b.returnsBool()) {
-                return Type.BOOL; 
+                return Type.BOOL;
             } else if (b.returnsInt()) {
-                return Type.INT; 
+                return Type.INT;
             } else {
                 throw new RuntimeException("Invalid integer operation");
             }
         }
 
         if (lt.equals(Type.BOOL) && b.isBool()) {
-            return Type.BOOL; 
+            return Type.BOOL;
         }
 
         if (!lt.isClass() && b.isList()) {
@@ -117,7 +117,7 @@ public class TypeCheck extends Visitor<Type> {
         Type ut = u.child.accept(this);
         if (u.isLogical()) {
             if (ut.equals(Type.BOOL)) {
-                return Type.BOOL; 
+                return Type.BOOL;
             } else {
                 throw new RuntimeException("Expected boolean for logical negation");
             }
@@ -146,7 +146,7 @@ public class TypeCheck extends Visitor<Type> {
     public Type visit(Index i) throws XicException {
         Type it = i.index.accept(this);
         Type at = i.array.accept(this);
-        
+
         if (!it.equals(Type.INT)) {
             throw new RuntimeException("Index is not integer");
         } else if (at.isClass()) {
@@ -174,7 +174,7 @@ public class TypeCheck extends Visitor<Type> {
 
     public Type visit(XiArray a) throws XicException {
         if (a.values.size() == 0) {
-            return Type.POLY; 
+            return Type.POLY;
         } else {
             Type t = a.values.get(0).accept(this);
 
