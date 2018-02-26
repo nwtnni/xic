@@ -34,7 +34,7 @@ public class Main {
 		}
 
 		// Help flag given
-		if (helpFlag || !(lexFlag || parseFlag)) { 
+		if (helpFlag || !(lexFlag || parseFlag || typeFlag)) { 
 			displayHelp(); 
 			return;
 		}
@@ -45,7 +45,7 @@ public class Main {
 			for (String unit : sourceFiles) {
 				if (lexFlag) { xic.printLexed(unit); }
 				if (parseFlag) { xic.printParsed(unit); }
-				if (typeFlag) {System.out.println("Hi");}
+				if (typeFlag) { xic.printTyped(unit); }
 			}
 		} catch (XicException e) {
 			System.out.println(e.toPrint());

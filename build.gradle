@@ -22,6 +22,7 @@ clean.doFirst {
         include "**/*.iparsed"
         include "**/*.parsed"
         include "**/*.lexed"
+        include "**/*.typed"
         include "**/IXiLexer.java"
         include "**/IXiParser.java"
         include "**/IXiSymbol.java"

@@ -42,9 +42,12 @@ public class TypeCheck extends Visitor<Type> {
     	
     	switch (args.kind) {
     	case CLASS:
-    		//TODO debugging purposes
-    		assert args.isDeclaration();
-    		vars.add(args.getDeclaration(), args);
+    	case ARRAY:
+    		if (args.isDeclaration()) {
+        		vars.add(args.getDeclaration(), args);
+    		} else {
+    			assert args.equals(Type.UNIT);
+    		}
     		break;
     	case TUPLE:
     		for (Type child : args.children) {
@@ -52,9 +55,6 @@ public class TypeCheck extends Visitor<Type> {
     			vars.add(child.getDeclaration(), child);
     		}
     		break;
-    	default:
-    		//TODO internal error
-    		assert false;
     	}
     	
     	returns = fns.lookup(f.id).returns;
@@ -195,7 +195,9 @@ public class TypeCheck extends Visitor<Type> {
     	Type args = c.args.accept(this);
     	FnType fn = fns.lookup(c.id);
     	
-    	if (args.equals(fn.args)) {
+    	if (fn == null) {
+    		throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
+    	} else if (args.equals(fn.args)) {
     		c.type = fn.returns;
     		return c.type;
     	} else {
@@ -257,6 +259,8 @@ public class TypeCheck extends Visitor<Type> {
     }
 
     public Type visit(Multiple m) throws XicException {
+    	if (m.values.size() == 0) { return Type.UNIT; }
+    	
 		ArrayList<Type> mt = new ArrayList<>();
 		for (Node value : m.values) {
 			mt.add(value.accept(this));
