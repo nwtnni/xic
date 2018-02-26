@@ -5,6 +5,7 @@ import xic.XicException;
 
 import java.util.ArrayList;
 
+// Function Declaration
 public class Fn extends Node {
     
     public enum Kind {

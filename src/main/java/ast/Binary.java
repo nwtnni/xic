@@ -5,6 +5,7 @@ import xic.XicException;
 
 import java.util.ArrayList;
 
+// Binary Operation
 public class Binary extends Node {
 
     public enum Kind {

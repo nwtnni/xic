@@ -3,9 +3,9 @@ package ast;
 import xic.XicException;
 
 import java.util.ArrayList;
-
 import java_cup.runtime.ComplexSymbolFactory.Location;
 
+// A Block of statements
 public class Block extends Node {
 
     public ArrayList<Node> statements;

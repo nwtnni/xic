@@ -3,6 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// A Variable Declaration
 public class Declare extends Node {
 
     public enum Kind {

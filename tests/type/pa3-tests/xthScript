@@ -1,0 +1,16 @@
+build
+
+xic ("Test --typecheck") "--typecheck" {
+    pa3-1.xi;
+    pa3-2.xi;
+    pa3-3.xi;
+    bad_pa3-4.xi;
+    bad_pa3-5.xi;
+    bad_pa3-6.xi;
+    bad_pa3-7.xi;
+    bad_pa3-8.xi;
+    bad_pa3-9.xi;
+    bad_pa3-10.xi;
+    bad_pa3-11.xi;
+    bad_pa3-12.xi;
+}
