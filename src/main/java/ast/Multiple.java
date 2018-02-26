@@ -8,7 +8,7 @@ import java.util.ArrayList;
 public class Multiple extends Node {
 
     public enum Kind {
-        ASSIGN, RETURN 
+        ASSIGN, RETURN, FN_ARGS, FN_RETURNS, FN_CALL,
     }
 
     public Kind kind;

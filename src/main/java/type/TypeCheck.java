@@ -22,7 +22,6 @@ public class TypeCheck extends Visitor<Type> {
     private TypeContext types;
     private FnContext fns;
     private VarContext vars;
-    private ArrayList<Type> expected;
 
     /*
      * Top-level AST nodes
@@ -46,18 +45,41 @@ public class TypeCheck extends Visitor<Type> {
      * Statement nodes
      */
     public Type visit(Declare d) throws XicException {
-        //TODO
-        return null;
+    	if (d.isUnderscore()) {
+    		return new VarType("_", Type.UNIT);
+    	}
+    	else {
+    		return new VarType(d.id, d.type.accept(this));
+    	}
     }
 
     public Type visit(Assign a) throws XicException {
-        //TODO
-        return null;
+    	Type lhs = a.lhs.accept(this);
+    	Type rhs = a.rhs.accept(this);
+    	
+    	if (!lhs.equals(rhs)) { throw new RuntimeException("Mismatched types"); }
+
+    	switch (lhs.kind) {
+			case ARRAY:
+			case CLASS:
+				vars.add(lhs.getVariable(), lhs);
+				break;
+			case TUPLE:
+				for (Type child : lhs.children) {
+					vars.add(child.getVariable(), child);
+				}
+				break;
+		}
+		
+		a.type = Type.UNIT;
+		return Type.UNIT;
     }
 
     public Type visit(Return r) throws XicException {
-        //TODO
-        return null;
+    	
+    	return null;
+    	
+    	
     }
 
     public Type visit(Block b) throws XicException {
@@ -67,6 +89,7 @@ public class TypeCheck extends Visitor<Type> {
 
     public Type visit(If i) throws XicException {
         //TODO
+    	
         return null;
     }
 
@@ -85,12 +108,7 @@ public class TypeCheck extends Visitor<Type> {
      */
 
     public Type visit(Call c) throws XicException {
-    	
-    	ArrayList<Type> types = new ArrayList<>();
-    	for (Node arg : c.args) {
-    		types.add(arg.accept(this));
-    	}
-    	Type args = new Type(types);
+    	Type args = c.args.accept(this);
     	FnType fn = fns.lookup(c.id);
     	
     	if (args.equals(fn.args)) {
