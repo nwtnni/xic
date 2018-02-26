@@ -240,12 +240,15 @@ BlockStmts ::=
     StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
     {:
         if (el.size() == 0) {
-            RESULT = new Block(slnr, new Return(rxleft));
+        	slnr.add(new Return(rxleft));
+            RESULT = new Block(slnr);
         } else if (el.size() == 1) {
-            RESULT = new Block(slnr, new Return(rxleft, el.get(0)));
+        	slnr.add(new Return(rxleft, el.get(0)));
+            RESULT = new Block(slnr);
         } else {
             Multiple m = new Multiple(elxleft, el, Multiple.Kind.RETURN);
-            RESULT = new Block(slnr, new Return(rxleft, m));
+            slnr.add(new Return(rxleft, m));
+            RESULT = new Block(slnr);
         }
     :}
     | StmtListNoReturn:slnr

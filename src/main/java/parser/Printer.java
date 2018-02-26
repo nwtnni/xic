@@ -168,10 +168,6 @@ public class Printer extends Visitor<Void> {
             statement.accept(this);
         }
         
-        if (b.hasReturn()) {
-            b.returns.accept(this);
-        }
-
         printer.endList();
         return null;
     }

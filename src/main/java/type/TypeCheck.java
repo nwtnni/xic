@@ -22,6 +22,7 @@ public class TypeCheck extends Visitor<Type> {
     private TypeContext types;
     private FnContext fns;
     private VarContext vars;
+    private Type returns;
 
     /*
      * Top-level AST nodes
@@ -76,15 +77,39 @@ public class TypeCheck extends Visitor<Type> {
     }
 
     public Type visit(Return r) throws XicException {
-    	
-    	return null;
-    	
-    	
+    	if ((r.hasValue() && returns.equals(r.value.accept(this))) 
+    	|| (!r.hasValue() && returns.equals(Type.EMPTY))) {
+    		r.type = Type.VOID;
+    		return Type.VOID;
+    	} else {
+    		throw new RuntimeException("Mismatched return type");
+    	}
     }
 
     public Type visit(Block b) throws XicException {
-        //TODO
-        return null;
+
+    	vars.push();
+    	int last = b.statements.size() - 1;
+    	for (int i = 0; i < last; i++) {
+    		if (b.statements.get(i).accept(this).equals(Type.VOID)) {
+    			throw new RuntimeException("Unreachable statement");
+    		}
+    	}
+    	
+    	Type bt = b.statements.get(last).accept(this);
+    	vars.pop();
+    	
+    	if (bt.equals(Type.VOID)) {
+    		b.type = Type.VOID;
+    		return Type.VOID;
+    	} else if (bt.equals(Type.UNIT)) {
+    		b.type = Type.UNIT;
+    		return Type.UNIT;
+    	} else {
+    		//TODO internal error
+    		assert false;
+    		return null;
+    	}
     }
 
     public Type visit(If i) throws XicException {

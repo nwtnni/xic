@@ -8,11 +8,9 @@ import xic.XicException;
 public class FnContext {
 	
 	private HashMap<String, FnType> map;
-	private String current;
 	
 	public FnContext() {
 		this.map = new HashMap<>();
-		this.current = null;
 	}
 	
 	public FnType lookup(String id) {
@@ -34,15 +32,6 @@ public class FnContext {
 		for (String id : context.keySet()) {
 			add(id, context.lookup(id));
 		}
-	}
-	
-	public void enter(String fn) {
-		current = fn;
-	}
-	
-	public Type expectedReturn() {
-		FnType type = map.get(current);
-		return type.returns;
 	}
 	
 	public Set<String> keySet() {
