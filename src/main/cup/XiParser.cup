@@ -153,11 +153,14 @@ FnDeclr ::=
 FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-        RESULT = new Fn(idxleft,id,atl,rtl);
+    	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+    	Node returns = rtl.size() == 1 ? rtl.get(0) : new Multiple(rtlxleft, rtl, Multiple.Kind.FN_RETURNS);
+        RESULT = new Fn(idxleft, id, args, returns);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        RESULT = new Fn(idxleft,id,atl);
+    	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+        RESULT = new Fn(idxleft, id, args);
     :}
     ;
 
@@ -167,7 +170,7 @@ ArgsTypeList ::=
     :}
     | IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft,new Var(idxleft,id), type));
+        fatl.add(0, new Declare(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -178,7 +181,7 @@ FArgsTypeList ::=
     :}
     | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft,new Var(idxleft,id),type));
+        fatl.add(0, new Declare(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -237,12 +240,15 @@ BlockStmts ::=
     StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
     {:
         if (el.size() == 0) {
-            RESULT = new Block(slnr, new Return(rxleft));
+        	slnr.add(new Return(rxleft));
+            RESULT = new Block(slnr);
         } else if (el.size() == 1) {
-            RESULT = new Block(slnr, new Return(rxleft, el.get(0)));
+        	slnr.add(new Return(rxleft, el.get(0)));
+            RESULT = new Block(slnr);
         } else {
             Multiple m = new Multiple(elxleft, el, Multiple.Kind.RETURN);
-            RESULT = new Block(slnr, new Return(rxleft, m));
+            slnr.add(new Return(rxleft, m));
+            RESULT = new Block(slnr);
         }
     :}
     | StmtListNoReturn:slnr
@@ -325,11 +331,13 @@ StmtNoReturn ::=
 FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
-            RESULT = new Call(idxleft, id, args);
+        	Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
+            RESULT = new Call(idxleft, id, arg);
         :}
     | LENGTH:l LPAREN Args:args RPAREN
         {:
-            RESULT = new Call(lxleft, "length", args);
+            Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
+            RESULT = new Call(lxleft, "length", arg);
         :}
     ;
 
@@ -431,7 +439,7 @@ FArrayElems ::=
 VarDeclr ::= 
     IDENTIFIER:id COLON VarType:type
     {:
-        RESULT = new Declare(idxleft, new Var(idxleft, id), type);
+        RESULT = new Declare(idxleft, id, type);
     :};
 
 VarType ::= 
@@ -528,7 +536,7 @@ ElseStmt ::=
     :}
     | ELSE:el BlockOptBraces:block 
     {:
-        RESULT = new Else(elxleft,block);
+        RESULT = block;
     :}
     ;
 

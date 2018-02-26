@@ -3,8 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
-import java.util.ArrayList;
-
+// Binary Operation
 public class Binary extends Node {
 
     public enum Kind {
@@ -49,7 +48,7 @@ public class Binary extends Node {
         return v.visit(this);
     }
 
-    public boolean isBool() {
+    public boolean acceptsBool() {
         switch (kind) {
             case TIMES:
             case HIGH_TIMES:
@@ -67,28 +66,29 @@ public class Binary extends Node {
             case AND:
             case OR:
                 return true;
+            default:
+                assert false;
+                return false;
         }
-        assert false;
-        return false;
     }
 
-    public boolean isInt() {
+    public boolean acceptsInt() {
         return !(kind == Kind.AND || kind == Kind.OR);
     }
 
-    public boolean isList() {
+    public boolean acceptsList() {
         return kind == Kind.PLUS;
     }
 
     public boolean returnsBool() {
-        return isBool();         
+        return acceptsBool();         
     }
 
     public boolean returnsInt() {
-        return !isBool(); 
+        return !acceptsBool(); 
     }
 
     public boolean returnsList() {
-        return isList();
+        return acceptsList();
     }
 }

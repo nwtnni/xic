@@ -2,7 +2,6 @@ package type;
 
 import ast.*;
 import parser.IXiParser;
-import xic.Xic;
 import xic.XicException;
 
 public class UseImporter extends Visitor<Void> {
@@ -12,6 +11,7 @@ public class UseImporter extends Visitor<Void> {
     
     public static FnContext resolve(String source, Node ast) throws XicException {
     	UseImporter resolver = new UseImporter(source);
+    	ast.accept(resolver);
     	return resolver.context;
     }
     

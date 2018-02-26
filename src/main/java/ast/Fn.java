@@ -5,6 +5,7 @@ import xic.XicException;
 
 import java.util.ArrayList;
 
+// Function Declaration
 public class Fn extends Node {
     
     public enum Kind {
@@ -14,20 +15,11 @@ public class Fn extends Node {
 
     public Kind kind;
     public String id;
-    public ArrayList<Node> args;
-    public ArrayList<Node> returns;
+    public Node args;
+    public Node returns;
     public Node block;
 
-    public Fn(Location location, String id, ArrayList<Node> args, ArrayList<Node> returns, Node block) {
-        this.kind = Kind.FN;
-        this.location = location;
-        this.id = id;  
-        this.args = args;
-        this.returns = returns;
-        this.block = block;
-    }
-
-    public Fn(Location location, String id, ArrayList<Node> args, ArrayList<Node> returns) {
+    public Fn(Location location, String id, Node args, Node returns) {
         this.kind = Kind.FN_HEADER;
         this.location = location;
         this.id = id;  
@@ -36,21 +28,12 @@ public class Fn extends Node {
         this.block = null;
     }
 
-    public Fn(Location location, String id, ArrayList<Node> args, Node block) {
-        this.kind = Kind.PROC;
-        this.location = location;
-        this.id = id;  
-        this.args = args;
-        this.returns = null;
-        this.block = block;
-    }
-
-    public Fn(Location location, String id, ArrayList<Node> args) {
+    public Fn(Location location, String id, Node args) {
         this.kind = Kind.PROC_HEADER; 
         this.location = location;
         this.id = id;  
         this.args = args;
-        this.returns = null;
+        this.returns = new Multiple(location, new ArrayList<>(), Multiple.Kind.FN_RETURNS);
         this.block = null;
     }
 

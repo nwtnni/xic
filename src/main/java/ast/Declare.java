@@ -3,6 +3,7 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
+// A Variable Declaration
 public class Declare extends Node {
 
     public enum Kind {
@@ -10,21 +11,21 @@ public class Declare extends Node {
     }
 
     private Kind kind;
-    public Node id;
-    public Node type;
+    public String id;
+    public Node xiType;
 
-    public Declare(Location location, Node id, Node type) {
+    public Declare(Location location, String id, Node type) {
         this.kind = Kind.VAR;
         this.location = location;
         this.id = id; 
-        this.type = type;
+        this.xiType = type;
     }
 
     public Declare(Location location) {
         this.kind = Kind.UNDERSCORE;
         this.location = location;
         this.id = null;
-        this.type = null;
+        this.xiType = null;
     }
 
     public boolean isUnderscore() {

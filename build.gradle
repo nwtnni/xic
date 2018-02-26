@@ -22,6 +22,7 @@ clean.doFirst {
         include "**/*.iparsed"
         include "**/*.parsed"
         include "**/*.lexed"
+        include "**/*.typed"
         include "**/IXiLexer.java"
         include "**/IXiParser.java"
         include "**/IXiSymbol.java"
@@ -75,6 +76,11 @@ task testLexer(type: Exec) {
 task testParser(type: Exec) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript"
+}
+
+task testType(type: Exec) {
+    executable "sh"
+    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/type/pa3-tests tests/type/pa3-tests/xthScript"
 }
 
 compileJava.dependsOn jflexIXi

@@ -2,6 +2,7 @@ package ast;
 
 import xic.XicException;
 
+// Boilerplate code to implement the visitor pattern
 public abstract class Visitor<T> {
 
     /*
@@ -39,10 +40,6 @@ public abstract class Visitor<T> {
     }
 
     public T visit(If i) throws XicException {
-        return null;
-    }
-
-    public T visit(Else e) throws XicException {
         return null;
     }
 

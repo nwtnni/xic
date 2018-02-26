@@ -62,11 +62,10 @@ public class Invariant extends Visitor<Void> {
     //
     // [f.id]       non-null
     //
-    // [f.args]     non-null && Declare nodes
+    // [f.args]     non-null
     //
-    // [f.returns]  non-null && XiType nodes if Kind.FN || Kind.FN_HEADER
-    //              null otherwise
-    //
+    // [f.returns]  non-null
+    //           
     // [f.block]    non-null && Block node if Kind.FN || Kind.PROC
     //              null otherwise
     //
@@ -75,21 +74,10 @@ public class Invariant extends Visitor<Void> {
     
         assert f.id != null;
         assert f.args != null;
-
-        for (Node arg : f.args) {
-            assert arg instanceof Declare;
-            arg.accept(this);
-        }
-
-        if (f.isFn()) {
-            assert f.returns != null;
-            for (Node type : f.returns) {
-                assert type instanceof XiType; 
-                type.accept(this);
-            }
-        } else {
-            assert f.returns == null;
-        }
+        assert f.returns != null;
+        
+        f.args.accept(this);
+        f.returns.accept(this);
 
         if (f.isDef()) {
             assert f.block instanceof Block;
@@ -114,12 +102,11 @@ public class Invariant extends Visitor<Void> {
         assert d.location != null;
         if (d.isUnderscore()) {
             assert d.id == null;
-            assert d.type == null;
+            assert d.xiType == null;
         } else {
-            assert d.id instanceof Var;
-            assert d.type instanceof XiType;
-            d.id.accept(this);
-            d.type.accept(this);
+        	assert d.id != null;
+            assert d.xiType instanceof XiType;
+            d.xiType.accept(this);
         }
         return null;
     }
@@ -165,20 +152,14 @@ public class Invariant extends Visitor<Void> {
     //
     // [b.statements] non-null
     //
-    // [b.return]     non-null if Kind.RETURN
-    //                null otherwise
-    //
     public Void visit(Block b) throws XicException {
         assert b.location != null;
         assert b.statements != null;
+
         for (Node statement : b.statements) {
             statement.accept(this);
         }
 
-        if (b.hasReturn()) {
-            assert b.returns != null; 
-            b.returns.accept(this);
-        }
         return null;
     }
 
@@ -202,24 +183,11 @@ public class Invariant extends Visitor<Void> {
         i.guard.accept(this);
 
         if (i.hasElse()) {
-            assert i.elseBlock instanceof Else; 
+            assert i.elseBlock instanceof Block; 
             i.elseBlock.accept(this);
         } else {
             assert i.elseBlock == null; 
         }
-        return null;
-    }
-
-    // Else invariants:
-    //
-    // [e.location] non-null
-    //
-    // [e.block]    non-null && Block node
-    //
-    public Void visit(Else e) throws XicException {
-        assert e.location != null;
-        assert e.block instanceof Block;
-        e.block.accept(this);
         return null;
     }
 
@@ -250,10 +218,7 @@ public class Invariant extends Visitor<Void> {
         assert c.location != null;
         assert c.id != null; 
         assert c.args != null;
-
-        for (Node arg : c.args) {
-            arg.accept(this);
-        }
+        c.args.accept(this);
         return null;
     }
 
@@ -303,12 +268,12 @@ public class Invariant extends Visitor<Void> {
     //
     // [m.location] non-null
     //
-    // [m.values]   non-null && size > 1
+    // [m.values]   non-null && size != 1
     //
     public Void visit(Multiple m) throws XicException {
         assert m.location != null; 
         assert m.values != null;
-        assert m.values.size() > 1;
+        assert m.values.size() != 1;
 
         for (Node value : m.values) {
             value.accept(this);

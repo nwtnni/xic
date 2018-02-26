@@ -104,18 +104,12 @@ public class Printer extends Visitor<Void> {
         
         // Fn arguments
         printer.startList();
-        for (Node arg : f.args) {
-            arg.accept(this);
-        }
+        f.args.accept(this);
         printer.endList();
 
         // Fn return types
         printer.startList();
-        if (f.isFn()) {
-            for (Node type : f.returns) {
-                type.accept(this);
-            }
-        }
+        f.returns.accept(this);
         printer.endList();
 
         // Statement block
@@ -136,8 +130,8 @@ public class Printer extends Visitor<Void> {
         }
         else {
             printer.startList(); 
-            d.id.accept(this);
-            d.type.accept(this);
+            printer.printAtom(d.id);
+            d.xiType.accept(this);
             printer.endList();
         }
         return null;
@@ -174,10 +168,6 @@ public class Printer extends Visitor<Void> {
             statement.accept(this);
         }
         
-        if (b.hasReturn()) {
-            b.returns.accept(this);
-        }
-
         printer.endList();
         return null;
     }
@@ -195,11 +185,6 @@ public class Printer extends Visitor<Void> {
         }
 
         printer.endList();
-        return null;
-    }
-
-    public Void visit(Else e) throws XicException{
-        e.block.accept(this);
         return null;
     }
 
@@ -222,9 +207,7 @@ public class Printer extends Visitor<Void> {
 
         printer.printAtom(c.id);
         
-        for (Node arg : c.args) {
-            arg.accept(this);
-        }
+        c.args.accept(this);
 
         printer.endList();
         return null;

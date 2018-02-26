@@ -6,6 +6,7 @@ import ast.Node;
 import lexer.XiLexer;
 import parser.IXiParser;
 import parser.XiParser;
+import type.TypeCheck;
 
 public class Xic {
 	
@@ -45,11 +46,22 @@ public class Xic {
 		return ast;
 	}
 	
+	public Node typeCheck(String unit) throws XicException {
+		Node ast = parse(unit);
+		TypeCheck.check(source, ast);
+		//TODO: Invariant check phase?
+		return ast;
+	}
+	
 	public void printLexed(String unit) throws XicException {
 		lexer.Printer.print(source, sink, unit);
 	}
 	
 	public void printParsed(String unit) throws XicException {
 		parser.Printer.print(source, sink, unit);
+	}
+
+	public void printTyped(String unit) throws XicException {
+		type.Printer.print(source, sink, unit);
 	}
 }
