@@ -28,18 +28,53 @@ public class TypeCheck extends Visitor<Type> {
      * Top-level AST nodes
      */
     public Type visit(Program p) throws XicException {
-        //TODO
-        return null;
-    }
-
-    public Type visit(Use u) throws XicException {
-        //TODO
-        return null;
+    	for (Node fn : p.fns) {
+    		fn.accept(this);
+    	} 
+    	p.type = Type.UNIT;
+    	return p.type;
     }
 
     public Type visit(Fn f) throws XicException {
-        //TODO
-        return null;
+    	Type args = f.args.accept(this);
+    	
+    	vars.push();
+    	
+    	switch (args.kind) {
+    	case CLASS:
+    		//TODO debugging purposes
+    		assert args.hasVariable();
+    		vars.add(args.getVariable(), args);
+    	case TUPLE:
+    		for (Type child : args.children) {
+    			assert child.hasVariable();
+    			vars.add(child.getVariable(), child);
+    		}
+    	default:
+    		//TODO internal error
+    		assert false;
+    	}
+    	
+    	returns = fns.lookup(f.id).returns;
+    	
+        Type ft = f.block == null ? null : f.block.accept(this);
+        vars.pop();
+        switch (f.kind) {
+        	case FN:
+        		if (ft.equals(Type.VOID)) {
+        			f.type = Type.UNIT;
+        			return f.type;
+        		} else {
+        			throw new RuntimeException("Control reached end of non-void function");
+        		}
+        	case PROC:
+        		f.type = Type.UNIT;
+        		return f.type;
+        	default:
+        		//TODO internal error
+        		assert false;
+        		return null;
+        }
     }
 
     /*
@@ -94,7 +129,6 @@ public class TypeCheck extends Visitor<Type> {
 
     	if (b.statements.size() == 0) { return Type.UNIT; }
     	
-    	vars.push();
     	int last = b.statements.size() - 1;
     	for (int i = 0; i < last; i++) {
     		Type st = b.statements.get(i).accept(this);
@@ -108,7 +142,6 @@ public class TypeCheck extends Visitor<Type> {
     	}
     	
     	Type bt = b.statements.get(last).accept(this);
-    	vars.pop();
     	
     	if (bt.equals(Type.VOID)) {
     		b.type = Type.VOID;
@@ -128,8 +161,12 @@ public class TypeCheck extends Visitor<Type> {
     		throw new RuntimeException("Guard expression must be a boolean");
     	}
     	
+    	vars.push();
     	Type it = i.block.accept(this);
+    	vars.pop();
+    	vars.push();
     	Type et = i.hasElse() ? i.elseBlock.accept(this) : null;
+    	vars.pop();
     	
     	if (et != null && it.equals(Type.VOID) && et.equals(Type.VOID)) {
     		i.type = Type.VOID;
@@ -144,7 +181,9 @@ public class TypeCheck extends Visitor<Type> {
     		throw new RuntimeException("Guard expression must be a boolean");
     	}
     	
+    	vars.push();
     	w.block.accept(this);
+    	vars.pop();
     	w.type = Type.UNIT;
     	return w.type;
     }
