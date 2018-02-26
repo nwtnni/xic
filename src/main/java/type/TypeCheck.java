@@ -96,7 +96,7 @@ public class TypeCheck extends Visitor<Type> {
     	if (args.equals(fn.args)) {
     		return fn.returns;
     	} else {
-    		throw new RuntimeException("Function call with incorrect arguments");
+    		throw new TypeException(Kind.INVALID_ARG_TYPES, c.location);
     	}
     }
 
@@ -104,27 +104,29 @@ public class TypeCheck extends Visitor<Type> {
         Type lt = b.lhs.accept(this);
         Type rt = b.rhs.accept(this);
 
-        if (!lt.equals(rt)) { throw new RuntimeException("Mismatched types"); }
+        if (!lt.equals(rt)) { 
+            throw new TypeException(Kind.MISMATCHED_TYPES, b.location);
+        }
 
-        if (lt.equals(Type.INT) && b.isInt()) {
+        if (lt.equals(Type.INT) && b.acceptsInt()) {
             if (b.returnsBool()) {
                 return Type.BOOL;
             } else if (b.returnsInt()) {
                 return Type.INT;
             } else {
-                throw new RuntimeException("Invalid integer operation");
+                throw new TypeException(Kind.INVALID_INT_OP, b.location);
             }
         }
 
-        if (lt.equals(Type.BOOL) && b.isBool()) {
+        if (lt.equals(Type.BOOL) && b.acceptsBool()) {
             return Type.BOOL;
         }
 
-        if (lt.kind == Type.Kind.ARRAY && b.isList()) {
+        if (lt.kind == Type.Kind.ARRAY && b.acceptsList()) {
             return lt;
         }
 
-        throw new RuntimeException("Invalid binary operation for these types");
+        throw new TypeException(Kind.INVALID_BIN_OP, b.location);
     }
 
     public Type visit(Unary u) throws XicException {
@@ -133,13 +135,13 @@ public class TypeCheck extends Visitor<Type> {
             if (ut.equals(Type.BOOL)) {
                 return Type.BOOL;
             } else {
-                throw new RuntimeException("Expected boolean for logical negation");
+                throw new TypeException(Kind.LNEG_ERROR, u.location);
             }
         } else {
             if (ut.equals(Type.INT)) {
                 return Type.INT;
             } else {
-                throw new RuntimeException("Expected int for int negation");
+                throw new TypeException(Kind.NEG_ERROR, u.location);
             }
         }
     }
@@ -165,9 +167,9 @@ public class TypeCheck extends Visitor<Type> {
         Type at = i.array.accept(this);
 
         if (!it.equals(Type.INT)) {
-            throw new RuntimeException("Index is not integer");
+            throw new TypeException(Kind.INVALID_ARRAY_INDEX, i.index.location);
         } else if (at.kind != Type.Kind.ARRAY) {
-            throw new RuntimeException("Not an array, silly");
+            throw new TypeException(Kind.NOT_AN_ARRAY, i.array.location);
         } else {
             return at.children.get(0);
         }
