@@ -1,10 +1,10 @@
 package type;
 
-public class VarType extends Type {
+public class DeclareType extends Type {
 
 	private String var;
 	
-	public VarType(String var, Type type) {
+	public DeclareType(String var, Type type) {
 		this.kind = type.kind;
 		this.children = type.children;
 		this.id = type.id;
@@ -12,12 +12,12 @@ public class VarType extends Type {
 	}
 	
 	@Override
-	public String getVariable() {
+	public String getDeclaration() {
 		return var;
 	}
 	
 	@Override 
-	public boolean hasVariable() {
+	public boolean isDeclaration() {
 		return true;
 	}
 }

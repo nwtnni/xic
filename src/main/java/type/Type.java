@@ -56,11 +56,11 @@ public class Type {
     
     protected Type() {}
     
-    public boolean hasVariable() {
+    public boolean isDeclaration() {
     	return false;
     }
     
-    public String getVariable() {
+    public String getDeclaration() {
     	return null;
     }
     

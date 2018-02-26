@@ -43,13 +43,13 @@ public class TypeCheck extends Visitor<Type> {
     	switch (args.kind) {
     	case CLASS:
     		//TODO debugging purposes
-    		assert args.hasVariable();
-    		vars.add(args.getVariable(), args);
+    		assert args.isDeclaration();
+    		vars.add(args.getDeclaration(), args);
     		break;
     	case TUPLE:
     		for (Type child : args.children) {
-    			assert child.hasVariable();
-    			vars.add(child.getVariable(), child);
+    			assert child.isDeclaration();
+    			vars.add(child.getDeclaration(), child);
     		}
     		break;
     	default:
@@ -82,10 +82,10 @@ public class TypeCheck extends Visitor<Type> {
      */
     public Type visit(Declare d) throws XicException {
     	if (d.isUnderscore()) {
-    		d.type = new VarType("_", Type.UNIT);
+    		d.type = new DeclareType("_", Type.UNIT);
     	}
     	else {
-    		d.type = new VarType(d.id, d.xiType.accept(this));
+    		d.type = new DeclareType(d.id, d.xiType.accept(this));
     	}
     	return d.type;
     }
@@ -99,14 +99,14 @@ public class TypeCheck extends Visitor<Type> {
     	switch (lhs.kind) {
 			case ARRAY:
 			case CLASS:
-				if (lhs.hasVariable()) {
-					vars.add(lhs.getVariable(), lhs);	
+				if (lhs.isDeclaration()) {
+					vars.add(lhs.getDeclaration(), lhs);	
 				}
 				break;
 			case TUPLE:
 				for (Type child : lhs.children) {
-					if (child.hasVariable()) {
-						vars.add(child.getVariable(), child);
+					if (child.isDeclaration()) {
+						vars.add(child.getDeclaration(), child);
 					}
 				}
 				break;
@@ -137,8 +137,8 @@ public class TypeCheck extends Visitor<Type> {
     			throw new RuntimeException("Unreachable statement");
     		} else if (!st.equals(Type.UNIT)) {
     			//TODO for debugging purposes
-    			assert st.hasVariable();
-    			vars.add(st.getVariable(), st);
+    			assert st.isDeclaration();
+    			vars.add(st.getDeclaration(), st);
     		}
     	}
     	
