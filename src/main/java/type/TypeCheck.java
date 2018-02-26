@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 import ast.*;
 import type.TypeException.Kind;
-import xic.Xic;
 import xic.XicException;
 
 public class TypeCheck extends Visitor<Type> {

@@ -2,8 +2,6 @@ package xic;
 
 import java.util.ArrayList;
 
-import org.apache.commons.io.FilenameUtils;
-
 public class Main {
 
 	public static void main(String[] args) {

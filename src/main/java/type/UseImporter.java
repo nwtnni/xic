@@ -2,7 +2,6 @@ package type;
 
 import ast.*;
 import parser.IXiParser;
-import xic.Xic;
 import xic.XicException;
 
 public class UseImporter extends Visitor<Void> {

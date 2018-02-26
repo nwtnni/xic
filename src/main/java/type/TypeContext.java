@@ -1,7 +1,5 @@
 package type;
 
-import org.pcollections.*;
-
 public class TypeContext extends Context<Type, Type> {
 
     public TypeContext() {

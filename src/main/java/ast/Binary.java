@@ -3,8 +3,6 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
-import java.util.ArrayList;
-
 // Binary Operation
 public class Binary extends Node {
 
