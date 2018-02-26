@@ -167,7 +167,7 @@ ArgsTypeList ::=
     :}
     | IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft,new Var(idxleft,id), type));
+        fatl.add(0, new Declare(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -178,7 +178,7 @@ FArgsTypeList ::=
     :}
     | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft,new Var(idxleft,id),type));
+        fatl.add(0, new Declare(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -431,7 +431,7 @@ FArrayElems ::=
 VarDeclr ::= 
     IDENTIFIER:id COLON VarType:type
     {:
-        RESULT = new Declare(idxleft, new Var(idxleft, id), type);
+        RESULT = new Declare(idxleft, id, type);
     :};
 
 VarType ::= 

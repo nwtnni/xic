@@ -136,7 +136,7 @@ public class Printer extends Visitor<Void> {
         }
         else {
             printer.startList(); 
-            d.id.accept(this);
+            printer.printAtom(d.id);
             d.type.accept(this);
             printer.endList();
         }

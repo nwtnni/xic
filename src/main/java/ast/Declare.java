@@ -10,10 +10,10 @@ public class Declare extends Node {
     }
 
     private Kind kind;
-    public Node id;
+    public String id;
     public Node type;
 
-    public Declare(Location location, Node id, Node type) {
+    public Declare(Location location, String id, Node type) {
         this.kind = Kind.VAR;
         this.location = location;
         this.id = id; 
