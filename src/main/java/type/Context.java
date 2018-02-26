@@ -36,9 +36,10 @@ public class Context<K, V> {
     }
 
     public boolean inContext(K id) {
-		if (context.get(0).containsKey(id)){
-			return true;
-		}
-		return false;
+    	try {
+    		return lookup(id) != null;
+    	} catch (Exception e) {
+    		return false;
+    	}
 	}
 }
