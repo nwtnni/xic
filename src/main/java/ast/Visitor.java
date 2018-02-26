@@ -42,10 +42,6 @@ public abstract class Visitor<T> {
         return null;
     }
 
-    public T visit(Else e) throws XicException {
-        return null;
-    }
-
     public T visit(While w) throws XicException {
         return null;
     }

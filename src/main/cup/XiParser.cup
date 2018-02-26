@@ -536,7 +536,7 @@ ElseStmt ::=
     :}
     | ELSE:el BlockOptBraces:block 
     {:
-        RESULT = new Else(elxleft,block);
+        RESULT = block;
     :}
     ;
 

@@ -117,12 +117,7 @@ public class TypeCheck extends Visitor<Type> {
     	
         return null;
     }
-
-    public Type visit(Else e) throws XicException {
-        //TODO
-        return null;
-    }
-
+    
     public Type visit(While w) throws XicException {
         //TODO
         return null;

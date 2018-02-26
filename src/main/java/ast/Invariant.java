@@ -183,24 +183,11 @@ public class Invariant extends Visitor<Void> {
         i.guard.accept(this);
 
         if (i.hasElse()) {
-            assert i.elseBlock instanceof Else; 
+            assert i.elseBlock instanceof Block; 
             i.elseBlock.accept(this);
         } else {
             assert i.elseBlock == null; 
         }
-        return null;
-    }
-
-    // Else invariants:
-    //
-    // [e.location] non-null
-    //
-    // [e.block]    non-null && Block node
-    //
-    public Void visit(Else e) throws XicException {
-        assert e.location != null;
-        assert e.block instanceof Block;
-        e.block.accept(this);
         return null;
     }
 
