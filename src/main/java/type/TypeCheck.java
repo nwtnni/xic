@@ -1,23 +1,28 @@
 package type;
 
+import java.util.ArrayList;
+
 import ast.*;
+import type.TypeException.Kind;
 import xic.Xic;
 import xic.XicException;
 
 public class TypeCheck extends Visitor<Type> {
 
-    private static final TypeCheck CHECKER = new TypeCheck();
-
-    private static TypeContext types;
-    private static FnContext fns;
-    private static VarContext vars;
-
     public static void check(String source, Node ast) throws XicException {
-        fns = UseImporter.resolve(source, ast);
-        types = new TypeContext();
-        vars = new VarContext();
-        ast.accept(CHECKER);
+    	ast.accept(new TypeCheck(source, ast));
     }
+    
+    private TypeCheck(String source, Node ast) throws XicException {
+    	this.fns = UseImporter.resolve(source, ast);
+    	this.types = new TypeContext();
+    	this.vars = new VarContext();
+    }
+
+    private TypeContext types;
+    private FnContext fns;
+    private VarContext vars;
+    private ArrayList<Type> expected;
 
     /*
      * Top-level AST nodes
@@ -79,11 +84,20 @@ public class TypeCheck extends Visitor<Type> {
      * Expression nodes
      */
 
-    // TODO
-    // Context dependent
     public Type visit(Call c) throws XicException {
-        assert false;
-        return null;
+    	
+    	ArrayList<Type> types = new ArrayList<>();
+    	for (Node arg : c.args) {
+    		types.add(arg.accept(this));
+    	}
+    	Type args = new Type(types);
+    	FnType fn = fns.lookup(c.id);
+    	
+    	if (args.equals(fn.args)) {
+    		return fn.returns;
+    	} else {
+    		throw new RuntimeException("Function call with incorrect arguments");
+    	}
     }
 
     public Type visit(Binary b) throws XicException {
@@ -106,7 +120,7 @@ public class TypeCheck extends Visitor<Type> {
             return Type.BOOL;
         }
 
-        if (!lt.isClass() && b.isList()) {
+        if (lt.kind == Type.Kind.ARRAY && b.isList()) {
             return lt;
         }
 
@@ -130,17 +144,20 @@ public class TypeCheck extends Visitor<Type> {
         }
     }
 
-    // TODO
-    // Context dependent
     public Type visit(Var v) throws XicException {
-        assert false;
-        return null;
+    	try {
+    		return vars.lookup(v.id);
+    	} catch (Exception todofixpls) {
+    		throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
+    	}
     }
 
-    // Should cover this in first pass
     public Type visit(Multiple m) throws XicException {
-        assert false;
-        return null;
+		ArrayList<Type> types = new ArrayList<>();
+		for (Node value : m.values) {
+			types.add(value.accept(this));
+		}
+		return new Type(types);
     }
 
     public Type visit(Index i) throws XicException {
@@ -149,10 +166,10 @@ public class TypeCheck extends Visitor<Type> {
 
         if (!it.equals(Type.INT)) {
             throw new RuntimeException("Index is not integer");
-        } else if (at.isClass()) {
+        } else if (at.kind != Type.Kind.ARRAY) {
             throw new RuntimeException("Not an array, silly");
         } else {
-            return at.child;
+            return at.children.get(0);
         }
     }
 
