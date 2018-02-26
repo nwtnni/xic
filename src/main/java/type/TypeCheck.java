@@ -64,7 +64,7 @@ public class TypeCheck extends Visitor<Type> {
         switch (f.kind) {
         	case FN:
         		if (!ft.equals(Type.VOID)) {
-        			throw new RuntimeException("Control reached end of non-void function");
+        			throw new TypeException(Kind.CONTROL_FLOW, f.location);
         		}
         		break;
         	case PROC:
@@ -94,7 +94,9 @@ public class TypeCheck extends Visitor<Type> {
     	Type lhs = a.lhs.accept(this);
     	Type rhs = a.rhs.accept(this);
     	
-    	if (!lhs.equals(rhs)) { throw new RuntimeException("Mismatched types"); }
+    	if (!lhs.equals(rhs)) {
+    		throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
+    	}
 
     	switch (lhs.kind) {
 			case ARRAY:
@@ -122,7 +124,7 @@ public class TypeCheck extends Visitor<Type> {
     		r.type = Type.VOID;
     		return r.type;
     	} else {
-    		throw new RuntimeException("Mismatched return type");
+    		throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
     	}
     }
 
@@ -134,7 +136,7 @@ public class TypeCheck extends Visitor<Type> {
     	for (int i = 0; i < last; i++) {
     		Type st = b.statements.get(i).accept(this);
     		if (st.equals(Type.VOID)) {
-    			throw new RuntimeException("Unreachable statement");
+    			throw new TypeException(Kind.UNREACHABLE, b.statements.get(i + 1).location);
     		} else if (!st.equals(Type.UNIT)) {
     			//TODO for debugging purposes
     			assert st.isDeclaration();
@@ -157,7 +159,7 @@ public class TypeCheck extends Visitor<Type> {
 
     public Type visit(If i) throws XicException {
     	if (!i.guard.accept(this).equals(Type.BOOL)) {
-    		throw new RuntimeException("Guard expression must be a boolean");
+    		throw new TypeException(Kind.INVALID_GUARD, i.guard.location);
     	}
     	
     	vars.push();
@@ -177,7 +179,7 @@ public class TypeCheck extends Visitor<Type> {
     
     public Type visit(While w) throws XicException {
     	if (!w.guard.accept(this).equals(Type.BOOL)) {
-    		throw new RuntimeException("Guard expression must be a boolean");
+    		throw new TypeException(Kind.INVALID_GUARD, w.guard.location);
     	}
     	
     	vars.push();
@@ -210,7 +212,7 @@ public class TypeCheck extends Visitor<Type> {
         Type rt = b.rhs.accept(this);
 
         if (!lt.equals(rt)) { 
-            throw new TypeException(Kind.MISMATCHED_TYPES, b.location);
+            throw new TypeException(Kind.MISMATCHED_BINARY, b.location);
         }
 
         if (lt.equals(Type.INT) && b.acceptsInt()) {
@@ -312,7 +314,7 @@ public class TypeCheck extends Visitor<Type> {
 
             for (int i = 1; i < a.values.size(); i++) {
                 if (!at.equals(a.values.get(i).accept(this))) {
-                    throw new RuntimeException("DERP0");
+                	throw new TypeException(Kind.NOT_UNIFORM_ARRAY, a.location);
                 }
             }
             a.type = at;
