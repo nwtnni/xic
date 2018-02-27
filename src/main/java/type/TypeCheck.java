@@ -141,9 +141,12 @@ public class TypeCheck extends Visitor<Type> {
     		if (st.equals(Type.VOID)) {
     			throw new TypeException(Kind.UNREACHABLE, b.statements.get(i + 1).location);
     		} else if (!st.equals(Type.UNIT)) {
-    			//TODO for debugging purposes
-    			assert st.isDeclaration();
-    			vars.add(st.getDeclaration(), st);
+                // Can be either function call or variable declaration
+                if (st.isDeclaration()) {
+                    vars.add(st.getDeclaration(), st);
+                } else {
+                    throw new TypeException(Kind.UNUSED_FUNCTION, b.statements.get(i).location);
+                }
     		}
     	}
 
