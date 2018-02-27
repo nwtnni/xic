@@ -64,7 +64,7 @@ public class TypeCheck extends Visitor<Type> {
     public Type visit(Declare d) throws XicException {
     	if (d.isUnderscore()) {
     		d.type = Type.UNIT;
-    	} else if (vars.inContext(d.id) || fns.inContext(d.id)){
+    	} else if (vars.inContext(d.id) || fns.inContext(d.id)) {
             throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
         } else {
     		d.type = d.xiType.accept(this);
@@ -160,8 +160,7 @@ public class TypeCheck extends Visitor<Type> {
             }
             c.type = Type.INT;
             return c.type;
-        }
-        else {
+        } else {
     		FnType fn = fns.lookup(c.id);
     		if (fn == null) {
     			throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);

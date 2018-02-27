@@ -1,3 +1,3 @@
 foo() {
-  i:int[] = {}
+  i:int = length({})
 }

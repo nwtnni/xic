@@ -20,17 +20,23 @@ public class FnContext {
 	public void add(String id, FnType type) throws XicException {
 		FnType existing = lookup(id);
 
-		if (existing == null) {
-			map.put(id, type);
-		} else if (!existing.equals(type)) {
-			//TODO: include both locations in error message?
+		if (existing != null) {
 			throw new TypeException(TypeException.Kind.DECLARATION_CONFLICT, type.location);
 		}
+		map.put(id, type);
 	}
 
 	public void merge(FnContext context) throws XicException {
 		for (String id : context.keySet()) {
-			add(id, context.lookup(id));
+			FnType existing = lookup(id);
+			FnType type = context.lookup(id);
+
+			if (existing == null) {
+				map.put(id, type);
+			} else if (!existing.equals(type)) {
+				//TODO: include both locations in error message?
+				throw new TypeException(TypeException.Kind.DECLARATION_CONFLICT, type.location);
+			}
 		}
 	}
 
