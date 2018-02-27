@@ -56,8 +56,16 @@ public class TypeCheck extends Visitor<Type> {
     		break;
     	}
 
-    	returns = fns.lookup(f.id).returns;
-        Type ft = f.block == null ? null : f.block.accept(this);
+		FnType fn = fns.lookup(f.id);
+		if (fn == null) {
+			throw new TypeException(Kind.SYMBOL_NOT_FOUND, f.location);
+		}
+		returns = fn.returns;
+
+		Type ft = null;
+		if (f.block != null) {
+			ft = f.block.accept(this);
+		}
 
         vars.pop();
 
@@ -140,12 +148,17 @@ public class TypeCheck extends Visitor<Type> {
 
     	int last = b.statements.size() - 1;
     	for (int i = 0; i < last; i++) {
-    		Type st = b.statements.get(i).accept(this);
+			Type st = b.statements.get(i).accept(this);
+			
+			System.out.println(i);
+
     		if (st.equals(Type.VOID)) {
     			throw new TypeException(Kind.UNREACHABLE, b.statements.get(i + 1).location);
     		} else if (!st.equals(Type.UNIT)) {
                 // Can be either function call or variable declaration
                 if (st.isDeclaration()) {
+					System.out.println(st.getDeclaration());
+					System.out.println(st.kind.toString());
                     vars.add(st.getDeclaration(), st);
                 } else {
                     throw new TypeException(Kind.UNUSED_FUNCTION, b.statements.get(i).location);
@@ -260,12 +273,11 @@ public class TypeCheck extends Visitor<Type> {
     }
 
     public Type visit(Var v) throws XicException {
-    	try {
-    		v.type = vars.lookup(v.id);
-    		return v.type;
-    	} catch (Exception todofixpls) {
-    		throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
-    	}
+		v.type = vars.lookup(v.id);
+		if (v.type == null) {
+			throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
+		}	
+    	return v.type;
     }
 
     public Type visit(Multiple m) throws XicException {

@@ -24,6 +24,7 @@ public class Context<K, V> {
 
     public void add(K k, V t) throws TypeException {
         if (lookup(k) != null) {
+            System.out.println("conflict found");
             throw new TypeException(Kind.DECLARATION_CONFLICT);
         }
         PMap<K, V> map = context.get(0);
