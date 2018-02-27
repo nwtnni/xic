@@ -4,6 +4,7 @@ public class DeclareType extends Type {
 
 	private String var;
 	
+	// A type that holds the variable
 	public DeclareType(String var, Type type) {
 		this.kind = type.kind;
 		this.children = type.children;
@@ -22,6 +23,7 @@ public class DeclareType extends Type {
 	}
 
 	// Handles Underscores
+	@Override
 	public boolean equals(Object o) {
 		if (!(o instanceof Type)) { return false; }
 

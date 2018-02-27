@@ -1,3 +1,3 @@
 foo() {
-    x:int = 1+false
+	x:int = 1 + false
 }

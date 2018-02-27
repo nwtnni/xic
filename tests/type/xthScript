@@ -1,0 +1,6 @@
+build
+
+xic ("Test --typecheck") "--typecheck" {
+    primitives1.xi;
+    underscores.xi;
+}

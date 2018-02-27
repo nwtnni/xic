@@ -12,6 +12,7 @@ public class TypeException extends XicException {
     	CONTROL_FLOW("Control reached end of non-void function"),
     	MISMATCHED_ASSIGN("Mismatched types for assignment"),
     	MISMATCHED_RETURN("Mismatched return type for function"),
+        UNUSED_FUNCTION("Unused function result"),
     	UNREACHABLE("Unreachable statement"),
     	INVALID_GUARD("Guard expressions must be type bool"),
         
