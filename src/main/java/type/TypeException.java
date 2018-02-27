@@ -10,7 +10,8 @@ public class TypeException extends XicException {
     public enum Kind {
         // Statement exceptions
     	CONTROL_FLOW("Control reached end of non-void function"),
-    	MISMATCHED_ASSIGN("Mismatched types for assignment"),
+        MISMATCHED_ASSIGN("Mismatched types for assignment"),
+        INVALID_WILDCARD("Wildcard can only be used with function call"),
     	MISMATCHED_RETURN("Mismatched return type for function"),
         UNUSED_FUNCTION("Unused function result"),
     	UNREACHABLE("Unreachable statement"),
