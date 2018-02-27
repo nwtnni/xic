@@ -2,8 +2,13 @@ foo() {
     x:int = 1
     y:bool = true
     z:int
+    y':bool
     z = x
-    //y':bool
-    //y' = y
-    return
+    y' = y
+    if y' {
+      return;
+    } else {
+      return;
+    }
+    x = z;
 }
