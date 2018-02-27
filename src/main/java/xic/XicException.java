@@ -27,6 +27,12 @@ public class XicException extends Exception {
 		this.location = null;
 		this.description = description;
 	}
+
+	public XicException(Kind kind, String description) {
+		this.kind = kind;
+		this.location = null;
+		this.description = description;
+	}
 	
 	public XicException(Kind kind, Location location, String description) {
 		this.kind = kind;

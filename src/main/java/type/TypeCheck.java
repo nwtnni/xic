@@ -197,17 +197,19 @@ public class TypeCheck extends Visitor<Type> {
      */
 
     public Type visit(Call c) throws XicException {
-    	Type args = c.args.accept(this);
-    	FnType fn = fns.lookup(c.id);
+		FnType fn = fns.lookup(c.id);
+		if (fn == null) {
+			throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
+		}
 
-    	if (fn == null) {
-    		throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
-    	} else if (args.equals(fn.args)) {
-    		c.type = fn.returns;
-    		return c.type;
-    	} else {
-    		throw new TypeException(Kind.INVALID_ARG_TYPES, c.location);
-    	}
+		Type args = c.args.accept(this);
+
+		if (args.equals(fn.args)) {
+			c.type = fn.returns;
+			return c.type;
+		} else {
+			throw new TypeException(Kind.INVALID_ARG_TYPES, c.location);
+		}
     }
 
     public Type visit(Binary b) throws XicException {

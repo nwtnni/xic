@@ -2,6 +2,8 @@ package type;
 
 import org.pcollections.*;
 
+import type.TypeException.Kind;
+
 public class Context<K, V> {
 
     private PStack<PMap<K, V>> context;
@@ -10,17 +12,20 @@ public class Context<K, V> {
         this.context = ConsPStack.singleton(HashTreePMap.empty());
     }
 
-    public V lookup(K k) throws Exception {
+    public V lookup(K k) {
         for (PMap<K, V> map : context) {
             V v = map.get(k);
             if (v != null){
                 return v;
             }
         }
-        throw new Exception("Unbound value: " + k);
+        return null;
     }
 
-    public void add(K k, V t) {
+    public void add(K k, V t) throws TypeException {
+        if (lookup(k) != null) {
+            throw new TypeException(Kind.DECLARATION_CONFLICT);
+        }
         PMap<K, V> map = context.get(0);
         context = context.minus(0);
         map = map.plus(k, t);
@@ -36,10 +41,6 @@ public class Context<K, V> {
     }
 
     public boolean inContext(K id) {
-    	try {
-    		return lookup(id) != null;
-    	} catch (Exception e) {
-    		return false;
-    	}
+        return lookup(id) != null;
 	}
 }
