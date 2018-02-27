@@ -322,7 +322,7 @@ public class TypeCheck extends Visitor<Type> {
                 	throw new TypeException(Kind.NOT_UNIFORM_ARRAY, a.location);
                 }
             }
-            a.type = at;
+            a.type = new Type(at);
             return a.type;
         }
     }
