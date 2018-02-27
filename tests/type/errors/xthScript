@@ -11,6 +11,9 @@ xic ("Test --typecheck") "--typecheck" {
     bad_assign1.xi;
     bad_assign2.xi;
     bad_function_declarations1.xi;
+    bad_length1.xi;
+    bad_length2.xi;
+    bad_length3.xi;
     bad_multiarray1.xi;
     bad_multiarray2.xi;
     bad_primitive1.xi;
