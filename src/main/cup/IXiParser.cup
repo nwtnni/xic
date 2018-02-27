@@ -152,9 +152,9 @@ FnDefList ::=
         :}
     ;
 
-Interface ::= FnDef:f FnDefList:fdl
+Interface ::= FnDefList:fdl FnDef:f
         {:
-            fdl.add(0,f);
+            fdl.add(f);
             RESULT = new Program(fdlxleft, fdl);
         :}
     ;

@@ -6,6 +6,7 @@ xic ("Test --help") "--help" {
 
 xic ("Test --parse") "--parse" {
     arrays.xi;
+    empty_functions.xi;
     functions1.xi;
     functions2.xi;
     if-while.xi;
