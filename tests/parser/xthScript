@@ -12,6 +12,7 @@ xic ("Test --parse") "--parse" {
     interface1.ixi;
     nested_return.xi;
     nestedblocks.xi;
+    paren_wrapped_return.xi;
     precedence.xi;
     procedures1.xi;
     use1.xi;
