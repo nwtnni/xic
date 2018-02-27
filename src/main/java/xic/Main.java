@@ -9,9 +9,9 @@ public class Main {
         boolean parseFlag = false;
         boolean typeFlag = false;
         boolean helpFlag = false;
-        String sourcePath = "";
-        String dPath = "";
-        String libPath = "";
+        String source = "";
+        String sink = "";
+        String lib = "";
 
         ArrayList<String> sourceFiles = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
@@ -24,11 +24,11 @@ public class Main {
             } else if (args[i].equals("--help")) {
                 helpFlag = true;
             } else if (args[i].equals("-sourcepath") && i + 1 < args.length) {
-                sourcePath = args[++i];
+                source = args[++i];
             } else if (args[i].equals("-D") && i + 1 < args.length) {
-                dPath = args[++i];
+                sink = args[++i];
             } else if (args[i].equals("-libpath") && i + 1 < args.length){
-                libPath = args[++i];
+                lib = args[++i];
             } else {
                 sourceFiles.add(args[i]);
             }
@@ -39,7 +39,7 @@ public class Main {
             return;
         }
         
-        Xic xic = new Xic(sourcePath, dPath, libPath);
+        Xic xic = new Xic(source, sink, lib);
         
         try {
             for (String unit : sourceFiles) {

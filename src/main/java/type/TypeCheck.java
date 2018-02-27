@@ -8,12 +8,12 @@ import xic.XicException;
 
 public class TypeCheck extends Visitor<Type> {
 
-    public static void check(String source, Node ast) throws XicException {
-    	ast.accept(new TypeCheck(source, ast));
+    public static void check(String lib, Node ast) throws XicException {
+    	ast.accept(new TypeCheck(lib, ast));
     }
 
-    private TypeCheck(String source, Node ast) throws XicException {
-    	this.fns = UseImporter.resolve(source, ast);
+    private TypeCheck(String lib, Node ast) throws XicException {
+    	this.fns = UseImporter.resolve(lib, ast);
     	this.types = new TypeContext();
     	this.vars = new VarContext();
     }
