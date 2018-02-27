@@ -12,14 +12,12 @@ public class Xic {
 	
 	private String source; // for source path
 	private String sink; // for output path
-	private String loads; // for use path - interfaces only
+	private String lib; // for use path - interfaces only
 
-
-	
-	public Xic(String source, String sink, String loads) {
+	public Xic(String source, String sink, String lib) {
 		this.source = source;
 		this.sink = sink;
-		this.loads = loads;
+		this.lib = lib;
 	}
 
 	public XiLexer lex(String unit) throws XicException {
@@ -52,7 +50,7 @@ public class Xic {
 	
 	public Node typeCheck(String unit) throws XicException {
 		Node ast = parse(unit);
-		TypeCheck.check(loads, ast);
+		TypeCheck.check(lib, ast);
 		//TODO: Invariant check phase?
 		return ast;
 	}
@@ -66,6 +64,6 @@ public class Xic {
 	}
 
 	public void printTyped(String unit) throws XicException {
-		type.Printer.print(source, sink, unit, loads);
+		type.Printer.print(source, sink, lib, unit);
 	}
 }

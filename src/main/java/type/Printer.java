@@ -10,7 +10,7 @@ import xic.XicException;
 
 public class Printer {
 	
-	public static void print(String source, String sink, String unit, String loads) throws XicException {
+	public static void print(String source, String sink, String lib, String unit) throws XicException {
 		String ext = FilenameUtils.getExtension(unit);
     	String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
     	Node ast = null;
@@ -22,10 +22,10 @@ public class Printer {
 	        		case "xi":
 	        			output += ".typed";
 	        			ast = XiParser.from(source, unit);
-	        			if (loads.equals("")) {
-							loads = FilenameUtils.concat(source, FilenameUtils.getFullPath(unit));
+	        			if (lib.equals("")) {
+							lib = FilenameUtils.concat(source, FilenameUtils.getFullPath(unit));
 						}
-	        			TypeCheck.check(loads, ast);
+	        			TypeCheck.check(lib, ast);
 	        			break;
 	        		default:
 	        			throw XicException.unsupported(unit);
