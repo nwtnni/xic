@@ -11,6 +11,7 @@ public class Main {
         boolean helpFlag = false;
         String sourcePath = "";
         String dPath = "";
+        String libPath = "";
 
         ArrayList<String> sourceFiles = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
@@ -26,18 +27,19 @@ public class Main {
                 sourcePath = args[++i];
             } else if (args[i].equals("-D") && i + 1 < args.length) {
                 dPath = args[++i];
+            } else if (args[i].equals("-libpath") && i + 1 < args.length){
+                libPath = args[++i];
             } else {
                 sourceFiles.add(args[i]);
             }
         }
-
         // Help flag given
         if (helpFlag || !(lexFlag || parseFlag || typeFlag)) { 
             displayHelp(); 
             return;
         }
         
-        Xic xic = new Xic(sourcePath, dPath);
+        Xic xic = new Xic(sourcePath, dPath, libPath);
         
         try {
             for (String unit : sourceFiles) {

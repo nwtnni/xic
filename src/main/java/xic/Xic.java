@@ -10,12 +10,16 @@ import type.TypeCheck;
 
 public class Xic {
 	
-	private String source;
-	private String sink;
+	private String source; // for source path
+	private String sink; // for output path
+	private String loads; // for use path - interfaces only
+
+
 	
-	public Xic(String source, String sink) {
+	public Xic(String source, String sink, String loads) {
 		this.source = source;
 		this.sink = sink;
+		this.loads = loads;
 	}
 
 	public XiLexer lex(String unit) throws XicException {
@@ -48,7 +52,7 @@ public class Xic {
 	
 	public Node typeCheck(String unit) throws XicException {
 		Node ast = parse(unit);
-		TypeCheck.check(source, ast);
+		TypeCheck.check(loads, ast);
 		//TODO: Invariant check phase?
 		return ast;
 	}
@@ -62,6 +66,6 @@ public class Xic {
 	}
 
 	public void printTyped(String unit) throws XicException {
-		type.Printer.print(source, sink, unit);
+		type.Printer.print(source, sink, unit, loads);
 	}
 }
