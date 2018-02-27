@@ -66,10 +66,10 @@ public class Binary extends Node {
             case AND:
             case OR:
                 return true;
-            default:
-                assert false;
-                return false;
         }
+        // Unreachable
+        assert false;
+        return false;
     }
 
     public boolean acceptsInt() {

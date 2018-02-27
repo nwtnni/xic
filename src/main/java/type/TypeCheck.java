@@ -78,7 +78,7 @@ public class TypeCheck extends Visitor<Type> {
     	Type rt = a.rhs.accept(this);
 
     	//TODO subtyping
-    	if (!lt.equals(rt)) {
+    	if (!types.isSubType(rt, lt)) {
     		throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
     	}
 

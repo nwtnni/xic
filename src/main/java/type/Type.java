@@ -10,9 +10,7 @@ public class Type {
     public static final Type BOOL = new Type("bool");
     public static final Type UNIT = new Type("_unit");
     public static final Type VOID = new Type("_void");
-    public static final Type POLY = new Type("_poly"); // For the empty array {}
-
-    public static final Type[] TYPES = {INT, BOOL, UNIT, VOID, POLY};
+    public static final Type POLY = new Type(new Type("_poly")); // For the empty array {}
 
     public enum Kind {
         ARRAY, CLASS, TUPLE
@@ -22,12 +20,14 @@ public class Type {
     public String id;
     public ArrayList<Type> children;
 
+    // Primitives
     protected Type(String id) {
         this.kind = Kind.CLASS;
         this.id = id;
         this.children = null;
     }
 
+    // Arrays
     public Type(Type child) {
         this.kind = Kind.ARRAY;
         this.id = null;

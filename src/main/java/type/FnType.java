@@ -24,7 +24,7 @@ public class FnType extends Visitor<Type> {
     		args = f.args.accept(this);
     		returns = f.returns.accept(this);
     	} catch (XicException xic) {
-    		//TODO assert unreachable?
+    		// Unreachable
     		assert false;
     	}
     	return null;

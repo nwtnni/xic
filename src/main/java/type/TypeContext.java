@@ -4,22 +4,58 @@ public class TypeContext extends Context<Type, Type> {
 
     public TypeContext() {
         super();
-        for (Type t : Type.TYPES) {
-            try {
-                add(t, Type.UNIT);
-            } catch (TypeException e) {
-                // impossible when constructing new clean TypeContext
-            } 
-        }
+        try {
+            add(Type.BOOL, Type.UNIT);
+            add(Type.INT, Type.UNIT);
+            add(Type.POLY, Type.UNIT);
+            add(Type.VOID, Type.UNIT);
+            add(Type.UNIT, null);
+        } catch (TypeException e) {
+            // impossible when constructing new clean TypeContext
+        } 
     }
 
-    public void validate(Type t, Type p) throws Exception {
-        Type ancestor = p;
-        while (!ancestor.equals(Type.UNIT)) {
-            if (ancestor.equals(t)) {
-                throw new Exception("Cyclic type dependency.");
+    public void validate(Type child, Type parent) throws TypeException {
+        Type ancestor = parent;
+        while (ancestor != null) {
+            if (ancestor.equals(child)) {
+                throw new TypeException(TypeException.Kind.CYCLIC_TYPE_DEPENDENCY);
             }
             ancestor = lookup(ancestor);
         }
+    }
+
+    public boolean isSubType(Type child, Type parent) {
+        switch (child.kind) {
+            case CLASS:
+                Type ancestor = child;
+                while (ancestor != null) {
+                    if (ancestor.equals(parent)) {
+                        return true;
+                    }
+                    ancestor = lookup(ancestor);
+                }
+                return false;
+            case TUPLE:
+                int cs = child.children.size();
+                int ps =  parent.children.size();
+                if (cs != ps) {
+                    return false;
+                }
+                for (int i = 0; i < cs; i++) {
+                    if (!isSubType(child.children.get(i), parent.children.get(i))) {
+                        return false;
+                    }
+                }
+                return true;
+            case ARRAY:
+                if (child.equals(Type.POLY) && parent.kind.equals(Type.Kind.ARRAY)) {
+                    return true;
+                }
+                return child.equals(parent);
+        }
+        // Unreachable
+        assert false;
+        return false;
     }
 }
