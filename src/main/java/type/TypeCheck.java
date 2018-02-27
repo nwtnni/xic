@@ -77,10 +77,13 @@ public class TypeCheck extends Visitor<Type> {
     	Type lt = a.lhs.accept(this);
     	Type rt = a.rhs.accept(this);
 
-    	//TODO subtyping
     	if (!types.isSubType(rt, lt)) {
     		throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
-    	}
+		}
+		
+		if (lt.equals(Type.UNIT) && !(a.rhs instanceof Call)) 
+			throw new TypeException(Kind.INVALID_WILDCARD, a.location);{
+		}
 
 		a.type = Type.UNIT;
 		return a.type;
