@@ -55,16 +55,6 @@ public class Type {
         }
     }
     
-    protected Type() {}
-    
-    public boolean isDeclaration() {
-    	return false;
-    }
-    
-    public String getDeclaration() {
-    	return null;
-    }
-    
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Type)) { return false; }
