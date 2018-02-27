@@ -72,19 +72,16 @@ start with      Interface;
 // Function Definitions
 FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
-        {: 
-        	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
-        	Node returns = rtl.size() == 1 ? rtl.get(0) : new Multiple(rtlxleft, rtl, Multiple.Kind.FN_RETURNS);
-            RESULT = new Fn(idxleft, id, args, returns);
-        :}
-    ;
-
-ProcedureDef ::= 
-    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
-        {: 
-        	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
-            RESULT = new Fn(idxleft, id, args);
-        :}
+    {:
+        Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+        Node returns = rtl.size() == 1 ? rtl.get(0) : new Multiple(rtlxleft, rtl, Multiple.Kind.FN_RETURNS);
+        RESULT = new Fn(idxleft, id, args, returns);
+    :}
+    | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
+    {:
+        Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+        RESULT = new Fn(idxleft, id, args);
+    :}
     ;
 
 ArgsTypeList ::= 
@@ -153,15 +150,11 @@ FnDefList ::=
             fdl.add(f);
             RESULT = fdl;
         :}
-    | FnDefList:fdl ProcedureDef:f
-        {:
-            fdl.add(f);
-            RESULT = fdl;
-        :}
     ;
 
-Interface ::= FnDefList:fdl
+Interface ::= FnDef:f FnDefList:fdl
         {:
+            fdl.add(0,f);
             RESULT = new Program(fdlxleft, fdl);
         :}
     ;

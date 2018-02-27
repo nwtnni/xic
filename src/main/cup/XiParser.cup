@@ -100,8 +100,9 @@ OptSemicolon ::=
     ;
 
 // Program
-Program ::= UseDeclarations:uds FnDeclarations:fds
+Program ::= UseDeclarations:uds FnDeclr:f FnDeclarations:fds
     {:
+        fds.add(0,f);
         RESULT = new Program(udsxleft, uds, fds);
     :}
     ;

@@ -16,6 +16,8 @@ xic ("Test --parse") "--parse" {
     precedence.xi;
     procedures1.xi;
     use1.xi;
+    bad_empty.xi;
+    bad_empty.ixi;
     bad_fun_def.ixi;
     bad_function.xi;
     bad_neg_maxint.xi;
