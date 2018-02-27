@@ -62,18 +62,14 @@ public class TypeCheck extends Visitor<Type> {
      * Statement nodes
      */
     public Type visit(Declare d) throws XicException {
-        if (vars.inContext(d.id) || fns.inContext(d.id)){
-            throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
-        }
-        
     	if (d.isUnderscore()) {
     		d.type = Type.UNIT;
-    	}
-    	else {
+    	} else if (vars.inContext(d.id) || fns.inContext(d.id)){
+            throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
+        } else {
     		d.type = d.xiType.accept(this);
     		vars.add(d.id, d.type);
     	}
-    	
     	return d.type;
     }
 
