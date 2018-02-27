@@ -12,18 +12,24 @@ public class TypeCheck extends Visitor<Type> {
     	ast.accept(new TypeCheck(lib, ast));
     }
 
+    protected TypeCheck() {
+    	this.fns = new FnContext();
+    	this.types = new TypeContext();
+    	this.vars = new VarContext();
+    }
+    
     private TypeCheck(String lib, Node ast) throws XicException {
-    	this.fns = UseImporter.resolve(lib, ast);
+    	this.fns = Importer.resolve(lib, ast);
     	this.types = new TypeContext();
     	this.vars = new VarContext();
     }
 
+    protected FnContext fns;
+    protected VarContext vars;
     private TypeContext types;
-    private FnContext fns;
-    private VarContext vars;
     private Type returns;
 
-    /*
+    /*#
      * Top-level AST nodes
      */
     public Type visit(Program p) throws XicException {
