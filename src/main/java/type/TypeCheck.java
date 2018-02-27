@@ -37,7 +37,7 @@ public class TypeCheck extends Visitor<Type> {
     public Type visit(Fn f) throws XicException {
     	Type args = f.args.accept(this);
 
-    	vars.push();
+        vars.push();
 
     	switch (args.kind) {
     	case CLASS:
@@ -57,9 +57,10 @@ public class TypeCheck extends Visitor<Type> {
     	}
 
     	returns = fns.lookup(f.id).returns;
-
         Type ft = f.block == null ? null : f.block.accept(this);
+
         vars.pop();
+
         switch (f.kind) {
         	case FN:
         		if (!ft.equals(Type.VOID)) {
@@ -135,6 +136,8 @@ public class TypeCheck extends Visitor<Type> {
 
     	if (b.statements.size() == 0) { return Type.UNIT; }
 
+        vars.push();
+
     	int last = b.statements.size() - 1;
     	for (int i = 0; i < last; i++) {
     		Type st = b.statements.get(i).accept(this);
@@ -152,6 +155,8 @@ public class TypeCheck extends Visitor<Type> {
 
     	Type bt = b.statements.get(last).accept(this);
 
+        vars.pop();
+
     	if (bt.equals(Type.VOID)) {
     		b.type = Type.VOID;
     	} else if (bt.equals(Type.UNIT)) {
@@ -160,6 +165,7 @@ public class TypeCheck extends Visitor<Type> {
     		//TODO internal error
     		assert false;
     	}
+
     	return b.type;
     }
 
@@ -168,12 +174,8 @@ public class TypeCheck extends Visitor<Type> {
     		throw new TypeException(Kind.INVALID_GUARD, i.guard.location);
     	}
 
-    	vars.push();
     	Type it = i.block.accept(this);
-    	vars.pop();
-    	vars.push();
     	Type et = i.hasElse() ? i.elseBlock.accept(this) : null;
-    	vars.pop();
 
     	if (et != null && it.equals(Type.VOID) && et.equals(Type.VOID)) {
     		i.type = Type.VOID;
@@ -188,9 +190,7 @@ public class TypeCheck extends Visitor<Type> {
     		throw new TypeException(Kind.INVALID_GUARD, w.guard.location);
     	}
 
-    	vars.push();
     	w.block.accept(this);
-    	vars.pop();
     	w.type = Type.UNIT;
     	return w.type;
     }
