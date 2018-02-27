@@ -49,10 +49,7 @@ public class TypeContext extends Context<Type, Type> {
                 }
                 return true;
             case ARRAY:
-                if (child.equals(Type.POLY) && parent.kind.equals(Type.Kind.ARRAY)) {
-                    return true;
-                }
-                return child.equals(parent);
+            	return child.equals(parent);
         }
         // Unreachable
         assert false;

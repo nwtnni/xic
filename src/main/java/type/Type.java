@@ -64,11 +64,9 @@ public class Type {
         if (kind == Kind.CLASS && t.kind == Kind.CLASS) {
             return t.id.equals(id);
         } else if (kind == Kind.ARRAY && t.kind == Kind.ARRAY) {
-            return t.children.get(0).equals(children.get(0));
+            return t.children.get(0).equals(children.get(0)) || t == Type.POLY || this == Type.POLY;
         } else if (kind == Kind.TUPLE && t.kind == Kind.TUPLE) {
-        	
         	if (children.size() != t.children.size()) { return false; }
-        	
         	for (int i = 0; i < children.size(); i++) {
         		if (!children.get(i).equals(t.children.get(i))) {
         			return false;
@@ -84,6 +82,8 @@ public class Type {
     public int hashCode() {
         if (kind == Kind.CLASS) {
             return id.hashCode();
+        } else if (kind == Kind.ARRAY) {
+        	return 100;
         } else {
         	int hash = 1;
         	for (Type child : children) {
