@@ -2,7 +2,7 @@ foo() {
     x:int = 1
     y:bool = true
     z:int
-    x = z
+    z = x
     y':bool
     y' = y
     return

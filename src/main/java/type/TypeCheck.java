@@ -35,45 +35,26 @@ public class TypeCheck extends Visitor<Type> {
     }
 
     public Type visit(Fn f) throws XicException {
-    	Type args = f.args.accept(this);
 
         vars.push();
+    	f.args.accept(this);
 
-    	switch (args.kind) {
-    	case CLASS:
-    	case ARRAY:
-    		if (args.isDeclaration()) {
-        		vars.add(args.getDeclaration(), args);
-    		} else {
-    			assert args.equals(Type.UNIT);
-    		}
-    		break;
-    	case TUPLE:
-    		for (Type child : args.children) {
-    			assert child.isDeclaration();
-    			vars.add(child.getDeclaration(), child);
-    		}
-    		break;
-    	}
+		FnType fn = fns.lookup(f.id);
 
-    	returns = fns.lookup(f.id).returns;
-        Type ft = f.block == null ? null : f.block.accept(this);
-
+		if (fn == null) { 
+			throw new TypeException(Kind.SYMBOL_NOT_FOUND, f.location);
+		}
+		
+		returns = fn.returns;
+		
+		Type ft = f.block.accept(this);
         vars.pop();
 
-        switch (f.kind) {
-        	case FN:
-        		if (!ft.equals(Type.VOID)) {
-        			throw new TypeException(Kind.CONTROL_FLOW, f.location);
-        		}
-        		break;
-        	case PROC:
-        		break;
-        	default:
-        		//TODO internal error
-        		assert false;
+        if (f.isFn() && !ft.equals(Type.VOID)) {
+        	throw new TypeException(Kind.CONTROL_FLOW, f.location);
         }
-		f.type = Type.UNIT;
+        
+        f.type = Type.UNIT;
         return f.type;
     }
 
@@ -84,42 +65,29 @@ public class TypeCheck extends Visitor<Type> {
         if (vars.inContext(d.id) || fns.inContext(d.id)){
             throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
         }
+        
     	if (d.isUnderscore()) {
-    		d.type = new DeclareType("_", Type.UNIT);
+    		d.type = Type.UNIT;
     	}
     	else {
-    		d.type = new DeclareType(d.id, d.xiType.accept(this));
+    		d.type = d.xiType.accept(this);
+    		vars.add(d.id, d.type);
     	}
+    	
     	return d.type;
     }
 
     public Type visit(Assign a) throws XicException {
-    	Type lhs = a.lhs.accept(this);
-    	Type rhs = a.rhs.accept(this);
+    	Type lt = a.lhs.accept(this);
+    	Type rt = a.rhs.accept(this);
 
-    	if (!lhs.equals(rhs)) {
+    	//TODO subtyping
+    	if (!lt.equals(rt)) {
     		throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
     	}
 
-    	switch (lhs.kind) {
-			case ARRAY:
-			case CLASS:
-				if (lhs.isDeclaration()) {
-					vars.add(lhs.getDeclaration(), lhs);
-				}
-				break;
-			case TUPLE:
-				for (Type child : lhs.children) {
-					if (child.isDeclaration()) {
-						vars.add(child.getDeclaration(), child);
-					}
-				}
-				break;
-		}
-
 		a.type = Type.UNIT;
 		return a.type;
-
     }
 
     public Type visit(Return r) throws XicException {
@@ -133,39 +101,28 @@ public class TypeCheck extends Visitor<Type> {
     }
 
     public Type visit(Block b) throws XicException {
+    	b.type = Type.UNIT;
+    	vars.push();
+    	int size = b.statements.size();
+    	
+    	for (int i = 0; i < size; i++) {
 
-    	if (b.statements.size() == 0) { return Type.UNIT; }
+    		Node s = b.statements.get(i);
+    		Type st = s.accept(this);
 
-        vars.push();
-
-    	int last = b.statements.size() - 1;
-    	for (int i = 0; i < last; i++) {
-    		Type st = b.statements.get(i).accept(this);
-    		if (st.equals(Type.VOID)) {
-    			throw new TypeException(Kind.UNREACHABLE, b.statements.get(i + 1).location);
-    		} else if (!st.equals(Type.UNIT)) {
-                // Can be either function call or variable declaration
-                if (st.isDeclaration()) {
-                    vars.add(st.getDeclaration(), st);
-                } else {
-                    throw new TypeException(Kind.UNUSED_FUNCTION, b.statements.get(i).location);
-                }
+    		// Unused function result
+    		if (!st.equals(Type.VOID) && !st.equals(Type.UNIT) && s instanceof Call) {
+                throw new TypeException(Kind.UNUSED_FUNCTION, b.statements.get(i).location);
+    		}
+    		
+    		// Unreachable code
+    		if (i < size - 1 && st.equals(Type.VOID)) {
+        		throw new TypeException(Kind.UNREACHABLE, b.statements.get(i + 1).location);
+    		} else {
+    			b.type = st.equals(Type.VOID) ? Type.VOID : Type.UNIT;
     		}
     	}
-
-    	Type bt = b.statements.get(last).accept(this);
-
         vars.pop();
-
-    	if (bt.equals(Type.VOID)) {
-    		b.type = Type.VOID;
-    	} else if (bt.equals(Type.UNIT)) {
-    		b.type = Type.UNIT;
-    	} else {
-    		//TODO internal error
-    		assert false;
-    	}
-
     	return b.type;
     }
 
@@ -270,12 +227,11 @@ public class TypeCheck extends Visitor<Type> {
     }
 
     public Type visit(Var v) throws XicException {
-    	try {
-    		v.type = vars.lookup(v.id);
-    		return v.type;
-    	} catch (Exception todofixpls) {
-    		throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
-    	}
+		v.type = vars.lookup(v.id);
+		if (v.type == null) {
+			throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
+		}	
+    	return v.type;
     }
 
     public Type visit(Multiple m) throws XicException {
@@ -287,7 +243,6 @@ public class TypeCheck extends Visitor<Type> {
 		}
 		m.type = new Type(mt);
 		return m.type;
-
     }
 
     public Type visit(Index i) throws XicException {
