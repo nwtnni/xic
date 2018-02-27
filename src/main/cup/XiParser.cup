@@ -67,7 +67,7 @@ non terminal    Node                ArrayCall;
 non terminal    ArrayList<Node>     IndexList;
 non terminal    ArrayList<Node>     ArrayElems, FArrayElems;
 non terminal    Node                VarDeclr, VarType, KeyType;
-non terminal    Node                Assign, AssignName;
+non terminal    Node                Assign, SingleAssignName, MultiAssignName;
 non terminal    ArrayList<Node>     IDList, FIDList;
 non terminal    Node                WhileStmt, IfStmt, ElseStmt;
 non terminal    Node                BlockOptBraces, BlockStmts;
@@ -472,16 +472,18 @@ KeyType ::=
 Assign ::= 
     IDList:il EQ Expr:e
     {:
-        if (il.size() == 1) {
-            RESULT = new Assign(ilxleft, il.get(0), e);
-        } else {
-            RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), e);
-        }
-    :};
+        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), e);
+    :}
+    | SingleAssignName:san EQ Expr:e
+    {:
+        RESULT = new Assign(sanxleft, san, e);
+    :}
+    ;
 
 IDList ::= 
-    AssignName:an FIDList:fl
+    MultiAssignName:an COMMA MultiAssignName: bn FIDList:fl
     {:
+        fl.add(0, bn);
         fl.add(0, an);
         RESULT = fl;
     :};
@@ -490,14 +492,27 @@ FIDList ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA AssignName:an FIDList:fl
+    | COMMA MultiAssignName:an FIDList:fl
     {:
         fl.add(0, an);
         RESULT = fl;
     :}
     ;
 
-AssignName ::= 
+// LHS of multiple assignment
+MultiAssignName ::=
+    UNDERSCORE:u
+    {:
+        RESULT = new Declare(uxleft);
+    :}
+    | VarDeclr:v
+    {:
+        RESULT = v;
+    :}
+    ;
+
+// LHS of single assignment
+SingleAssignName ::= 
     UNDERSCORE:u
     {:
         RESULT = new Declare(uxleft);
