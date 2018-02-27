@@ -59,7 +59,7 @@ terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Node                Expr;
+non terminal    Node                Expr, ExprArrayCall;
 non terminal    ArrayList<Node>     ExprList, FExprList;
 non terminal    Node                FnCall;
 non terminal    ArrayList<Node>     Args, FArgs; 
@@ -71,12 +71,11 @@ non terminal    Node                Assign, SingleAssignName, MultiAssignName;
 non terminal    ArrayList<Node>     IDList, FIDList;
 non terminal    Node                WhileStmt, IfStmt, ElseStmt;
 non terminal    Node                BlockOptBraces, BlockStmts;
-non terminal    Node                SingleStmtNoReturn, Procedure, StmtNoReturn;
+non terminal    Node                SingleStmtNoReturn, StmtNoReturn;
 non terminal    ArrayList<Node>     StmtListNoReturn;
 non terminal    Node                FnDeclr, FnDef;
 non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
 non terminal    Node                FnType;
-non terminal    Node                ProcedureDeclr, ProcedureDef;
 non terminal    Node                UseDeclr;
 non terminal    ArrayList<Node>     UseDeclarations, FnDeclarations;
 non terminal    Node                Program;
@@ -395,6 +394,7 @@ ArrayCall ::=
             }
             RESULT = index;
         :}
+
     ;
 
 IndexList ::=
@@ -556,6 +556,22 @@ ElseStmt ::=
     ;
 
 // Expressions
+ExprArrayCall ::=
+    ArrayCall:ac
+    {:
+        RESULT = ac;
+    :}
+    | LBRACE:lbrace ArrayElems:ae RBRACE LBRACK Expr:e RBRACK IndexList:il
+    {:
+        il.add(0,e);
+        Index index = new Index(lbracexleft, new XiArray(aexleft, ae), il.get(0));
+        for(int i=1; i<il.size(); i++) {
+            Node n = il.get(i);
+            index = new Index(n.location, index, n);
+        }
+        RESULT = index;
+    :}
+    ;
 Expr ::= 
     LPAREN Expr:e RPAREN
         {:
@@ -630,7 +646,7 @@ Expr ::=
         {:
             RESULT = fc;
         :}
-    | ArrayCall:ac
+    | ExprArrayCall:ac
         {:
             RESULT = ac;
         :}

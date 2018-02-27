@@ -6,7 +6,7 @@ import xic.XicException;
 // Used for Array Calls (eg a[0][1])
 public class Index extends Node {
     
-    public Node array;
+    public Node array; //The "name" of the array
     public Node index;
 
     public Index(Location location, Node array, Node index) {
