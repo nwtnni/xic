@@ -96,6 +96,7 @@ non terminal    ArrayList<Node>     ArrayElems, FArrayElems;
 non terminal    Node                VarDeclr, VarType, KeyType;
 non terminal    ArrayList<Node>     VarTypeIndexList, VarTypeIndexListNoExpr;
 non terminal    Node                Assign, SingleAssignName, MultiAssignName;
+non terminal    Node                AssignVarDeclr, AssignVarType;
 non terminal    ArrayList<Node>     IDList, FIDList;
 non terminal    Node                WhileStmt, IfStmt, ElseStmt;
 non terminal    Node                BlockOptBraces, BlockStmts;
@@ -565,7 +566,7 @@ MultiAssignName ::=
     {:
         RESULT = new Declare(uxleft);
     :}
-    | VarDeclr:v
+    | AssignVarDeclr:v
     {:
         RESULT = v;
     :}
@@ -585,11 +586,34 @@ SingleAssignName ::=
     {:
         RESULT = a;
     :}
-    | VarDeclr:v
+    | AssignVarDeclr:v
     {:
         RESULT = v;
     :}
     ;
+
+AssignVarDeclr ::= 
+    IDENTIFIER:id COLON AssignVarType:type 
+    {:
+        RESULT = new Declare(idxleft, id, type);
+    :}
+    ;
+
+AssignVarType ::=
+    KeyType:type VarTypeIndexListNoExpr:vtilne
+    {:
+        for(int i=vtilne.size()-1; i>=0; i--) {
+            if(vtilne.get(i) == null){
+                type = new XiType(typexleft,type);
+            }
+            else {
+                type = new XiType(typexleft, type, vtilne.get(i));
+            }
+        }
+        RESULT = type;
+    :}
+    ;
+
 
 // While Statement
 WhileStmt ::= WHILE:w Expr:e BlockOptBraces:block
