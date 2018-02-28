@@ -18,6 +18,7 @@ vardecl02-2.xi - Array Declaration Indexing
 vardecl06-2.xi - Error Location
 vardecl07-2.xi - Error Location
 vardecl08-2.xi - Edge Case of Array Declaration
+group_of_anonymous01_01-3.xi - Array Calls have higher precedence
 group_of_anonymous03_01-3.xi - Array Calls have higher precedence
 group_of_anonymous04_01-3.xi - Array Declaration (Paren Order)
 group_of_anonymous04_02-3.xi - Extra parens from block
