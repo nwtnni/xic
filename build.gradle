@@ -70,29 +70,29 @@ task xic(type: Exec) {
 
 // test tasks left here for legacy purposes
 
-task regression(type: GradleBuild) {
+task regression(type: GradleBuild, dependsOn:xic) {
     tasks = ['testLexer', 'testParser', 'testType']
 }
 
-task fails(type: Exec) {
+task fails(type: Exec, dependsOn:xic) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript\
     && printf \"\\n========================================\\n\\n\""
 }
 
-task testLexer(type: Exec) {
+task testLexer(type: Exec, dependsOn:xic) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript && echo\
     && printf \"\\n========================================\\n\\n\""
 }
 
-task testParser(type: Exec) {
+task testParser(type: Exec, dependsOn:xic) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript && echo\
     && printf \"\\n========================================\\n\\n\""
 }
 
-task testType(type: Exec) {
+task testType(type: Exec, dependsOn:xic) {
     executable "sh"
     args "-c", "xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript\
     && printf \"\\n========================================\\n\\n\"\
