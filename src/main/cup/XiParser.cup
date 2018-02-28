@@ -41,6 +41,32 @@ parser code {:
 
     public void syntax_error(Symbol cur_token) {}
 
+    private Node evalInt(TempInt expr, boolean negate) throws ParseException {
+        try {
+            if (negate) {
+                expr.literal = "-" + expr.literal;
+            }
+            return new XiInt(expr.location, Long.valueOf(expr.literal));
+        } catch (NumberFormatException ex) {
+            throw ParseException.numberFormatException(expr.location, expr.literal);
+        }
+    }
+
+    private Node evalExpr(Node expr) throws ParseException {
+        if (expr instanceof TempInt) {
+            return evalInt((TempInt) expr, false);
+        }
+        return expr;
+    }
+
+    private Node evalNegExpr(Location l, Node expr) throws ParseException {
+        if (expr instanceof TempInt) {
+            expr.location = l;
+            return evalInt((TempInt) expr, true);
+        }
+        return new Unary(l, Unary.Kind.INEGATE, expr);
+    }
+
 :};
 
 scan with {: return lexer.nextToken(); :};
@@ -54,7 +80,7 @@ terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
 terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
 terminal    Boolean         TRUE, FALSE; 
 terminal    String          IDENTIFIER;
-terminal    Long            INTEGER;
+terminal    String          INTEGER;
 terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
 
@@ -263,7 +289,7 @@ ExprList ::=
     :}
     | Expr:e FExprList:fel
     {:
-        fel.add(0, e);
+        fel.add(0, evalExpr(e));
         RESULT = fel;
     :}
     ;
@@ -274,7 +300,7 @@ FExprList ::=
     :}
     | COMMA Expr:e FExprList:fel 
     {:
-        fel.add(0, e);
+        fel.add(0, evalExpr(e));
         RESULT = fel;
     :}
     ;
@@ -347,7 +373,7 @@ Args ::=
         :}
     | Expr:e FArgs:fargs
         {:  
-            fargs.add(0, e);
+            fargs.add(0, evalExpr(e));
             RESULT = fargs;
         :}
     ;
@@ -358,7 +384,7 @@ FArgs ::=
     :} 
     | COMMA Expr:e FArgs:fargs
         {:
-            fargs.add(0, e);
+            fargs.add(0, evalExpr(e));
             RESULT = fargs;
         :}
     ;
@@ -367,7 +393,7 @@ FArgs ::=
 ArrayCall ::= 
     STRING:s LBRACK Expr:e RBRACK IndexList:il 
         {:
-            il.add(0, e);
+            il.add(0, evalExpr(e));
             Index index = new Index(sxleft, new XiString(sxleft, s.name, s.value), il.get(0));
             for (int i = 1; i < il.size(); i++) {
                 Node n = il.get(i);
@@ -377,7 +403,7 @@ ArrayCall ::=
         :}
     | FnCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
-            il.add(0, e);
+            il.add(0, evalExpr(e));
             Index index = new Index(fcxleft, fc, il.get(0));
             for(int i =1; i<il.size(); i++) {
                 Node n = il.get(i);
@@ -387,7 +413,7 @@ ArrayCall ::=
         :}
     | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
         {:
-            il.add(0, e);
+            il.add(0, evalExpr(e));
             Index index = new Index(idxleft, new Var(idxleft, id), il.get(0));
             for(int i =1; i<il.size(); i++) {
                 Node n = il.get(i);
@@ -403,7 +429,7 @@ IndexList ::=
         :}
     | LBRACK Expr:e RBRACK IndexList:il
         {:
-            il.add(0, e);
+            il.add(0, evalExpr(e));
             RESULT = il;
         :}
     ;
@@ -415,7 +441,7 @@ ArrayElems ::=
     :}
     | Expr:e FArrayElems:fae
     {:
-        fae.add(0, e);
+        fae.add(0, evalExpr(e));
         RESULT = fae;
     :}
     ;
@@ -430,7 +456,7 @@ FArrayElems ::=
     :}
     | COMMA Expr:e FArrayElems:fae
     {:
-        fae.add(0, e);
+        fae.add(0, evalExpr(e));
         RESULT = fae;
     :}
     ;
@@ -449,7 +475,7 @@ VarType ::=
     :}
     | VarType:type LBRACK Expr:e RBRACK
     {:
-        RESULT = new XiType(typexleft, type, e);
+        RESULT = new XiType(typexleft, type, evalExpr(e));
     :}
     | KeyType:type 
     {:
@@ -472,11 +498,11 @@ KeyType ::=
 Assign ::= 
     IDList:il EQ Expr:e
     {:
-        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), e);
+        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), evalExpr(e));
     :}
     | SingleAssignName:san EQ Expr:e
     {:
-        RESULT = new Assign(sanxleft, san, e);
+        RESULT = new Assign(sanxleft, san, evalExpr(e));
     :}
     ;
 
@@ -534,13 +560,13 @@ SingleAssignName ::=
 // While Statement
 WhileStmt ::= WHILE:w Expr:e BlockOptBraces:block
     {:
-        RESULT = new While(wxleft, e, block);
+        RESULT = new While(wxleft, evalExpr(e), block);
     :};
 
 // If Statement
 IfStmt ::= IF:i Expr:e BlockOptBraces:block ElseStmt:el
     {:
-        If node = (el == null) ? new If(ixleft, e, block) : new If(ixleft, e, block, el);
+        If node = (el == null) ? new If(ixleft, evalExpr(e), block) : new If(ixleft, evalExpr(e), block, el);
         RESULT = node;
     :}
     ;
@@ -559,80 +585,80 @@ ElseStmt ::=
 Expr ::= 
     LPAREN Expr:e RPAREN
         {:
-            RESULT = e;
+            RESULT = evalExpr(e);
         :}
     | LNEG:l Expr:e
         {:
-            RESULT = new Unary(lxleft, Unary.Kind.LNEGATE, e);
+            RESULT = new Unary(lxleft, Unary.Kind.LNEGATE, evalExpr(e));
         :}
     | MINUS:m Expr:e
         {:
-            RESULT = new Unary(mxleft, Unary.Kind.INEGATE, e);
+            RESULT = evalNegExpr(mxleft, e);
         :}
         %prec UMINUS
     | Expr:e1 MULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.TIMES, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 HMULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.HIGH_TIMES, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.HIGH_TIMES, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 DIV:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.DIVISION, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.DIVISION, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 MOD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.MODULO, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.MODULO, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 ADD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.PLUS, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.PLUS, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 MINUS:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.MINUS, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.MINUS, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.LE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.LE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.LT, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.LT, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 GTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.GE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.GE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 GT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.GT, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.GT, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 EQEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.EQ, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.EQ, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 NEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.NE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.NE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LAND:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.AND, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.AND, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LOR:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.OR, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.OR, evalExpr(e1), evalExpr(e2));
         :}
     | FnCall:fc
         {:
             RESULT = fc;
         :}
-    | Expr:e LBRACK Expr:e2 RBRACK
+    | Expr:e1 LBRACK Expr:e2 RBRACK
         {:
-            Index index = new Index(exleft, e, e2);
+            Index index = new Index(e1xleft, evalExpr(e1), evalExpr(e2));
             RESULT = index;
         :}
     | LBRACE ArrayElems:ae RBRACE
@@ -649,7 +675,7 @@ Expr ::=
         :}
     | INTEGER:i
         {:
-            RESULT = new XiInt(ixleft, i);
+            RESULT = new TempInt(ixleft, i);
         :}
     | CHAR:c
         {:
