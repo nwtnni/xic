@@ -364,12 +364,6 @@ FnCall ::=
             RESULT = new Call(idxleft, id, arg);
         :}
         %prec FUNCTIONCALL
-    | LENGTH:l LPAREN Args:args RPAREN
-        {:
-            Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
-            RESULT = new Call(lxleft, "length", arg);
-        :}
-        %prec FUNCTIONCALL
     ;
 
 Args ::= 
@@ -706,6 +700,14 @@ Expr ::=
         {:
             RESULT = fc;
         :}
+    | LENGTH:l LPAREN Expr:e RPAREN
+        {:
+            ArrayList<Node> args = new ArrayList<Node>();
+            args.add(evalExpr(e));
+            Node arg = new Multiple(exleft, args, Multiple.Kind.FN_CALL);
+            RESULT = new Call(lxleft, "length", arg);
+        :}
+        %prec FUNCTIONCALL
     | Expr:e1 LBRACK Expr:e2 RBRACK
         {:
             Index index = new Index(e1xleft, evalExpr(e1), evalExpr(e2));
