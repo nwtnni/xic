@@ -4,4 +4,4 @@
   (use freddie1)
   (use bar)
   (use foo))
- ())
+ ((foo () () ())))

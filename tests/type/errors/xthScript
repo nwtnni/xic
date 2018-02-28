@@ -29,4 +29,5 @@ xic ("Test --typecheck") "--typecheck" {
     bad_subtract2.xi;
     bad_subtract3.xi;
     bad_undeclared_var1.xi;
+    bad_unreachable1.xi;
 }

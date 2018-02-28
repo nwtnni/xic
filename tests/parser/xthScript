@@ -6,15 +6,19 @@ xic ("Test --help") "--help" {
 
 xic ("Test --parse") "--parse" {
     arrays.xi;
+    empty_functions.xi;
     functions1.xi;
     functions2.xi;
     if-while.xi;
     interface1.ixi;
     nested_return.xi;
     nestedblocks.xi;
+    paren_wrapped_return.xi;
     precedence.xi;
     procedures1.xi;
     use1.xi;
+    bad_empty.xi;
+    bad_empty.ixi;
     bad_fun_def.ixi;
     bad_function.xi;
     bad_neg_maxint.xi;
