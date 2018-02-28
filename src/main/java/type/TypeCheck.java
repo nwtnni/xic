@@ -70,7 +70,7 @@ public class TypeCheck extends Visitor<Type> {
 	public Type visit(Declare d) throws XicException {
 		if (d.isUnderscore()) {
 			d.type = Type.UNIT;
-		} else if (vars.inContext(d.id) || fns.inContext(d.id)) {
+		} else if (vars.contains(d.id) || fns.contains(d.id)) {
 			throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
 		} else {
 			d.type = d.xiType.accept(this);
