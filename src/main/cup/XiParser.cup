@@ -692,10 +692,7 @@ Expr ::=
         :}
     | LENGTH:l LPAREN Expr:e RPAREN
         {:
-            ArrayList<Node> args = new ArrayList<Node>();
-            args.add(evalExpr(e));
-            Node arg = new Multiple(exleft, args, Multiple.Kind.FN_CALL);
-            RESULT = new Call(lxleft, "length", arg);
+            RESULT = new Call(lxleft, "length", evalExpr(e));
         :}
         %prec FUNCTIONCALL
     | Expr:e1 LBRACK Expr:e2 RBRACK
