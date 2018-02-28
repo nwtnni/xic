@@ -495,7 +495,7 @@ VarTypeIndexList ::=
     :}
     | LBRACK Expr:e RBRACK VarTypeIndexList:vtil
     {:
-        vtil.add(0,e);
+        vtil.add(0,evalExpr(e));
         RESULT = vtil;
     :}
     | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
