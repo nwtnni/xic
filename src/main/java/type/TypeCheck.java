@@ -70,7 +70,7 @@ public class TypeCheck extends Visitor<Type> {
 	public Type visit(Declare d) throws XicException {
 		if (d.isUnderscore()) {
 			d.type = Type.UNIT;
-		} else if (vars.contains(d.id) || fns.contains(d.id)) {
+		} else if (vars.inContext(d.id) || fns.inContext(d.id)) {
 			throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
 		} else {
 			d.type = d.xiType.accept(this);
@@ -80,15 +80,15 @@ public class TypeCheck extends Visitor<Type> {
 	}
 
 	public Type visit(Assign a) throws XicException {
-		Type rt = a.rhs.accept(this);
 		Type lt = a.lhs.accept(this);
+		Type rt = a.rhs.accept(this);
 
 		if (!types.isSubType(rt, lt)) {
 			throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
 		}
 
 		if (lt.equals(Type.UNIT) && !(a.rhs instanceof Call)) {
-			throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
+			throw new TypeException(Kind.INVALID_WILDCARD, a.location);
 		}
 
 		a.type = Type.UNIT;
