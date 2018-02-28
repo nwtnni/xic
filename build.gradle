@@ -68,30 +68,38 @@ task xic(type: Exec) {
     args "-c", "cat resources/stub.sh build/libs/xic-0.1.0.jar >> xic && chmod 777 xic"
 }
 
+// test tasks left here for legacy purposes
+
 task regression(type: GradleBuild) {
     tasks = ['testLexer', 'testParser', 'testType']
 }
 
 task fails(type: Exec) {
     executable "sh"    
-    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript"
+    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript\
+    && printf \"\\n========================================\\n\\n\""
 }
 
 task testLexer(type: Exec) {
     executable "sh"    
-    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript"
+    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript && echo\
+    && printf \"\\n========================================\\n\\n\""
 }
 
 task testParser(type: Exec) {
     executable "sh"    
-    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript"
+    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript && echo\
+    && printf \"\\n========================================\\n\\n\""
 }
 
 task testType(type: Exec) {
     executable "sh"
     args "-c", "xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript\
+    && printf \"\\n========================================\\n\\n\"\
     && xth/xth -compilerpath . -workpath tests/type/errors -testpath tests/type/errors tests/type/errors/xthScript\
-    && xth/xth -compilerpath . -workpath tests/type/pa3-tests-manual -testpath tests/type/pa3-tests-manual tests/type/pa3-tests-manual/xthScript"
+    && printf \"\\n========================================\\n\\n\"\
+    && xth/xth -compilerpath . -workpath tests/type/pa3-tests-manual -testpath tests/type/pa3-tests-manual tests/type/pa3-tests-manual/xthScript\
+    && printf \"\\n========================================\\n\\n\""
 }
 
 compileJava.dependsOn jflexIXi

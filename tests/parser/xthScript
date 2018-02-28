@@ -1,4 +1,4 @@
-build
+// build
 
 xic ("Test --help") "--help" {
     ;
@@ -17,6 +17,8 @@ xic ("Test --parse") "--parse" {
     precedence.xi;
     procedures1.xi;
     use1.xi;
+    bad_array_arg.xi;
+    bad_array_return.xi;
     bad_empty.xi;
     bad_empty.ixi;
     bad_fun_def.ixi;
