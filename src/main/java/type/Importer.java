@@ -2,6 +2,7 @@ package type;
 
 import ast.*;
 import parser.IXiParser;
+import type.TypeException.Kind;
 import xic.XicException;
 
 public class Importer extends TypeCheck {
@@ -54,10 +55,12 @@ public class Importer extends TypeCheck {
     
     @Override
     public Type visit(Fn f) throws XicException {
-    	if (populate) {
-        	fns.add(f.id, FnType.from(f));
+    	if (!populate) {
+    		f.args.accept(this);
+    	} else if (fns.contains(f.id)) {
+    		throw new TypeException(Kind.DECLARATION_CONFLICT, f.location);
     	} else {
-        	f.args.accept(this);	
+    		fns.add(f.id, FnType.from(f));
     	}
     	return null;
     }
