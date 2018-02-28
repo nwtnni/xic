@@ -68,6 +68,15 @@ task xic(type: Exec) {
     args "-c", "cat resources/stub.sh build/libs/xic-0.1.0.jar >> xic && chmod 777 xic"
 }
 
+task regression(type: GradleBuild) {
+    tasks = ['testLexer', 'testParser', 'testType']
+}
+
+task fails(type: Exec) {
+    executable "sh"    
+    args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript"
+}
+
 task testLexer(type: Exec) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript"
