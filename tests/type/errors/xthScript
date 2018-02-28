@@ -8,6 +8,8 @@ xic ("Test --typecheck") "--typecheck" {
     bad_add5.xi;
     bad_array1.xi;
     bad_array2.xi;
+    bad_array_size1.xi;
+    bad_array_size2.xi;
     bad_arg_shadowing.xi;
     bad_assign1.xi;
     bad_assign2.xi;

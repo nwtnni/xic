@@ -46,4 +46,8 @@ public class XiType extends Node {
     public boolean isClass() {
         return kind == Kind.CLASS; 
     }
+    
+    public boolean hasSize() {
+    	return size != null;
+    }
 }

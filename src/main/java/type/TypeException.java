@@ -25,6 +25,7 @@ public class TypeException extends XicException {
         LNEG_ERROR("Expected boolean for logical negation"),
         NEG_ERROR("Expected integer for integer negation"),
         INVALID_ARRAY_INDEX("Expected integer for array index"),
+        INVALID_ARRAY_SIZE("Expected integer for array size"),
         NOT_UNIFORM_ARRAY("Arrays must contain values of uniform type"),
         NOT_AN_ARRAY("Expected array"),
         

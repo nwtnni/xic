@@ -308,6 +308,11 @@ public class TypeCheck extends Visitor<Type> {
 
 	public Type visit(XiType t) throws XicException {
 		t.type = new Type(t);
+		
+		if (t.hasSize() && !t.size.accept(this).equals(Type.INT)) {
+			throw new TypeException(Kind.INVALID_ARRAY_SIZE, t.size.location);
+		}
+		
 		return t.type;
 	}
 }
