@@ -1,4 +1,4 @@
-build
+// build
 
 xic ("Test --typecheck") "--typecheck" {
     bad_add1.xi;

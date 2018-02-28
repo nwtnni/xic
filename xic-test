@@ -1,0 +1,59 @@
+#!/bin/bash
+
+build() {
+   xth/xth -compilerpath . -testpath tests tests/xth-build
+   printf "\n========================================\n\n"
+}
+
+testall() {
+    testlex
+    testparse
+    testtype
+}
+
+testfails() {
+    xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
+    printf "\n========================================\n\n" 
+}
+
+testlex() {
+    xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript
+    printf "\n========================================\n\n"
+}
+
+testparse() {
+    xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript
+    printf "\n========================================\n\n"
+}
+
+testtype() {
+    xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
+    printf "\n========================================\n\n"
+    xth/xth -compilerpath . -workpath tests/type/errors -testpath tests/type/errors tests/type/errors/xthScript
+    printf "\n========================================\n\n"
+    xth/xth -compilerpath . -workpath tests/type/pa3-tests-manual -testpath tests/type/pa3-tests-manual tests/type/pa3-tests-manual/xthScript
+    printf "\n========================================\n\n"
+}
+
+build
+
+case $1 in
+r|regression)
+    testall
+    ;;
+f|fails)
+    testfails
+    ;;
+l|lexer)
+    testlex
+    ;;
+p|parser)
+    testparse
+    ;;
+t|type)
+    testtype
+    ;;
+*)
+    echo "test flags: r f l p t"
+    ;;
+esac

@@ -1,4 +1,4 @@
-build
+// build
 
 xic ("Test --typecheck") "--typecheck" {
     array_literals_1.xi;
