@@ -80,8 +80,8 @@ public class TypeCheck extends Visitor<Type> {
 	}
 
 	public Type visit(Assign a) throws XicException {
-		Type lt = a.lhs.accept(this);
 		Type rt = a.rhs.accept(this);
+		Type lt = a.lhs.accept(this);
 
 		if (!types.isSubType(rt, lt)) {
 			throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
