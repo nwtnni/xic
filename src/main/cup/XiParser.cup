@@ -114,7 +114,7 @@ UseDeclarations ::=
     :}
     | UseDeclarations:uds UseDeclr:u
     {:
-        uds.add(0, u);
+        uds.add(u);
         RESULT = uds;
     :}
     ;
