@@ -59,7 +59,7 @@ terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Node                Expr, ExprArrayCall;
+non terminal    Node                Expr;
 non terminal    ArrayList<Node>     ExprList, FExprList;
 non terminal    Node                FnCall;
 non terminal    ArrayList<Node>     Args, FArgs; 
@@ -395,7 +395,6 @@ ArrayCall ::=
             }
             RESULT = index;
         :}
-
     ;
 
 IndexList ::=
@@ -557,22 +556,6 @@ ElseStmt ::=
     ;
 
 // Expressions
-ExprArrayCall ::=
-    ArrayCall:ac
-    {:
-        RESULT = ac;
-    :}
-    | LBRACE:lbrace ArrayElems:ae RBRACE LBRACK Expr:e RBRACK IndexList:il
-    {:
-        il.add(0,e);
-        Index index = new Index(lbracexleft, new XiArray(aexleft, ae), il.get(0));
-        for(int i=1; i<il.size(); i++) {
-            Node n = il.get(i);
-            index = new Index(n.location, index, n);
-        }
-        RESULT = index;
-    :}
-    ;
 Expr ::= 
     LPAREN Expr:e RPAREN
         {:
@@ -647,9 +630,10 @@ Expr ::=
         {:
             RESULT = fc;
         :}
-    | ExprArrayCall:ac
+    | Expr:e LBRACK Expr:e2 RBRACK
         {:
-            RESULT = ac;
+            Index index = new Index(exleft, e, e2);
+            RESULT = index;
         :}
     | LBRACE ArrayElems:ae RBRACE
         {:
