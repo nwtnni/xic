@@ -5,55 +5,84 @@ build() {
    printf "\n========================================\n\n"
 }
 
-testall() {
-    testlex
-    testparse
-    testtype
+test_reg() {
+    test_lex
+    test_parse
+    test_type
 }
 
-testfails() {
+test_fails() {
     xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
     printf "\n========================================\n\n" 
 }
 
-testlex() {
+test_lex() {
     xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript
     printf "\n========================================\n\n"
 }
 
-testparse() {
+test_parse() {
     xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript
     printf "\n========================================\n\n"
 }
 
-testtype() {
+test_type() {
+    test_type_err
+    test_type_valid
+    test_type_man
+}
+
+test_type_valid() {
     xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
     printf "\n========================================\n\n"
+}
+
+test_type_err() {
     xth/xth -compilerpath . -workpath tests/type/errors -testpath tests/type/errors tests/type/errors/xthScript
     printf "\n========================================\n\n"
+}
+
+test_type_man() {
     xth/xth -compilerpath . -workpath tests/type/pa3-tests-manual -testpath tests/type/pa3-tests-manual tests/type/pa3-tests-manual/xthScript
     printf "\n========================================\n\n"
 }
 
-build
+cmd=$1
+if [ "$cmd" = "--nb" ] ; then
+    echo "skipping build"
+    cmd=$2
+elif [ -n "$cmd" ] ; then
+    build
+fi
 
-case $1 in
+case $cmd in
 r|regression)
-    testall
+    test_all
     ;;
 f|fails)
-    testfails
+    test_fails
     ;;
 l|lexer)
-    testlex
+    test_lex
     ;;
 p|parser)
-    testparse
+    test_parse
     ;;
 t|type)
-    testtype
+    test_type
+    ;;
+te)
+    test_type_err
+    ;;
+tv)
+    test_type_valid
+    ;;
+tm)
+    test_type_man
     ;;
 *)
-    echo "test flags: r f l p t"
+    echo "Usage: xic-test [options] <command>"
+    echo "  --nb:   Skips running xic-build"
+    echo "  Possible commands: r[egression] f[ails] l[exer] p[arser] t[ype] te tv tm"
     ;;
 esac

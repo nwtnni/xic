@@ -1,7 +1,7 @@
-bar() : int, bool {
-	return (0), ((true))
+foo() {
+	x:int, y:int[1] = bar()
 }
 
-foo() {
-	y:int;
+bar() : int, int[] {
+	return 1, {2, 3}
 }
