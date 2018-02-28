@@ -388,19 +388,9 @@ FArgs ::=
         :}
     ;
 
-// Array Calls TODO?? Do we need to generalize?
+// Array Calls for LHS of assignment
 ArrayCall ::= 
-    STRING:s LBRACK Expr:e RBRACK IndexList:il 
-        {:
-            il.add(0, evalExpr(e));
-            Index index = new Index(sxleft, new XiString(sxleft, s.name, s.value), il.get(0));
-            for (int i = 1; i < il.size(); i++) {
-                Node n = il.get(i);
-                index = new Index(n.location, index, n);
-            }
-            RESULT = index;
-        :}
-    | FnCall:fc LBRACK Expr:e RBRACK IndexList:il
+    FnCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
             il.add(0, evalExpr(e));
             Index index = new Index(fcxleft, fc, il.get(0));
