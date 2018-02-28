@@ -8,4 +8,5 @@ xic ("Test --typecheck") "--typecheck" {
     length.xi;
     primitives1.xi;
     underscores.xi;
+    underscore_array.xi
 }
