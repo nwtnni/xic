@@ -29,9 +29,6 @@ public class TypeContext extends Context<Type, Type> {
         if (child.equals(Type.UNIT)) {
             return false;
         }
-        if (!child.kind.equals(parent.kind)) {
-            return false;
-        }
         switch (child.kind) {
             case CLASS:
                 Type ancestor = child;
@@ -43,6 +40,9 @@ public class TypeContext extends Context<Type, Type> {
                 }
                 return false;
             case TUPLE:
+                if (!child.kind.equals(parent.kind)) {
+                    return false;
+                }
                 int cs = child.children.size();
                 int ps =  parent.children.size();
                 if (cs != ps) {
@@ -55,7 +55,7 @@ public class TypeContext extends Context<Type, Type> {
                 }
                 return true;
             case ARRAY:
-            	return child.equals(parent);
+            	return child.equals(parent) || parent.equals(Type.UNIT);
         }
         // Unreachable
         assert false;
