@@ -57,7 +57,7 @@ fi
 
 case $cmd in
 r|regression)
-    test_all
+    test_reg
     ;;
 f|fails)
     test_fails

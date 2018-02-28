@@ -1,7 +1,10 @@
 foo() {
-	x:int, y:int[1] = bar()
+	a:int[] = {1, 2, 3}
+	x:int = a[0]
+    c:int[a[0]]
+	x = bar()
 }
 
-bar() : int, int[] {
-	return 1, {2, 3}
+bar () : int {
+	return 1
 }
