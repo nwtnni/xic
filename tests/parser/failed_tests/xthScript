@@ -26,7 +26,7 @@ xic ("Test --parse") "--parse" {
     vardecl02-1.xi;
     while01-1.xi;
 
-    assign04-2.xi
+    assign04-2.xi;
     block02-2.xi;
     empty-2.xi;
     length01-2.xi;
