@@ -1,0 +1,82 @@
+invariant exception
+    codedecl01
+    codedecl03
+    codedecl04
+    codedecl05
+    while01
+    if01
+    if04
+
+*declaration only in multiassign (parse time fix)
+    error assign04
+
+*accessing array literals (parse time fix)
+    assign03
+    assign04
+    expr05
+    prec07
+    group_of_anonymous06_01.xi
+
+min value (parse time fix)
+    expr06
+    group_of_anonymous07_01
+
+*return in blocks
+    codedecl07
+    if02
+    group_of_anonymous01_02
+    group_of_anonymous01_03
+    group_of_anonymous06_02
+
+*semicolon after return (parse time fix)
+    return02
+    group_of_anonymous03_01
+
+*semicolon after block (parse time fix)
+    group_of_anonymous09_02
+
+*return with declaration after it (parse time fix)
+    block02
+
+*return with parens
+    group_of_anonymous01_19
+
+function vs procedure (typechecking fix)
+    codedecl06
+    group_of_anonymous07_02
+
+empty program should not parse (must have at least 1 function - parse time fix)
+    empty
+    use01
+    use02
+    group_of_anonymous09_01
+
+length function: must only take 1 expression and must be treated as an expression (parse time)
+    length0[1-3]
+
+dimensions in multiarray declaration
+    mdarrays
+    vardecl0[1,2]
+    group_of_anonymous08_01 (can't initialize)
+
+arbitrary expression before array call
+    group_of_anonymous01_01
+    group_of_anonymous03_01
+
+error message in different location
+    vardecl0[6,7]
+
+reversed printing order in multiarray dimensions when on LHS of assign
+    basic vardecl02
+    group_of_anonymous04_01
+    group_of_anonymous08_01
+
+different number of paren / printing differences (probably okay)
+    ex2
+    gcd
+    group_of_anonymous04_02
+    group_of_anonymous08_03
+
+array declaration with dimensions is syntactic sugar and cannot be assigned to immediately (parse time fix)
+    vardecl08
+
