@@ -30,6 +30,7 @@ bin/
 # Test files
 # xth/
 xth.tar.gz
+xth-build.results
 xthScript.results
 
 # xic output

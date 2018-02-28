@@ -11,6 +11,7 @@ xic ("Test --parse") "--parse" {
     functions2.xi;
     if-while.xi;
     interface1.ixi;
+    min_int.xi;
     nested_return.xi;
     nestedblocks.xi;
     paren_wrapped_return.xi;
@@ -23,6 +24,7 @@ xic ("Test --parse") "--parse" {
     bad_empty.ixi;
     bad_fun_def.ixi;
     bad_function.xi;
+    bad_int.xi;
     bad_neg_maxint.xi;
     bad_procedure.xi;
     bad_program.xi;
