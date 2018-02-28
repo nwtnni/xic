@@ -26,6 +26,9 @@ public class TypeContext extends Context<Type, Type> {
     }
 
     public boolean isSubType(Type child, Type parent) {
+        if (child.equals(Type.UNIT)) {
+            return false;
+        }
         switch (child.kind) {
             case CLASS:
                 Type ancestor = child;
