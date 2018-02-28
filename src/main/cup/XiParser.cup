@@ -57,6 +57,7 @@ terminal    String          IDENTIFIER;
 terminal    Long            INTEGER;
 terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
+terminal                    FUNCTIONCALL, ARRAYCALL; //TODO ARRAYCALL is implemented via LBRACK
 
 /* Non terminals */
 non terminal    Node                Expr;
@@ -90,6 +91,7 @@ precedence left         LTE, LT, GTE, GT;
 precedence left         ADD, MINUS;
 precedence left         MULT, HMULT, DIV, MOD;
 precedence right        UMINUS, LNEG;
+precedence left         FUNCTIONCALL, LBRACK; //TODO LBRACK is hack to make arraycall precedence work
 
 /* The grammar rules */
 start with      Program;
@@ -334,11 +336,13 @@ FnCall ::=
         	Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
             RESULT = new Call(idxleft, id, arg);
         :}
+        %prec FUNCTIONCALL
     | LENGTH:l LPAREN Args:args RPAREN
         {:
             Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
             RESULT = new Call(lxleft, "length", arg);
         :}
+        %prec FUNCTIONCALL
     ;
 
 Args ::= 
@@ -363,7 +367,7 @@ FArgs ::=
         :}
     ;
 
-// Array Calls
+// Array Calls TODO?? Do we need to generalize?
 ArrayCall ::= 
     STRING:s LBRACK Expr:e RBRACK IndexList:il 
         {:

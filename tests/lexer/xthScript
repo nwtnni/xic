@@ -1,8 +1,8 @@
-build
+// build
 
-xic ("Test --help") "--help" {
-    ;
-}
+// xic ("Test --help") "--help" {
+//     ;
+// }
 
 xic ("Test --lex") "--lex" {
     escape-errors.xi;

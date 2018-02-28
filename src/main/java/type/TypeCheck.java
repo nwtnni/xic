@@ -87,6 +87,10 @@ public class TypeCheck extends Visitor<Type> {
 			throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
 		}
 
+		if (lt.equals(Type.UNIT) && !(a.rhs instanceof Call)) {
+			throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
+		}
+
 		a.type = Type.UNIT;
 		return a.type;
 	}
