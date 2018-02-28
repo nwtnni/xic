@@ -54,7 +54,7 @@ terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
 terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
 terminal    Boolean         TRUE, FALSE; 
 terminal    String          IDENTIFIER;
-terminal    Long            INTEGER;
+terminal    String          INTEGER;
 terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
 

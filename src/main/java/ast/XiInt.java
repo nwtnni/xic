@@ -10,7 +10,7 @@ public class XiInt extends Node {
 
     public XiInt(Location location, long value) {
         this.location = location;
-        this.value = value; 
+        this.value = value;
     }
 
     public <T> T accept(Visitor<T> v) throws XicException {

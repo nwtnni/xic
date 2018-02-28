@@ -6,18 +6,24 @@ import xic.XicException;
 
 @SuppressWarnings("serial")
 public class ParseException extends XicException {
-	
-	private static final String prefix = "unexpected token ";
 
     public ParseException(ComplexSymbol symbol) {
-    	super(XicException.Kind.SYNTAX, symbol.getLeft(), prefix + symbol.getName());
+    	super(XicException.Kind.SYNTAX, symbol.getLeft(), "Unexpected token " + symbol.getName());
     }
 
-    public ParseException(String description) {
+    private ParseException(String description) {
 		super(description);
+	}
+
+	private ParseException(Location l, String literal) {
+		super(XicException.Kind.SYNTAX, l, literal);
 	}
 	
 	public static ParseException internal(Exception e) {
 		return new ParseException("Internal parser error: " + e.toString());
+	}
+
+	public static ParseException numberFormatException(Location l, String literal) {
+		return new ParseException(l, "Invalid integer literal " + literal);
 	}
 }

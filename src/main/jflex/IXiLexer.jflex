@@ -36,6 +36,7 @@ import static parser.IXiSymbol.*;
 %{
     /* Exposed Interface */
 
+    // TODO: Throw XicException
     public static IXiLexer from(String source, String unit) throws XicException {
         String input = FilenameUtils.concat(source, unit);
         try {
@@ -43,7 +44,7 @@ import static parser.IXiSymbol.*;
             lexer.init(unit, new ComplexSymbolFactory());
             return lexer;
         } catch (IOException e) {
-        	throw XicException.read(input);
+            throw XicException.read(input);
         }
     }
 
@@ -55,7 +56,7 @@ import static parser.IXiSymbol.*;
     	try {
     		return next_token();
     	} catch (IOException io) {
-    		throw new LexException(Kind.IO);
+    		throw LexException.internal(Kind.IO);
     	}
     }
 
@@ -120,12 +121,7 @@ import static parser.IXiSymbol.*;
             case IDENTIFIER:
                 return symbolFactory.newSymbol(yytext(), IDENTIFIER, l, r, yytext());
             case INTEGER:
-                try {
-                    Long value = Long.valueOf(yytext());
-                    return symbolFactory.newSymbol(yytext(), INTEGER, l, r, value);
-                } catch (NumberFormatException e) {
-                    throwLexException(row(), column(), Kind.INVALID_INT_LITERAL);
-                }
+                return symbolFactory.newSymbol(yytext(), INTEGER, l, r, yytext());
             default:
                 return symbolFactory.newSymbol(yytext(), id, l, r);
         }
@@ -153,7 +149,7 @@ import static parser.IXiSymbol.*;
         Location l = new Location(unit, row, col);
         Location r = new Location(unit, row, col + yylength());
         ComplexSymbol symbol = (ComplexSymbol) symbolFactory.newSymbol(yytext(), error, l, r);
-        throw new LexException(symbol, kind);
+        throw new LexException(kind, symbol);
     }
 %}
 
