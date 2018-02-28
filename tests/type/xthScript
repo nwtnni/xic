@@ -1,7 +1,8 @@
 build
 
 xic ("Test --typecheck") "--typecheck" {
-    array_literal_indexing.xi;
+    array_literals_1.xi;
+    array_literals_2.xi;
     empty_arrays.xi;
     length.xi;
     primitives1.xi;
