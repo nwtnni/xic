@@ -1,28 +1,22 @@
 ex2.xi - Extra parens from block
 gcd.xi - Misalignment?
-mdarrays.xi - Array Declaration (Paren Order)
 expr06-1.xi - Min Int
 if01-1.xi - Extra parens from block
 if02-1.xi - Extra parens from block
 if04-1.xi - Extra parens from block
-vardecl02-1.xi - Array Declaration (Paren Order)
 while01-1.xi - Misalignment?
 length01-2.xi - Length issue?
 length02-2.xi - Length issue?
 length03-2.xi - Length issue?
 use01-2.xi - Error Location
 use02-2.xi - Error Location
-vardecl01-2.xi - Array Declaration Indexing
-vardecl02-2.xi - Array Declaration Indexing
 vardecl06-2.xi - Error Location
 vardecl07-2.xi - Error Location
 vardecl08-2.xi - Edge Case of Array Declaration
 group_of_anonymous01_01-3.xi - Min Int
-group_of_anonymous04_01-3.xi - Array Declaration (Paren Order)
 group_of_anonymous04_02-3.xi - Extra parens from block
 group_of_anonymous07_01-3.xi - Min Int Issues
 group_of_anonymous07_02-3.xi - Extra parens from block
-group_of_anonymous08_01-3.xi - Array Declaration (Paren Order)
 group_of_anonymous08_03-3.xi - Extra parens from block
 group_of_anonymous08_01-4.xi - Edge Case of Array Declaration
 group_of_anonymous09_01-4.xi - Error Location

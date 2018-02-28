@@ -68,6 +68,7 @@ non terminal    Node                ArrayCall;
 non terminal    ArrayList<Node>     IndexList;
 non terminal    ArrayList<Node>     ArrayElems, FArrayElems;
 non terminal    Node                VarDeclr, VarType, KeyType;
+non terminal    ArrayList<Node>     VarTypeIndexList, VarTypeIndexListNoExpr;
 non terminal    Node                Assign, SingleAssignName, MultiAssignName;
 non terminal    ArrayList<Node>     IDList, FIDList;
 non terminal    Node                WhileStmt, IfStmt, ElseStmt;
@@ -446,6 +447,50 @@ VarDeclr ::=
         RESULT = new Declare(idxleft, id, type);
     :};
 
+
+VarType ::= 
+    KeyType:type VarTypeIndexList:vtil
+    {:
+        for(int i=vtil.size()-1; i>=0; i--) {
+            if(vtil.get(i) == null){
+                type = new XiType(typexleft,type);
+            }
+            else {
+                type = new XiType(typexleft, type, vtil.get(i));
+            }
+        }
+        RESULT = type;
+    :}
+    ;
+
+VarTypeIndexList ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | LBRACK Expr:e RBRACK VarTypeIndexList:vtil
+    {:
+        vtil.add(0,e);
+        RESULT = vtil;
+    :}
+    | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
+    {:
+        vtilne.add(0,null);
+        RESULT = vtilne;
+    :}
+    ;
+
+VarTypeIndexListNoExpr ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
+    {:
+        vtilne.add(0,null);
+        RESULT = vtilne;
+    :}
+    ;
+
+/*
 VarType ::= 
     VarType:type LBRACK RBRACK
     {:
@@ -460,6 +505,7 @@ VarType ::=
         RESULT = type;
     :}
     ;
+*/
 
 KeyType ::= 
     INT:i
