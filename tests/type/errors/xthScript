@@ -10,6 +10,7 @@ xic ("Test --typecheck") "--typecheck" {
     bad_array2.xi;
     bad_assign1.xi;
     bad_assign2.xi;
+    bad_early_bind.xi;
     bad_function_declarations1.xi;
     bad_length1.xi;
     bad_length2.xi;
