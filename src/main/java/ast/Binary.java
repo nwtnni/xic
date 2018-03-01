@@ -105,6 +105,6 @@ public class Binary extends Node {
     }
 
     public boolean returnsList() {
-        return kind == Kind.Plus;
+        return kind == Kind.PLUS;
     }
 }
