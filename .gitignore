@@ -4,6 +4,8 @@ buildSrc/.gradle/
 buildSrc/build/
 build/
 
+# Javadoc
+doc/
 
 # JFlex and CUP generated files
 src/main/java/lexer/XiLexer.java
