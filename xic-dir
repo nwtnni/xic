@@ -1,13 +1,20 @@
 #!/bin/bash
 XIC=xic
 
-for dir in ${@:2};
-do
-  for file in $dir/{*.xi,*.ixi};
+if [ $# -gt 0 ]; then
+  for dir in ${@:2};
   do
-    if [[ -f $file ]]; then
-      echo "running $1 on file $file";
-      $XIC $1 $file
-    fi
+    for file in $dir/{*.xi,*.ixi};
+    do
+      if [[ -f $file ]]; then
+        echo "running $1 on file $file";
+        $XIC $1 $file
+      fi
+    done
   done
-done
+else
+  echo "Usage: xic-dir [option] <directories>"
+  echo "  --lex"
+  echo "  --parse"
+  echo "  --typecheck"
+fi

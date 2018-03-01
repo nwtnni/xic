@@ -3,7 +3,8 @@
 xic ("Test --typecheck") "--typecheck" {
     array_literals_1.xi;
     array_literals_2.xi;
-    array_with_dims.xi;
+    array_with_dims1.xi;
+    array_with_dims2.xi;
     arg_shadowing.xi;
     block_shadowing.xi;
     cross_fn_shadowing.xi;

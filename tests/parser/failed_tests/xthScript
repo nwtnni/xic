@@ -33,6 +33,7 @@ xic ("Test --parse") "--parse" {
     length02-2.xi;
     length03-2.xi;
     use01-2.xi;
+    use02-1.xi;
     use02-2.xi;
     vardecl01-2.xi;
     vardecl02-2.xi;

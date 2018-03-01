@@ -20,7 +20,6 @@ public class TypeException extends XicException {
         // Expression exceptions
         INVALID_ARG_TYPES("Invalid arguments for function call"),
         MISMATCHED_BINARY("Mismatched types for binary operator"),
-        INVALID_INT_OP("Invalid binary operator for integers"),
         INVALID_BIN_OP("Invalid binary operator for these arguments"),
         LNEG_ERROR("Expected boolean for logical negation"),
         NEG_ERROR("Expected integer for integer negation"),

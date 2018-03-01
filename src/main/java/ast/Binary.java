@@ -56,11 +56,11 @@ public class Binary extends Node {
             case MODULO:
             case PLUS:
             case MINUS:
-                return false;
             case LT:
             case LE:
             case GE:
             case GT:
+                return false;
             case EQ:
             case NE:
             case AND:
@@ -77,18 +77,34 @@ public class Binary extends Node {
     }
 
     public boolean acceptsList() {
-        return kind == Kind.PLUS;
+        return kind == Kind.PLUS || kind == Kind.EQ || kind == Kind.NE;
     }
 
     public boolean returnsBool() {
-        return acceptsBool();         
-    }
-
-    public boolean returnsInt() {
-        return !acceptsBool(); 
+        switch (kind) {
+            case TIMES:
+            case HIGH_TIMES:
+            case DIVISION:
+            case MODULO:
+            case PLUS:
+            case MINUS:
+                return false;
+            case LT:
+            case LE:
+            case GE:
+            case GT:
+            case EQ:
+            case NE:
+            case AND:
+            case OR:
+                return true;
+        }
+        // Unreachable
+        assert false;
+        return false;       
     }
 
     public boolean returnsList() {
-        return acceptsList();
+        return kind == Kind.PLUS;
     }
 }
