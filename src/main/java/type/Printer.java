@@ -1,7 +1,6 @@
 package type;
 
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import org.apache.commons.io.FilenameUtils;
 
 import ast.Node;
@@ -13,6 +12,8 @@ public class Printer {
 	public static void print(String source, String sink, String lib, String unit) throws XicException {
 		String ext = FilenameUtils.getExtension(unit);
     	String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
+        mkDirTo(output);
+
     	Node ast = null;
         FileWriter writer = null;
 
@@ -45,4 +46,10 @@ public class Printer {
         	throw XicException.write(output);
         }
 	}
+
+    private static void mkDirTo(String file) {
+        try {
+            (new File(file)).getParentFile().mkdirs();
+        } catch (NullPointerException e) { }
+    }
 }

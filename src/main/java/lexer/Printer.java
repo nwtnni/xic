@@ -1,8 +1,7 @@
 package lexer;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -18,8 +17,10 @@ public class Printer {
 
         String lexed = FilenameUtils.removeExtension(unit) + ".lexed";
         String output = FilenameUtils.concat(sink, lexed);
+        mkDirTo(output);
+
         BufferedWriter writer = null;
-        
+
         try {
         	try {
 	            writer = new BufferedWriter(new FileWriter(output, false));
@@ -38,6 +39,12 @@ public class Printer {
         	throw XicException.write(output);
         }
 	}
+
+    private static void mkDirTo(String file) {
+        try {
+            (new File(file)).getParentFile().mkdirs();
+        } catch (NullPointerException e) { }
+    }
 
     private static String format(ComplexSymbol s) {
         String label;
