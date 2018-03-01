@@ -1,14 +1,13 @@
 package parser;
 
+import java.io.*;
+import xic.FilenameUtils;
+
 import edu.cornell.cs.cs4120.util.*;
 import polyglot.util.OptimalCodeWriter;
-import xic.XicException;
-
-import org.apache.commons.io.FilenameUtils;
-
-import java.io.*;
 
 import ast.*;
+import xic.XicException;
 
 public class Printer extends Visitor<Void> {
 

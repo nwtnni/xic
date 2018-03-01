@@ -1,7 +1,7 @@
 package type;
 
 import java.io.*;
-import org.apache.commons.io.FilenameUtils;
+import xic.FilenameUtils;
 
 import ast.Node;
 import parser.XiParser;
