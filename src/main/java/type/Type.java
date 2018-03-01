@@ -27,7 +27,9 @@ public class Type {
         this.children = null;
     }
 
-    // Arrays
+    // Arrays 
+    // The child type of an array is the element type
+    // which can be an array type or a class type
     public Type(Type child) {
         this.kind = Kind.ARRAY;
         this.id = null;
@@ -36,6 +38,8 @@ public class Type {
     }
     
     // Tuple
+    // The children types are the types of each element
+    // of the tuple
     public Type(ArrayList<Type> children) {
     	this.kind = Kind.TUPLE;
     	this.id = null;
