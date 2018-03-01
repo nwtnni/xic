@@ -8,3 +8,11 @@ foo() {
 bar () : int {
 	return 12
 }
+
+barfoo() {
+    a:int[] = {1,2}
+    b:int[] = {1,2,3}
+    if (a == b){
+
+    }
+}

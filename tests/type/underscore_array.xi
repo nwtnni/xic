@@ -10,7 +10,7 @@ bar3(): bool[][][] {
   return {{}, {{true, false}}}  
 }
 
-foo() {
+foo() {	
   _ = bar();
   _ = bar2();
   _ = bar3();

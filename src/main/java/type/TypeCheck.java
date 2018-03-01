@@ -196,15 +196,17 @@ public class TypeCheck extends Visitor<Type> {
 		if (lt.equals(Type.INT) && b.acceptsInt()) {
 			if (b.returnsBool()) {
 				b.type = Type.BOOL;
-			} else if (b.returnsInt()) {
-				b.type = Type.INT;
 			} else {
-				throw new TypeException(Kind.INVALID_INT_OP, b.location);
-			}
+				b.type = Type.INT;
+			} 
 		} else if (lt.equals(Type.BOOL) && b.acceptsBool()) {
 			b.type = Type.BOOL;
 		} else if (lt.kind.equals(Type.Kind.ARRAY) && b.acceptsList()) {
-			b.type = lt;
+			if (b.returnsBool()) {
+				b.type = Type.BOOL;
+			} else {
+				b.type = lt;
+			}
 		} else {
 			throw new TypeException(Kind.INVALID_BIN_OP, b.location);
 		}
