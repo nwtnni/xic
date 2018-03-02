@@ -16,27 +16,29 @@ src/main/java/lexer/IXiLexer.java
 src/main/java/parser/IXiParser.java
 src/main/java/parser/IXiSymbol.java
 
-
-# VS Code generated nonsense
-.classpath
-.project
-.settings/
-bin/
-
-
 # Binary and zip files
 /xic
 /xic.zip
 
-
 # Test files
 # xth/
 xth.tar.gz
-xth-build.results
-xthScript.results
 
 # xic output
 *.lexed
 *.parsed
 *.iparsed
 *.typed
+*.results
+
+# VS Code generated nonsense
+.classpath
+.project
+.settings/
+bin/
+.vscode/
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride

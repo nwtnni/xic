@@ -46,14 +46,21 @@ jar {
 task zip(type: Zip) {
     archiveName = 'xic.zip'
     from(projectDir) {
-        exclude 'build/'
-        exclude 'watch'
-        exclude '**/IXiLexer.java'
-        exclude '**/IXiParser.java'
-        exclude '**/IXiSymbol.java'
-        exclude '**/XiLexer.java'
-        exclude '**/XiParser.java'
-        exclude '**/XiSymbol.java'
+        include 'buildSrc/'
+        include 'gradle/'
+        include 'libs/'
+        include 'resources/'
+        include 'src/'
+        include 'tests/'
+        include 'build.gradle'
+        include 'gradlew'
+        include 'gradlew.bat'
+        include 'LICENSE'
+        include 'README.md'
+        include 'settings.gradle'
+        include 'xic-build'
+        include 'xic-dir'
+        include 'xic-test'
     }
 }
 
