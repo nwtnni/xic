@@ -2,8 +2,17 @@ package xic;
 
 import java.util.ArrayList;
 
+/**
+ * Command line interface for Xic.
+ * 
+ * Possible flags are:
+ * 
+ */
 public class Main {
 
+	/**
+	 * Main compiler interface. Usage information can be printed with the --help flag.
+	 */
     public static void main(String[] args) {
         boolean lexFlag = false;
         boolean parseFlag = false;
@@ -52,11 +61,25 @@ public class Main {
         }
     }
 
+    /**
+     * Helper function to display usage information.
+     */
     private static void displayHelp() {
-        System.out.println("Usage: xic [options] <source-files>");
-        System.out.println("  --help:                       Print a synopsis of options");
-        System.out.println("  --lex <source-files>:         For each source file filename.xi, generate a lexed file filename.lexed");
-        System.out.println("  --parse <source-files>:       For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
-        System.out.println("  --typecheck <source-files>:   For each source file filename.xi, generate a typecheck result filename.typed");
+        System.out.println("-----------------------------------------------------------------------------------");
+        System.out.println("Usage: xic <OPTION>* <OPERATION>+ <FILE>+                                          ");
+        System.out.println("-----------------------------------------------------------------------------------");
+        System.out.println("Where <OPTION> is zero or more of:                                                 ");
+        System.out.println("  --help                  : Print synopsis of options                              ");
+        System.out.println("  -D          <DIRECTORY> : Output diagnostic files to <DIRECTORY>                 ");
+        System.out.println("  -libpath    <DIRECTORY> : Search for interface files in <DIRECTORY>              ");
+        System.out.println("  -sourcepath <DIRECTORY> : Search for source files in <DIRECTORY>                 ");
+        System.out.println("-----------------------------------------------------------------------------------");
+        System.out.println("Where <OPERATION> is one or more of:                                               ");
+        System.out.println("  --lex                   : For each f.(i)xi, generate lex diagnostic file f.lexed ");
+        System.out.println("  --parse                 : For each f.(i)xi, generate parse diagnostic f.(i)parsed");
+        System.out.println("  --typecheck             : For each f.xi, generate type check diagnostic f.typed  ");
+        System.out.println("-----------------------------------------------------------------------------------");
+        System.out.println("Where <FILE> is one or more source files to operate on                             ");
+        System.out.println("-----------------------------------------------------------------------------------");
     }
 }
