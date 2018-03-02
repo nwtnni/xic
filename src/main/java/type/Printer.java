@@ -14,7 +14,7 @@ public class Printer {
 	
 	/**
 	 * Parses the given file, runs the type checker, and outputs diagnostic
-	 * information to the given output file as well as System.out.
+	 * information to the given output file.
 	 * 
 	 * @param source Directory to search for the source
 	 * @param sink Directory to output the result

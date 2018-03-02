@@ -9,8 +9,21 @@ import polyglot.util.OptimalCodeWriter;
 import ast.*;
 import xic.XicException;
 
+/**
+ * Recursively traverses a parsed AST and writes a pretty-printed
+ * version to file.
+ */
 public class Printer extends Visitor<Void> {
 
+	/**
+	 * Parses the given file, and outputs diagnostic
+	 * information to the given output file.
+	 * 
+	 * @param source Directory to search for the source
+	 * @param sink Directory to output the result
+ 	 * @param unit Path to the target source file, relative to source
+	 * @throws XicException if the Printer was unable to write to the given file
+	 */
     public static void print(String source, String sink, String unit) throws XicException {
 
     	String ext = FilenameUtils.getExtension(unit);
@@ -55,6 +68,10 @@ public class Printer extends Visitor<Void> {
     private Printer(OutputStream stream) {
         printer = new CodeWriterSExpPrinter(new OptimalCodeWriter(stream, WIDTH));
     }
+    
+    /* 
+     * Visitor logic
+     */
 
     /*
      * Top-level AST nodes
