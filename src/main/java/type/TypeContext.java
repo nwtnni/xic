@@ -1,7 +1,17 @@
 package type;
 
+/**
+ * Symbol table mapping {@link Type} to supertype.
+ * 
+ * Not strictly necessary for now, since we don't have user-defined types,
+ * but implemented for future-proofing purposes. TypeContext maintains
+ * a tree mapping child types to parent types.
+ */
 public class TypeContext extends Context<Type, Type> {
 
+	/**
+	 * Default constructor initializes the context with primitive types.
+	 */
     public TypeContext() {
         super();
         try {
@@ -15,6 +25,12 @@ public class TypeContext extends Context<Type, Type> {
         } 
     }
 
+    /**
+     * Checks for cyclic type dependencies.
+     * @param child Child type to check
+     * @param parent Parent type to subclass 
+     * @throws TypeException if a cyclic type dependency occurs as a result of this subclassing relationship.
+     */
     public void validate(Type child, Type parent) throws TypeException {
         Type ancestor = parent;
         while (ancestor != null) {
@@ -25,6 +41,12 @@ public class TypeContext extends Context<Type, Type> {
         }
     }
 
+    /**
+     * Checks for a subtyping relationship.
+     * @param child Child type to check
+     * @param parent Parent type to check
+     * @return
+     */
     public boolean isSubType(Type child, Type parent) {
         if (child.equals(Type.UNIT)) {
             return false;

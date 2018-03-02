@@ -4,9 +4,16 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 import ast.*;
 
+/**
+ * Represents all possible semantic exceptions.
+ */
 @SuppressWarnings("serial")
 public class TypeException extends XicException {
 
+	/**
+	 * Enums allow for compile-time assurance that all thrown TypeExceptions
+	 * are drawn from the following set.
+	 */
     public enum Kind {
         // Statement exceptions
     	CONTROL_FLOW("Control reached end of non-void function"),
@@ -44,15 +51,22 @@ public class TypeException extends XicException {
         }
     }
     
+    /**
+     * Constructor for location-specific error
+     * 
+     * @param kind Kind of TypeException to throw
+     * @param location Location of error
+     */
     public TypeException(Kind kind, Location location) {
     	super(XicException.Kind.SEMANTIC, location, kind.toString());
     }
 
-    public TypeException(Kind kind, Node node) {
-    	super(XicException.Kind.SEMANTIC, node.location, kind.toString());
-    }
-
-    public TypeException(Kind kind) {
-        super(XicException.Kind.SEMANTIC, kind.toString());
-    }
+    /**
+     * Constructor for error without location information
+     * 
+     * @param kind Kind of TypeException to throw
+     */
+	public TypeException(Kind kind) {
+		super(XicException.Kind.SEMANTIC, kind.toString());
+	}
 }
