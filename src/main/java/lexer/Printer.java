@@ -1,10 +1,7 @@
 package lexer;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-
-import org.apache.commons.io.FilenameUtils;
+import java.io.*;
+import xic.FilenameUtils;
 
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
@@ -14,15 +11,16 @@ import xic.XicException;
 public class Printer {
 
 	public static void print(String source, String sink, String unit) throws XicException {
-		XiLexer lexer = XiLexer.from(source, unit);
-
-        String lexed = FilenameUtils.removeExtension(unit) + ".lexed";
-        String output = FilenameUtils.concat(sink, lexed);
-        BufferedWriter writer = null;
-        
+		
+        String lexed = FilenameUtils.setExtension(unit, "lexed");
+        lexed = FilenameUtils.concat(sink, lexed);
         try {
+            File output = FilenameUtils.makeFile(lexed);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(output, false));
+
         	try {
-	            writer = new BufferedWriter(new FileWriter(output, false));
+                XiLexer lexer = XiLexer.from(source, unit);
+
 	            ComplexSymbol s = (ComplexSymbol) lexer.nextToken();
 	            while (s.sym != XiSymbol.EOF) {
 	                writer.append(format(s) + "\n");
@@ -35,7 +33,8 @@ public class Printer {
                 throw e;
         	}
         } catch (IOException io) {
-        	throw XicException.write(output);
+            io.printStackTrace();
+        	throw XicException.write(lexed);
         }
 	}
 

@@ -1,18 +1,13 @@
 package parser;
 
+import java.io.*;
+import xic.FilenameUtils;
+
 import edu.cornell.cs.cs4120.util.*;
 import polyglot.util.OptimalCodeWriter;
-import xic.XicException;
-
-import org.apache.commons.io.FilenameUtils;
-
-import java.io.OutputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.BufferedWriter;
 
 import ast.*;
+import xic.XicException;
 
 public class Printer extends Visitor<Void> {
 
@@ -20,6 +15,8 @@ public class Printer extends Visitor<Void> {
 
     	String ext = FilenameUtils.getExtension(unit);
     	String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
+        mkDirTo(output);
+
     	Node ast = null;
         OutputStream stream = null;
 
@@ -50,6 +47,12 @@ public class Printer extends Visitor<Void> {
         } catch (IOException io) {
         	throw XicException.write(output);
         }
+    }
+
+    private static void mkDirTo(String file) {
+        try {
+            (new File(file)).getParentFile().mkdirs();
+        } catch (NullPointerException e) { }
     }
 
     private static final int WIDTH = 80;

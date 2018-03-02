@@ -1,6 +1,5 @@
 package xic;
 
-import org.apache.commons.io.FilenameUtils;
 import ast.Invariant;
 import ast.Node;
 import lexer.XiLexer;
