@@ -8,8 +8,20 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import parser.XiSymbol;
 import xic.XicException;
 
+/**
+ * Convenience class to write the result of a lexing run to file.
+ */
 public class Printer {
 
+	/**
+	 * Lexes the given file, and outputs diagnostic
+	 * information to the given output file.
+	 * 
+	 * @param source Directory to search for the source
+	 * @param sink Directory to output the result
+ 	 * @param unit Path to the target source file, relative to source
+	 * @throws XicException if the Printer was unable to write to the given file
+	 */
 	public static void print(String source, String sink, String unit) throws XicException {
         String lexed = FilenameUtils.setExtension(unit, "lexed");
         lexed = FilenameUtils.concat(sink, lexed);
