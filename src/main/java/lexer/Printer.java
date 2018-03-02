@@ -11,12 +11,11 @@ import xic.XicException;
 public class Printer {
 
 	public static void print(String source, String sink, String unit) throws XicException {
-		
         String lexed = FilenameUtils.setExtension(unit, "lexed");
         lexed = FilenameUtils.concat(sink, lexed);
         try {
-            File output = FilenameUtils.makeFile(lexed);
-            BufferedWriter writer = new BufferedWriter(new FileWriter(output, false));
+            FilenameUtils.makePathTo(lexed);
+            BufferedWriter writer = new BufferedWriter(new FileWriter(lexed, false));
 
         	try {
                 XiLexer lexer = XiLexer.from(source, unit);

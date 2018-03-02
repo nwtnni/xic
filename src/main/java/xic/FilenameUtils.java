@@ -137,20 +137,15 @@ public class FilenameUtils {
     }
 
     /**
-     * Returns a File located at filename, making directories as needed.
+     * Returns true if successfully makes directories to file as needed.
      * Throws IOException if operation fails.
      */
-    public static File makeFile(String filename) throws IOException {
-        try {
-            File file = new File(filename);
-            if (file.getParentFile().mkdirs()) {
-                file.createNewFile();
-                // file.setWritable(true);
-            }
-            return file;
-        } catch (NullPointerException e) {
-            throw new IOException("Failed to create output file.");
-         }
+    public static boolean makePathTo(String filename) {
+        File dir = (new File(filename)).getParentFile();
+        if (dir != null && dir.mkdirs()) {
+            return true;
+        }
+        return false;
     }
     
 }

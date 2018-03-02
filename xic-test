@@ -12,17 +12,17 @@ test_reg() {
 }
 
 test_fails() {
-    xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
     printf "\n========================================\n\n" 
 }
 
 test_lex() {
-    xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/lexer tests/lexer/xthScript
     printf "\n========================================\n\n"
 }
 
 test_parse() {
-    xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/parser/ tests/parser/xthScript
     printf "\n========================================\n\n"
 }
 
