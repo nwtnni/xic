@@ -1,8 +1,9 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
-import java.util.ArrayList;
+import xic.XicException;
 
+// Binary Operation
 public class Binary extends Node {
 
     public enum Kind {
@@ -43,7 +44,67 @@ public class Binary extends Node {
         this.rhs = rhs;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) throws XicException {
+        return v.visit(this);
+    }
+
+    public boolean acceptsBool() {
+        switch (kind) {
+            case TIMES:
+            case HIGH_TIMES:
+            case DIVISION:
+            case MODULO:
+            case PLUS:
+            case MINUS:
+            case LT:
+            case LE:
+            case GE:
+            case GT:
+                return false;
+            case EQ:
+            case NE:
+            case AND:
+            case OR:
+                return true;
+        }
+        // Unreachable
+        assert false;
+        return false;
+    }
+
+    public boolean acceptsInt() {
+        return !(kind == Kind.AND || kind == Kind.OR);
+    }
+
+    public boolean acceptsList() {
+        return kind == Kind.PLUS || kind == Kind.EQ || kind == Kind.NE;
+    }
+
+    public boolean returnsBool() {
+        switch (kind) {
+            case TIMES:
+            case HIGH_TIMES:
+            case DIVISION:
+            case MODULO:
+            case PLUS:
+            case MINUS:
+                return false;
+            case LT:
+            case LE:
+            case GE:
+            case GT:
+            case EQ:
+            case NE:
+            case AND:
+            case OR:
+                return true;
+        }
+        // Unreachable
+        assert false;
+        return false;       
+    }
+
+    public boolean returnsList() {
+        return kind == Kind.PLUS;
     }
 }

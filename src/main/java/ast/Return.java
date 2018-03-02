@@ -1,7 +1,9 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
+// A return statement
 public class Return extends Node {
 
     public enum Kind {
@@ -27,7 +29,7 @@ public class Return extends Node {
         return kind == Kind.VALUE; 
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) throws XicException {
+        return v.visit(this);
     }
 }

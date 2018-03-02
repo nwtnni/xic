@@ -1,35 +1,24 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
-import java.util.ArrayList;
-
+// An Xi type
 public class XiType extends Node {
 
     public enum Kind {
-        ARRAY,
-        BOOLEAN,
-        INTEGER;
-
-        public String toString() {
-            switch (this) {
-                case ARRAY: return "[]";
-                case BOOLEAN: return "bool";
-                case INTEGER: return "int";
-            }
-            assert false;
-            return "";
-        }
+        ARRAY, CLASS
     }
 
     public Kind kind;
     public Node size;
     public Node child;
+    public String id;
 
-    public XiType(Location location, Kind kind) {
-        assert kind != Kind.ARRAY;
+    public XiType(Location location, String id) {
         this.location = location;
-        this.kind = kind; 
+        this.kind = Kind.CLASS; 
+        this.id = id;
         this.child = null;
         this.size = null;
     }
@@ -37,6 +26,7 @@ public class XiType extends Node {
     public XiType(Location location, Node child, Node size) {
         this.location = location;
         this.kind = Kind.ARRAY;
+        this.id = null;
         this.child = child;
         this.size = size;
     }
@@ -44,11 +34,20 @@ public class XiType extends Node {
     public XiType(Location location, Node child) {
         this.location = location;
         this.kind = Kind.ARRAY; 
+        this.id = null;
         this.child = child;
         this.size = null;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) throws XicException {
+        return v.visit(this);
+    }
+
+    public boolean isClass() {
+        return kind == Kind.CLASS; 
+    }
+    
+    public boolean hasSize() {
+    	return size != null;
     }
 }

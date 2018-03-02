@@ -4,6 +4,8 @@ buildSrc/.gradle/
 buildSrc/build/
 build/
 
+# Javadoc
+doc/
 
 # JFlex and CUP generated files
 src/main/java/lexer/XiLexer.java
@@ -14,25 +16,29 @@ src/main/java/lexer/IXiLexer.java
 src/main/java/parser/IXiParser.java
 src/main/java/parser/IXiSymbol.java
 
+# Binary and zip files
+/xic
+/xic.zip
+
+# Test files
+# xth/
+xth.tar.gz
+
+# xic output
+*.lexed
+*.parsed
+*.iparsed
+*.typed
+*.results
 
 # VS Code generated nonsense
 .classpath
 .project
 .settings/
 bin/
+.vscode/
 
-
-# Binary and zip files
-/xic
-/xic.zip
-
-
-# Test files
-# xth/
-xth.tar.gz
-xthScript.results
-
-# xic output
-*.lexed
-*.parsed
-*.iparsed
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride

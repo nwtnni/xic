@@ -4,24 +4,72 @@ import java.util.ArrayList;
 
 import lexer.*;
 import ast.*;
+import xic.XicException;
 
 parser code {:
 
-    XiLexer lex;
-    XiParser(XiLexer lex, ComplexSymbolFactory sf) {
-        super(lex, sf);
-        this.lex = lex;
+    /* Exposed Interface */
+
+    //TODO: throw XicException
+    public static Node from(String source, String unit) throws XicException {
+        XiLexer lexer = XiLexer.from(source, unit);
+        XiParser parser = new XiParser(lexer);
+        
+        try {
+        	return parser.parse().value();
+        } catch (XicException xic) {
+        	throw xic;
+        } catch (Exception e) {
+        	throw ParseException.internal(e);
+        }
     }
 
-    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
+    /* Private Utility Functions */
+
+    private XiLexer lexer;
+
+    private XiParser(XiLexer lexer) {
+        super(lexer, lexer.getSymbolFactory());
+        this.lexer = lexer;
+    }
+
+    public void unrecovered_syntax_error(Symbol cur_token) throws ParseException {
         done_parsing();
         ComplexSymbol sym = (ComplexSymbol) cur_token;
-        throw new ParserError(sym, "Unexpected token " + sym.getName());
+        throw new ParseException(sym);
     }
 
     public void syntax_error(Symbol cur_token) {}
 
+    private Node evalInt(TempInt expr, boolean negate) throws ParseException {
+        try {
+            if (negate) {
+                expr.literal = "-" + expr.literal;
+            }
+            return new XiInt(expr.location, Long.valueOf(expr.literal));
+        } catch (NumberFormatException ex) {
+            throw ParseException.numberFormatException(expr.location, expr.literal);
+        }
+    }
+
+    private Node evalExpr(Node expr) throws ParseException {
+        if (expr instanceof TempInt) {
+            return evalInt((TempInt) expr, false);
+        }
+        return expr;
+    }
+
+    private Node evalNegExpr(Location l, Node expr) throws ParseException {
+        if (expr instanceof TempInt) {
+            expr.location = l;
+            return evalInt((TempInt) expr, true);
+        }
+        return new Unary(l, Unary.Kind.INEGATE, expr);
+    }
+
 :};
+
+scan with {: return lexer.nextToken(); :};
 
 /* Terminals (tokens returned by the scanner). */
 terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
@@ -32,31 +80,33 @@ terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
 terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
 terminal    Boolean         TRUE, FALSE; 
 terminal    String          IDENTIFIER;
-terminal    Long            INTEGER;
+terminal    String          INTEGER;
 terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
+terminal                    FUNCTIONCALL, ARRAYCALL; //TODO ARRAYCALL is implemented via LBRACK
 
 /* Non terminals */
 non terminal    Node                Expr;
 non terminal    ArrayList<Node>     ExprList, FExprList;
-non terminal    Node                FunctionCall;
+non terminal    Node                FnCall;
 non terminal    ArrayList<Node>     Args, FArgs; 
 non terminal    Node                ArrayCall;
 non terminal    ArrayList<Node>     IndexList;
 non terminal    ArrayList<Node>     ArrayElems, FArrayElems;
 non terminal    Node                VarDeclr, VarType, KeyType;
-non terminal    Node                Assign, AssignName;
+non terminal    ArrayList<Node>     VarTypeIndexList, VarTypeIndexListNoExpr;
+non terminal    Node                Assign, SingleAssignName, MultiAssignName;
+non terminal    Node                AssignVarDeclr, AssignVarType;
 non terminal    ArrayList<Node>     IDList, FIDList;
 non terminal    Node                WhileStmt, IfStmt, ElseStmt;
 non terminal    Node                BlockOptBraces, BlockStmts;
-non terminal    Node                SingleStmtNoReturn, Procedure, StmtNoReturn;
+non terminal    Node                SingleStmtNoReturn, StmtNoReturn;
 non terminal    ArrayList<Node>     StmtListNoReturn;
-non terminal    Node                FunctionDeclr, FunctionDef;
+non terminal    Node                FnDeclr, FnDef;
 non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
-non terminal    Node                FunType;
-non terminal    Node                ProcedureDeclr, ProcedureDef;
+non terminal    Node                FnType;
 non terminal    Node                UseDeclr;
-non terminal    ArrayList<Node>     UseDeclarations, FunctionDeclarations;
+non terminal    ArrayList<Node>     UseDeclarations, FnDeclarations;
 non terminal    Node                Program;
 non terminal                        OptSemicolon;
 
@@ -69,6 +119,7 @@ precedence left         LTE, LT, GTE, GT;
 precedence left         ADD, MINUS;
 precedence left         MULT, HMULT, DIV, MOD;
 precedence right        UMINUS, LNEG;
+precedence left         FUNCTIONCALL, LBRACK; //TODO LBRACK is hack to make arraycall precedence work
 
 /* The grammar rules */
 start with      Program;
@@ -79,8 +130,9 @@ OptSemicolon ::=
     ;
 
 // Program
-Program ::= UseDeclarations:uds FunctionDeclarations:fds
+Program ::= UseDeclarations:uds FnDeclr:f FnDeclarations:fds
     {:
+        fds.add(0,f);
         RESULT = new Program(udsxleft, uds, fds);
     :}
     ;
@@ -92,7 +144,7 @@ UseDeclarations ::=
     :}
     | UseDeclarations:uds UseDeclr:u
     {:
-        uds.add(0, u);
+        uds.add(u);
         RESULT = uds;
     :}
     ;
@@ -106,11 +158,11 @@ UseDeclr ::=
     ;
 
 // Functions
-FunctionDeclarations ::= 
+FnDeclarations ::= 
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | FunctionDeclr:f FunctionDeclarations:fds
+    | FnDeclr:f FnDeclarations:fds
     {:
         fds.add(0, f);
         RESULT = fds;
@@ -118,24 +170,27 @@ FunctionDeclarations ::=
     ;
 
 // Function and Procedure Declaration
-FunctionDeclr ::= 
-    FunctionDef:def LBRACE:l BlockStmts:block RBRACE
+FnDeclr ::= 
+    FnDef:def LBRACE:l BlockStmts:block RBRACE
     {:
         //TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
 
-        RESULT = new Function(defxleft, (Function) def, block);
+        RESULT = new Fn(defxleft, (Fn) def, block);
     :}
     ;
 
-FunctionDef ::= 
+FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-        RESULT = new Function(idxleft,id,atl,rtl);
+    	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+    	Node returns = rtl.size() == 1 ? rtl.get(0) : new Multiple(rtlxleft, rtl, Multiple.Kind.FN_RETURNS);
+        RESULT = new Fn(idxleft, id, args, returns);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        RESULT = new Function(idxleft,id,atl);
+    	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+        RESULT = new Fn(idxleft, id, args);
     :}
     ;
 
@@ -143,9 +198,9 @@ ArgsTypeList ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
+    | IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft,new Variable(idxleft,id), type));
+        fatl.add(0, new Declare(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -154,15 +209,15 @@ FArgsTypeList ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA IDENTIFIER:id COLON FunType:type FArgsTypeList:fatl
+    | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft,new Variable(idxleft,id),type));
+        fatl.add(0, new Declare(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
 
 ReturnTypeList ::= 
-    FunType:type FReturnTypeList:frtl
+    FnType:type FReturnTypeList:frtl
     {:
         frtl.add(0, type);
         RESULT = frtl;
@@ -173,23 +228,23 @@ FReturnTypeList ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA FunType:type FReturnTypeList:frtl
+    | COMMA FnType:type FReturnTypeList:frtl
     {:
         frtl.add(0, type);
         RESULT = frtl;
     :}
     ;
 
-FunType ::= 
+FnType ::= 
     INT:i
     {:
-        RESULT = new XiType(ixleft, XiType.Kind.INTEGER);
+        RESULT = new XiType(ixleft, "int");
     :}
     | BOOL:b
     {:
-        RESULT = new XiType(bxleft, XiType.Kind.BOOLEAN);
+        RESULT = new XiType(bxleft, "bool");
     :}
-    | FunType:type LBRACK RBRACK
+    | FnType:type LBRACK RBRACK
     {:
         RESULT = new XiType(typexleft, type);
     :}
@@ -215,12 +270,15 @@ BlockStmts ::=
     StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
     {:
         if (el.size() == 0) {
-            RESULT = new Block(slnr, new Return(rxleft));
+        	slnr.add(new Return(rxleft));
+            RESULT = new Block(slnr);
         } else if (el.size() == 1) {
-            RESULT = new Block(slnr, new Return(rxleft, el.get(0)));
+        	slnr.add(new Return(rxleft, el.get(0)));
+            RESULT = new Block(slnr);
         } else {
             Multiple m = new Multiple(elxleft, el, Multiple.Kind.RETURN);
-            RESULT = new Block(slnr, new Return(rxleft, m));
+            slnr.add(new Return(rxleft, m));
+            RESULT = new Block(slnr);
         }
     :}
     | StmtListNoReturn:slnr
@@ -235,7 +293,7 @@ ExprList ::=
     :}
     | Expr:e FExprList:fel
     {:
-        fel.add(0, e);
+        fel.add(0, evalExpr(e));
         RESULT = fel;
     :}
     ;
@@ -246,7 +304,7 @@ FExprList ::=
     :}
     | COMMA Expr:e FExprList:fel 
     {:
-        fel.add(0, e);
+        fel.add(0, evalExpr(e));
         RESULT = fel;
     :}
     ;
@@ -264,7 +322,7 @@ SingleStmtNoReturn ::=
     {:
         RESULT = w;
     :}
-    | FunctionCall:p OptSemicolon // Procedure
+    | FnCall:p OptSemicolon // Procedure
     {:
         RESULT = p;
     :}
@@ -300,17 +358,13 @@ StmtNoReturn ::=
     ;
 
 // Function Calls
-FunctionCall ::= 
+FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
-            Variable v = new Variable(idxleft, id);
-            RESULT = new Call(idxleft, v, args);
+        	Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
+            RESULT = new Call(idxleft, id, arg);
         :}
-    | LENGTH:l LPAREN Args:args RPAREN
-        {:
-            Variable v = new Variable(lxleft, "length");
-            RESULT = new Call(lxleft, v, args);
-        :}
+        %prec FUNCTIONCALL
     ;
 
 Args ::= 
@@ -319,7 +373,7 @@ Args ::=
         :}
     | Expr:e FArgs:fargs
         {:  
-            fargs.add(0, e);
+            fargs.add(0, evalExpr(e));
             RESULT = fargs;
         :}
     ;
@@ -330,26 +384,16 @@ FArgs ::=
     :} 
     | COMMA Expr:e FArgs:fargs
         {:
-            fargs.add(0, e);
+            fargs.add(0, evalExpr(e));
             RESULT = fargs;
         :}
     ;
 
-// Array Calls
+// Array Calls for LHS of assignment
 ArrayCall ::= 
-    STRING:s LBRACK Expr:e RBRACK IndexList:il 
+    FnCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
-            il.add(0, e);
-            Index index = new Index(sxleft, new XiString(sxleft, s.name, s.value), il.get(0));
-            for (int i = 1; i < il.size(); i++) {
-                Node n = il.get(i);
-                index = new Index(n.location, index, n);
-            }
-            RESULT = index;
-        :}
-    | FunctionCall:fc LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, e);
+            il.add(0, evalExpr(e));
             Index index = new Index(fcxleft, fc, il.get(0));
             for(int i =1; i<il.size(); i++) {
                 Node n = il.get(i);
@@ -359,8 +403,8 @@ ArrayCall ::=
         :}
     | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
         {:
-            il.add(0, e);
-            Index index = new Index(idxleft, new Variable(idxleft, id), il.get(0));
+            il.add(0, evalExpr(e));
+            Index index = new Index(idxleft, new Var(idxleft, id), il.get(0));
             for(int i =1; i<il.size(); i++) {
                 Node n = il.get(i);
                 index = new Index(n.location, index, n);
@@ -375,7 +419,7 @@ IndexList ::=
         :}
     | LBRACK Expr:e RBRACK IndexList:il
         {:
-            il.add(0, e);
+            il.add(0, evalExpr(e));
             RESULT = il;
         :}
     ;
@@ -387,7 +431,7 @@ ArrayElems ::=
     :}
     | Expr:e FArrayElems:fae
     {:
-        fae.add(0, e);
+        fae.add(0, evalExpr(e));
         RESULT = fae;
     :}
     ;
@@ -402,18 +446,62 @@ FArrayElems ::=
     :}
     | COMMA Expr:e FArrayElems:fae
     {:
-        fae.add(0, e);
+        fae.add(0, evalExpr(e));
         RESULT = fae;
     :}
     ;
 
-// Variable Declaration
+// Var Declaration
 VarDeclr ::= 
     IDENTIFIER:id COLON VarType:type
     {:
-        RESULT = new Declare(idxleft, new Variable(idxleft, id), type);
+        RESULT = new Declare(idxleft, id, type);
     :};
 
+
+VarType ::= 
+    KeyType:type VarTypeIndexList:vtil
+    {:
+        for(int i=vtil.size()-1; i>=0; i--) {
+            if(vtil.get(i) == null){
+                type = new XiType(typexleft,type);
+            }
+            else {
+                type = new XiType(typexleft, type, vtil.get(i));
+            }
+        }
+        RESULT = type;
+    :}
+    ;
+
+VarTypeIndexList ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | LBRACK Expr:e RBRACK VarTypeIndexList:vtil
+    {:
+        vtil.add(0,evalExpr(e));
+        RESULT = vtil;
+    :}
+    | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
+    {:
+        vtilne.add(0,null);
+        RESULT = vtilne;
+    :}
+    ;
+
+VarTypeIndexListNoExpr ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
+    {:
+        vtilne.add(0,null);
+        RESULT = vtilne;
+    :}
+    ;
+
+/*
 VarType ::= 
     VarType:type LBRACK RBRACK
     {:
@@ -421,22 +509,23 @@ VarType ::=
     :}
     | VarType:type LBRACK Expr:e RBRACK
     {:
-        RESULT = new XiType(typexleft, type, e);
+        RESULT = new XiType(typexleft, type, evalExpr(e));
     :}
     | KeyType:type 
     {:
         RESULT = type;
     :}
     ;
+*/
 
 KeyType ::= 
     INT:i
     {:
-        RESULT = new XiType(ixleft, XiType.Kind.INTEGER);
+        RESULT = new XiType(ixleft, "int");
     :}
     | BOOL:b
     {:
-        RESULT = new XiType(bxleft, XiType.Kind.BOOLEAN);
+        RESULT = new XiType(bxleft, "bool");
     :}
     ;
 
@@ -444,16 +533,18 @@ KeyType ::=
 Assign ::= 
     IDList:il EQ Expr:e
     {:
-        if (il.size() == 1) {
-            RESULT = new Assign(ilxleft, il.get(0), e);
-        } else {
-            RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), e);
-        }
-    :};
+        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), evalExpr(e));
+    :}
+    | SingleAssignName:san EQ Expr:e
+    {:
+        RESULT = new Assign(sanxleft, san, evalExpr(e));
+    :}
+    ;
 
 IDList ::= 
-    AssignName:an FIDList:fl
+    MultiAssignName:an COMMA MultiAssignName: bn FIDList:fl
     {:
+        fl.add(0, bn);
         fl.add(0, an);
         RESULT = fl;
     :};
@@ -462,42 +553,78 @@ FIDList ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA AssignName:an FIDList:fl
+    | COMMA MultiAssignName:an FIDList:fl
     {:
         fl.add(0, an);
         RESULT = fl;
     :}
     ;
 
-AssignName ::= 
+// LHS of multiple assignment
+MultiAssignName ::=
+    UNDERSCORE:u
+    {:
+        RESULT = new Declare(uxleft);
+    :}
+    | AssignVarDeclr:v
+    {:
+        RESULT = v;
+    :}
+    ;
+
+// LHS of single assignment
+SingleAssignName ::= 
     UNDERSCORE:u
     {:
         RESULT = new Declare(uxleft);
     :}
     | IDENTIFIER:id
     {:
-        RESULT = new Variable(idxleft, id);
+        RESULT = new Var(idxleft, id);
     :}
     | ArrayCall:a
     {:
         RESULT = a;
     :}
-    | VarDeclr:v
+    | AssignVarDeclr:v
     {:
         RESULT = v;
     :}
     ;
 
+AssignVarDeclr ::= 
+    IDENTIFIER:id COLON AssignVarType:type 
+    {:
+        RESULT = new Declare(idxleft, id, type);
+    :}
+    ;
+
+AssignVarType ::=
+    KeyType:type VarTypeIndexListNoExpr:vtilne
+    {:
+        for(int i=vtilne.size()-1; i>=0; i--) {
+            if(vtilne.get(i) == null){
+                type = new XiType(typexleft,type);
+            }
+            else {
+                type = new XiType(typexleft, type, vtilne.get(i));
+            }
+        }
+        RESULT = type;
+    :}
+    ;
+
+
 // While Statement
 WhileStmt ::= WHILE:w Expr:e BlockOptBraces:block
     {:
-        RESULT = new While(wxleft, e, block);
+        RESULT = new While(wxleft, evalExpr(e), block);
     :};
 
 // If Statement
 IfStmt ::= IF:i Expr:e BlockOptBraces:block ElseStmt:el
     {:
-        If node = (el == null) ? new If(ixleft, e, block) : new If(ixleft, e, block, el);
+        If node = (el == null) ? new If(ixleft, evalExpr(e), block) : new If(ixleft, evalExpr(e), block, el);
         RESULT = node;
     :}
     ;
@@ -508,7 +635,7 @@ ElseStmt ::=
     :}
     | ELSE:el BlockOptBraces:block 
     {:
-        RESULT = new Else(elxleft,block);
+        RESULT = block;
     :}
     ;
 
@@ -516,80 +643,86 @@ ElseStmt ::=
 Expr ::= 
     LPAREN Expr:e RPAREN
         {:
-            RESULT = e;
+            RESULT = evalExpr(e);
         :}
     | LNEG:l Expr:e
         {:
-            RESULT = new Unary(lxleft, Unary.Kind.LNEGATE, e);
+            RESULT = new Unary(lxleft, Unary.Kind.LNEGATE, evalExpr(e));
         :}
     | MINUS:m Expr:e
         {:
-            RESULT = new Unary(mxleft, Unary.Kind.INEGATE, e);
+            RESULT = evalNegExpr(mxleft, e);
         :}
         %prec UMINUS
     | Expr:e1 MULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.TIMES, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 HMULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.HIGH_TIMES, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.HIGH_TIMES, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 DIV:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.DIVISION, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.DIVISION, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 MOD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.MODULO, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.MODULO, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 ADD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.PLUS, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.PLUS, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 MINUS:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.MINUS, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.MINUS, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.LE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.LE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.LT, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.LT, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 GTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.GE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.GE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 GT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.GT, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.GT, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 EQEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.EQ, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.EQ, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 NEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.NE, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.NE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LAND:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.AND, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.AND, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LOR:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.OR, e1,e2);
+            RESULT = new Binary(bxleft, Binary.Kind.OR, evalExpr(e1), evalExpr(e2));
         :}
-    | FunctionCall:fc
+    | FnCall:fc
         {:
             RESULT = fc;
         :}
-    | ArrayCall:ac
+    | LENGTH:l LPAREN Expr:e RPAREN
         {:
-            RESULT = ac;
+            RESULT = new Call(lxleft, "length", evalExpr(e));
+        :}
+        %prec FUNCTIONCALL
+    | Expr:e1 LBRACK Expr:e2 RBRACK
+        {:
+            Index index = new Index(e1xleft, evalExpr(e1), evalExpr(e2));
+            RESULT = index;
         :}
     | LBRACE ArrayElems:ae RBRACE
         {:
@@ -605,7 +738,7 @@ Expr ::=
         :}
     | INTEGER:i
         {:
-            RESULT = new XiInt(ixleft, i);
+            RESULT = new TempInt(ixleft, i);
         :}
     | CHAR:c
         {:
@@ -617,6 +750,6 @@ Expr ::=
         :}
     | IDENTIFIER:id
         {:
-            RESULT = new Variable(idxleft, id);
+            RESULT = new Var(idxleft, id);
         :}
     ;

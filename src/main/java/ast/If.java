@@ -1,7 +1,9 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
+// If Statement
 public class If extends Node {
 
     public enum Kind {
@@ -33,7 +35,7 @@ public class If extends Node {
         return kind == Kind.IF_ELSE; 
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) throws XicException {
+        return v.visit(this);
     }
 }

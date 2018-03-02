@@ -1,179 +1,134 @@
 package xic;
 
-import java.io.*;
-import java.io.FileInputStream;
-import org.apache.commons.io.FilenameUtils;
+import ast.Invariant;
+import ast.Node;
+import lexer.XiLexer;
+import parser.IXiParser;
+import parser.XiParser;
+import type.TypeCheck;
 
-import java_cup.runtime.*;
-import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
-import java_cup.runtime.ComplexSymbolFactory.Location;
-
-import parser.XiSymbol;
-import lexer.*;
-import parser.*;
-import ast.*;
-
-import java.util.*;
-
+/**
+ * Main compiler class. Wraps around and provides convenience methods
+ * for every phase of compilation.
+ */
 public class Xic {
+	
+	/**
+	 * The source path associated with this compiler, i.e. where it will
+	 * look for source files.
+	 */
+	private String source;
+	
+	/**
+	 * The sink path associated with this compiler, i.e. where it will
+	 * output diagnostic files.
+	 */
+	private String sink;
+	
+	/**
+	 * The lib path associated with this compiler, i.e. where it will
+	 * look for interface files.
+	 */
+	private String lib;
+	
+	/**
+	 * Creates a new compiler instance which will read from the given
+	 * file paths.
+	 * 
+	 * @param source Where to look for source files
+	 * @param sink Where to output diagnostic files
+	 * @param lib Where to look for interface files
+	 */
+	public Xic(String source, String sink, String lib) {
+		this.source = source;
+		this.sink = sink;
+		this.lib = lib;
+	}
 
-    public static void main(String [] args) {
-        boolean lexFlag = false;
-        boolean parseFlag = false;
-        boolean helpFlag = false;
-        boolean sourceFlag = false;
-        String sourcePath = "";
-        boolean dFlag = false;
-        String dPath = "";
+	/**
+	 * Creates a {@link lexer.XiLexer} which reads the input file.
+	 * 
+	 * @param unit The path to the input file, relative to source
+	 * @return A XiLexer instance which will read the input file
+	 * @throws XicException if lexing failed
+	 */
+	public XiLexer lex(String unit) throws XicException {
+		switch (FilenameUtils.getExtension(unit)) {
+			case "xi":
+			case "ixi":
+				return XiLexer.from(source, unit);
+			default:
+				throw XicException.unsupported(unit);
+		}
+	}
 
-        ArrayList<String> sourceFiles = new ArrayList<String>();
-        for (int i = 0; i < args.length; i++){
-            if (args[i].equals("--lex")){
-                lexFlag = true;
-            }
-            else if (args[i].equals("--parse")){
-                parseFlag = true;
-            }
-            else if (args[i].equals("--help")){
-                helpFlag = true;
-            }
-            else if (args[i].equals("-sourcepath") && i+1<args.length){
-                sourceFlag = true;
-                sourcePath = args[++i];
-            }
-            else if (args[i].equals("-D") && i+1<args.length){
-                dFlag = true;
-                dPath = args[++i];
-            }
-            else {
-                sourceFiles.add(args[i]);
-            }
-        }
+	/**
+	 * Returns the AST associated with the input file.
+	 * 
+	 * @param unit The path to the input file, relative to source
+	 * @return The AST of the input file
+	 * @throws XicException if lexing or parsing failed
+	 */
+	public Node parse(String unit) throws XicException {
+		Node ast = null;
+		
+		switch (FilenameUtils.getExtension(unit)) {
+			case "xi":
+				ast = XiParser.from(source, unit);
+				break;
+			case "ixi":
+				ast = IXiParser.from(source, unit);
+				break;
+			default:
+				throw XicException.unsupported(unit);
+		}
+		
+		Invariant.check(ast);
+		return ast;
+	}
+	
+	/**
+	 * Returns the decorated AST (i.e. with type annotations) 
+	 * associated with the input file.
+	 * 
+	 * @param unit The path to the input file, relative to source
+	 * @return The decorated AST of the input file
+	 * @throws XicException if lexing, parsing, or typechecking failed
+	 */
+	public Node typeCheck(String unit) throws XicException {
+		Node ast = parse(unit);
+		TypeCheck.check(lib, ast);
+		return ast;
+	}
+	
+	/**
+	 * Prints and writes diagnostics for the lexed input file.
+	 * 
+	 * @param unit The path to the input file, relative to source
+	 * @throws XicException if lexing failed
+	 */
+	public void printLexed(String unit) throws XicException {
+		lexer.Printer.print(source, sink, unit);
+	}
+	
+	/**
+	 * Prints and writes diagnostics for the lexed and parsed input file.
+	 * 
+	 * @param unit The path to the input file, relative to source
+	 * @throws XicException if lexing or parsing failed
+	 */
+	public void printParsed(String unit) throws XicException {
+		parser.Printer.print(source, sink, unit);
+	}
 
-        if (helpFlag == true || (lexFlag == false && parseFlag == false)) {
-            displayHelp();
-        }
-        else {
-            try {
-                if (lexFlag == true){
-                    for (String source : sourceFiles){
-                        lex(source, sourcePath, dPath);
-                    }
-                
-                }
-                if (parseFlag == true){
-                    for (String source : sourceFiles){
-                        parse(source, sourcePath, dPath);
-                    }
-                }
-            } catch (IOException e){
-                System.out.println("Could not find file");
-            }
-        }
-    }
-
-    private static void lex(String source, String sourceDir, String outputDir) throws IOException {
-        String ext = FilenameUtils.getExtension(source);
-        if (!ext.equals("xi") && !ext.equals("ixi")) {
-            displayHelp();
-            return;
-        }
-
-        String output = FilenameUtils.concat(outputDir, FilenameUtils.removeExtension(source) + ".lexed");
-        source = FilenameUtils.concat(sourceDir, source);
-        
-        BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
-        XiLexer lexer = new XiLexer(new FileReader(source));
-        lexer.init(source, new ComplexSymbolFactory());
-        try {
-           ComplexSymbol s = (ComplexSymbol) lexer.next_token();
-            while (s.sym != XiSymbol.EOF) {
-                w.append(formatSymbol(s) + "\n");
-                s = (ComplexSymbol) lexer.next_token();
-            }
-            w.close();
-        } catch (Exception e) {
-            w.append(e.toString());
-            w.close();
-            System.out.println(e.toString());
-        }
-    }
-
-    private static String formatSymbol(ComplexSymbol s) {
-        String label;
-        switch (s.sym) {
-            case XiSymbol.IDENTIFIER:
-                label = "id ";
-                break;
-            case XiSymbol.INTEGER:
-                label = "integer ";
-                break;
-            case XiSymbol.CHAR:
-                label = "character ";
-                break;
-            case XiSymbol.STRING:
-                label = "string ";
-                break;
-            default:
-                label = "";
-        }
-        Location l = s.getLeft();
-        return l.getLine() + ":" + l.getColumn() + " " + label + s.getName();   
-    }
-
-    private static void parse(String source, String sourceDir, String outputDir) throws IOException {
-        String ext = FilenameUtils.getExtension(source);
-        
-        String output;
-        if (ext.equals("ixi")){
-            output = ".iparsed";
-        } else {
-            output = ".parsed";
-        }
-        output = FilenameUtils.concat(outputDir, FilenameUtils.removeExtension(source) + output);
-        source = FilenameUtils.concat(sourceDir, source);
-          
-        try {
-            if (ext.equals("xi")){
-                OutputStream stream = new FileOutputStream(output);
-                XiLexer lexer = new XiLexer(new FileReader(source));
-                ComplexSymbolFactory sf = new ComplexSymbolFactory();
-                lexer.init(source, sf);
-                XiParser parser = new XiParser(lexer, sf);
-                
-                Printer pp = new Printer(stream);
-                Node ast = parser.parse().value();
-                Invariant.check(ast);
-                pp.print(ast);
-            }
-            else if (ext.equals("ixi")){
-                OutputStream stream = new FileOutputStream(output);
-                IXiLexer lexer = new IXiLexer(new FileReader(source));
-                ComplexSymbolFactory sf = new ComplexSymbolFactory();
-                lexer.init(source, sf);
-                IXiParser parser = new IXiParser(lexer, sf);
-
-                Printer pp = new Printer(stream);
-                Node ast = parser.parse().value();
-                Invariant.check(ast);
-                pp.print(ast);
-            }
-            else {
-                displayHelp();
-            }
-        } catch (Exception e){
-            BufferedWriter w = new BufferedWriter(new FileWriter(output, false));
-            w.append(e.toString());
-            w.close();
-            System.out.println(e.toString());
-
-        }
-    }
-
-    private static void displayHelp() {
-        System.out.println("Usage: xic [options] <source-files>");
-        System.out.println("  --help:                 Print a synopsis of options");
-        System.out.println("  --lex <source-files>:   For each source file filename.xi, generate a lexed file filename.lexed");
-        System.out.println("  --parse <source-files>: For each source file filename.xi/filename.ixi, generate a parsed file filename.parsed/filename.iparsed");
-    }
+	/**
+	 * Prints and writes diagnostics for the lexed, parsed, and typechecked input
+	 * file.
+	 * 
+	 * @param unit The path to the input file, relative to source
+	 * @throws XicException if lexing, parsing, or typechecking failed
+	 */
+	public void printTyped(String unit) throws XicException {
+		type.Printer.print(source, sink, lib, unit);
+	}
 }

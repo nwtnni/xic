@@ -1,5 +1,18 @@
 package lexer;
 
+import xic.XicException;
+import lexer.LexException.Kind;
+
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+
+import xic.FilenameUtils;
+
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
 import java.util.ArrayList;
@@ -13,7 +26,7 @@ import static parser.IXiSymbol.*;
 
 %cupsym IXiSymbol
 %cup
-%yylexthrow Exception, LexerError
+%yylexthrow LexException
 
 %pack
 %unicode
@@ -21,20 +34,46 @@ import static parser.IXiSymbol.*;
 %column
 
 %{
+    /* Exposed Interface */
+
+    // TODO: Throw XicException
+    public static IXiLexer from(String source, String unit) throws XicException {
+        String input = FilenameUtils.concat(source, unit);
+        try {
+            IXiLexer lexer = new IXiLexer(new FileReader(input));
+            lexer.init(unit, new ComplexSymbolFactory());
+            return lexer;
+        } catch (IOException e) {
+            throw XicException.read(input);
+        }
+    }
+
+    public ComplexSymbolFactory getSymbolFactory() {
+        return symbolFactory;   
+    }
+    
+    public Symbol nextToken() throws LexException {
+    	try {
+    		return next_token();
+    	} catch (IOException io) {
+    		throw LexException.internal(Kind.IO);
+    	}
+    }
+
+    /* JFlex Fields */
+
     private String unit;
     private ComplexSymbolFactory symbolFactory;
-    
     private StringBuilder literal = new StringBuilder();
     private ArrayList<Long> value = new ArrayList<Long>();
-    
     private int startColumn = 1;
 
-    public void init(String unit, ComplexSymbolFactory sf) {
+    /* Utility methods */
+
+    private void init(String unit, ComplexSymbolFactory sf) {
         this.unit = unit;
         this.symbolFactory = sf;
     }
-
-    /* Utility methods */
 
     private int row() { return yyline + 1; }
 
@@ -71,7 +110,7 @@ import static parser.IXiSymbol.*;
 
     /* Symbol factory methods */
 
-    private Symbol tokenize(int id) throws LexerError {
+    private Symbol tokenize(int id) throws LexException {
         Location l = new Location(unit, row(), column());
         Location r = new Location(unit, row(), column() + yylength());
         switch (id) {
@@ -82,12 +121,7 @@ import static parser.IXiSymbol.*;
             case IDENTIFIER:
                 return symbolFactory.newSymbol(yytext(), IDENTIFIER, l, r, yytext());
             case INTEGER:
-                try {
-                    Long value = Long.valueOf(yytext());
-                    return symbolFactory.newSymbol(yytext(), INTEGER, l, r, value);
-                } catch (NumberFormatException e) {
-                    throwLexError(row(), column(), "invalid integer literal");
-                }
+                return symbolFactory.newSymbol(yytext(), INTEGER, l, r, yytext());
             default:
                 return symbolFactory.newSymbol(yytext(), id, l, r);
         }
@@ -111,11 +145,11 @@ import static parser.IXiSymbol.*;
         return symbolFactory.newSymbol(literal.toString(), STRING, l, r, v);
     }
 
-    private Symbol throwLexError(int row, int col, String msg) throws LexerError {
+    private Symbol throwLexException(int row, int col, Kind kind) throws LexException {
         Location l = new Location(unit, row, col);
         Location r = new Location(unit, row, col + yylength());
-        ComplexSymbol err = (ComplexSymbol) symbolFactory.newSymbol(yytext(), error, l, r);
-        throw new LexerError(err, msg);
+        ComplexSymbol symbol = (ComplexSymbol) symbolFactory.newSymbol(yytext(), error, l, r);
+        throw new LexException(kind, symbol);
     }
 %}
 
@@ -241,8 +275,8 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
-    \\                  { throwLexError(row(), column(), "Invalid escape sequence"); }
-    [^]                 { throwLexError(row(), column(), "Invalid character literal"); }
+    \\                  { throwLexException(row(), column(), Kind.INVALID_ESCAPE_SEQUENCE); }
+    [^]                 { throwLexException(row(), column(), Kind.INVALID_CHAR_LITERAL); }
 }
 
 <YYSTRING> {
@@ -272,10 +306,10 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             buildString(escape(yytext(), c), c);
                         }
-    \\                  { throwLexError(row(), column(), "Invalid escape sequence"); }
-    {EOL}               { throwLexError(row(), column(), "String literal not properly terminated"); }
-    <<EOF>>             { throwLexError(row(), column(), "String literal not properly terminated"); }
+    \\                  { throwLexException(row(), column(), Kind.INVALID_ESCAPE_SEQUENCE); }
+    {EOL}               { throwLexException(row(), column(), Kind.INVALID_STRING_TERMINATOR); }
+    <<EOF>>             { throwLexException(row(), column(), Kind.INVALID_STRING_TERMINATOR); }
 }
 
-[^]                     { throwLexError(row(), column(), "Invalid syntax"); } 
+[^]                     { throwLexException(row(), column(), Kind.INVALID_SYNTAX); } 
 <<EOF>>                 { return tokenize(EOF); }

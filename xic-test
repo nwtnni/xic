@@ -1,0 +1,93 @@
+#!/bin/bash
+
+build() {
+   xth/xth -compilerpath . -testpath tests tests/xth-build
+   printf "\n========================================\n\n"
+}
+
+test_all() {
+  test_reg
+  test_fails
+}
+
+test_reg() {
+    test_lex
+    test_parse
+    test_type
+}
+
+test_fails() {
+    xth/xth -compilerpath . -workpath tests/parser/failed_tests -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
+    printf "\n========================================\n\n" 
+}
+
+test_lex() {
+    xth/xth -compilerpath . -workpath tests/lexer -testpath tests/lexer tests/lexer/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_parse() {
+    xth/xth -compilerpath . -workpath tests/parser -testpath tests/parser tests/parser/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_type() {
+    test_type_err
+    test_type_valid
+    test_type_man
+}
+
+test_type_valid() {
+    xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_type_err() {
+    xth/xth -compilerpath . -workpath tests/type/errors -testpath tests/type/errors tests/type/errors/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_type_man() {
+    xth/xth -compilerpath . -workpath tests/type/pa3-tests-manual -testpath tests/type/pa3-tests-manual tests/type/pa3-tests-manual/xthScript
+    printf "\n========================================\n\n"
+}
+
+cmd=$1
+if [ "$cmd" = "--nb" ] ; then
+    echo "skipping build"
+    cmd=$2
+elif [ -n "$cmd" ] ; then
+    build
+fi
+
+case $cmd in
+r|regression)
+    test_reg
+    ;;
+f|fails)
+    test_fails
+    ;;
+l|lexer)
+    test_lex
+    ;;
+p|parser)
+    test_parse
+    ;;
+t|type)
+    test_type
+    ;;
+te)
+    test_type_err
+    ;;
+tv)
+    test_type_valid
+    ;;
+tm)
+    test_type_man
+    ;;
+*)
+    echo "Usage: xic-test [options] <command>"
+    echo "  --nb:   Skips running xic-build"
+    echo "  Possible commands: r[egression] f[ails] l[exer] p[arser] t[ype] te tv tm"
+    ;;
+esac

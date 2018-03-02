@@ -1,4 +1,3 @@
 foo() {
-    {return}
-    return
+    x = -a[2]+b[1]
 }

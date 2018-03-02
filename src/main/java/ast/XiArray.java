@@ -1,9 +1,11 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
 import java.util.ArrayList;
 
+// A Xi array
 public class XiArray extends Node {
 
     public ArrayList<Node> values;
@@ -13,7 +15,7 @@ public class XiArray extends Node {
         this.values = values;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) throws XicException {
+        return v.visit(this);
     }
 }

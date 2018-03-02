@@ -3,7 +3,9 @@ package ast;
 import java.util.ArrayList;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
+// An Xi String
 public class XiString extends Node {
 
     public String escaped;
@@ -15,7 +17,7 @@ public class XiString extends Node {
         this.value = value;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) throws XicException {
+        return v.visit(this);
     }
 }

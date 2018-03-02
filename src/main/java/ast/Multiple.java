@@ -1,13 +1,15 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
 import java.util.ArrayList;
 
+// Used to hold tuples (multiple assign/multiple return/function args/etc)
 public class Multiple extends Node {
 
     public enum Kind {
-        ASSIGN, RETURN 
+        ASSIGN, RETURN, FN_ARGS, FN_RETURNS, FN_CALL,
     }
 
     public Kind kind;
@@ -23,7 +25,7 @@ public class Multiple extends Node {
         return kind == Kind.ASSIGN; 
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) throws XicException {
+        return v.visit(this);
     }
 }

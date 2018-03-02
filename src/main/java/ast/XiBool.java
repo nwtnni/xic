@@ -1,7 +1,9 @@
 package ast;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
+import xic.XicException;
 
+// An Xi primitive boolean
 public class XiBool extends Node {
 
     public boolean value;
@@ -11,7 +13,7 @@ public class XiBool extends Node {
         this.value = value;
     }
 
-    public void accept(Visitor v) {
-        v.visit(this);
+    public <T> T accept(Visitor<T> v) throws XicException {
+        return v.visit(this);
     }
 }

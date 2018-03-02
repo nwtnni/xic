@@ -1,0 +1,39 @@
+// build
+
+xic ("Test --typecheck") "--typecheck" {
+    bad_add1.xi;
+    bad_add2.xi;
+    bad_add3.xi;
+    bad_add4.xi;
+    bad_add5.xi;
+    bad_array1.xi;
+    bad_array2.xi;
+    bad_array_size1.xi;
+    bad_array_size2.xi;
+    bad_arg_shadowing.xi;
+    bad_assign1.xi;
+    bad_assign2.xi;
+    bad_early_bind.xi;
+    bad_function_declarations1.xi;
+    bad_length1.xi;
+    bad_length2.xi;
+    bad_length3.xi;
+    bad_multiarray1.xi;
+    bad_multiarray2.xi;
+    bad_primitive1.xi;
+    bad_primitive2.xi;
+    bad_procedure_call1.xi;
+    bad_return1.xi;
+    bad_return2.xi;
+    bad_return3.xi;
+    bad_return4.xi;
+    bad_return5.xi;
+    bad_scope1.xi;
+    bad_subtract1.xi;
+    bad_subtract2.xi;
+    bad_subtract3.xi;
+    bad_undeclared_var1.xi;
+    bad_unreachable1.xi;
+    bad_underscore.xi;
+    bad_underscore_tuple.xi;
+}

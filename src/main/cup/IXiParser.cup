@@ -4,24 +4,46 @@ import java.util.ArrayList;
 
 import lexer.*;
 import ast.*;
+import xic.XicException;
 
 parser code {:
 
-    IXiLexer lex;
-    IXiParser(IXiLexer lex, ComplexSymbolFactory sf) {
-        super(lex, sf);
-        this.lex = lex;
+    /* Exposed Interface */
+
+    //TODO: throw XicException
+    public static Node from(String source, String unit) throws XicException {
+        IXiLexer lexer = IXiLexer.from(source, unit);
+        IXiParser parser = new IXiParser(lexer);
+        
+        try {
+        	return parser.parse().value();
+        } catch (XicException xic) {
+        	throw xic;
+        } catch (Exception e) {
+        	throw ParseException.internal(e);
+        }
     }
 
-    public void unrecovered_syntax_error(Symbol cur_token) throws Exception {
+    /* Private Utility Functions */
+
+    IXiLexer lexer;
+
+    IXiParser(IXiLexer lexer) {
+        super(lexer, lexer.getSymbolFactory());
+        this.lexer = lexer;
+    }
+
+    public void unrecovered_syntax_error(Symbol cur_token) throws ParseException {
         done_parsing();
         ComplexSymbol sym = (ComplexSymbol) cur_token;
-        throw new ParserError(sym, "Unexpected token " + sym.getName());
+        throw new ParseException(sym);
     }
 
     public void syntax_error(Symbol cur_token) {}
 
 :};
+
+scan with {: return lexer.nextToken(); :};
 
 /* Terminals (tokens returned by the scanner). */
 terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
@@ -32,44 +54,43 @@ terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
 terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
 terminal    Boolean         TRUE, FALSE; 
 terminal    String          IDENTIFIER;
-terminal    Long            INTEGER;
+terminal    String          INTEGER;
 terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Node                FunctionDef, ProcedureDef;
-non terminal    ArrayList<Node>     FunctionDefList;
+non terminal    Node                FnDef, ProcedureDef;
+non terminal    ArrayList<Node>     FnDefList;
 non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
 non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
-non terminal    Node                FunType;
+non terminal    Node                FnType;
 non terminal    Node                Interface;
 
 /* The grammar rules */
 start with      Interface;
 
 // Function Definitions
-FunctionDef ::= 
+FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
-        {: 
-            RESULT = new Function(idxleft, id, atl, rtl);
-        :}
-    ;
-
-ProcedureDef ::= 
-    IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
-        {: 
-            RESULT = new Function(idxleft, id, atl, new ArrayList<Node>());
-        :}
+    {:
+        Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+        Node returns = rtl.size() == 1 ? rtl.get(0) : new Multiple(rtlxleft, rtl, Multiple.Kind.FN_RETURNS);
+        RESULT = new Fn(idxleft, id, args, returns);
+    :}
+    | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
+    {:
+        Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
+        RESULT = new Fn(idxleft, id, args);
+    :}
     ;
 
 ArgsTypeList ::= 
         {:
             RESULT = new ArrayList<Node>();
         :}
-    | IDENTIFIER:id COLON FunType:type FArgsTypeList:atl
+    | IDENTIFIER:id COLON FnType:type FArgsTypeList:atl
         {:
-            Variable v = new Variable(idxleft, id);
-            atl.add(0, new Declare(idxleft, v, type));
+            atl.add(0, new Declare(idxleft, id, type));
             RESULT = atl;
         :}
     ;
@@ -78,16 +99,15 @@ FArgsTypeList ::=
         {:
             RESULT = new ArrayList<Node>();
         :} 
-    | COMMA IDENTIFIER:id COLON FunType:type FArgsTypeList:atl
+    | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:atl
         {:
-            Variable v = new Variable(idxleft, id);
-            atl.add(0, new Declare(idxleft, v, type));
+            atl.add(0, new Declare(idxleft, id, type));
             RESULT = atl;
         :}
     ;
 
 ReturnTypeList ::= 
-    FunType:type FReturnTypeList:rtl
+    FnType:type FReturnTypeList:rtl
         {:
             rtl.add(0, type);
             RESULT = rtl;
@@ -98,47 +118,43 @@ FReturnTypeList ::=
         {:
             RESULT = new ArrayList<Node>();
         :}
-    | COMMA FunType:type FReturnTypeList:rtl
+    | COMMA FnType:type FReturnTypeList:rtl
         {:
             rtl.add(0, type);
             RESULT = rtl;
         :}
     ;
 
-FunType ::= 
+FnType ::= 
     INT:i
         {:
-            RESULT = new XiType(ixleft, XiType.Kind.INTEGER);
+            RESULT = new XiType(ixleft, "int");
         :}
     | BOOL:b
         {:
-            RESULT = new XiType(bxleft, XiType.Kind.BOOLEAN);
+            RESULT = new XiType(bxleft, "bool");
         :}
-    | FunType:type LBRACK RBRACK
+    | FnType:type LBRACK RBRACK
         {:
             RESULT = new XiType(typexleft, type);
         :}
     ;
 
 // Interface
-FunctionDefList ::= 
+FnDefList ::= 
         {:
             RESULT = new ArrayList<Node>();
         :}
-    | FunctionDefList:fdl FunctionDef:f
-        {:
-            fdl.add(f);
-            RESULT = fdl;
-        :}
-    | FunctionDefList:fdl ProcedureDef:f
+    | FnDefList:fdl FnDef:f
         {:
             fdl.add(f);
             RESULT = fdl;
         :}
     ;
 
-Interface ::= FunctionDefList:fdl
+Interface ::= FnDefList:fdl FnDef:f
         {:
+            fdl.add(f);
             RESULT = new Program(fdlxleft, fdl);
         :}
     ;

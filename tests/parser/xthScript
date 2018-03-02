@@ -1,24 +1,31 @@
-build
-
-xic ("Test --help") "--help" {
-    ;
-}
+// build
 
 xic ("Test --parse") "--parse" {
+    arrays1.xi;
+    arrays_with_dims.xi;
+    empty_functions.xi;
     functions1.xi;
     functions2.xi;
     if-while.xi;
     interface1.ixi;
+    min_int.xi;
     nested_return.xi;
     nestedblocks.xi;
+    paren_wrapped_return.xi;
     precedence.xi;
     procedures1.xi;
     use1.xi;
-    /* errors/bad_fun_def.ixi; */
-    /* errors/bad_function.xi; */
-    /* errors/bad_neg_maxint.xi; */
-    /* errors/bad_procedure.xi; */
-    /* errors/bad_program.xi; */
-    /* errors/bad_use_statement_loc.xi; */
-    /* errors/bad_use.ixi; */
+    bad_array_arg.xi;
+    bad_array_dim_assign1.xi;
+    bad_array_return.xi;
+    bad_empty.xi;
+    bad_empty.ixi;
+    bad_fun_def.ixi;
+    bad_function.xi;
+    bad_int.xi;
+    bad_neg_maxint.xi;
+    bad_procedure.xi;
+    bad_program.xi;
+    bad_use_statement_loc.xi;
+    bad_use.ixi;
 }
