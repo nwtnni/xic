@@ -6,31 +6,81 @@ import ast.*;
 import type.TypeException.Kind;
 import xic.XicException;
 
+/**
+ * Main type checking implementation. Recursively traverses the AST
+ * and verifies typing rules at each node, as defined by the Xi Type
+ * Specification. This implementation mutates the provided AST, decorating
+ * each node with a Type field.
+ */
 public class TypeCheck extends Visitor<Type> {
 
+	/**
+	 * Factory method to type check the given AST.
+	 * @param lib Directory to search for interface files
+	 * @param ast AST to typecheck
+	 * @throws XicException if a semantic error was found
+	 */
 	public static void check(String lib, Node ast) throws XicException {
 		ast.accept(new TypeCheck(lib, ast));
 	}
 
+	/**
+	 * Default constructor initializes empty contexts.
+	 */
 	protected TypeCheck() {
 		this.fns = new FnContext();
 		this.types = new TypeContext();
 		this.vars = new VarContext();
 	}
 
+	/**
+	 * This constructor initializes the FnContext with {@link Importer},
+	 * but leaves the other empty.
+	 * 
+	 * @param lib Directory to search for interface files
+	 * @param ast AST to resolve dependencies for
+	 * @throws XicException if a semantic error occurred while resolving dependencies
+	 */
 	private TypeCheck(String lib, Node ast) throws XicException {
 		this.fns = Importer.resolve(lib, ast);
 		this.types = new TypeContext();
 		this.vars = new VarContext();
 	}
 
+	/**
+	 * Associated function context.
+	 */
 	protected FnContext fns;
+
+	/**
+	 * Associated variable context.
+	 */
 	protected VarContext vars;
+	
+	/**
+	 * Associated type context.
+	 */
 	private TypeContext types;
+	
+	/**
+	 * The current value of rho, the expected return
+	 * type for the current function in scope, as defined
+	 * in the type specification.
+	 */
 	private Type returns;
 
 	/*
-	 * # Top-level AST nodes
+	 * Top-level AST nodes
+	 */
+	
+	/**
+	 * A program is valid if all of its top-level declarations
+	 * are valid. Use statements and top-level declarations 
+	 * are checked by {@link Importer},
+	 * while function bodies are checked by this class.
+	 * 
+	 * @returns {@link Type.UNIT} if program is valid
+	 * @throws XicException if program has semantic errors
 	 */
 	public Type visit(Program p) throws XicException {
 		for (Node fn : p.fns) {
@@ -40,6 +90,14 @@ public class TypeCheck extends Visitor<Type> {
 		return p.type;
 	}
 
+	/**
+	 * A function is valid if none of its arguments
+	 * shadow anything in the context, and its block is
+	 * void if it has return types.
+	 * 
+	 * @returns {@link Type.UNIT} is function is valid
+	 * @throws XicException if function has semantic errors
+	 */
 	public Type visit(Fn f) throws XicException {
 
 		vars.push();
@@ -48,6 +106,7 @@ public class TypeCheck extends Visitor<Type> {
 		FnType fn = fns.lookup(f.id);
 
 		if (fn == null) {
+			// Internal error occurred; should never happen
 			throw new TypeException(Kind.SYMBOL_NOT_FOUND, f.location);
 		}
 
@@ -67,6 +126,13 @@ public class TypeCheck extends Visitor<Type> {
 	/*
 	 * Statement nodes
 	 */
+	
+	/**
+	 * A declaration is valid if it doesn't shadow anything in the context.
+	 * 
+	 * @returns typeof(declaration) if valid
+	 * @throws XicException if a conflict was found
+	 */
 	public Type visit(Declare d) throws XicException {
 		if (d.isUnderscore()) {
 			d.type = Type.UNIT;
@@ -79,6 +145,16 @@ public class TypeCheck extends Visitor<Type> {
 		return d.type;
 	}
 
+	/**
+	 * An assignment is valid if each type on the RHS is a subtype of the
+	 * corresponding type on the LHS, and the number of types is matched.
+	 * 
+	 * Additionally, a procedure cannot be assigned to anything, and only
+	 * function calls can have wildcards on the LHS.
+	 * 
+	 * @returns {@link Type.UNIT} if valid
+	 * @throws XicException if invalid assignment
+	 */
 	public Type visit(Assign a) throws XicException {
 		Type rt = a.rhs.accept(this);
 		Type lt = a.lhs.accept(this);
@@ -95,6 +171,12 @@ public class TypeCheck extends Visitor<Type> {
 		return a.type;
 	}
 
+	/**
+	 * A return is valid if its type matches {@link TypeCheck#returns}
+	 * 
+	 * @returns {@link Type.VOID} if return type matches {@link TypeCheck#returns}
+	 * @throws XicException if return type doesn't match
+	 */
 	public Type visit(Return r) throws XicException {
 		if ((r.hasValue() && returns.equals(r.value.accept(this))) || (!r.hasValue() && returns.equals(Type.UNIT))) {
 			r.type = Type.VOID;
@@ -104,6 +186,13 @@ public class TypeCheck extends Visitor<Type> {
 		}
 	}
 
+	/**
+	 * A block is valid if each statement is valid, and no statement before the
+	 * last one is type {@link Type.VOID}.
+	 * 
+	 * @returns The type of the last statement
+	 * @throws XicException if invalid
+	 */
 	public Type visit(Block b) throws XicException {
 		b.type = Type.UNIT;
 		vars.push();
@@ -130,6 +219,12 @@ public class TypeCheck extends Visitor<Type> {
 		return b.type;
 	}
 
+	/**
+	 * An if statement is valid if its guard is {@link Type.BOOL} and its block is valid.
+	 * 
+	 * @returns If both blocks are {@link Type.VOID}, then Type.VOID, otherwise Type.UNIT
+	 * @throws XicException if invalid
+	 */
 	public Type visit(If i) throws XicException {
 		if (!i.guard.accept(this).equals(Type.BOOL)) {
 			throw new TypeException(Kind.INVALID_GUARD, i.guard.location);
@@ -146,6 +241,12 @@ public class TypeCheck extends Visitor<Type> {
 		return i.type;
 	}
 
+	/**
+	 * A while statement is valid if its guard is {@link Type.BOOL} and its block is valid.
+	 * 
+	 * @returns {@link Type.UNIT} if valid
+	 * @throws XicException if invalid
+	 */
 	public Type visit(While w) throws XicException {
 		if (!w.guard.accept(this).equals(Type.BOOL)) {
 			throw new TypeException(Kind.INVALID_GUARD, w.guard.location);
@@ -160,6 +261,9 @@ public class TypeCheck extends Visitor<Type> {
 	 * Expression nodes
 	 */
 
+	/**
+	 * A function call is valid if the arguments match the function's arguments.
+	 */
 	public Type visit(Call c) throws XicException {
 		if (c.id.equals("length")) {
 			Type args = c.args.accept(this);
@@ -185,6 +289,9 @@ public class TypeCheck extends Visitor<Type> {
 		}
 	}
 
+	/**
+	 * A binary operation is valid if the types of the operands and the operator match.
+	 */
 	public Type visit(Binary b) throws XicException {
 		Type lt = b.lhs.accept(this);
 		Type rt = b.rhs.accept(this);
@@ -213,6 +320,12 @@ public class TypeCheck extends Visitor<Type> {
 		return b.type;
 	}
 
+	/**
+	 * A unary operator is valid if the type of the operator and operand match.
+	 * 
+	 * @returns The type of the operator if valid
+	 * @throws XicException if operator mismatch
+	 */
 	public Type visit(Unary u) throws XicException {
 		Type ut = u.child.accept(this);
 		if (u.isLogical()) {
@@ -231,6 +344,12 @@ public class TypeCheck extends Visitor<Type> {
 		return u.type;
 	}
 
+	/**
+	 * A variable lookup is valid if the variable exists in the context.
+	 * 
+	 * @returns typeof(variable) if valid
+	 * @throws XicException if invalid
+	 */
 	public Type visit(Var v) throws XicException {
 		v.type = vars.lookup(v.id);
 		if (v.type == null) {
@@ -239,6 +358,12 @@ public class TypeCheck extends Visitor<Type> {
 		return v.type;
 	}
 
+	/**
+	 * A multiple nonterminal is valid if its children are valid.
+	 * 
+	 * @returns Tuple of child types if valid
+	 * @throws XicException if invalid
+	 */
 	public Type visit(Multiple m) throws XicException {
 		if (m.values.size() == 0) {
 			return Type.UNIT;
@@ -252,6 +377,10 @@ public class TypeCheck extends Visitor<Type> {
 		return m.type;
 	}
 
+	/**
+	 * An array index is valid if the array child is {@link Type.Kind.ARRAY}, and the
+	 * index child is {@link Type.INT}
+	 */
 	public Type visit(Index i) throws XicException {
 		Type it = i.index.accept(this);
 		Type at = i.array.accept(this);
@@ -261,32 +390,60 @@ public class TypeCheck extends Visitor<Type> {
 		} else if (at.kind != Type.Kind.ARRAY) {
 			throw new TypeException(Kind.NOT_AN_ARRAY, i.array.location);
 		} else {
-			// TODO make getter method?
 			i.type = at.children.get(0);
 			return i.type;
 		}
 	}
 
-	public Type visit(XiInt i) throws XicException {
+	/**
+	 * A XiInt is always {@link Type.INT}
+	 * 
+	 * @returns {@link Type.INT}
+	 */
+	public Type visit(XiInt i) {
 		i.type = Type.INT;
 		return i.type;
 	}
 
-	public Type visit(XiBool b) throws XicException {
+	/**
+	 * A XiBool is always {@link Type.BOOL}
+	 * 
+	 * @returns {@link Type.BOOL}
+	 */
+	public Type visit(XiBool b) {
 		b.type = Type.BOOL;
 		return b.type;
 	}
 
-	public Type visit(XiChar c) throws XicException {
+	/**
+	 * A XiChar is always {@link Type.INT}
+	 * 
+	 * @returns {@link Type.INT}
+	 */
+	public Type visit(XiChar c) {
 		c.type = Type.INT;
 		return c.type;
 	}
 
-	public Type visit(XiString s) throws XicException {
+	/**
+	 * A XiString is always a {@link Type.Kind.ARRAY} of {@link Type.INT}
+	 * 
+	 * @returns Array of {@link Type.INT}
+	 */
+	public Type visit(XiString s) {
 		s.type = new Type(Type.INT);
 		return s.type;
 	}
 
+	/**
+	 * A XiArray is valid if its children are the same type.
+	 * 
+	 * The 0-length array is polymorphic and has special type {@link Type.POLY},
+	 * which is equal to all array types.
+	 * 
+	 * @returns Array of child types
+	 * @throws XicException if invalid
+	 */
 	public Type visit(XiArray a) throws XicException {
 		if (a.values.size() == 0) {
 			a.type = Type.POLY;
@@ -304,10 +461,12 @@ public class TypeCheck extends Visitor<Type> {
 		}
 	}
 
-	/*
-	 * Other nodes
+	/**
+	 * A XiType is equal to its corresponding Type.
+	 * 
+	 * @returns Corresponding type
+	 * @throws XicException if array type with invalid size
 	 */
-
 	public Type visit(XiType t) throws XicException {
 		t.type = new Type(t);
 		

@@ -50,7 +50,6 @@ public class Xic {
 	public Node typeCheck(String unit) throws XicException {
 		Node ast = parse(unit);
 		TypeCheck.check(lib, ast);
-		//TODO: Invariant check phase?
 		return ast;
 	}
 	
