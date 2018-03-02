@@ -1,9 +1,5 @@
 // build
 
-xic ("Test --help") "--help" {
-    ;
-}
-
 xic ("Test --parse") "--parse" {
     arrays1.xi;
     arrays_with_dims.xi;

@@ -5,6 +5,11 @@ build() {
    printf "\n========================================\n\n"
 }
 
+test_all() {
+  test_reg
+  test_fails
+}
+
 test_reg() {
     test_lex
     test_parse
@@ -12,17 +17,17 @@ test_reg() {
 }
 
 test_fails() {
-    xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
     printf "\n========================================\n\n" 
 }
 
 test_lex() {
-    xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/lexer tests/lexer/xthScript
     printf "\n========================================\n\n"
 }
 
 test_parse() {
-    xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/parser/ tests/parser/xthScript
     printf "\n========================================\n\n"
 }
 
@@ -33,17 +38,17 @@ test_type() {
 }
 
 test_type_valid() {
-    xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/type tests/type/xthScript
     printf "\n========================================\n\n"
 }
 
 test_type_err() {
-    xth/xth -compilerpath . -workpath tests/type/errors -testpath tests/type/errors tests/type/errors/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/type/errors tests/type/errors/xthScript
     printf "\n========================================\n\n"
 }
 
 test_type_man() {
-    xth/xth -compilerpath . -workpath tests/type/pa3-tests-manual -testpath tests/type/pa3-tests-manual tests/type/pa3-tests-manual/xthScript
+    xth/xth -compilerpath . -workpath tests/xthout -testpath tests/type/pa3-tests-manual tests/type/pa3-tests-manual/xthScript
     printf "\n========================================\n\n"
 }
 

@@ -25,7 +25,8 @@ public class Printer {
 	public static void print(String source, String sink, String lib, String unit) throws XicException {
 		String ext = FilenameUtils.getExtension(unit);
     	String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
-        mkDirTo(output);
+	    output = FilenameUtils.setExtension(output, "typed");
+        FilenameUtils.makePathTo(output);
 
     	Node ast = null;
         FileWriter writer = null;
@@ -34,11 +35,7 @@ public class Printer {
         	try {
             	switch (ext) {
 	        		case "xi":
-	        			output += ".typed";
 	        			ast = XiParser.from(source, unit);
-	        			if (lib.equals("")) {
-							lib = FilenameUtils.concat(source, FilenameUtils.getFullPath(unit));
-						}
 	        			TypeCheck.check(lib, ast);
 	        			break;
 	        		default:
@@ -59,10 +56,4 @@ public class Printer {
         	throw XicException.write(output);
         }
 	}
-
-    private static void mkDirTo(String file) {
-        try {
-            (new File(file)).getParentFile().mkdirs();
-        } catch (NullPointerException e) { }
-    }
 }

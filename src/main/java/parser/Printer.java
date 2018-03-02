@@ -27,8 +27,8 @@ public class Printer extends Visitor<Void> {
     public static void print(String source, String sink, String unit) throws XicException {
 
     	String ext = FilenameUtils.getExtension(unit);
-    	String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
-        mkDirTo(output);
+    	String output = FilenameUtils.concat(sink, unit);
+        FilenameUtils.makePathTo(output);
 
     	Node ast = null;
         OutputStream stream = null;
@@ -37,11 +37,11 @@ public class Printer extends Visitor<Void> {
         	try {
             	switch (ext) {
 	        		case "xi":
-	        			output += ".parsed";
+	        			output = FilenameUtils.setExtension(output, "parsed");
 	        			ast = XiParser.from(source, unit);
 	        			break;
 	        		case "ixi":
-	        			output += ".iparsed";
+	        			output = FilenameUtils.setExtension(output, "iparsed");
 	        			ast = IXiParser.from(source, unit);
 	        			break;
 	        		default:
@@ -60,12 +60,6 @@ public class Printer extends Visitor<Void> {
         } catch (IOException io) {
         	throw XicException.write(output);
         }
-    }
-
-    private static void mkDirTo(String file) {
-        try {
-            (new File(file)).getParentFile().mkdirs();
-        } catch (NullPointerException e) { }
     }
 
     private static final int WIDTH = 80;
