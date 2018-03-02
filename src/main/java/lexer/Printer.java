@@ -44,7 +44,6 @@ public class Printer {
                 throw e;
         	}
         } catch (IOException io) {
-            io.printStackTrace();
         	throw XicException.write(lexed);
         }
 	}
