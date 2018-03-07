@@ -1,6 +1,5 @@
-use io
+use bar
 
-foo() {
-	arr:int[] = {}
-    i:int = arr[0]
+foo(x:int) {
+    return x
 }
