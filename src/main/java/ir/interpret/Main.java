@@ -8,8 +8,6 @@ import edu.cornell.cs.cs4120.util.CodeWriterSExpPrinter;
 import edu.cornell.cs.cs4120.util.SExpPrinter;
 import ir.*;
 import ir.IRBinOp.OpType;
-import ir.parse.IRLexer;
-import ir.parse.IRParser;
 
 public class Main {
 
@@ -91,21 +89,22 @@ public class Main {
         // IR parser demo
         String prog = sw.toString();
         try (StringReader r = new StringReader(prog)) {
-            IRParser parser =
-                    new IRParser(new IRLexer(r), new IRNodeFactory_c());
-            IRCompUnit compUnit_ = null;
-            try {
-                compUnit_ = parser.parse().<IRCompUnit> value();
-            }
-            catch (RuntimeException e) {
-                throw e;
-            }
-            catch (Exception e) {
-                // Used by CUP to indicate an unrecoverable error.
-                String msg = e.getMessage();
-                if (msg != null) System.err.println("Syntax error: " + msg);
-            }
+            // IRParser parser =
+            //         new IRParser(new IRLexer(r), new IRNodeFactory_c());
+            // IRCompUnit compUnit_ = null;
+            // try {
+            //     compUnit_ = parser.parse().<IRCompUnit> value();
+            // }
+            // catch (RuntimeException e) {
+            //     throw e;
+            // }
+            // catch (Exception e) {
+            //     // Used by CUP to indicate an unrecoverable error.
+            //     String msg = e.getMessage();
+            //     if (msg != null) System.err.println("Syntax error: " + msg);
+            // }
 
+            IRCompUnit compUnit_ = null;
             if (compUnit_ != null) {
                 IRSimulator sim = new IRSimulator(compUnit_);
                 long result = sim.call("b", 2, 1);

@@ -1,7 +1,6 @@
 package ir;
 
 import edu.cornell.cs.cs4120.util.SExpPrinter;
-import ir.visit.*;
 
 /**
  * A node in an intermediate-representation abstract syntax tree.

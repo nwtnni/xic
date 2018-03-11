@@ -1,7 +1,5 @@
 package ir;
 
-import ir.visit.CheckCanonicalIRVisitor;
-
 /**
  * An intermediate representation for expressions
  */

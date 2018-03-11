@@ -48,10 +48,10 @@ public class IRFuncDecl extends IRNode_c {
     //     return v;
     // }
 
-    @Override
-    public IRNode buildInsnMaps(InsnMapsBuilder v) {
-        return this;
-    }
+    // @Override
+    // public IRNode buildInsnMaps(InsnMapsBuilder v) {
+    //     return this;
+    // }
 
     @Override
     public void printSExp(SExpPrinter p) {
