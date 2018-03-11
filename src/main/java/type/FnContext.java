@@ -25,7 +25,7 @@ public class FnContext extends Context<String, FnType> {
 				if (existing == null) {
 					add(id, type);
 				} else if (!existing.equals(type)) {
-					throw new TypeException(TypeException.Kind.DECLARATION_CONFLICT, type.location);
+					throw new TypeException(TypeException.Kind.DECLARATION_CONFLICT, existing.location);
 				}
 			}
 		}

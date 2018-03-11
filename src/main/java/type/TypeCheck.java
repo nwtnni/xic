@@ -449,14 +449,24 @@ public class TypeCheck extends Visitor<Type> {
 			a.type = Type.POLY;
 			return Type.POLY;
 		} else {
-			Type at = a.values.get(0).accept(this);
+			Type arrayType = a.values.get(0).accept(this);
 
 			for (int i = 1; i < a.values.size(); i++) {
-				if (!at.equals(a.values.get(i).accept(this))) {
+				Type elemType = a.values.get(i).accept(this);
+				if (arrayType.isPoly()) {
+					arrayType = elemType;
+				} else if (!arrayType.equals(elemType)) {
 					throw new TypeException(Kind.NOT_UNIFORM_ARRAY, a.location);
 				}
 			}
-			a.type = new Type(at);
+
+			// Iterate through elements again to coerce all types 
+			for (int i = 0; i < a.values.size(); i++) {
+				Type elemType = a.values.get(i).accept(this);
+				elemType.equals(arrayType);
+			}
+			
+			a.type = new Type(arrayType);
 			return a.type;
 		}
 	}

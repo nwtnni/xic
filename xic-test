@@ -8,6 +8,7 @@ build() {
 test_all() {
   test_reg
   test_fails
+  test_course
 }
 
 test_reg() {
@@ -52,6 +53,11 @@ test_type_man() {
     printf "\n========================================\n\n"
 }
 
+test_course() {
+    xth/xth -compilerpath . -workpath xth/tests/pa4 xth/tests/pa4/xthScript
+    printf "\n========================================\n\n" 
+}
+
 cmd=$1
 if [ "$cmd" = "--nb" ] ; then
     echo "skipping build"
@@ -61,6 +67,9 @@ elif [ -n "$cmd" ] ; then
 fi
 
 case $cmd in
+a|all)
+    test_all
+    ;;
 r|regression)
     test_reg
     ;;
@@ -85,9 +94,12 @@ tv)
 tm)
     test_type_man
     ;;
+c|course)
+    test_course
+    ;;
 *)
     echo "Usage: xic-test [options] <command>"
     echo "  --nb:   Skips running xic-build"
-    echo "  Possible commands: r[egression] f[ails] l[exer] p[arser] t[ype] te tv tm"
+    echo "  Possible commands: a[ll] r[egression] f[ails] l[exer] p[arser] t[ype] te tv tm c[ourse]"
     ;;
 esac

@@ -1,2 +1,2 @@
 #!/bin/sh
-gradle xic
+gradle --no-daemon xic
