@@ -52,6 +52,11 @@ test_type_man() {
     printf "\n========================================\n\n"
 }
 
+test_course() {
+    xth/xth -compilerpath . -workpath xth/tests/pa4 xth/tests/pa4/xthScript
+    printf "\n========================================\n\n" 
+}
+
 cmd=$1
 if [ "$cmd" = "--nb" ] ; then
     echo "skipping build"
@@ -84,6 +89,9 @@ tv)
     ;;
 tm)
     test_type_man
+    ;;
+c|course)
+    test_course
     ;;
 *)
     echo "Usage: xic-test [options] <command>"

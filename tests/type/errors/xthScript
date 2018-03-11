@@ -37,4 +37,7 @@ xic ("Test --typecheck") "--typecheck" {
     bad_underscore.xi;
     bad_underscore_tuple.xi;
     bad-assign-procedure.xi;
+    bad-mixed-array.xi;
+    bad-nested-array.xi;
+    bad-use-conflict.xi;
 }
