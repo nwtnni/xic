@@ -8,6 +8,7 @@ build() {
 test_all() {
   test_reg
   test_fails
+  test_course
 }
 
 test_reg() {
@@ -66,6 +67,9 @@ elif [ -n "$cmd" ] ; then
 fi
 
 case $cmd in
+a|all)
+    test_all
+    ;;
 r|regression)
     test_reg
     ;;
@@ -96,6 +100,6 @@ c|course)
 *)
     echo "Usage: xic-test [options] <command>"
     echo "  --nb:   Skips running xic-build"
-    echo "  Possible commands: r[egression] f[ails] l[exer] p[arser] t[ype] te tv tm"
+    echo "  Possible commands: a[ll] r[egression] f[ails] l[exer] p[arser] t[ype] te tv tm c[ourse]"
     ;;
 esac
