@@ -365,7 +365,9 @@ public class TypeCheck extends Visitor<Type> {
 	 * @throws XicException if invalid
 	 */
 	public Type visit(Multiple m) throws XicException {
+		// TODO: remove when we convert UNIT to a tuple type
 		if (m.values.size() == 0) {
+			m.type = Type.UNIT;
 			return Type.UNIT;
 		}
 

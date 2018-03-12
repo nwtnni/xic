@@ -201,4 +201,33 @@ public class Type {
             return false;
         }
     }
+
+    @Override
+    public String toString() {
+        switch (kind) {
+            case CLASS:
+                if (this.equals(INT)) {
+                    return "i";
+                } else if (this.equals(BOOL)) {
+                    return "b";
+                } else if (this.equals(UNIT)) {
+                    return "";
+                } else {
+                    // TODO for future extension
+                    assert false;
+                    return null;
+                }
+            case ARRAY:
+                return "a" + children.get(0).toString();
+            case TUPLE:
+                String encoding = "";
+                for (Type t : children) {
+                    encoding += t.toString();
+                }
+                return "t" + encoding;
+        }
+        // Unreachable
+        assert false;
+        return null;
+    }
 }

@@ -1,10 +1,21 @@
 package emit;
 
+import java.util.ArrayList;
+
 import ast.*;
 import ir.*;
+import type.FnContext;
+import type.FnType;
+import type.Type;
 import xic.XicException;
 
 public class Emitter extends Visitor<IRNode> {
+
+    private FnContext context;
+
+    public Emitter(FnContext c) {
+        context = c;
+    }
 
     /*
      * Top-level AST nodes
@@ -52,14 +63,30 @@ public class Emitter extends Visitor<IRNode> {
      * Expression nodes
      */
     public IRNode visit(Call c) throws XicException {
-        IRName id = new IRName(c.id);
-        return null;
+
+        // TODO: refactor escaping to ABI into a function
+        FnType type = context.lookup(c.id);
+        String args = type.args.toString();
+        String returns = type.returns.toString();
+
+        String name = c.id.replaceAll("_", "__");
+        
+        // TODO: figure out dealing with different convention
+        // for argument and return types
+
+        // name = "_I" + name + returns + args;
+
+        IRName id = new IRName(name);
+        ArrayList<IRNode> argList = new ArrayList<>();
+        for (Node n : c.getArgs()) {
+            argList.add(n.accept(this));
+        }
+        return new IRCall(id, argList);
     }
 
     public IRNode visit(Binary b) throws XicException {
         IRNode left = b.lhs.accept(this);
         IRNode right = b.rhs.accept(this);
-        IRBinOp.OpType t;
         switch (b.kind) {
             case TIMES:
                 return new IRBinOp(IRBinOp.OpType.MUL, left, right);
