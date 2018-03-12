@@ -6,7 +6,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for a temporary register
  * TEMP(name)
  */
-public class IRTemp extends IRExpr_c {
+public class IRTemp extends IRExpr {
     private String name;
 
     /**

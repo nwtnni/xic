@@ -7,24 +7,24 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * MOVE(target, expr)
  */
 public class IRMove extends IRStmt {
-    private IRExpr target;
-    private IRExpr src;
+    private IRNode target;
+    private IRNode src;
 
     /**
      *
      * @param target the destination of this move
      * @param src the expression whose value is to be moved
      */
-    public IRMove(IRExpr target, IRExpr src) {
+    public IRMove(IRNode target, IRNode src) {
         this.target = target;
         this.src = src;
     }
 
-    public IRExpr target() {
+    public IRNode target() {
         return target;
     }
 
-    public IRExpr source() {
+    public IRNode source() {
         return src;
     }
 

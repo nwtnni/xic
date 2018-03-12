@@ -10,16 +10,16 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for a function call
  * CALL(e_target, e_1, ..., e_n)
  */
-public class IRCall extends IRExpr_c {
-    protected IRExpr target;
-    protected List<IRExpr> args;
+public class IRCall extends IRExpr {
+    protected IRNode target;
+    protected List<IRNode> args;
 
     /**
      *
      * @param target address of the code for this function call
      * @param args arguments of this function call
      */
-    public IRCall(IRExpr target, IRExpr... args) {
+    public IRCall(IRNode target, IRNode... args) {
         this(target, Arrays.asList(args));
     }
 
@@ -28,16 +28,16 @@ public class IRCall extends IRExpr_c {
      * @param target address of the code for this function call
      * @param args arguments of this function call
      */
-    public IRCall(IRExpr target, List<IRExpr> args) {
+    public IRCall(IRNode target, List<IRNode> args) {
         this.target = target;
         this.args = args;
     }
 
-    public IRExpr target() {
+    public IRNode target() {
         return target;
     }
 
-    public List<IRExpr> args() {
+    public List<IRNode> args() {
         return args;
     }
 
@@ -89,7 +89,7 @@ public class IRCall extends IRExpr_c {
         p.startList();
         p.printAtom("CALL");
         target.printSExp(p);
-        for (IRExpr arg : args)
+        for (IRNode arg : args)
             arg.printSExp(p);
         p.endList();
     }

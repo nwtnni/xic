@@ -3,11 +3,11 @@ package ir;
 import edu.cornell.cs.cs4120.util.SExpPrinter;
 
 /** An IR function declaration */
-public class IRFuncDecl extends IRNode_c {
+public class IRFuncDecl extends IRNode {
     private String name;
-    private IRStmt body;
+    private IRNode body;
 
-    public IRFuncDecl(String name, IRStmt body) {
+    public IRFuncDecl(String name, IRNode body) {
         this.name = name;
         this.body = body;
     }
@@ -16,7 +16,7 @@ public class IRFuncDecl extends IRNode_c {
         return name;
     }
 
-    public IRStmt body() {
+    public IRNode body() {
         return body;
     }
 

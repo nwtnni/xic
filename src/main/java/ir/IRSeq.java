@@ -11,12 +11,12 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * SEQ(s1,...,sn)
  */
 public class IRSeq extends IRStmt {
-    private List<IRStmt> stmts;
+    private List<IRNode> stmts;
 
     /**
      * @param stmts the statements
      */
-    public IRSeq(IRStmt... stmts) {
+    public IRSeq(IRNode... stmts) {
         this(Arrays.asList(stmts));
     }
 
@@ -25,11 +25,11 @@ public class IRSeq extends IRStmt {
      * The list should not be modified subsequently.
      * @param stmts the sequence of statements
      */
-    public IRSeq(List<IRStmt> stmts) {
+    public IRSeq(List<IRNode> stmts) {
         this.stmts = stmts;
     }
 
-    public List<IRStmt> stmts() {
+    public List<IRNode> stmts() {
         return stmts;
     }
 
@@ -82,7 +82,7 @@ public class IRSeq extends IRStmt {
     public void printSExp(SExpPrinter p) {
         p.startUnifiedList();
         p.printAtom("SEQ");
-        for (IRStmt stmt : stmts)
+        for (IRNode stmt : stmts)
             stmt.printSExp(p);
         p.endList();
     }

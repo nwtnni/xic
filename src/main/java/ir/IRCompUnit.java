@@ -8,7 +8,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
 /**
  * An intermediate representation for a compilation unit
  */
-public class IRCompUnit extends IRNode_c {
+public class IRCompUnit extends IRNode {
     private String name;
     private Map<String, IRFuncDecl> functions;
 

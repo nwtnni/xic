@@ -8,17 +8,17 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * EXP(e)
  */
 public class IRExp extends IRStmt {
-    private IRExpr expr;
+    private IRNode expr;
 
     /**
      *
      * @param expr the expression to be evaluated and result discarded
      */
-    public IRExp(IRExpr expr) {
+    public IRExp(IRNode expr) {
         this.expr = expr;
     }
 
-    public IRExpr expr() {
+    public IRNode expr() {
         return expr;
     }
 

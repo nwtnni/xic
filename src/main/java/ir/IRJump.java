@@ -6,17 +6,17 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for a transfer of control
  */
 public class IRJump extends IRStmt {
-    private IRExpr target;
+    private IRNode target;
 
     /**
      *
      * @param expr the destination of the jump
      */
-    public IRJump(IRExpr expr) {
+    public IRJump(IRNode expr) {
         target = expr;
     }
 
-    public IRExpr target() {
+    public IRNode target() {
         return target;
     }
 

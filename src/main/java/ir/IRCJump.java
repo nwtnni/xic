@@ -7,7 +7,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * CJUMP(expr, trueLabel, falseLabel)
  */
 public class IRCJump extends IRStmt {
-    private IRExpr cond;
+    private IRNode cond;
     private String trueLabel, falseLabel;
 
     /**
@@ -16,7 +16,7 @@ public class IRCJump extends IRStmt {
      * @param trueLabel the destination of the jump if {@code expr} evaluates
      *          to true
      */
-    public IRCJump(IRExpr cond, String trueLabel) {
+    public IRCJump(IRNode cond, String trueLabel) {
         this(cond, trueLabel, null);
     }
 
@@ -28,13 +28,13 @@ public class IRCJump extends IRStmt {
      * @param falseLabel the destination of the jump if {@code expr} evaluates
      *          to false
      */
-    public IRCJump(IRExpr cond, String trueLabel, String falseLabel) {
+    public IRCJump(IRNode cond, String trueLabel, String falseLabel) {
         this.cond = cond;
         this.trueLabel = trueLabel;
         this.falseLabel = falseLabel;
     }
 
-    public IRExpr cond() {
+    public IRNode cond() {
         return cond;
     }
 
