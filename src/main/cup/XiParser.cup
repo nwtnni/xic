@@ -259,9 +259,10 @@ BlockOptBraces ::=
     :}
     | SingleStmtNoReturn:ssnr
     {:
-        ArrayList<Node> block = new ArrayList<>();
-        block.add(ssnr);
-        RESULT = new Block(ssnrxleft, block);
+        // ArrayList<Node> block = new ArrayList<>();
+        // block.add(ssnr);
+        // RESULT = new Block(ssnrxleft, block);
+        RESULT = ssnr;
     :}
     ;
 
