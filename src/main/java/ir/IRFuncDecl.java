@@ -52,6 +52,10 @@ public class IRFuncDecl extends IRNode_c {
     // public IRNode buildInsnMaps(InsnMapsBuilder v) {
     //     return this;
     // }
+    @Override
+    public <T> T accept(IRVisitor<T> v) {
+        return v.visit(this);
+    }
 
     @Override
     public void printSExp(SExpPrinter p) {

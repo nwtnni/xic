@@ -30,6 +30,10 @@ public class IRLabel extends IRStmt {
     //     v.addNameToCurrentIndex(name);
     //     return v;
     // }
+    @Override
+    public <T> T accept(IRVisitor<T> v) {
+        return v.visit(this);
+    }
 
     @Override
     public void printSExp(SExpPrinter p) {

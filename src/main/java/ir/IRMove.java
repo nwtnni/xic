@@ -51,6 +51,10 @@ public class IRMove extends IRStmt {
     //     result = v.bind(result, v.visit(src));
     //     return result;
     // }
+    @Override
+    public <T> T accept(IRVisitor<T> v) {
+        return v.visit(this);
+    }
 
     @Override
     public void printSExp(SExpPrinter p) {

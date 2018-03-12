@@ -66,6 +66,10 @@ public class IRCompUnit extends IRNode_c {
     //         result = v.bind(result, v.visit(func));
     //     return result;
     // }
+    @Override
+    public <T> T accept(IRVisitor<T> v) {
+        return v.visit(this);
+    }
 
     @Override
     public void printSExp(SExpPrinter p) {
