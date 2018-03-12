@@ -8,7 +8,7 @@ import java.util.List;
 
 /** RETURN statement */
 public class IRReturn extends IRStmt {
-    protected List<IRNode> rets;
+    public List<IRNode> rets;
 
     /**
      * @param rets values to return

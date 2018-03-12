@@ -3,6 +3,9 @@ package emit;
 import java.util.OptionalLong;
 import ir.*;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class ConstantFolder extends IRVisitor<OptionalLong> {
 
@@ -34,10 +37,10 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                 c = lt.getAsLong() % rt.getAsLong();
                 break;
             case AND:
-                c = (lt.getAsLong() == 1) && (rt.getAsLong() == 1);
+                c = ((lt.getAsLong() == 1) && (rt.getAsLong() == 1)) ? 1 : 0;
                 break;
             case OR:
-                c = (lt.getAsLong() == 1) || (rt.getAsLong() == 1);
+                c = ((lt.getAsLong() == 1) || (rt.getAsLong() == 1)) ? 1 : 0;
                 break;
             case XOR:
                 c = lt.getAsLong() ^ rt.getAsLong();
@@ -52,22 +55,22 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                 c = lt.getAsLong() >>> rt.getAsLong();
                 break;
             case EQ:
-                c = (lt.getAsLong() == 1) == (rt.getAsLong() == 1);
+                c = ((lt.getAsLong() == 1) == (rt.getAsLong() == 1)) ? 1 : 0;
                 break;
             case NEQ:
-                c = (lt.getAsLong() == 1) != (rt.getAsLong() == 1);
+                c = ((lt.getAsLong() == 1) != (rt.getAsLong() == 1)) ? 1 : 0;
                 break;
             case LT:
-                c = (lt.getAsLong() == 1) < (rt.getAsLong() == 1);
+                c = (lt.getAsLong() < rt.getAsLong()) ? 1 : 0;
                 break;
             case GT:
-                c = (lt.getAsLong() == 1) > (rt.getAsLong() == 1);
+                c = (lt.getAsLong() > rt.getAsLong()) ? 1 : 0;
                 break;
             case LEQ:
-                c = (lt.getAsLong() == 1) <= (rt.getAsLong() == 1);
+                c = (lt.getAsLong() <= rt.getAsLong()) ? 1 : 0;
                 break;
             case GEQ:
-                c = (lt.getAsLong() == 1) >= (rt.getAsLong() == 1);
+                c = (lt.getAsLong() >= rt.getAsLong()) ? 1 : 0;
                 break;
             default: // unreachable
                 assert false;
@@ -80,62 +83,123 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 	}
 	
 	public OptionalLong visit(IRCall c) {
-		return null;
+        List<IRNode> children = new ArrayList<IRNode>();
+		for (IRNode n : c.args) {
+            OptionalLong ol = n.accept(this);
+            if (ol.isPresent()) {
+                children.add(new IRConst(ol.getAsLong()));
+            } else {
+                children.add(n);
+            }
+        }
+        c.args = children;
+        return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRCJump c) {
-		return null;
+        OptionalLong ol = c.accept(this);
+        if (ol.isPresent()) {
+            c.cond = new IRConst(ol.getAsLong());
+        }
+		return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRJump j) {
-		return null;
+		return OptionalLong.empty();
 	}
 	
 	public OptionalLong visit(IRCompUnit c) {
-		return null;
+		return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRConst c) {
-		return null;
+		return OptionalLong.of(c.value);
 	}
 
 	public OptionalLong visit(IRESeq e) {
-		return null;
+        /* e.stmt cannot be constant, do not need to check */
+		OptionalLong sol = e.stmt.accept(this);
+        OptionalLong eol = e.expr.accept(this);
+
+        if (eol.isPresent()) {
+            e.expr = new IRConst(eol.getAsLong());
+        }
+
+        return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRExp e) {
-		return null;
+		OptionalLong eol = e.expr.accept(this);
+
+        if (eol.isPresent()) {
+            return OptionalLong.of(eol.getAsLong());
+        }
+
+        return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRFuncDecl f) {
-		return null;
+        OptionalLong bol = f.body.accept(this);
+
+		return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRLabel l) {
-		return null;
+		return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRMem m) {
-		return null;
+        OptionalLong eol = m.expr.accept(this);
+
+        if (eol.isPresent()) {
+            m.expr = new IRConst(eol.getAsLong());
+        }
+
+		return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRMove m) {
-		return null;
+		OptionalLong tol = m.target.accept(this);
+        OptionalLong sol = m.src.accept(this);
+
+        if (tol.isPresent()) {
+            m.target = new IRConst(tol.getAsLong());
+        } 
+
+        if (sol.isPresent()) {
+            m.src = new IRConst(sol.getAsLong());
+        }
+
+        return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRName n) {
-		return null;
+		return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRReturn r) {
-		return null;
+		List<IRNode> children = new ArrayList<IRNode>();
+        for (IRNode n : r.rets) {
+            OptionalLong ol = n.accept(this);
+            if (ol.isPresent()) {
+                children.add(new IRConst(ol.getAsLong()));
+            } else {
+                children.add(n);
+            }
+        }
+        r.rets = children;
+        return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRSeq s) {
-		return null;
+        for (IRNode n : s.stmts) {
+            OptionalLong ol = n.accept(this);
+        }
+        
+        return OptionalLong.empty();
 	}
 
 	public OptionalLong visit(IRTemp t) {
-		return null;
+		return OptionalLong.empty();
 	}
 }

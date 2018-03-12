@@ -11,8 +11,12 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * CALL(e_target, e_1, ..., e_n)
  */
 public class IRCall extends IRExpr {
-    protected IRNode target;
-    protected List<IRNode> args;
+    /**
+    *
+    * target and args were IRExpr in release code
+    */
+    public IRNode target;
+    public List<IRNode> args;
 
     /**
      *

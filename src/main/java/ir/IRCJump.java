@@ -7,6 +7,9 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * CJUMP(expr, trueLabel, falseLabel)
  */
 public class IRCJump extends IRStmt {
+    /**
+    * cond is IRExpr in release code
+    */
     public IRNode cond;
     public String trueLabel, falseLabel;
 
