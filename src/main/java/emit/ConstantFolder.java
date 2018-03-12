@@ -12,65 +12,67 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
     IRNode tree;
 
 	public OptionalLong visit(IRBinOp b) {
-		OptionalLong lt = b.left.accept(this);
-        OptionalLong rt = b.right.accept(this);
+		OptionalLong ltol = b.left.accept(this);
+        OptionalLong rtol = b.right.accept(this);
         if (lt.isPresent() && rt.isPresent()) {
             long c;
+            long lt = lt.getAsLong();
+            long rt = rt.getAsLong();
             switch (b.type) {
             case ADD: 
-                c = lt.getAsLong() + rt.getAsLong();
+                c = lt + rt;
                 break;
             case SUB:
-                c = lt.getAsLong() - rt.getAsLong();
+                c = lt - rt;
                 break;
             case MUL:
-                c = lt.getAsLong() * rt.getAsLong();
+                c = lt * rt;
                 break;
             case HMUL:
-                c = BigInteger.valueOf(lt.getAsLong()).
-                    multiply(BigInteger.valueOf(lt.getAsLong())).shiftRight(64).longValue();
+                c = BigInteger.valueOf(lt).
+                    multiply(BigInteger.valueOf(rt)).shiftRight(64).longValue();
                 break;
             case DIV:
-                c = lt.getAsLong() / rt.getAsLong();
+                c = lt / rt;
                 break;
             case MOD:
-                c = lt.getAsLong() % rt.getAsLong();
+                c = lt % rt;
                 break;
             case AND:
-                c = ((lt.getAsLong() == 1) && (rt.getAsLong() == 1)) ? 1 : 0;
+                c = ((lt == 1) && (rt == 1)) ? 1 : 0;
                 break;
             case OR:
-                c = ((lt.getAsLong() == 1) || (rt.getAsLong() == 1)) ? 1 : 0;
+                c = ((lt == 1) || (rt == 1)) ? 1 : 0;
                 break;
             case XOR:
-                c = lt.getAsLong() ^ rt.getAsLong();
+                c = lt ^ rt;
                 break;
             case LSHIFT:
-                c = lt.getAsLong() << rt.getAsLong();
+                c = lt << rt;
                 break;
             case RSHIFT:
-                c = lt.getAsLong() >> rt.getAsLong();
+                c = lt >> rt;
                 break;
             case ARSHIFT:
-                c = lt.getAsLong() >>> rt.getAsLong();
+                c = lt >>> rt;
                 break;
             case EQ:
-                c = ((lt.getAsLong() == 1) == (rt.getAsLong() == 1)) ? 1 : 0;
+                c = ((lt == 1) == (rt == 1)) ? 1 : 0;
                 break;
             case NEQ:
-                c = ((lt.getAsLong() == 1) != (rt.getAsLong() == 1)) ? 1 : 0;
+                c = ((lt == 1) != (rt == 1)) ? 1 : 0;
                 break;
             case LT:
-                c = (lt.getAsLong() < rt.getAsLong()) ? 1 : 0;
+                c = (lt < rt) ? 1 : 0;
                 break;
             case GT:
-                c = (lt.getAsLong() > rt.getAsLong()) ? 1 : 0;
+                c = (lt > rt) ? 1 : 0;
                 break;
             case LEQ:
-                c = (lt.getAsLong() <= rt.getAsLong()) ? 1 : 0;
+                c = (lt <= rt) ? 1 : 0;
                 break;
             case GEQ:
-                c = (lt.getAsLong() >= rt.getAsLong()) ? 1 : 0;
+                c = (lt >= rt) ? 1 : 0;
                 break;
             default: // unreachable
                 assert false;
