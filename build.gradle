@@ -6,11 +6,14 @@ apply plugin: 'application'
 mainClassName = 'xic.Main'
 
 repositories {
-    mavenCentral()
-    jcenter()
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 dependencies {
+    testCompile "org.hamcrest:hamcrest-core:1.3"
+    testCompile "junit:junit:4.12"
     compile files("libs/java_cup.jar")
     compile files("libs/commons-io-2.6.jar")
     compile files("libs/sexp-printer.jar")
