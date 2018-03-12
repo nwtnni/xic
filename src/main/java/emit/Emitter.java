@@ -52,19 +52,60 @@ public class Emitter extends Visitor<IRNode> {
      * Expression nodes
      */
     public IRNode visit(Call c) throws XicException {
+        IRName id = new IRName(c.id);
         return null;
     }
 
     public IRNode visit(Binary b) throws XicException {
+        IRNode left = b.lhs.accept(this);
+        IRNode right = b.rhs.accept(this);
+        IRBinOp.OpType t;
+        switch (b.kind) {
+            case TIMES:
+                return new IRBinOp(IRBinOp.OpType.MUL, left, right);
+            case HIGH_TIMES:
+                return new IRBinOp(IRBinOp.OpType.HMUL, left, right);
+            case DIVISION:
+                return new IRBinOp(IRBinOp.OpType.DIV, left, right);
+            case MODULO:
+                return new IRBinOp(IRBinOp.OpType.MOD, left, right);
+            case PLUS:
+                return new IRBinOp(IRBinOp.OpType.ADD, left, right);
+            case MINUS:
+                return new IRBinOp(IRBinOp.OpType.SUB, left, right);
+            case LT:
+                return new IRBinOp(IRBinOp.OpType.LEQ, left, right);
+            case LE:
+                return new IRBinOp(IRBinOp.OpType.LT, left, right);
+            case GE:
+                return new IRBinOp(IRBinOp.OpType.GEQ, left, right);
+            case GT:
+                return new IRBinOp(IRBinOp.OpType.GT, left, right);
+            case EQ:
+                return new IRBinOp(IRBinOp.OpType.EQ, left, right);
+            case NE:
+                return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
+            case AND:
+                return new IRBinOp(IRBinOp.OpType.AND, left, right);
+            case OR:
+                return new IRBinOp(IRBinOp.OpType.OR, left, right);
+        }
+        // Unreachable
+        assert false;
         return null;
     }
 
     public IRNode visit(Unary u) throws XicException {
-        return null;
+        IRNode child = u.child.accept(this);
+        if (u.isLogical()) {
+            return new IRBinOp(IRBinOp.OpType.XOR, new IRConst(1), child);
+        } else {
+            return new IRBinOp(IRBinOp.OpType.SUB, new IRConst(0), child);
+        }
     }
 
     public IRNode visit(Var v) throws XicException {
-        return null;
+        return new IRTemp(v.id);
     }
 
     public IRNode visit(Multiple m) throws XicException {
@@ -76,15 +117,16 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(XiInt i) throws XicException {
-        return null;
+        return new IRConst(i.value);
     }
 
     public IRNode visit(XiBool b) throws XicException {
-        return null;
+        long value = b.value ? 1 : 0;
+        return new IRConst(value);
     }
 
     public IRNode visit(XiChar c) throws XicException {
-        return null;
+        return new IRConst(c.value);
     }
 
     public IRNode visit(XiString s) throws XicException {
@@ -95,11 +137,4 @@ public class Emitter extends Visitor<IRNode> {
         return null;
     }
 
-    /*
-     * Other nodes
-     */
-    @Override
-    public IRNode visit(XiType t) throws XicException {
-        return null;
-    }
 }
