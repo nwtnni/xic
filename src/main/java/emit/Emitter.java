@@ -48,7 +48,11 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Block b) throws XicException {
-        return null;
+        ArrayList<IRNode> stmts = new ArrayList<>();
+        for (Node n : b.statements) {
+            stmts.add(n.accept(this));
+        }
+        return new IRSeq(stmts);
     }
 
     public IRNode visit(If i) throws XicException {
@@ -66,15 +70,16 @@ public class Emitter extends Visitor<IRNode> {
 
         // TODO: refactor escaping to ABI into a function
         FnType type = context.lookup(c.id);
+        
+        // TODO: figure out dealing with different convention
+        // for argument and return types
         String args = type.args.toString();
         String returns = type.returns.toString();
 
         String name = c.id.replaceAll("_", "__");
-        
-        // TODO: figure out dealing with different convention
-        // for argument and return types
+        String p = type.returns.equals(Type.UNIT) ? "p" : "";
 
-        // name = "_I" + name + returns + args;
+        name = "_I" + name + p + returns + args;
 
         IRName id = new IRName(name);
         ArrayList<IRNode> argList = new ArrayList<>();
@@ -112,6 +117,7 @@ public class Emitter extends Visitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.EQ, left, right);
             case NE:
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
+            // TODO: fix boolean operators to use control flow
             case AND:
                 return new IRBinOp(IRBinOp.OpType.AND, left, right);
             case OR:
