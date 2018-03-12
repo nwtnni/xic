@@ -1,4 +1,4 @@
-package ir.interpret;
+package interpret;
 
 import java.io.PrintWriter;
 import java.io.StringReader;

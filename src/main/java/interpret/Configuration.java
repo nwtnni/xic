@@ -1,4 +1,4 @@
-package ir.interpret;
+package interpret;
 
 /**
  * Constants for interpreting intermediate code.
