@@ -6,7 +6,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for a transfer of control
  */
 public class IRJump extends IRStmt {
-    private IRNode target;
+    public IRNode target;
 
     /**
      *
@@ -45,13 +45,5 @@ public class IRJump extends IRStmt {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("JUMP");
-        target.printSExp(p);
-        p.endList();
     }
 }

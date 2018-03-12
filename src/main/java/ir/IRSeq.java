@@ -11,7 +11,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * SEQ(s1,...,sn)
  */
 public class IRSeq extends IRStmt {
-    private List<IRNode> stmts;
+    public List<IRNode> stmts;
 
     /**
      * @param stmts the statements
@@ -76,14 +76,5 @@ public class IRSeq extends IRStmt {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startUnifiedList();
-        p.printAtom("SEQ");
-        for (IRNode stmt : stmts)
-            stmt.printSExp(p);
-        p.endList();
     }
 }

@@ -8,7 +8,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * EXP(e)
  */
 public class IRExp extends IRStmt {
-    private IRNode expr;
+    public IRNode expr;
 
     /**
      *
@@ -52,13 +52,5 @@ public class IRExp extends IRStmt {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("EXP");
-        expr.printSExp(p);
-        p.endList();
     }
 }

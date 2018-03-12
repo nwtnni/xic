@@ -4,8 +4,8 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
 
 /** An IR function declaration */
 public class IRFuncDecl extends IRNode {
-    private String name;
-    private IRNode body;
+    public String name;
+    public IRNode body;
 
     public IRFuncDecl(String name, IRNode body) {
         this.name = name;
@@ -55,14 +55,5 @@ public class IRFuncDecl extends IRNode {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("FUNC");
-        p.printAtom(name);
-        body.printSExp(p);
-        p.endList();
     }
 }

@@ -58,11 +58,7 @@ public class Main {
 
         // IR pretty-printer demo
         System.out.println("Code:");
-        StringWriter sw = new StringWriter();
-        try (PrintWriter pw = new PrintWriter(sw);
-             SExpPrinter sp = new CodeWriterSExpPrinter(pw)) {
-            compUnit.printSExp(sp);
-        }
+        String sw = compUnit.toString();
         System.out.println(sw);
 
         // IR interpreter demo

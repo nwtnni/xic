@@ -7,8 +7,8 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * CJUMP(expr, trueLabel, falseLabel)
  */
 public class IRCJump extends IRStmt {
-    private IRNode cond;
-    private String trueLabel, falseLabel;
+    public IRNode cond;
+    public String trueLabel, falseLabel;
 
     /**
      * Construct a CJUMP instruction with fall-through on false.
@@ -80,15 +80,5 @@ public class IRCJump extends IRStmt {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("CJUMP");
-        cond.printSExp(p);
-        p.printAtom(trueLabel);
-        if (hasFalseLabel()) p.printAtom(falseLabel);
-        p.endList();
     }
 }

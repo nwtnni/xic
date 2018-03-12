@@ -1,11 +1,5 @@
 package ir;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import edu.cornell.cs.cs4120.util.CodeWriterSExpPrinter;
-import edu.cornell.cs.cs4120.util.SExpPrinter;
-
 /**
  * A node in an intermediate-representation abstract syntax tree.
  */
@@ -52,15 +46,8 @@ public abstract class IRNode {
 
     public abstract String label();
 
-    public abstract void printSExp(SExpPrinter p);
-
     @Override
     public String toString() {
-        StringWriter sw = new StringWriter();
-        try (PrintWriter pw = new PrintWriter(sw);
-             SExpPrinter sp = new CodeWriterSExpPrinter(pw)) {
-            printSExp(sp);
-        }
-        return sw.toString();
+        return Printer.toString(this);
     }
 }

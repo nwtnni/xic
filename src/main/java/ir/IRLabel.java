@@ -6,7 +6,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for naming a memory address
  */
 public class IRLabel extends IRStmt {
-    private String name;
+    public String name;
 
     /**
      *
@@ -33,13 +33,5 @@ public class IRLabel extends IRStmt {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("LABEL");
-        p.printAtom(name);
-        p.endList();
     }
 }

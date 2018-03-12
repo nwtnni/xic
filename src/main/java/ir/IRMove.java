@@ -7,8 +7,8 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * MOVE(target, expr)
  */
 public class IRMove extends IRStmt {
-    private IRNode target;
-    private IRNode src;
+    public IRNode target;
+    public IRNode src;
 
     /**
      *
@@ -54,14 +54,5 @@ public class IRMove extends IRStmt {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("MOVE");
-        target.printSExp(p);
-        src.printSExp(p);
-        p.endList();
     }
 }

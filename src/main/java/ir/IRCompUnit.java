@@ -9,8 +9,8 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for a compilation unit
  */
 public class IRCompUnit extends IRNode {
-    private String name;
-    private Map<String, IRFuncDecl> functions;
+    public String name;
+    public Map<String, IRFuncDecl> functions;
 
     public IRCompUnit(String name) {
         this.name = name;
@@ -69,15 +69,5 @@ public class IRCompUnit extends IRNode {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("COMPUNIT");
-        p.printAtom(name);
-        for (IRFuncDecl func : functions.values())
-            func.printSExp(p);
-        p.endList();
     }
 }

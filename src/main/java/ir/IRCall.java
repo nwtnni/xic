@@ -83,14 +83,4 @@ public class IRCall extends IRExpr {
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
     }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("CALL");
-        target.printSExp(p);
-        for (IRNode arg : args)
-            arg.printSExp(p);
-        p.endList();
-    }
 }

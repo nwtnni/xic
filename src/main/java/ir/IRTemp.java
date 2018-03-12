@@ -7,7 +7,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * TEMP(name)
  */
 public class IRTemp extends IRExpr {
-    private String name;
+    public String name;
 
     /**
      *
@@ -29,13 +29,5 @@ public class IRTemp extends IRExpr {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("TEMP");
-        p.printAtom(name);
-        p.endList();
     }
 }

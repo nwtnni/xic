@@ -7,7 +7,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * CONST(n)
  */
 public class IRConst extends IRExpr {
-    private long value;
+    public long value;
 
     /**
      *
@@ -39,13 +39,5 @@ public class IRConst extends IRExpr {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("CONST");
-        p.printAtom(String.valueOf(value));
-        p.endList();
     }
 }
