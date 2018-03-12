@@ -83,7 +83,7 @@ public class Xic {
 				throw XicException.unsupported(unit);
 		}
 		
-		// Invariant.check(ast);
+		Invariant.check(ast);
 		return ast;
 	}
 	
