@@ -1,70 +1,73 @@
 package emit;
 
+import java.util.OptionalLong;
 import ir.*;
 
-public class ConstantFolder extends IRVisitor<IRNode> {
+public class ConstantFolder extends IRVisitor<OptionalLong> {
 
-	public IRNode visit(IRBinOp b) {
+    IRNode tree;
+
+	public OptionalLong visit(IRBinOp b) {
 		return null;
 	}
 	
-	public IRNode visit(IRCall c) {
+	public OptionalLong visit(IRCall c) {
 		return null;
 	}
 
-	public IRNode visit(IRCJump c) {
+	public OptionalLong visit(IRCJump c) {
 		return null;
 	}
 
-	public IRNode visit(IRJump j) {
+	public OptionalLong visit(IRJump j) {
 		return null;
 	}
 	
-	public IRNode visit(IRCompUnit c) {
+	public OptionalLong visit(IRCompUnit c) {
 		return null;
 	}
 
-	public IRNode visit(IRConst c) {
+	public OptionalLong visit(IRConst c) {
 		return null;
 	}
 
-	public IRNode visit(IRESeq e) {
+	public OptionalLong visit(IRESeq e) {
 		return null;
 	}
 
-	public IRNode visit(IRExp e) {
+	public OptionalLong visit(IRExp e) {
 		return null;
 	}
 
-	public IRNode visit(IRFuncDecl f) {
+	public OptionalLong visit(IRFuncDecl f) {
 		return null;
 	}
 
-	public IRNode visit(IRLabel l) {
+	public OptionalLong visit(IRLabel l) {
 		return null;
 	}
 
-	public IRNode visit(IRMem m) {
+	public OptionalLong visit(IRMem m) {
 		return null;
 	}
 
-	public IRNode visit(IRMove m) {
+	public OptionalLong visit(IRMove m) {
 		return null;
 	}
 
-	public IRNode visit(IRName n) {
+	public OptionalLong visit(IRName n) {
 		return null;
 	}
 
-	public IRNode visit(IRReturn r) {
+	public OptionalLong visit(IRReturn r) {
 		return null;
 	}
 
-	public IRNode visit(IRSeq s) {
+	public OptionalLong visit(IRSeq s) {
 		return null;
 	}
 
-	public IRNode visit(IRTemp t) {
+	public OptionalLong visit(IRTemp t) {
 		return null;
 	}
 }
