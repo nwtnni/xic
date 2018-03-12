@@ -6,7 +6,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for a binary operation
  * OP(left, right)
  */
-public class IRBinOp extends IRExpr_c {
+public class IRBinOp extends IRExpr {
 
     /**
      * Binary operators
@@ -62,9 +62,9 @@ public class IRBinOp extends IRExpr_c {
     };
 
     private OpType type;
-    private IRExpr left, right;
+    private IRNode left, right;
 
-    public IRBinOp(OpType type, IRExpr left, IRExpr right) {
+    public IRBinOp(OpType type, IRNode left, IRNode right) {
         this.type = type;
         this.left = left;
         this.right = right;
@@ -74,22 +74,17 @@ public class IRBinOp extends IRExpr_c {
         return type;
     }
 
-    public IRExpr left() {
+    public IRNode left() {
         return left;
     }
 
-    public IRExpr right() {
+    public IRNode right() {
         return right;
     }
 
     @Override
     public String label() {
         return type.toString();
-    }
-
-    @Override
-    public boolean isConstant() {
-        return left.isConstant() && right.isConstant();
     }
 
     @Override

@@ -67,12 +67,6 @@ public class Importer extends TypeCheck {
      */
     @Override
     public Type visit(Program p) throws XicException {
-    	if (p.isProgram()) {
-    		for (Node use : p.uses) {
-    			use.accept(this);
-    		}
-    	}
-    	
 		// First pass: populate top-level environment with function IDs
     	for (Node fn : p.fns) {
     		fn.accept(this);
@@ -85,6 +79,12 @@ public class Importer extends TypeCheck {
     		vars.push();
     		fn.accept(this);
     		vars.pop();
+    	}
+		
+		if (p.isProgram()) {
+    		for (Node use : p.uses) {
+    			use.accept(this);
+    		}
     	}
 
     	return null;

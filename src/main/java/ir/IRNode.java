@@ -1,38 +1,66 @@
 package ir;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+import edu.cornell.cs.cs4120.util.CodeWriterSExpPrinter;
 import edu.cornell.cs.cs4120.util.SExpPrinter;
 
 /**
  * A node in an intermediate-representation abstract syntax tree.
  */
-public interface IRNode {
+public abstract class IRNode {
 
-    // /**
-    //  * Visit the children of this IR node.
-    //  * @param v the visitor
-    //  * @return the result of visiting children of this node
-    //  */
-    // IRNode visitChildren(IRVisitor v);
+    // @Override
+    // public IRNode visitChildren(IRVisitor v) {
+    //     return this;
+    // }
 
-    // <T> T aggregateChildren(AggregateVisitor<T> v);
+    // @Override
+    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
+    //     return v.unit();
+    // }
 
-    // InsnMapsBuilder buildInsnMapsEnter(InsnMapsBuilder v);
+    // @Override
+    // public InsnMapsBuilder buildInsnMapsEnter(InsnMapsBuilder v) {
+    //     return v;
+    // }
 
-    // IRNode buildInsnMaps(InsnMapsBuilder v);
+    // @Override
+    // public IRNode buildInsnMaps(InsnMapsBuilder v) {
+    //     v.addInsn(this);
+    //     return this;
+    // }
 
-    // CheckCanonicalIRVisitor checkCanonicalEnter(CheckCanonicalIRVisitor v);
+    // @Override
+    // public CheckCanonicalIRVisitor checkCanonicalEnter(
+    //         CheckCanonicalIRVisitor v) {
+    //     return v;
+    // }
 
-    // boolean isCanonical(CheckCanonicalIRVisitor v);
+    // @Override
+    // public boolean isCanonical(CheckCanonicalIRVisitor v) {
+    //     return true;
+    // }
 
-    // boolean isConstFolded(CheckConstFoldedIRVisitor v);
+    // @Override
+    // public boolean isConstFolded(CheckConstFoldedIRVisitor v) {
+    //     return true;
+    // }
 
-	public <T> T accept(IRVisitor<T> v);
-	
-    String label();
+    public abstract <T> T accept(IRVisitor<T> v);
 
-    /**
-     * Print an S-expression representation of this IR node.
-     * @param p the S-expression printer
-     */
-    void printSExp(SExpPrinter p);
+    public abstract String label();
+
+    public abstract void printSExp(SExpPrinter p);
+
+    @Override
+    public String toString() {
+        StringWriter sw = new StringWriter();
+        try (PrintWriter pw = new PrintWriter(sw);
+             SExpPrinter sp = new CodeWriterSExpPrinter(pw)) {
+            printSExp(sp);
+        }
+        return sw.toString();
+    }
 }

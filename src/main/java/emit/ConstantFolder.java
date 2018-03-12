@@ -2,14 +2,15 @@ package emit;
 
 import java.util.OptionalLong;
 import ir.*;
+import java.math.BigInteger;
 
 public class ConstantFolder extends IRVisitor<OptionalLong> {
 
     IRNode tree;
 
 	public OptionalLong visit(IRBinOp b) {
-		IRNode lt = b.left.accept(this);
-        IRNode rt = b.right.accept(this);
+		OptionalLong lt = b.left.accept(this);
+        OptionalLong rt = b.right.accept(this);
         if (lt.isPresent() && rt.isPresent()) {
             long c;
             switch (b.type) {
@@ -23,7 +24,8 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                 c = lt.getAsLong() * rt.getAsLong();
                 break;
             case HMUL:
-                c = lt.getAsLong() *>> rt.getAsLong();
+                c = BigInteger.valueOf(lt.getAsLong()).
+                    multiply(BigInteger.valueOf(lt.getAsLong())).shiftRight(64).longValue();
                 break;
             case DIV:
                 c = lt.getAsLong() / rt.getAsLong();
@@ -32,10 +34,10 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                 c = lt.getAsLong() % rt.getAsLong();
                 break;
             case AND:
-                c = lt.getAsLong() && rt.getAsLong();
+                c = (lt.getAsLong() == 1) && (rt.getAsLong() == 1);
                 break;
             case OR:
-                c = lt.getAsLong() || rt.getAsLong();
+                c = (lt.getAsLong() == 1) || (rt.getAsLong() == 1);
                 break;
             case XOR:
                 c = lt.getAsLong() ^ rt.getAsLong();
@@ -50,28 +52,31 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                 c = lt.getAsLong() >>> rt.getAsLong();
                 break;
             case EQ:
-                c = lt.getAsLong() == rt.getAsLong();
+                c = (lt.getAsLong() == 1) == (rt.getAsLong() == 1);
                 break;
             case NEQ:
-                c = lt.getAsLong() != rt.getAsLong();
+                c = (lt.getAsLong() == 1) != (rt.getAsLong() == 1);
                 break;
             case LT:
-                c = lt.getAsLong() < rt.getAsLong();
+                c = (lt.getAsLong() == 1) < (rt.getAsLong() == 1);
                 break;
             case GT:
-                rc = lt.getAsLong() > rt.getAsLong();
+                c = (lt.getAsLong() == 1) > (rt.getAsLong() == 1);
                 break;
             case LEQ:
-                c = lt.getAsLong() <= rt.getAsLong();
+                c = (lt.getAsLong() == 1) <= (rt.getAsLong() == 1);
                 break;
             case GEQ:
-                c = lt.getAsLong() >= rt.getAsLong();
+                c = (lt.getAsLong() == 1) >= (rt.getAsLong() == 1);
                 break;
-            default: return (new OptionalLong()).empty();
-                break;
+            default: // unreachable
+                assert false;
+                return null;
             }
+            return OptionalLong.of(c);
         }
-        return new IRBinOp(b.type, lt, rt);
+        return OptionalLong.empty();
+        
 	}
 	
 	public OptionalLong visit(IRCall c) {

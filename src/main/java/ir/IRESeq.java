@@ -6,25 +6,25 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for an expression evaluated under side effects
  * ESEQ(stmt, expr)
  */
-public class IRESeq extends IRExpr_c {
-    private IRStmt stmt;
-    private IRExpr expr;
+public class IRESeq extends IRExpr {
+    private IRNode stmt;
+    private IRNode expr;
 
     /**
      *
      * @param stmt IR statement to be evaluated for side effects
      * @param expr IR expression to be evaluated after {@code stmt}
      */
-    public IRESeq(IRStmt stmt, IRExpr expr) {
+    public IRESeq(IRNode stmt, IRNode expr) {
         this.stmt = stmt;
         this.expr = expr;
     }
 
-    public IRStmt stmt() {
+    public IRNode stmt() {
         return stmt;
     }
 
-    public IRExpr expr() {
+    public IRNode expr() {
         return expr;
     }
 

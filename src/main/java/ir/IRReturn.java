@@ -8,23 +8,23 @@ import java.util.List;
 
 /** RETURN statement */
 public class IRReturn extends IRStmt {
-    protected List<IRExpr> rets;
+    protected List<IRNode> rets;
 
     /**
      * @param rets values to return
      */
-    public IRReturn(IRExpr... rets) {
+    public IRReturn(IRNode... rets) {
         this(Arrays.asList(rets));
     }
 
     /**
      * @param rets values to return
      */
-    public IRReturn(List<IRExpr> rets) {
+    public IRReturn(List<IRNode> rets) {
         this.rets = rets;
     }
 
-    public List<IRExpr> rets() {
+    public List<IRNode> rets() {
         return rets;
     }
 
@@ -67,7 +67,7 @@ public class IRReturn extends IRStmt {
     public void printSExp(SExpPrinter p) {
         p.startList();
         p.printAtom("RETURN");
-        for (IRExpr ret : rets)
+        for (IRNode ret : rets)
             ret.printSExp(p);
         p.endList();
     }

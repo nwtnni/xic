@@ -6,7 +6,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for named memory address
  * NAME(n)
  */
-public class IRName extends IRExpr_c {
+public class IRName extends IRExpr {
     private String name;
 
     /**

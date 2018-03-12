@@ -6,7 +6,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * An intermediate representation for a memory location
  * MEM(e)
  */
-public class IRMem extends IRExpr_c {
+public class IRMem extends IRExpr {
     public enum MemType {
         NORMAL, IMMUTABLE;
 
@@ -24,23 +24,23 @@ public class IRMem extends IRExpr_c {
         }
     };
 
-    private IRExpr expr;
+    private IRNode expr;
     private MemType memType;
 
     /**
      *
      * @param expr the address of this memory location
      */
-    public IRMem(IRExpr expr) {
+    public IRMem(IRNode expr) {
         this(expr, MemType.NORMAL);
     }
 
-    public IRMem(IRExpr expr, MemType memType) {
+    public IRMem(IRNode expr, MemType memType) {
         this.expr = expr;
         this.memType = memType;
     }
 
-    public IRExpr expr() {
+    public IRNode expr() {
         return expr;
     }
 

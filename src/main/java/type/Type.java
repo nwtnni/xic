@@ -41,12 +41,14 @@ public class Type {
      */
     public static final Type VOID = new Type("_void");
     
+    private static final String POLY_ID = "_poly";
+
     /**
      * Primitive poly.
      * 
      * Represents the type of polymorphic length-0 arrays.
      */
-    public static final Type POLY = new Type(new Type("_poly")); // For the empty array {}
+    public static final Type POLY = new Type(new Type(POLY_ID)); // For the empty array {}
 
     /**
      * Denotes the possible categories of Types.
@@ -139,6 +141,7 @@ public class Type {
     /**
      * Checks for equality of the Type tree. Special case is the
      * {@link Type#POLY} class, which is equal to any array type.
+     * Automatically does type coercion for polymorphic arrays.
      */
     public boolean equals(Object o) {
         if (!(o instanceof Type)) { return false; }
@@ -146,9 +149,15 @@ public class Type {
         Type t = (Type) o;
 
         if (kind == Kind.CLASS && t.kind == Kind.CLASS) {
+            if (this.id.equals(POLY_ID)) {
+                this.id = t.id;
+            }
+            if (t.id.equals(POLY_ID)) {
+                t.id = this.id;
+            }
             return t.id.equals(id);
         } else if (kind == Kind.ARRAY && t.kind == Kind.ARRAY) {
-            return t.children.get(0).equals(children.get(0)) || t == Type.POLY || this == Type.POLY;
+            return t.children.get(0).equals(children.get(0)) || this == POLY || t == POLY;
         } else if (kind == Kind.TUPLE && t.kind == Kind.TUPLE) {
         	if (children.size() != t.children.size()) { return false; }
         	for (int i = 0; i < children.size(); i++) {
@@ -176,6 +185,20 @@ public class Type {
         		hash += 10 * child.hashCode();
         	}
         	return hash;
+        }
+    }
+
+    /**
+     * Returns true if an arbitrary dimension array is polymorphic.
+     */
+    public boolean isPoly() {
+        if (kind == Kind.ARRAY) {
+            if (this == POLY) {
+                return true;
+            }
+            return this.children.get(0).isPoly();
+        } else {
+            return false;
         }
     }
 }
