@@ -50,6 +50,11 @@ public class IRExp extends IRStmt {
     // }
 
     @Override
+    public <T> T accept(IRVisitor<T> v) {
+        return v.visit(this);
+    }
+
+    @Override
     public void printSExp(SExpPrinter p) {
         p.startList();
         p.printAtom("EXP");

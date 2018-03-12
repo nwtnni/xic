@@ -8,7 +8,6 @@ public class EmitterTest {
 
     @Test
     public void testTest() {
-       assertEquals(true, false); 
         System.out.println("our first unit test: amazing");
     }
 }

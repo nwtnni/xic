@@ -74,6 +74,11 @@ public class IRSeq extends IRStmt {
     // }
 
     @Override
+    public <T> T accept(IRVisitor<T> v) {
+        return v.visit(this);
+    }
+
+    @Override
     public void printSExp(SExpPrinter p) {
         p.startUnifiedList();
         p.printAtom("SEQ");

@@ -68,6 +68,10 @@ public class IRMem extends IRExpr_c {
     //     result = v.bind(result, v.visit(expr));
     //     return result;
     // }
+    @Override
+    public <T> T accept(IRVisitor<T> v) {
+        return v.visit(this);
+    }
 
     @Override
     public void printSExp(SExpPrinter p) {

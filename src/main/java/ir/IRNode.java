@@ -26,6 +26,8 @@ public interface IRNode {
 
     // boolean isConstFolded(CheckConstFoldedIRVisitor v);
 
+	public <T> T accept(IRVisitor<T> v);
+	
     String label();
 
     /**
