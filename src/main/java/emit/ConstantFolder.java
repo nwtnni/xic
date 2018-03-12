@@ -14,10 +14,10 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 	public OptionalLong visit(IRBinOp b) {
 		OptionalLong ltol = b.left.accept(this);
         OptionalLong rtol = b.right.accept(this);
-        if (lt.isPresent() && rt.isPresent()) {
+        if (ltol.isPresent() && rtol.isPresent()) {
             long c;
-            long lt = lt.getAsLong();
-            long rt = rt.getAsLong();
+            long lt = ltol.getAsLong();
+            long rt = rtol.getAsLong();
             switch (b.type) {
             case ADD: 
                 c = lt + rt;
