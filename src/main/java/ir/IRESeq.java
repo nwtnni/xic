@@ -7,8 +7,8 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
  * ESEQ(stmt, expr)
  */
 public class IRESeq extends IRExpr {
-    private IRNode stmt;
-    private IRNode expr;
+    public IRNode stmt;
+    public IRNode expr;
 
     /**
      *
@@ -60,14 +60,5 @@ public class IRESeq extends IRExpr {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("ESEQ");
-        stmt.printSExp(p);
-        expr.printSExp(p);
-        p.endList();
     }
 }

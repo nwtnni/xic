@@ -62,13 +62,4 @@ public class IRReturn extends IRStmt {
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
     }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom("RETURN");
-        for (IRNode ret : rets)
-            ret.printSExp(p);
-        p.endList();
-    }
 }

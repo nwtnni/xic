@@ -61,8 +61,8 @@ public class IRBinOp extends IRExpr {
         }
     };
 
-    private OpType type;
-    private IRNode left, right;
+    public OpType type;
+    public IRNode left, right;
 
     public IRBinOp(OpType type, IRNode left, IRNode right) {
         this.type = type;
@@ -91,14 +91,4 @@ public class IRBinOp extends IRExpr {
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
     }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom(type.toString());
-        left.printSExp(p);
-        right.printSExp(p);
-        p.endList();
-    }
-
 }

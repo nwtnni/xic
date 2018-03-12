@@ -24,8 +24,8 @@ public class IRMem extends IRExpr {
         }
     };
 
-    private IRNode expr;
-    private MemType memType;
+    public IRNode expr;
+    public MemType memType;
 
     /**
      *
@@ -71,13 +71,5 @@ public class IRMem extends IRExpr {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
-    }
-
-    @Override
-    public void printSExp(SExpPrinter p) {
-        p.startList();
-        p.printAtom(memType.toString());
-        expr.printSExp(p);
-        p.endList();
     }
 }
