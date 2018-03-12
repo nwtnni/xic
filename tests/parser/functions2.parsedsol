@@ -1,5 +1,5 @@
 (()
- ((foo ((a int) (b int)) (int) ((if (>= a b) () ((= a 2))) (return 5)))
+ ((foo ((a int) (b int)) (int) ((if (>= a b) () (= a 2)) (return 5)))
   (foo2 ((a int) (b int)) ()
    ((foo a b) (while true ()) (a int) (b int) (c bool)))
   (foo
