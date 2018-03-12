@@ -8,7 +8,70 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
     IRNode tree;
 
 	public OptionalLong visit(IRBinOp b) {
-		return null;
+		IRNode lt = b.left.accept(this);
+        IRNode rt = b.right.accept(this);
+        if (lt.isPresent() && rt.isPresent()) {
+            long c;
+            switch (b.type) {
+            case ADD: 
+                c = lt.getAsLong() + rt.getAsLong();
+                break;
+            case SUB:
+                c = lt.getAsLong() - rt.getAsLong();
+                break;
+            case MUL:
+                c = lt.getAsLong() * rt.getAsLong();
+                break;
+            case HMUL:
+                c = lt.getAsLong() *>> rt.getAsLong();
+                break;
+            case DIV:
+                c = lt.getAsLong() / rt.getAsLong();
+                break;
+            case MOD:
+                c = lt.getAsLong() % rt.getAsLong();
+                break;
+            case AND:
+                c = lt.getAsLong() && rt.getAsLong();
+                break;
+            case OR:
+                c = lt.getAsLong() || rt.getAsLong();
+                break;
+            case XOR:
+                c = lt.getAsLong() ^ rt.getAsLong();
+                break;
+            case LSHIFT:
+                c = lt.getAsLong() << rt.getAsLong();
+                break;
+            case RSHIFT:
+                c = lt.getAsLong() >> rt.getAsLong();
+                break;
+            case ARSHIFT:
+                c = lt.getAsLong() >>> rt.getAsLong();
+                break;
+            case EQ:
+                c = lt.getAsLong() == rt.getAsLong();
+                break;
+            case NEQ:
+                c = lt.getAsLong() != rt.getAsLong();
+                break;
+            case LT:
+                c = lt.getAsLong() < rt.getAsLong();
+                break;
+            case GT:
+                rc = lt.getAsLong() > rt.getAsLong();
+                break;
+            case LEQ:
+                c = lt.getAsLong() <= rt.getAsLong();
+                break;
+            case GEQ:
+                c = lt.getAsLong() >= rt.getAsLong();
+                break;
+            default: return (new OptionalLong()).empty();
+                break;
+            }
+        }
+        return new IRBinOp(b.type, lt, rt);
 	}
 	
 	public OptionalLong visit(IRCall c) {
