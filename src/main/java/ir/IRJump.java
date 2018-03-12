@@ -12,8 +12,8 @@ public class IRJump extends IRStmt {
      *
      * @param expr the destination of the jump
      */
-    public IRJump(IRExpr expr) {
-        target = expr;
+    public IRJump(IRNode n) {
+        target = n;
     }
 
     public IRExpr target() {
