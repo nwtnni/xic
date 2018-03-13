@@ -376,12 +376,24 @@ public class TypeChecker extends Visitor<Type> {
 			return Type.UNIT;
 		}
 
-		ArrayList<Type> mt = new ArrayList<>();
+		ArrayList<Type> types = new ArrayList<>();
 		for (Node value : m.values) {
-			mt.add(value.accept(this));
+			types.add(value.accept(this));
 		}
-		m.type = new Type(mt);
-		return m.type;
+		switch (m.kind) {
+			case ASSIGN:
+			case RETURN:
+			case FN_RETURNS:
+				m.type = new Type(types, false);
+				return m.type;
+			case FN_CALL:
+			case FN_ARGS:
+				m.type = new Type(types, true);
+				return m.type;
+		}
+		// Unreachable
+		assert false;
+		return null;
 	}
 
 	/**

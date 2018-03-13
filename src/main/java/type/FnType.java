@@ -68,12 +68,23 @@ public class FnType extends Visitor<Type> {
      * Visits a Multiple's children and collects them into a tuple.
      */
     public Type visit(Multiple m) throws XicException {
-    	if (m.values.size() == 0) { return Type.UNIT; }
+    	if (m.values.size() == 0) { 
+			return Type.UNIT; 
+		}
+
     	ArrayList<Type> types = new ArrayList<>();
     	for (Node value : m.values) {
     		types.add(value.accept(this));
     	}
-    	return new Type(types);
+		switch (m.kind) {
+			case FN_RETURNS:
+				return new Type(types, false);
+			case FN_ARGS:
+				return new Type(types, true);
+		}
+		// Unreachable
+		assert false;
+		return null;
     }
 
     /**

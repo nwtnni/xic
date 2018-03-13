@@ -64,6 +64,11 @@ public class Type {
          * Represents a single type
          */
         CLASS,
+
+        /**
+         * Represents a list type constructor
+         */
+        LIST,
         
         /**
          * Represents a tuple type constructor
@@ -109,12 +114,13 @@ public class Type {
     }
     
     /**
-     * Creates a new tuple type of its argument.
+     * Creates a new list or tuple type of its argument.
      * 
-     * @param children Types to create a tuple of, in order
+     * @param children Types to create a list of, in order
+     * @param isList is true if the type is a list type
      */
-    public Type(ArrayList<Type> children) {
-    	this.kind = Kind.TUPLE;
+    public Type(ArrayList<Type> children, boolean isList) {
+    	this.kind = isList ? Kind.LIST : Kind.TUPLE;
     	this.id = null;
     	this.children = children;
     }
@@ -149,16 +155,17 @@ public class Type {
         Type t = (Type) o;
 
         if (kind == Kind.CLASS && t.kind == Kind.CLASS) {
-            if (this.id.equals(POLY_ID)) {
-                this.id = t.id;
+            if (id.equals(POLY_ID)) {
+                id = t.id;
             }
             if (t.id.equals(POLY_ID)) {
-                t.id = this.id;
+                t.id = id;
             }
             return t.id.equals(id);
         } else if (kind == Kind.ARRAY && t.kind == Kind.ARRAY) {
             return t.children.get(0).equals(children.get(0)) || this == POLY || t == POLY;
-        } else if (kind == Kind.TUPLE && t.kind == Kind.TUPLE) {
+        } else if (kind == Kind.TUPLE && t.kind == Kind.TUPLE ||
+                   kind == Kind.LIST && t.kind == Kind.LIST) {
         	if (children.size() != t.children.size()) { return false; }
         	for (int i = 0; i < children.size(); i++) {
         		if (!children.get(i).equals(t.children.get(i))) {
@@ -219,6 +226,12 @@ public class Type {
                 }
             case ARRAY:
                 return "a" + children.get(0).toString();
+            case LIST:
+                String args = "";
+                for (Type t : children) {
+                    args += t.toString();
+                }
+                return args;
             case TUPLE:
                 String encoding = "";
                 for (Type t : children) {
