@@ -43,10 +43,11 @@ parser code {:
 
     private Node evalInt(TempInt expr, boolean negate) throws ParseException {
         try {
+            String orig = expr.literal;
             if (negate) {
                 expr.literal = "-" + expr.literal;
             }
-            return new XiInt(expr.location, Long.valueOf(expr.literal));
+            return new XiInt(expr.location, Long.valueOf(expr.literal), orig, negate);
         } catch (NumberFormatException ex) {
             throw ParseException.numberFormatException(expr.location, expr.literal);
         }
@@ -259,9 +260,10 @@ BlockOptBraces ::=
     :}
     | SingleStmtNoReturn:ssnr
     {:
-        ArrayList<Node> block = new ArrayList<>();
-        block.add(ssnr);
-        RESULT = new Block(ssnrxleft, block);
+        // ArrayList<Node> block = new ArrayList<>();
+        // block.add(ssnr);
+        // RESULT = new Block(ssnrxleft, block);
+        RESULT = ssnr;
     :}
     ;
 

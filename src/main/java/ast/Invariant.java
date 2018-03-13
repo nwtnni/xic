@@ -169,9 +169,11 @@ public class Invariant extends Visitor<Void> {
     //
     // [i.guard]     non-null
     //
-    // [i.block]     non-null && Block node
+    // [i.block]     non-null && Block node or node from
+    //               a SingleStmtNoReturn
     //
-    // [i.elseBlock] non-null && Block node if Kind.IF_ELSE
+    // [i.elseBlock] non-null && Block node or node from
+    //               a SingleStmtNoReturn if Kind.IF_ELSE
     //               null otherwise
     //
     public Void visit(If i) throws XicException {
@@ -179,11 +181,23 @@ public class Invariant extends Visitor<Void> {
         assert i.guard != null; 
         i.guard.accept(this);
 
-        assert i.block instanceof Block; 
+        Node block = i.block; 
+        assert (block instanceof Block ||
+                block instanceof Assign ||
+                block instanceof If ||
+                block instanceof While ||
+                block instanceof Call ||
+                block instanceof Declare);
         i.guard.accept(this);
 
         if (i.hasElse()) {
-            assert i.elseBlock instanceof Block; 
+            block = i.elseBlock; 
+            assert (block instanceof Block ||
+                    block instanceof Assign ||
+                    block instanceof If ||
+                    block instanceof While ||
+                    block instanceof Call ||
+                    block instanceof Declare);
             i.elseBlock.accept(this);
         } else {
             assert i.elseBlock == null; 
@@ -197,12 +211,19 @@ public class Invariant extends Visitor<Void> {
     //
     // [i.guard]    non-null
     //
-    // [i.block]    non-null && Block node
+    // [i.block]    non-null && Block node or node from
+    //              a SingleStmtNoReturn
     //
     public Void visit(While w) throws XicException {
         assert w.location != null;
-        assert w.guard != null; 
-        assert w.block instanceof Block;
+        assert w.guard != null;
+        Node block = w.block; 
+        assert (block instanceof Block ||
+                block instanceof Assign ||
+                block instanceof If ||
+                block instanceof While ||
+                block instanceof Call ||
+                block instanceof Declare);
         return null;
     }
 

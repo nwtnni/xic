@@ -1,5 +1,3 @@
-use bar
-
-foo(x:int) : int {
-    return x
+foo () {
+    return foo()
 }

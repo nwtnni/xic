@@ -99,6 +99,8 @@ task testLexer(type: Exec, dependsOn:xic) {
 task testParser(type: Exec, dependsOn:xic) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/ tests/parser/xthScript && echo\
+    && printf \"\\n========================================\\n\\n\"\
+    && xth/xth -compilerpath . -workpath tests/parser/failed_tests -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript\
     && printf \"\\n========================================\\n\\n\""
 }
 

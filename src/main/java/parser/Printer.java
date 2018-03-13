@@ -294,7 +294,14 @@ public class Printer extends Visitor<Void> {
     }
 
     public Void visit(XiInt i) throws XicException {
-        printer.printAtom(Long.toString(i.value));
+        if (i.negated) {
+            printer.startList();
+            printer.printAtom("-");
+            printer.printAtom(i.literal);
+            printer.endList();
+        } else {
+            printer.printAtom(i.literal);
+        }
         return null;
     }
 

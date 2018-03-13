@@ -5,8 +5,8 @@
    ((if
      (> (- b a) 5)
      ((if (== (- b a) 6) ((= c 5))))
-     ((if (== (+ b 6) 13) ((= c 7)))))
-    (if true ((if false ((= c 10)) ((= c 6)))) ((= c 7)))
+     (if (== (+ b 6) 13) ((= c 7))))
+    (if true (if false (= c 10) (= c 6)) (= c 7))
     (return true)))
   (foo2
    ((a int) (b int))
