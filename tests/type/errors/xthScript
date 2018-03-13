@@ -39,5 +39,6 @@ xic ("Test --typecheck") "--typecheck" {
     bad-assign-procedure.xi;
     bad-mixed-array.xi;
     bad-nested-array.xi;
+    bad-procedure-return.xi;
     bad-use-conflict.xi;
 }

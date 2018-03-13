@@ -178,12 +178,17 @@ public class TypeCheck extends Visitor<Type> {
 	 * @throws XicException if return type doesn't match
 	 */
 	public Type visit(Return r) throws XicException {
-		if ((r.hasValue() && returns.equals(r.value.accept(this))) || (!r.hasValue() && returns.equals(Type.UNIT))) {
+		if (r.hasValue()) {
+			Type value = r.value.accept(this);
+			if (!value.equals(Type.UNIT) && returns.equals(value)) {
+				r.type = Type.VOID;
+				return r.type;
+			}
+		} else if (returns.equals(Type.UNIT)) {
 			r.type = Type.VOID;
 			return r.type;
-		} else {
-			throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
 		}
+		throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
 	}
 
 	/**
