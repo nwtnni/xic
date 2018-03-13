@@ -46,17 +46,11 @@ parser code {:
 scan with {: return lexer.nextToken(); :};
 
 /* Terminals (tokens returned by the scanner). */
-terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                    USE;
 terminal                    INT, BOOL;
-terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
-terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
 terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
-terminal    Boolean         TRUE, FALSE; 
+terminal                    EQ, COLON, SEMICOLON, COMMA;
 terminal    String          IDENTIFIER;
-terminal    String          INTEGER;
-terminal    CharWrapper     CHAR;
-terminal    StringWrapper   STRING;
 
 /* Non terminals */
 non terminal    Node                FnDef, ProcedureDef;

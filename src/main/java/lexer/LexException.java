@@ -19,9 +19,8 @@ public class LexException extends XicException {
 		IO("Failed to read next token from file"),
 		
 		// Lex errors
-		INVALID_CHAR_LITERAL("Invalid char literal"),
-		INVALID_ESCAPE_SEQUENCE("Invalid escape sequence"),
-		INVALID_STRING_TERMINATOR("String literal not properly terminated"),
+		INVALID_CHAR("Invalid char literal"),
+		INVALID_STRING("Invalid string literal"),
 		INVALID_SYNTAX("Invalid syntax");
 		
 		private String description;

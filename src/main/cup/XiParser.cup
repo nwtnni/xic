@@ -606,7 +606,7 @@ AssignVarType ::=
     {:
         for(int i=vtilne.size()-1; i>=0; i--) {
             if(vtilne.get(i) == null){
-                type = new XiType(typexleft,type);
+                type = new XiType(typexleft, type);
             }
             else {
                 type = new XiType(typexleft, type, vtilne.get(i));

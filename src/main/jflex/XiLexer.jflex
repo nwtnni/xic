@@ -1,23 +1,16 @@
 package lexer;
 
-import xic.XicException;
-import lexer.LexException.Kind;
-
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
-
-import xic.FilenameUtils;
 
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
-import java.util.ArrayList;
 
+import xic.FilenameUtils;
 import static parser.XiSymbol.*;
+import xic.XicException;
+import lexer.LexException.Kind;
 
 %%
 
@@ -36,7 +29,6 @@ import static parser.XiSymbol.*;
 %{
     /* Exposed Interface */
 
-    // TODO: Throw XicException
     public static XiLexer from(String source, String unit) throws XicException {
         String input = FilenameUtils.concat(source, unit);
         try {
@@ -275,8 +267,7 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
-    \\                  { throwLexException(row(), column(), Kind.INVALID_ESCAPE_SEQUENCE); }
-    [^]                 { throwLexException(row(), column(), Kind.INVALID_CHAR_LITERAL); }
+    [^]                 { throwLexException(row(), startColumn, Kind.INVALID_CHAR); }
 }
 
 <YYSTRING> {
@@ -306,10 +297,11 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             buildString(escape(yytext(), c), c);
                         }
-    \\                  { throwLexException(row(), column(), Kind.INVALID_ESCAPE_SEQUENCE); }
-    {EOL}               { throwLexException(row(), column(), Kind.INVALID_STRING_TERMINATOR); }
-    <<EOF>>             { throwLexException(row(), column(), Kind.INVALID_STRING_TERMINATOR); }
+    \\                  { throwLexException(row(), startColumn, Kind.INVALID_STRING); }
+    {EOL}               { throwLexException(row(), startColumn, Kind.INVALID_STRING); }
+    <<EOF>>             { throwLexException(row(), startColumn, Kind.INVALID_STRING); }
+    [^]                 { throwLexException(row(), startColumn, Kind.INVALID_STRING); }
 }
 
-[^]                     { throwLexException(row(), column(), Kind.INVALID_SYNTAX); } 
 <<EOF>>                 { return tokenize(EOF); }
+[^]                     { throwLexException(row(), column(), Kind.INVALID_SYNTAX); } 
