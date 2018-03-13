@@ -120,7 +120,6 @@ Identifier = {Letter}({Digit}|{Letter}|_|')*
 "{"                 { return tokenize(LBRACE); }
 "}"                 { return tokenize(RBRACE); }
 ":"                 { return tokenize(COLON); }
-";"                 { return tokenize(SEMICOLON); }
 ","                 { return tokenize(COMMA); }
 
 {Identifier}        { return tokenize(IDENTIFIER); } 

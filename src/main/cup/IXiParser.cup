@@ -49,11 +49,11 @@ scan with {: return lexer.nextToken(); :};
 terminal                    USE;
 terminal                    INT, BOOL;
 terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                    EQ, COLON, SEMICOLON, COMMA;
+terminal                    COLON, COMMA;
 terminal    String          IDENTIFIER;
 
 /* Non terminals */
-non terminal    Node                FnDef, ProcedureDef;
+non terminal    Node                FnDef;
 non terminal    ArrayList<Node>     FnDefList;
 non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
 non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
