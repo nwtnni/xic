@@ -12,7 +12,7 @@ import xic.XicException;
  * Specification. This implementation mutates the provided AST, decorating
  * each node with a Type field.
  */
-public class TypeCheck extends Visitor<Type> {
+public class TypeChecker extends Visitor<Type> {
 
 	/**
 	 * Factory method to type check the given AST.
@@ -21,13 +21,13 @@ public class TypeCheck extends Visitor<Type> {
 	 * @throws XicException if a semantic error was found
 	 */
 	public static void check(String lib, Node ast) throws XicException {
-		ast.accept(new TypeCheck(lib, ast));
+		ast.accept(new TypeChecker(lib, ast));
 	}
 
 	/**
 	 * Default constructor initializes empty contexts.
 	 */
-	protected TypeCheck() {
+	protected TypeChecker() {
 		this.fns = new FnContext();
 		this.types = new TypeContext();
 		this.vars = new VarContext();
@@ -41,7 +41,7 @@ public class TypeCheck extends Visitor<Type> {
 	 * @param ast AST to resolve dependencies for
 	 * @throws XicException if a semantic error occurred while resolving dependencies
 	 */
-	private TypeCheck(String lib, Node ast) throws XicException {
+	private TypeChecker(String lib, Node ast) throws XicException {
 		this.fns = Importer.resolve(lib, ast);
 		this.types = new TypeContext();
 		this.vars = new VarContext();
@@ -172,18 +172,23 @@ public class TypeCheck extends Visitor<Type> {
 	}
 
 	/**
-	 * A return is valid if its type matches {@link TypeCheck#returns}
+	 * A return is valid if its type matches {@link TypeChecker#returns}
 	 * 
-	 * @returns {@link Type.VOID} if return type matches {@link TypeCheck#returns}
+	 * @returns {@link Type.VOID} if return type matches {@link TypeChecker#returns}
 	 * @throws XicException if return type doesn't match
 	 */
 	public Type visit(Return r) throws XicException {
-		if ((r.hasValue() && returns.equals(r.value.accept(this))) || (!r.hasValue() && returns.equals(Type.UNIT))) {
+		if (r.hasValue()) {
+			Type value = r.value.accept(this);
+			if (!value.equals(Type.UNIT) && returns.equals(value)) {
+				r.type = Type.VOID;
+				return r.type;
+			}
+		} else if (returns.equals(Type.UNIT)) {
 			r.type = Type.VOID;
 			return r.type;
-		} else {
-			throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
 		}
+		throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
 	}
 
 	/**

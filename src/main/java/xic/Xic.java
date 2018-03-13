@@ -5,7 +5,7 @@ import ast.Node;
 import lexer.XiLexer;
 import parser.IXiParser;
 import parser.XiParser;
-import type.TypeCheck;
+import type.TypeChecker;
 
 /**
  * Main compiler class. Wraps around and provides convenience methods
@@ -97,7 +97,7 @@ public class Xic {
 	 */
 	public Node typeCheck(String unit) throws XicException {
 		Node ast = parse(unit);
-		TypeCheck.check(lib, ast);
+		TypeChecker.check(lib, ast);
 		return ast;
 	}
 	
