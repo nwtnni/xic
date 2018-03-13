@@ -36,7 +36,7 @@ public class Printer {
             	switch (ext) {
 	        		case "xi":
 	        			ast = XiParser.from(source, unit);
-	        			TypeCheck.check(lib, ast);
+	        			TypeChecker.check(lib, ast);
 	        			break;
 	        		default:
 	        			throw XicException.unsupported(unit);

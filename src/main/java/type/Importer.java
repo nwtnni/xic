@@ -6,7 +6,7 @@ import type.TypeException.Kind;
 import xic.XicException;
 
 /**
- * Subclass of {@link TypeCheck} which type checks top-level
+ * Subclass of {@link TypeChecker} which type checks top-level
  * declarations of both interface (.ixi) and implementation (.xi)
  * files.
  * 
@@ -23,7 +23,7 @@ import xic.XicException;
  * 1) Add each function's types to the FnContext
  * 2) Check all function arguments for shadowing against the top-level context
  */
-public class Importer extends TypeCheck {
+public class Importer extends TypeChecker {
 
 	/**
 	 * Factory method to resolve dependencies in an AST into a FnContext.
