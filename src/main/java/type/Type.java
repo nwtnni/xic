@@ -31,7 +31,7 @@ public class Type {
      * Represents the type of both wildcards and
      * statements that might complete normally.
      */
-    public static final Type UNIT = new Type("_unit");
+    public static final Type UNIT = new Type();
     
     /**
      * Primitive void.
@@ -93,9 +93,18 @@ public class Type {
     public ArrayList<Type> children;
 
     /**
+     * Creates a unit type.
+     */
+    private Type() {
+        this.kind = Kind.TUPLE;
+        this.id = "_unit";
+        this.children = new ArrayList<>();
+    }
+
+    /**
      * Creates a new primitive type.
      */
-    protected Type(String id) {
+    public Type(String id) {
         this.kind = Kind.CLASS;
         this.id = id;
         this.children = null;
@@ -233,6 +242,9 @@ public class Type {
                 }
                 return args;
             case TUPLE:
+                if (children.size() == 0) {
+                    return "p";
+                }
                 String encoding = "";
                 for (Type t : children) {
                     encoding += t.toString();

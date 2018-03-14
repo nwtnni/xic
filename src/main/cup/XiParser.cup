@@ -544,7 +544,7 @@ Assign ::=
     ;
 
 IDList ::= 
-    MultiAssignName:an COMMA MultiAssignName: bn FIDList:fl
+    MultiAssignName:an COMMA MultiAssignName:bn FIDList:fl
     {:
         fl.add(0, bn);
         fl.add(0, an);

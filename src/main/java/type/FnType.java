@@ -36,7 +36,7 @@ public class FnType extends Visitor<Type> {
 	public Location location;
 	
 	/**
-	 * Stores the Fn's arguments. Can be a {@link Type.Kind#TUPLE} for
+	 * Stores the Fn's arguments. Can be a {@link Type.Kind#LIST} for
 	 * functions with zero or more than one argument types, or a {@link Type.Kind#CLASS}
 	 * for functions with one return type.
 	 */

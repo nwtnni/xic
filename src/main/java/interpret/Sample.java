@@ -9,7 +9,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
 import ir.*;
 import ir.IRBinOp.OpType;
 
-public class Main {
+public class Sample {
 
     public static void main(String[] args) {
         // Runs a simple program in the interpreter
