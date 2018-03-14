@@ -1,14 +1,15 @@
 #!/bin/bash
 
 build() {
-    gradle xic
-    printf "\n========================================\n\n"
+   gradle xic
+   printf "\n========================================\n\n"
 }
 
 test_all() {
-    test_reg
-    test_fails
-    test_course
+  test_reg
+  test_lex_fails
+  test_parse_fails
+  test_course
 }
 
 test_reg() {
@@ -17,7 +18,12 @@ test_reg() {
     test_type
 }
 
-test_fails() {
+test_lex_fails() {
+    xth/xth -compilerpath . -workpath tests/lexer/failed_tests -testpath tests/lexer/failed_tests tests/lexer/failed_tests/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_parse_fails() {
     xth/xth -compilerpath . -workpath tests/parser/failed_tests -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
     printf "\n========================================\n\n" 
 }
@@ -74,7 +80,8 @@ r|regression)
     test_reg
     ;;
 f|fails)
-    test_fails
+    test_lex_fails
+    test_parse_fails
     ;;
 l|lexer)
     test_lex
