@@ -46,7 +46,7 @@ public class Printer extends IRVisitor<Void> {
 	            OutputStream stream = new FileOutputStream(output);
                 Printer p = new Printer(stream);
                 comp.accept(p);
-                
+
                 debug(comp);
 
                 // System.out.println("\nRunning example: \n");
@@ -81,10 +81,6 @@ public class Printer extends IRVisitor<Void> {
 	    	}
         } catch (IOException io) {
         	throw XicException.write(output);
-        } 
-        // for debug
-        catch (StackOverflowError e) {
-            System.out.println("stackoverflowed");
         }
     }
 

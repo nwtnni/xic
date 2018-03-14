@@ -33,6 +33,10 @@ public class Emitter extends Visitor<IRNode> {
      * Utility methods
      */
 
+    /**
+     * Utility method for mangling function name to conform to
+     * ABI specification.
+     */
     protected String makeABIName(String name) {
         FnType type = context.lookup(name);
         String args = type.args.toString();
@@ -41,10 +45,10 @@ public class Emitter extends Visitor<IRNode> {
         return "_I" + name + "_" + returns + args;
     }
 
-
     /*
      * Top-level AST nodes
      */
+
     public IRNode visit(Program p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
         for (Node n : p.fns) {
@@ -54,6 +58,8 @@ public class Emitter extends Visitor<IRNode> {
         return program;
     }
 
+    // TODO: populate namespace with imports
+    // just iterate through the context and just ignore use statements
     public IRNode visit(Use u) throws XicException {
         return null;
     }
@@ -62,9 +68,10 @@ public class Emitter extends Visitor<IRNode> {
         IRSeq body = (IRSeq) f.block.accept(this);
 
         // TODO: visit args and prepend MOVE into TEMP to body
-        // see interpret.Configuration
+        // see interpret.Configuration for useful constants
+        // see interpret.Sample for examples of how to use them
 
-        // TODO: make sure a return is at the end of the function.
+        // TODO: make sure there is a return is at the end of the function.
 
         return new IRFuncDecl(makeABIName(f.id), body);
     }
@@ -72,10 +79,14 @@ public class Emitter extends Visitor<IRNode> {
     /*
      * Statement nodes
      */
+
+    // TODO: variable declaration
     public IRNode visit(Declare d) throws XicException {
         return null;
     }
 
+    // TODO: assignment, cases:
+    // declr, var, multiple, arrays
     public IRNode visit(Assign a) throws XicException {
         return null;
     }
@@ -89,6 +100,8 @@ public class Emitter extends Visitor<IRNode> {
         ArrayList<IRNode> stmts = new ArrayList<>();
         for (Node n : b.statements) {
             IRNode stmt = n.accept(this);
+            // TODO: this is just a hack for wrapping an EXPR with an EXP
+            // we need to find a better way to wrap function/procedure calls
             if (stmt instanceof IRExpr) {
                 stmts.add(new IRExp(stmt));
             } else {
@@ -98,10 +111,12 @@ public class Emitter extends Visitor<IRNode> {
         return new IRSeq(stmts);
     }
 
+    // TODO: if control flow with short circuit
     public IRNode visit(If i) throws XicException {
         return null;
     }
 
+    // TODO: while
     public IRNode visit(While w) throws XicException {
         return null;
     }
@@ -109,6 +124,7 @@ public class Emitter extends Visitor<IRNode> {
     /*
      * Expression nodes
      */
+
     public IRNode visit(Call c) throws XicException {
         IRName target = new IRName(makeABIName(c.id));
         ArrayList<IRNode> argList = new ArrayList<>();
@@ -117,7 +133,6 @@ public class Emitter extends Visitor<IRNode> {
         }
 
         // TODO: deal with calling convention for returns (probably in assign)
-        //
 
         return new IRCall(target, argList);
     }
@@ -174,10 +189,12 @@ public class Emitter extends Visitor<IRNode> {
         return new IRTemp(v.id);
     }
 
+    // TODO: multiple types
     public IRNode visit(Multiple m) throws XicException {
         return null;
     }
 
+    // TODO: array indexing
     public IRNode visit(Index i) throws XicException {
         return null;
     }
@@ -195,6 +212,7 @@ public class Emitter extends Visitor<IRNode> {
         return new IRConst(c.value);
     }
 
+    // TODO: strings and arrays - should we even have strings at this point?
     public IRNode visit(XiString s) throws XicException {
         return null;
     }
