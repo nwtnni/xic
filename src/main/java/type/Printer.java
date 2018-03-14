@@ -1,6 +1,7 @@
 package type;
 
-import java.io.*;
+import java.io.FileWriter;
+import java.io.IOException;
 import xic.FilenameUtils;
 
 import ast.Node;
@@ -27,9 +28,10 @@ public class Printer {
     	String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
 	    output = FilenameUtils.setExtension(output, "typed");
 
+		FileWriter writer = null;
         try {
         	FilenameUtils.makePathTo(output);
-			FileWriter writer = new FileWriter(output);
+			writer = new FileWriter(output);
         	try {
             	switch (ext) {
 	        		case "xi":

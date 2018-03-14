@@ -1,7 +1,5 @@
 package xic;
 
-import java_cup.runtime.ComplexSymbolFactory.Location;
-
 /**
  * Represents the set of all possible compiler exceptions.
  */

@@ -1,7 +1,5 @@
 package ir;
 
-import edu.cornell.cs.cs4120.util.SExpPrinter;
-
 /**
  * An intermediate representation for evaluating an expression for side effects,
  * discarding the result

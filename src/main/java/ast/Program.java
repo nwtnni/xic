@@ -1,9 +1,9 @@
 package ast;
 
+import java.util.List;
+
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
-
-import java.util.ArrayList;
 
 // The entire program
 public class Program extends Node {
@@ -13,17 +13,17 @@ public class Program extends Node {
     }
 
     public Kind kind;
-    public ArrayList<Node> uses;
-    public ArrayList<Node> fns;
+    public List<Node> uses;
+    public List<Node> fns;
 
-    public Program(Location location, ArrayList<Node> uses, ArrayList<Node> fns) {
+    public Program(Location location, List<Node> uses, List<Node> fns) {
         this.kind = Kind.PROGRAM;
         this.location = location;
         this.uses = uses;
         this.fns = fns;
     }
 
-    public Program(Location location, ArrayList<Node> fns) {
+    public Program(Location location, List<Node> fns) {
         this.kind = Kind.INTERFACE;
         this.location = location;
         this.uses = null;

@@ -81,6 +81,9 @@ public class FnType extends Visitor<Type> {
 				return new Type(types, false);
 			case FN_ARGS:
 				return new Type(types, true);
+			case RETURN:
+			case ASSIGN:
+			case FN_CALL:
 		}
 		// Unreachable
 		assert false;

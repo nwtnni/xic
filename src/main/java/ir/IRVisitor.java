@@ -1,7 +1,5 @@
 package ir;
 
-import xic.XicException;
-
 public abstract class IRVisitor<T> {
 	
 	public T visit(IRCompUnit c) {

@@ -1,9 +1,9 @@
 package ast;
 
+import java.util.ArrayList;
+
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
-
-import java.util.ArrayList;
 
 // Function Declaration
 public class Fn extends Node {

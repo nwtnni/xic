@@ -1,5 +1,6 @@
 package ast;
 
+import java.util.List;
 import java.util.ArrayList;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
@@ -21,11 +22,11 @@ public class Call extends Node {
         return v.visit(this);
     }
 
-    public ArrayList<Node> getArgs() {
+    public List<Node> getArgs() {
         if (args instanceof Multiple) {
             return ((Multiple) args).values;
         } else {
-            ArrayList<Node> argList = new ArrayList<>();
+            List<Node> argList = new ArrayList<>();
             argList.add(args);
             return argList;
         }

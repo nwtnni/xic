@@ -6,7 +6,7 @@ import xic.XicException;
 // An temporary node to hold an integer literal 
 public class TempInt extends Node {
 
-    public String literal;;
+    public String literal;
 
     public TempInt(Location location, String literal) {
         this.location = location;

@@ -1,9 +1,9 @@
 package ast;
 
+import java.util.List;
+
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
-
-import java.util.ArrayList;
 
 // Used to hold tuples (multiple assign/multiple return/function args/etc)
 public class Multiple extends Node {
@@ -13,9 +13,9 @@ public class Multiple extends Node {
     }
 
     public Kind kind;
-    public ArrayList<Node> values;
+    public List<Node> values;
 
-    public Multiple(Location location, ArrayList<Node> values, Kind kind) {
+    public Multiple(Location location, List<Node> values, Kind kind) {
         this.kind = kind;
         this.location = location;
         this.values = values;

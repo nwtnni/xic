@@ -1,6 +1,6 @@
 package ast;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
@@ -9,9 +9,9 @@ import xic.XicException;
 public class XiString extends Node {
 
     public String escaped;
-    public ArrayList<Long> value;
+    public List<Long> value;
 
-    public XiString(Location location, String escaped, ArrayList<Long> value) {
+    public XiString(Location location, String escaped, List<Long> value) {
         this.location = location;
         this.escaped = escaped;
         this.value = value;

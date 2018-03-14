@@ -1,5 +1,6 @@
 package type;
 
+import java.util.List;
 import java.util.ArrayList;
 
 import ast.XiType;
@@ -90,7 +91,7 @@ public class Type {
     /**
      * The children of this Type, if it is a Type constructor
      */
-    public ArrayList<Type> children;
+    public List<Type> children;
 
     /**
      * Creates a unit type.
@@ -128,7 +129,7 @@ public class Type {
      * @param children Types to create a list of, in order
      * @param isList is true if the type is a list type
      */
-    public Type(ArrayList<Type> children, boolean isList) {
+    public Type(List<Type> children, boolean isList) {
     	this.kind = isList ? Kind.LIST : Kind.TUPLE;
     	this.id = null;
     	this.children = children;

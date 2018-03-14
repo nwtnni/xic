@@ -3,8 +3,6 @@ package ir;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import edu.cornell.cs.cs4120.util.SExpPrinter;
-
 /**
  * An intermediate representation for a compilation unit
  */

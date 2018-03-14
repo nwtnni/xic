@@ -1,5 +1,6 @@
 package type;
 
+import java.util.List;
 import java.util.ArrayList;
 
 import ast.*;
@@ -393,7 +394,7 @@ public class TypeChecker extends Visitor<Type> {
 			return Type.UNIT;
 		}
 
-		ArrayList<Type> types = new ArrayList<>();
+		List<Type> types = new ArrayList<>();
 		for (Node value : m.values) {
 			types.add(value.accept(this));
 		}

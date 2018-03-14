@@ -1,7 +1,5 @@
 package ir;
 
-import edu.cornell.cs.cs4120.util.SExpPrinter;
-
 /** An IR function declaration */
 public class IRFuncDecl extends IRNode {
     public String name;

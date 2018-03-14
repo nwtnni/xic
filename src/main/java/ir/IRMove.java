@@ -1,7 +1,5 @@
 package ir;
 
-import edu.cornell.cs.cs4120.util.SExpPrinter;
-
 /**
  * An intermediate representation for a move statement
  * MOVE(target, expr)

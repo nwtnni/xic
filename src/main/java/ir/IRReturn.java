@@ -1,8 +1,5 @@
 package ir;
 
-import edu.cornell.cs.cs4120.util.SExpPrinter;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

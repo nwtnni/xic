@@ -2,7 +2,6 @@ package type;
 
 import org.pcollections.*;
 
-import java_cup.runtime.ComplexSymbolFactory.Location;
 import type.TypeException.Kind;
 
 /**
