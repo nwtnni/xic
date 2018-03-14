@@ -238,8 +238,19 @@ public class TypeChecker extends Visitor<Type> {
 			throw new TypeException(Kind.INVALID_GUARD, i.guard.location);
 		}
 
+		// Check if the statement is followed by a single statement
+		if (!(i.block instanceof Block)) {
+			i.block = new Block(i.block.location, i.block);
+		}
 		Type it = i.block.accept(this);
-		Type et = i.hasElse() ? i.elseBlock.accept(this) : null;
+		
+		Type et = null;
+		if (i.hasElse()) {
+			if (!(i.elseBlock instanceof Block)) {
+				i.elseBlock = new Block(i.elseBlock.location, i.elseBlock);
+			}
+			et = i.elseBlock.accept(this);
+		}
 
 		if (et != null && it.equals(Type.VOID) && et.equals(Type.VOID)) {
 			i.type = Type.VOID;
@@ -260,6 +271,9 @@ public class TypeChecker extends Visitor<Type> {
 			throw new TypeException(Kind.INVALID_GUARD, w.guard.location);
 		}
 
+		if (!(w.block instanceof Block)) {
+			w.block = new Block(w.block.location, w.block);
+		}
 		w.block.accept(this);
 		w.type = Type.UNIT;
 		return w.type;
