@@ -61,6 +61,10 @@ public class Printer extends IRVisitor<Void> {
 	    	}
         } catch (IOException io) {
         	throw XicException.write(output);
+        } 
+        // for debug
+        catch (StackOverflowError e) {
+            System.out.println("temp");
         }
     }
 
@@ -80,6 +84,10 @@ public class Printer extends IRVisitor<Void> {
         ast.accept(p);
         return stream.toString();
     }
+
+    /*
+     * Visitor methods
+     */
 
 	public Void visit(IRBinOp b) {
         p.startList();

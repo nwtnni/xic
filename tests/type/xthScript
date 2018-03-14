@@ -11,7 +11,7 @@ xic ("Test --typecheck") "--typecheck" {
     block_shadowing.xi;
     cross_fn_shadowing.xi;
     empty_arrays.xi;
-    if-scoping;
+    if-scoping.xi;
     interface-shadowing.xi;
     length.xi;
     primitives1.xi;

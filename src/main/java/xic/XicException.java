@@ -100,8 +100,9 @@ public class XicException extends Exception {
 			return description;
 		} else {
 			return String.format(
-				"%s error beginning at %d:%d: %s",
+				"%s error at %s:%d:%d: %s",
 				kind.toString(),
+				location.getUnit(),
 				location.getLine(),
 				location.getColumn(),
 				description
@@ -128,12 +129,5 @@ public class XicException extends Exception {
 	 */
 	public static XicException unsupported(String source) {
 		return new XicException("Unsupported file type: " + source);
-	}
-
-	/**
-	 * Factory method for an internal error.
-	 */
-	public static XicException internal(String msg) {
-		return new XicException("Internal error: " + msg);
 	}
 }

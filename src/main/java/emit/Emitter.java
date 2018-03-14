@@ -40,7 +40,7 @@ public class Emitter extends Visitor<IRNode> {
         String args = type.args.toString();
         String returns = type.returns.toString();
         name = name.replaceAll("_", "__");
-        return"_I" + name + returns + args;
+        return "_I" + name + "_" + returns + args;
     }
 
 
@@ -62,7 +62,7 @@ public class Emitter extends Visitor<IRNode> {
 
     public IRNode visit(Fn f) throws XicException {
         IRNode body = f.block.accept(this);
-        return new IRFuncDecl(f.id, body);
+        return new IRFuncDecl(makeABIName(f.id), body);
     }
 
     /*

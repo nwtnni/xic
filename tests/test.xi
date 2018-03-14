@@ -1,4 +1,6 @@
-foo () {
-    if true x:int = 1
-    else x:bool = true
+use io
+use conv
+
+main (args:int[][]) {
+    print(unparseInt(0))
 }
