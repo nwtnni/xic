@@ -267,6 +267,9 @@ UnicodeEscape = \\u{HexDigit}{4}
                             char c = (char) Integer.parseInt(s, 16);
                             return tokenize(c);
                         }
+    
+    {EOL}               { throwLexException(row(), startColumn, Kind.INVALID_STRING); }
+    <<EOF>>             { throwLexException(row(), startColumn, Kind.INVALID_STRING); }
     [^]                 { throwLexException(row(), startColumn, Kind.INVALID_CHAR); }
 }
 

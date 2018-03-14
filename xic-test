@@ -1,7 +1,7 @@
 #!/bin/bash
 
 build() {
-   xth/xth -compilerpath . -testpath tests tests/xth-build
+   gradle xic
    printf "\n========================================\n\n"
 }
 
@@ -80,6 +80,7 @@ r|regression)
     test_reg
     ;;
 f|fails)
+    test_lex_fails
     test_parse_fails
     ;;
 l|lexer)
