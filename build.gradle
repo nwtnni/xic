@@ -87,12 +87,16 @@ task regression(type: GradleBuild, dependsOn:xic) {
 task fails(type: Exec, dependsOn:xic) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript\
+    && printf \"\\n========================================\\n\\n\"\
+    && xth/xth -compilerpath . -workpath tests/lexer/failed_tests -testpath tests/lexer/failed_tests tests/lexer/failed_tests/xthScript\
     && printf \"\\n========================================\\n\\n\""
 }
 
 task testLexer(type: Exec, dependsOn:xic) {
     executable "sh"    
     args "-c", "xth/xth -compilerpath . -workpath . -testpath tests/lexer tests/lexer/xthScript && echo\
+    && printf \"\\n========================================\\n\\n\"\
+    && xth/xth -compilerpath . -workpath tests/lexer/failed_tests -testpath tests/lexer/failed_tests tests/lexer/failed_tests/xthScript\
     && printf \"\\n========================================\\n\\n\""
 }
 
