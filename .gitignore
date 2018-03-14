@@ -29,6 +29,7 @@ xth.tar.gz
 *.parsed
 *.iparsed
 *.typed
+*.ir
 *.results
 
 # VS Code generated nonsense

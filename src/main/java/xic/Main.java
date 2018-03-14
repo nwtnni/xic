@@ -17,10 +17,13 @@ public class Main {
         boolean lexFlag = false;
         boolean parseFlag = false;
         boolean typeFlag = false;
+        boolean irGenFlag = false;
+        boolean irRunFlag = false;
         boolean helpFlag = false;
         String source = "";
         String sink = "";
         String lib = "";
+        boolean optFlag = true;
 
         ArrayList<String> sourceFiles = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
@@ -30,6 +33,10 @@ public class Main {
                 parseFlag = true;
             } else if (args[i].equals("--typecheck")) {
                 typeFlag = true;
+            } else if (args[i].equals("--irgen")) {
+                irGenFlag = true;
+            } else if (args[i].equals("--irrun")) {
+                irRunFlag = true;
             } else if (args[i].equals("--help")) {
                 helpFlag = true;
             } else if (args[i].equals("-sourcepath") && i + 1 < args.length) {
@@ -38,12 +45,15 @@ public class Main {
                 sink = args[++i];
             } else if (args[i].equals("-libpath") && i + 1 < args.length){
                 lib = args[++i];
+            } else if (args[i].equals("-O")) {
+                optFlag = false;
             } else {
                 sourceFiles.add(args[i]);
             }
         }
+
         // Help flag given
-        if (helpFlag || !(lexFlag || parseFlag || typeFlag)) { 
+        if (helpFlag || !(lexFlag || parseFlag || typeFlag || irGenFlag || irRunFlag)) { 
             displayHelp(); 
             return;
         }
@@ -55,6 +65,7 @@ public class Main {
                 if (lexFlag) { xic.printLexed(unit); }
                 if (parseFlag) { xic.printParsed(unit); }
                 if (typeFlag) { xic.printTyped(unit); }
+                if (irGenFlag || irRunFlag) { xic.printIR(unit, irRunFlag, optFlag); }
             }
         } catch (XicException e) {
             System.out.println(e.toPrint());

@@ -25,16 +25,13 @@ public class Printer extends Visitor<Void> {
 	 * @throws XicException if the Printer was unable to write to the given file
 	 */
     public static void print(String source, String sink, String unit) throws XicException {
-
     	String ext = FilenameUtils.getExtension(unit);
     	String output = FilenameUtils.concat(sink, unit);
-        FilenameUtils.makePathTo(output);
-
-    	Node ast = null;
-        OutputStream stream = null;
 
         try {
+            FilenameUtils.makePathTo(output);
         	try {
+                Node ast = null;
             	switch (ext) {
 	        		case "xi":
 	        			output = FilenameUtils.setExtension(output, "parsed");
@@ -48,7 +45,7 @@ public class Printer extends Visitor<Void> {
 	        			throw XicException.unsupported(unit);
             	}
     	
-	            stream = new FileOutputStream(output);
+	            OutputStream stream = new FileOutputStream(output);
 	            Printer printer = new Printer(stream);
 	            ast.accept(printer);
 	    	} catch (XicException xic) {

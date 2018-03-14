@@ -15,13 +15,16 @@ import xic.XicException;
 public class TypeChecker extends Visitor<Type> {
 
 	/**
-	 * Factory method to type check the given AST.
+	 * Factory method to type check the given AST and return the 
+	 * associated function context.
 	 * @param lib Directory to search for interface files
 	 * @param ast AST to typecheck
 	 * @throws XicException if a semantic error was found
 	 */
-	public static void check(String lib, Node ast) throws XicException {
-		ast.accept(new TypeChecker(lib, ast));
+	public static FnContext check(String lib, Node ast) throws XicException {
+		TypeChecker checker = new TypeChecker(lib, ast);
+		ast.accept(checker);
+		return checker.fns;
 	}
 
 	/**

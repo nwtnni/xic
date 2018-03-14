@@ -28,7 +28,6 @@ public class Printer {
         try {
             FilenameUtils.makePathTo(lexed);
             BufferedWriter writer = new BufferedWriter(new FileWriter(lexed, false));
-
         	try {
                 XiLexer lexer = XiLexer.from(source, unit);
 
@@ -36,7 +35,8 @@ public class Printer {
 	            while (s.sym != XiSymbol.EOF) {
 	                writer.append(format(s) + "\n");
 	                s = (ComplexSymbol) lexer.nextToken();
-	            }
+                }
+                
 	            writer.close();
         	} catch (LexException e) {
                 writer.append(e.toWrite());

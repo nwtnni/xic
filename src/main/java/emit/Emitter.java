@@ -12,15 +12,24 @@ import xic.XicException;
 
 public class Emitter extends Visitor<IRNode> {
 
+    /**
+     * Factory method to generate IR from the given AST.
+	 * @param ast AST to typecheck
+     * @param context function context corresponding to the AST
+	 * @throws XicException if a semantic error was found
+     */
+    public static IRCompUnit emitIR(Program ast, FnContext context) throws XicException {
+        return (IRCompUnit) ast.accept(new Emitter(context));
+    }
+
+    public Emitter(FnContext context) {
+        this.context = context;
+    }
+
+    /**
+     * Associated function context.
+     */
     protected FnContext context;
-
-    public Emitter(FnContext c) {
-        context = c;
-    }
-
-    public IRCompUnit emitIR(Program p) throws XicException {
-        return (IRCompUnit) p.accept(this);
-    }
 
     /* 
      * Utility methods
@@ -44,7 +53,7 @@ public class Emitter extends Visitor<IRNode> {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
             funcs.put(f.name, f);
         }
-        return null;
+        return new IRCompUnit("main", funcs);
     }
 
     public IRNode visit(Use u) throws XicException {
