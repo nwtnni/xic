@@ -1,14 +1,14 @@
 #!/bin/bash
 
 build() {
-   xth/xth -compilerpath . -testpath tests tests/xth-build
-   printf "\n========================================\n\n"
+    gradle xic
+    printf "\n========================================\n\n"
 }
 
 test_all() {
-  test_reg
-  test_fails
-  test_course
+    test_reg
+    test_fails
+    test_course
 }
 
 test_reg() {

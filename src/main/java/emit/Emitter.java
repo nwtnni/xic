@@ -11,11 +11,24 @@ import xic.XicException;
 
 public class Emitter extends Visitor<IRNode> {
 
-    private FnContext context;
+    protected FnContext context;
 
     public Emitter(FnContext c) {
         context = c;
     }
+
+    /* 
+     * Utility methods
+     */
+
+    protected String makeABIName(String name) {
+        FnType type = context.lookup(name);
+        String args = type.args.toString();
+        String returns = type.returns.toString();
+        name = name.replaceAll("_", "__");
+        return"_I" + name + returns + args;
+    }
+
 
     /*
      * Top-level AST nodes
@@ -67,21 +80,7 @@ public class Emitter extends Visitor<IRNode> {
      * Expression nodes
      */
     public IRNode visit(Call c) throws XicException {
-
-        // TODO: refactor escaping to ABI into a function
-        FnType type = context.lookup(c.id);
-        
-        // TODO: figure out dealing with different convention
-        // for argument and return types
-        String args = type.args.toString();
-        String returns = type.returns.toString();
-
-        String name = c.id.replaceAll("_", "__");
-        String p = type.returns.equals(Type.UNIT) ? "p" : "";
-
-        name = "_I" + name + p + returns + args;
-
-        IRName id = new IRName(name);
+        IRName id = new IRName(makeABIName(c.id));
         ArrayList<IRNode> argList = new ArrayList<>();
         for (Node n : c.getArgs()) {
             argList.add(n.accept(this));

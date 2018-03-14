@@ -61,23 +61,23 @@ public class TypeContext extends Context<Type, Type> {
                     ancestor = lookup(ancestor);
                 }
                 return false;
+            case LIST:
             case TUPLE:
                 if (!child.kind.equals(parent.kind)) {
                     return false;
                 }
-                int cs = child.children.size();
-                int ps =  parent.children.size();
-                if (cs != ps) {
+                int size = child.children.size();
+                if (size != parent.children.size()) {
                     return false;
                 }
-                for (int i = 0; i < cs; i++) {
+                for (int i = 0; i < size; i++) {
                     if (!isSubType(child.children.get(i), parent.children.get(i))) {
                         return false;
                     }
                 }
                 return true;
             case ARRAY:
-            	return child.equals(parent) || parent.equals(Type.UNIT);
+                return child.equals(parent) || parent.equals(Type.UNIT);
         }
         // Unreachable
         assert false;
