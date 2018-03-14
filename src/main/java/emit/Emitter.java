@@ -1,12 +1,13 @@
 package emit;
 
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 import ast.*;
 import ir.*;
 import type.FnContext;
 import type.FnType;
-import type.Type;
 import xic.XicException;
 
 public class Emitter extends Visitor<IRNode> {
@@ -15,6 +16,10 @@ public class Emitter extends Visitor<IRNode> {
 
     public Emitter(FnContext c) {
         context = c;
+    }
+
+    public IRCompUnit emitIR(Program p) throws XicException {
+        return (IRCompUnit) p.accept(this);
     }
 
     /* 
@@ -34,6 +39,11 @@ public class Emitter extends Visitor<IRNode> {
      * Top-level AST nodes
      */
     public IRNode visit(Program p) throws XicException {
+        Map<String, IRFuncDecl> funcs = new LinkedHashMap<>();
+        for (Node n : p.fns) {
+            IRFuncDecl f = (IRFuncDecl) n.accept(this);
+            funcs.put(f.name, f);
+        }
         return null;
     }
 
@@ -42,7 +52,8 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Fn f) throws XicException {
-        return null;
+        IRNode body = f.block.accept(this);
+        return new IRFuncDecl(f.id, body);
     }
 
     /*
