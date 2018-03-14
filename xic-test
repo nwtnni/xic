@@ -60,7 +60,7 @@ test_type_man() {
 }
 
 test_course() {
-    xth/xth -compilerpath . -workpath xth/tests/pa4 xth/tests/pa4/xthScript
+    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa4 xth/tests/pa4/xthScript
     printf "\n========================================\n\n" 
 }
 

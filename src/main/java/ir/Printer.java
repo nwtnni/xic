@@ -5,6 +5,7 @@ import xic.FilenameUtils;
 
 import edu.cornell.cs.cs4120.util.CodeWriterSExpPrinter;
 import edu.cornell.cs.cs4120.util.SExpPrinter;
+import polyglot.util.OptimalCodeWriter;
 
 import xic.XicException;
 import emit.Emitter;
@@ -16,8 +17,6 @@ import ast.Node;
 import ast.Program;
 
 public class Printer extends IRVisitor<Void> {
-
-    public SExpPrinter p;
 
 	/**
 	 * Parses the given file, runs the type checker, generates IR 
@@ -44,9 +43,30 @@ public class Printer extends IRVisitor<Void> {
                 FnContext context = TypeChecker.check(lib, ast);
                 comp = Emitter.emitIR((Program) ast, context);
 
-                PrintWriter stream = new PrintWriter(output);
-                Printer printer = new Printer(stream);
-                comp.accept(printer);
+	            OutputStream stream = new FileOutputStream(output);
+                Printer p = new Printer(stream);
+                comp.accept(p);
+                
+                debug(comp);
+
+                // System.out.println("\nRunning example: \n");
+
+                // IRStmt cBody =
+        		// 	new IRSeq(new IRExp(new IRCall(new IRName("_Iprintln_pai"),
+        		// 						new IRCall(new IRName("_IunparseInt_aii"),
+        		// 									new IRConst(5)
+        		// 								))),
+        		// 			new IRReturn());
+                // IRFuncDecl func = new IRFuncDecl("_Imain_paai", cBody);
+
+                // IRCompUnit compUnit = new IRCompUnit("test");
+                // compUnit.appendFunc(func);
+
+                // System.out.println("Generated code: \n");
+                // debug(compUnit);
+                // compUnit.accept(p);
+                // System.out.println("\nEvaluating: \n");
+                // (new IRSimulator(compUnit)).call("_Imain_paai", 0);
 
                 if (run) {
                     IRSimulator sim = new IRSimulator(comp);
@@ -64,13 +84,8 @@ public class Printer extends IRVisitor<Void> {
         } 
         // for debug
         catch (StackOverflowError e) {
-            System.out.println("temp");
+            System.out.println("stackoverflowed");
         }
-    }
-
-
-    public Printer(PrintWriter stream) {
-        this.p = new CodeWriterSExpPrinter(stream);
     }
 
     public static void debug(IRNode ast) {
@@ -79,10 +94,21 @@ public class Printer extends IRVisitor<Void> {
     }
 
     public static String toString(IRNode ast) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        Printer p = new Printer(new PrintWriter(stream));
+        StringWriter sw = new StringWriter();
+        Printer p = new Printer(new PrintWriter(sw));
         ast.accept(p);
-        return stream.toString();
+        return sw.toString();
+    }
+
+    private final int WIDTH = 80;
+    public SExpPrinter printer;
+
+    public Printer(OutputStream stream) {
+        printer = new CodeWriterSExpPrinter(new OptimalCodeWriter(stream, WIDTH));
+    }
+
+    public Printer(PrintWriter writer) {
+        printer = new CodeWriterSExpPrinter(writer);
     }
 
     /*
@@ -90,148 +116,149 @@ public class Printer extends IRVisitor<Void> {
      */
 
 	public Void visit(IRBinOp b) {
-        p.startList();
-        p.printAtom(b.type.toString());
+        printer.startList();
+        printer.printAtom(b.type.toString());
         b.left.accept(this);
         b.right.accept(this);
-        p.endList();
+        printer.endList();
         return null;
 	}
 	
 	public Void visit(IRCall c) {
-        p.startList();
-        p.printAtom("CALL");
+        printer.startList();
+        printer.printAtom("CALL");
         c.target.accept(this);
         for (IRNode arg : c.args) {
             arg.accept(this);
         }
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRCJump c) {
-        p.startList();
-        p.printAtom("CJUMP");
+        printer.startList();
+        printer.printAtom("CJUMP");
         c.cond.accept(this);
-        p.printAtom(c.trueLabel);
+        printer.printAtom(c.trueLabel);
         if (c.hasFalseLabel()) {
-            p.printAtom(c.falseLabel);
+            printer.printAtom(c.falseLabel);
         }
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRJump j) {
-        p.startList();
-        p.printAtom("JUMP");
+        printer.startList();
+        printer.printAtom("JUMP");
         j.target.accept(this);
-        p.endList();
+        printer.endList();
 		return null;
 	}
 	
 	public Void visit(IRCompUnit c) {
-        p.startList();
-        p.printAtom("COMPUNIT");
-        p.printAtom(c.name);
+        printer.startUnifiedList();
+        printer.printAtom("COMPUNIT");
+        printer.printAtom(c.name);
         for (IRFuncDecl fn : c.functions.values()) {
             fn.accept(this);
         }
-        p.endList();
+        printer.endList();
+        printer.flush();
 		return null;
 	}
 
 	public Void visit(IRConst c) {
-        p.startList();
-        p.printAtom("CONST");
-        p.printAtom(String.valueOf(c.value));
-        p.endList();
+        printer.startList();
+        printer.printAtom("CONST");
+        printer.printAtom(String.valueOf(c.value));
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRESeq e) {
-        p.startList();
-        p.printAtom("ESEQ");
+        printer.startList();
+        printer.printAtom("ESEQ");
         e.stmt.accept(this);
         e.expr.accept(this);
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRExp e) {
-        p.startList();
-        p.printAtom("EXP");
+        printer.startList();
+        printer.printAtom("EXP");
         e.expr.accept(this);
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRFuncDecl f) {
-        p.startList();
-        p.printAtom("FUNC");
-        p.printAtom(f.name);
+        printer.startList();
+        printer.printAtom("FUNC");
+        printer.printAtom(f.name);
         f.body.accept(this);
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRLabel l) {
-        p.startList();
-        p.printAtom("LABEL");
-        p.printAtom(l.name);
-        p.endList();
+        printer.startList();
+        printer.printAtom("LABEL");
+        printer.printAtom(l.name);
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRMem m) {
-        p.startList();
-        p.printAtom(m.memType.toString());
+        printer.startList();
+        printer.printAtom(m.memType.toString());
         m.expr.accept(this);
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRMove m) {
-        p.startList();
-        p.printAtom("MOVE");
+        printer.startList();
+        printer.printAtom("MOVE");
         m.target.accept(this);
         m.src.accept(this);
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRName n) {
-        p.startList();
-        p.printAtom("NAME");
-        p.printAtom(n.name);
-        p.endList();
+        printer.startList();
+        printer.printAtom("NAME");
+        printer.printAtom(n.name);
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRReturn r) {
-        p.startList();
-        p.printAtom("RETURN");
+        printer.startList();
+        printer.printAtom("RETURN");
         for (IRNode ret : r.rets) {
             ret.accept(this);
         }
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRSeq s) {
-        p.startUnifiedList();
-        p.printAtom("SEQ");
+        printer.startUnifiedList();
+        printer.printAtom("SEQ");
         for (IRNode stmt : s.stmts) {
             stmt.accept(this);
         }
-        p.endList();
+        printer.endList();
 		return null;
 	}
 
 	public Void visit(IRTemp t) {
-        p.startList();
-        p.printAtom("TEMP");
-        p.printAtom(t.name);
-        p.endList();
+        printer.startList();
+        printer.printAtom("TEMP");
+        printer.printAtom(t.name);
+        printer.endList();
 		return null;
 	}
 }

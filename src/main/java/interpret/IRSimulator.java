@@ -8,6 +8,7 @@ import java.util.*;
 
 import ir.*;
 import polyglot.util.SerialVersionUID;
+import xic.XicInternalException;
 
 /**
  * A simple IR interpreter
@@ -37,7 +38,7 @@ public class IRSimulator {
     private Set<String> libraryFunctions;
     private List<String> ctors;
 
-    protected static int debugLevel = 2;
+    protected static int debugLevel = 0;
 
     public static final int DEFAULT_HEAP_SIZE = 10240;
 
@@ -172,10 +173,10 @@ public class IRSimulator {
             ret = libraryCall(name, args);
         } else {
             IRFuncDecl fDecl = compUnit.getFunction(name);
-            // if (fDecl == null)
-                //TODO: replace with IRException?
-                // throw new InternalCompilerError("Tried to call an unknown function: '"
-                //         + name + "'");
+            if (fDecl == null) {
+                throw XicInternalException.internal("Tried to call an unknown function: '"
+                        + name + "'");
+            }
 
             // Create a new stack frame.
             long ip = findLabel(name);
@@ -285,18 +286,14 @@ public class IRSimulator {
                 break;
             }
             default:
-                //TODO: replace with IRException?
-                // throw new InternalCompilerError("Unsupported library function: "
-                //         + name);
-                return null;
+                throw XicInternalException.internal("Unsupported library function: "
+                        + name);
             }
 
             return ret;
         }
         catch (IOException e) {
-            //TODO: replace with IRException?
-            // throw new InternalCompilerError("I/O Exception in simulator");
-            return null;
+            throw XicInternalException.internal("I/O Exception in simulator");
         }
     }
 
@@ -373,9 +370,7 @@ public class IRSimulator {
                 result = l >= r ? 1 : 0;
                 break;
             default:
-                result = 0;
-                //TODO: replace with IRException?
-                // throw new InternalCompilerError("Invalid binary operation");
+                throw XicInternalException.internal("Invalid binary operation");
             }
             exprStack.pushValue(result);
         }
@@ -394,18 +389,14 @@ public class IRSimulator {
                 targetName = target.name;
             else if (indexToInsn.containsKey(target.value)) {
                 IRNode node = indexToInsn.get(target.value);
-                if (node instanceof IRFuncDecl)
+                if (node instanceof IRFuncDecl) {
                     targetName = ((IRFuncDecl) node).name();
-                else {
-                    //TODO: replace with IRException?
-                    // else throw new InternalCompilerError("Call to a non-function instruction!");
-                    targetName = null;
+                } else {
+                    throw XicInternalException.internal("Call to a non-function instruction!");
                 }
             } else {
-                //TODO: replace with IRException?
-                // else throw new InternalCompilerError("Invalid function call '"
-                //         + insn + "' (target '" + target.value + "' is unknown)!");
-                targetName = null;
+                throw XicInternalException.internal("Invalid function call '"
+                        + insn + "' (target '" + target.value + "' is unknown)!");
             }
 
             long retVal = call(frame, targetName, args);
@@ -431,8 +422,7 @@ public class IRSimulator {
                 frame.put(stackItem.temp, r);
                 break;
             default:
-                //TODO: replace with IRException?
-                // throw new InternalCompilerError("Invalid MOVE!");
+                throw XicInternalException.internal("Invalid MOVE!");
             }
         }
         else if (insn instanceof IRExp) {
@@ -450,10 +440,8 @@ public class IRSimulator {
             else if (top == 1)
                 label = irCJump.trueLabel();
             else {
-                //TODO: replace with IRException?
-                // else throw new InternalCompilerError("Invalid value in CJUMP - expected 0/1, got "
-                //         + top);
-                label = null;
+                throw XicInternalException.internal("Invalid value in CJUMP - expected 0/1, got "
+                        + top);
             }
             if (label != null) frame.setIP(findLabel(label));
         }

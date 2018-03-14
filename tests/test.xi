@@ -2,5 +2,6 @@ use io
 use conv
 
 main (args:int[][]) {
-    print(unparseInt(0))
+    println(unparseInt(0))
+    return
 }

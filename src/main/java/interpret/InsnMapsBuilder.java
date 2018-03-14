@@ -89,10 +89,10 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
 	}
 
 	public IRNode visit(IRCall c) {
+		c.target.accept(this);
 		for (IRNode n : c.args) {
 			n.accept(this);
 		}
-		c.target.accept(this);
 		addInsn(c);
 		return c;
 	}
@@ -140,8 +140,8 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
 	}
 
 	public IRNode visit(IRMove m) {
-		m.src.accept(this);
 		m.target.accept(this);
+		m.src.accept(this);
 		addInsn(m);
 		return m;
 	}

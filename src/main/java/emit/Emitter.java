@@ -1,8 +1,6 @@
 package emit;
 
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.LinkedHashMap;
 
 import ast.*;
 import ir.*;
@@ -48,12 +46,12 @@ public class Emitter extends Visitor<IRNode> {
      * Top-level AST nodes
      */
     public IRNode visit(Program p) throws XicException {
-        Map<String, IRFuncDecl> funcs = new LinkedHashMap<>();
+        IRCompUnit program = new IRCompUnit("program");
         for (Node n : p.fns) {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
-            funcs.put(f.name, f);
+            program.appendFunc(f);
         }
-        return new IRCompUnit("main", funcs);
+        return program;
     }
 
     public IRNode visit(Use u) throws XicException {
@@ -61,7 +59,13 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Fn f) throws XicException {
-        IRNode body = f.block.accept(this);
+        IRSeq body = (IRSeq) f.block.accept(this);
+
+        // TODO: visit args and prepend MOVE into TEMP to body
+        // see interpret.Configuration
+
+        // TODO: make sure a return is at the end of the function.
+
         return new IRFuncDecl(makeABIName(f.id), body);
     }
 
@@ -77,13 +81,19 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Return r) throws XicException {
-        return null;
+        // TODO: actually make returns
+        return new IRReturn();
     }
 
     public IRNode visit(Block b) throws XicException {
         ArrayList<IRNode> stmts = new ArrayList<>();
         for (Node n : b.statements) {
-            stmts.add(n.accept(this));
+            IRNode stmt = n.accept(this);
+            if (stmt instanceof IRExpr) {
+                stmts.add(new IRExp(stmt));
+            } else {
+                stmts.add(stmt);
+            }
         }
         return new IRSeq(stmts);
     }
@@ -100,12 +110,16 @@ public class Emitter extends Visitor<IRNode> {
      * Expression nodes
      */
     public IRNode visit(Call c) throws XicException {
-        IRName id = new IRName(makeABIName(c.id));
+        IRName target = new IRName(makeABIName(c.id));
         ArrayList<IRNode> argList = new ArrayList<>();
         for (Node n : c.getArgs()) {
             argList.add(n.accept(this));
         }
-        return new IRCall(id, argList);
+
+        // TODO: deal with calling convention for returns (probably in assign)
+        //
+
+        return new IRCall(target, argList);
     }
 
     public IRNode visit(Binary b) throws XicException {
