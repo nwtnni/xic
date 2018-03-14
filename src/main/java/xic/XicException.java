@@ -129,4 +129,11 @@ public class XicException extends Exception {
 	public static XicException unsupported(String source) {
 		return new XicException("Unsupported file type: " + source);
 	}
+
+	/**
+	 * Factory method for an internal error.
+	 */
+	public static XicException internal(String msg) {
+		return new XicException("Internal error: " + msg);
+	}
 }

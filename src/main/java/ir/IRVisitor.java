@@ -2,27 +2,15 @@ package ir;
 
 public abstract class IRVisitor<T> {
 	
-	public T visit(IRBinOp b) {
-		return null;
-	}
-	
-	public T visit(IRCall c) {
-		return null;
-	}
-
-	public T visit(IRCJump c) {
-		return null;
-	}
-
-	public T visit(IRJump j) {
-		return null;
-	}
-	
 	public T visit(IRCompUnit c) {
 		return null;
 	}
 
-	public T visit(IRConst c) {
+	public T visit(IRFuncDecl f) {
+		return null;
+	}
+
+	public T visit(IRSeq s) {
 		return null;
 	}
 
@@ -34,7 +22,23 @@ public abstract class IRVisitor<T> {
 		return null;
 	}
 
-	public T visit(IRFuncDecl f) {
+	public T visit(IRCall c) {
+		return null;
+	}
+
+	public T visit(IRReturn r) {
+		return null;
+	}
+
+	public T visit(IRCJump c) {
+		return null;
+	}
+
+	public T visit(IRJump j) {
+		return null;
+	}
+	
+	public T visit(IRName n) {
 		return null;
 	}
 
@@ -42,6 +46,10 @@ public abstract class IRVisitor<T> {
 		return null;
 	}
 
+	public T visit(IRTemp t) {
+		return null;
+	}
+	
 	public T visit(IRMem m) {
 		return null;
 	}
@@ -50,19 +58,11 @@ public abstract class IRVisitor<T> {
 		return null;
 	}
 
-	public T visit(IRName n) {
+	public T visit(IRBinOp b) {
 		return null;
 	}
-
-	public T visit(IRReturn r) {
-		return null;
-	}
-
-	public T visit(IRSeq s) {
-		return null;
-	}
-
-	public T visit(IRTemp t) {
+	
+	public T visit(IRConst c) {
 		return null;
 	}
 }

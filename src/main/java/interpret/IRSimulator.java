@@ -85,12 +85,11 @@ public class IRSimulator {
         // other declarations
         libraryFunctions.add("_Iassert_pb");
 
-        // TODO: replace InsnMapsBuilder
-        // InsnMapsBuilder imb = new InsnMapsBuilder();
-        // compUnit = (IRCompUnit) imb.visit(compUnit);
-        // indexToInsn = imb.indexToInsn();
-        // nameToIndex = imb.nameToIndex();
-        // ctors = imb.ctors();
+        InsnMapsBuilder imb = new InsnMapsBuilder();
+        compUnit = (IRCompUnit) imb.visit(compUnit);
+        indexToInsn = imb.indexToInsn();
+        nameToIndex = imb.nameToIndex();
+        ctors = imb.ctors();
 
         // set up a dummy constructor frame, so that the constructors
         //   have somewhere to write their return values to
