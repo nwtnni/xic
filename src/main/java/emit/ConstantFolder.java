@@ -19,6 +19,7 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
             long lt = ltol.getAsLong();
             long rt = rtol.getAsLong();
             switch (b.type) {
+            // TODO: fix for array concat
             case ADD: 
                 c = lt + rt;
                 break;
@@ -56,9 +57,11 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
             case ARSHIFT:
                 c = lt >>> rt;
                 break;
+            // TODO: fix for arrays. array comparison should be physical equality
             case EQ:
                 c = ((lt == 1) == (rt == 1)) ? 1 : 0;
                 break;
+            // TODO: fix for arrays. array comparison should be physical equality
             case NEQ:
                 c = ((lt == 1) != (rt == 1)) ? 1 : 0;
                 break;
@@ -85,6 +88,7 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 	}
 	
 	public OptionalLong visit(IRCall c) {
+        // TODO: add constant folding for length
         List<IRNode> children = new ArrayList<IRNode>();
 		for (IRNode n : c.args) {
             OptionalLong ol = n.accept(this);
