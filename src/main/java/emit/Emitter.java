@@ -152,12 +152,12 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Return r) throws XicException {
-        if (r.hasValue()) {
-            IRNode n = r.value.accept(this);
-            if (n instanceof IRNodeList) {
-                return new IRReturn(((IRNodeList) n).nodes());
+        if (r.hasValues()) {
+            List<IRNode> values = new ArrayList<>();
+            for (Node n : r.values) {
+                values.add(n.accept(this));
             }
-            return new IRReturn(n);
+            return new IRReturn(values);
         }
         return new IRReturn();
     }
@@ -256,11 +256,6 @@ public class Emitter extends Visitor<IRNode> {
 
     public IRNode visit(Var v) throws XicException {
         return new IRTemp(v.id);
-    }
-
-    // TODO: multiple types
-    public IRNode visit(Multiple m) throws XicException {
-        return null;
     }
 
     // TODO: array indexing
