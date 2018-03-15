@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
 
-import type.TypeException.Kind;
 import xic.XicInternalException;
 
 /**
@@ -70,11 +69,10 @@ public abstract class Context<S,T> {
      * 
      * @param s Symbol to add
      * @param t Type to bind s to
-     * @throws TypeException if Symbol s is already bound in this context
+     * @throws XicInternalException if Symbol s is already bound in this context
      */
-    public void add(S s, T t) throws TypeException {
-    	//TODO throwing here means we lose location information?
-        if (contains(s)) { throw new TypeException(Kind.DECLARATION_CONFLICT); }
+    public void add(S s, T t) {
+        if (contains(s)) { throw XicInternalException.internal("Shadowing key in context"); }
         PMap<S, T> map = context.get(0);
         context = context.minus(0);
         map = map.plus(s, t);
@@ -109,12 +107,12 @@ public abstract class Context<S,T> {
     }
     
     /**
-     * Returns a Map of all the bindings in the context
+     * Returns a Map of all the bindings in this context.
      */
     public Map<S,T> getMap() {
         Map<S,T> aggregateMap = new LinkedHashMap<>();
         for (PMap<S,T> map : context) {
-            Iterator<Map.Entry<S T>> it = map.entrySet().iterator();
+            Iterator<Map.Entry<S,T>> it = map.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<S,T> e = (Map.Entry<S,T>) it.next();
                 aggregateMap.put(e.getKey(), e.getValue());

@@ -21,29 +21,21 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public Emitter(FnContext context) {
-        this.context = context;
+        this.typeContext = context;
+        this.context = new ABIContext(context);
     }
 
     /**
      * Associated function context.
      */
-    protected FnContext context;
+    protected FnContext typeContext;
+
+    protected ABIContext context;
 
     /* 
      * Utility methods
      */
 
-    /**
-     * Utility method for mangling function name to conform to
-     * ABI specification.
-     */
-    protected String makeABIName(String name) {
-        FnType type = context.lookup(name);
-        String args = type.args.toString();
-        String returns = type.returns.toString();
-        name = name.replaceAll("_", "__");
-        return "_I" + name + "_" + returns + args;
-    }
 
     /*
      * Top-level AST nodes
@@ -73,7 +65,7 @@ public class Emitter extends Visitor<IRNode> {
 
         // TODO: make sure there is a return is at the end of the function.
 
-        return new IRFuncDecl(makeABIName(f.id), body);
+        return new IRFuncDecl(context.lookup(f.id), body);
     }
 
     /*
@@ -92,7 +84,13 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Return r) throws XicException {
-        // TODO: actually make returns
+        if (r.hasValue()) {
+            IRNode n = r.value.accept(this);
+            if (n instanceof IRNodeList) {
+                return new IRReturn(((IRNodeList) n).nodes());
+            }
+            return new IRReturn(n);
+        }
         return new IRReturn();
     }
 
@@ -126,7 +124,7 @@ public class Emitter extends Visitor<IRNode> {
      */
 
     public IRNode visit(Call c) throws XicException {
-        IRName target = new IRName(makeABIName(c.id));
+        IRName target = new IRName(context.lookup(c.id));
         ArrayList<IRNode> argList = new ArrayList<>();
         for (Node n : c.getArgs()) {
             argList.add(n.accept(this));

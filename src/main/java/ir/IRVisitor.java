@@ -65,4 +65,11 @@ public abstract class IRVisitor<T> {
 	public T visit(IRConst c) {
 		return null;
 	}
+
+	// IRNodeList is only used as a convenience wrapper for
+	// lists of nodes
+	public T visit(IRNodeList n) {
+		assert false;
+		return null;
+	}
 }

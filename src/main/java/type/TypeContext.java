@@ -14,15 +14,11 @@ public class TypeContext extends Context<Type,Type> {
 	 */
     public TypeContext() {
         super();
-        try {
-            add(Type.BOOL, Type.UNIT);
-            add(Type.INT, Type.UNIT);
-            add(Type.POLY, Type.UNIT);
-            add(Type.VOID, Type.UNIT);
-            add(Type.UNIT, null);
-        } catch (TypeException e) {
-            // impossible when constructing new clean TypeContext
-        } 
+        add(Type.BOOL, Type.UNIT);
+        add(Type.INT, Type.UNIT);
+        add(Type.POLY, Type.UNIT);
+        add(Type.VOID, Type.UNIT);
+        add(Type.UNIT, null);
     }
 
     /**
