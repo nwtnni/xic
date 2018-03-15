@@ -44,6 +44,11 @@ test_type() {
     test_type_man
 }
 
+test_ir() {
+    xth/xth -compilerpath . -workpath tests/ir -testpath tests/ir tests/ir/xthScript
+    printf "\n========================================\n\n"
+}
+
 test_type_valid() {
     xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
     printf "\n========================================\n\n"
@@ -91,6 +96,9 @@ p|parser)
     ;;
 t|type)
     test_type
+    ;;
+i|ir)
+    test_ir
     ;;
 te)
     test_type_err
