@@ -10,6 +10,12 @@ xic ("Test --irgen") "--irgen" {
     simple_mod1.xi;
     simple_mod2.xi;
     simple_mod3.xi;
+    simple_highmult1.xi;
+    simple_highmult2.xi;
+    simple_ifelse1.xi;
+    simple_ifelse2.xi;
+    simple_while1.xi;
+
 
     /* Temporarily commented out
     add1.xi;

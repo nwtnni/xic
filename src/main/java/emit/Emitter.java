@@ -77,7 +77,7 @@ public class Emitter extends Visitor<IRNode> {
      */
 
     public IRNode visit(Declare d) throws XicException {
-        if (d.type.isPrimative()) {
+        if (d.type.isPrimitive()) {
             return new IRTemp(d.id);
         }
         // TODO: dealing with array declarations

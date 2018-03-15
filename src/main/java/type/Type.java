@@ -220,9 +220,9 @@ public class Type {
     }
 
     /**
-     * Returns true if type is primative.
+     * Returns true if type is primitive.
      */
-    public boolean isPrimative() {
+    public boolean isPrimitive() {
         return this.equals(INT) || this.equals(BOOL);
 
     }
