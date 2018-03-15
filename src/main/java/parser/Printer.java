@@ -1,5 +1,6 @@
 package parser;
 
+import java.util.List;
 import java.io.*;
 import xic.FilenameUtils;
 
@@ -70,6 +71,13 @@ public class Printer extends Visitor<Void> {
      * Visitor logic
      */
 
+    public List<Void> visit(List<Node> nodes) throws XicException {
+        for (Node n : nodes) {
+            n.accept(this);
+        }
+        return null;
+    }
+
     /*
      * Top-level AST nodes
      */
@@ -79,17 +87,13 @@ public class Printer extends Visitor<Void> {
         // Use statements
         if (p.isProgram()) {
             printer.startUnifiedList();
-            for (Node use : p.uses) {
-                use.accept(this);
-            }
+            visit(p.uses);
             printer.endList();
         }
 
         // Fn declarations
         printer.startUnifiedList();
-        for (Node f : p.fns) {
-            f.accept(this);
-        }
+        visit(p.fns);
         printer.endList();
 
         printer.endList();
@@ -115,16 +119,12 @@ public class Printer extends Visitor<Void> {
         
         // Fn arguments
         printer.startList();
-        for (Node n : f.args) {
-            n.accept(this);
-        }
+        visit(f.args);
         printer.endList();
 
         // Fn return types
         printer.startList();
-        for (Node n : f.returns) {
-            n.accept(this);
-        }
+        visit(f.returns);
         printer.endList();
 
         // Statement block
@@ -156,9 +156,7 @@ public class Printer extends Visitor<Void> {
         printer.startList();
 
         printer.printAtom("=");
-        for (Node n : a.lhs) {
-            n.accept(this);
-        }
+        visit(a.lhs);
         a.rhs.accept(this);
 
         printer.endList();
@@ -171,9 +169,7 @@ public class Printer extends Visitor<Void> {
         printer.printAtom("return");
         
         if (r.hasValues()) {
-            for (Node n : r.values) {
-                n.accept(this);
-            }
+            visit(r.values);
         }
 
         printer.endList();
@@ -182,11 +178,7 @@ public class Printer extends Visitor<Void> {
 
     public Void visit(Block b) throws XicException{
         printer.startUnifiedList();
-
-        for (Node statement : b.statements) {
-            statement.accept(this);
-        }
-        
+        visit(b.statements);
         printer.endList();
         return null;
     }
@@ -225,11 +217,7 @@ public class Printer extends Visitor<Void> {
         printer.startList();
 
         printer.printAtom(c.id);
-        
-        for (Node n : c.args) {
-            n.accept(this);
-        }
-
+        visit(c.args);
         printer.endList();
         return null;
     }
@@ -316,11 +304,7 @@ public class Printer extends Visitor<Void> {
 
     public Void visit(XiArray a) throws XicException {
         printer.startList();
-
-        for (Node value: a.values) {
-            value.accept(this);
-        }
-
+        visit(a.values);
         printer.endList();
         return null;
     }
