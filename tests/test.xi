@@ -2,6 +2,10 @@ use io
 use conv
 
 main (args:int[][]) {
-    println(unparseInt(0 + 1 + 2 + 3 + 4))
-    return
+    if false {
+        println(unparseInt(1))
+    } else {
+        println(unparseInt(0))
+    }
+    println(unparseInt(-1))
 }
