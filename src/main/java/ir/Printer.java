@@ -43,10 +43,12 @@ public class Printer extends IRVisitor<Void> {
                 FnContext context = TypeChecker.check(lib, ast);
                 comp = Emitter.emitIR((Program) ast, context);
 
+                // Generate .ir file
 	            OutputStream stream = new FileOutputStream(output);
                 Printer p = new Printer(stream);
                 comp.accept(p);
 
+                // Print IR to console
                 debug(comp);
 
                 // System.out.println("\nRunning example: \n");
@@ -74,9 +76,6 @@ public class Printer extends IRVisitor<Void> {
                 }
 
 	    	} catch (XicException xic) {
-	            BufferedWriter w = new BufferedWriter(new FileWriter(output));
-	            w.write(xic.toWrite());
-	            w.close();
 	            throw xic;
 	    	}
         } catch (IOException io) {
