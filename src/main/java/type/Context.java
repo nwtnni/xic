@@ -114,7 +114,7 @@ public abstract class Context<S,T> {
     public Map<S,T> getMap() {
         Map<S,T> aggregateMap = new LinkedHashMap<>();
         for (PMap<S,T> map : context) {
-            Iterator<Map.Entry<S T>> it = map.entrySet().iterator();
+            Iterator<Map.Entry<S,T>> it = map.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry<S,T> e = (Map.Entry<S,T>) it.next();
                 aggregateMap.put(e.getKey(), e.getValue());

@@ -118,6 +118,12 @@ task testType(type: Exec, dependsOn:xic) {
     && printf \"\\n========================================\\n\\n\""
 }
 
+task testIr(type: Exec, dependsOn:xic) {
+    executable "sh"
+    args "-c", "xth/xth -compilerpath . -workpath tests/ir -testpath tests/ir tests/ir/xthScript\
+    && printf \"\\n========================================\\n\\n\""
+}
+
 compileJava.dependsOn jflexIXi
 compileJava.dependsOn jflexXi
 compileJava.dependsOn cupIXi
