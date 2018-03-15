@@ -34,7 +34,7 @@ public class Emitter extends Visitor<IRNode> {
     private int labelIndex;
 
     /* 
-     * Utility methods
+     * Utility methods for generating code
      */
 
      /**
@@ -85,6 +85,15 @@ public class Emitter extends Visitor<IRNode> {
             );
 
         return loop;
+    }
+
+    /**
+     * Generate code for the length built-in function.
+     */
+    private IRNode length() {
+        // TODO: this will not actually be a function but rather an
+        // expression that evaluates to the length of an array
+        return null;
     }
 
 
@@ -154,7 +163,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Block b) throws XicException {
-        ArrayList<IRNode> stmts = new ArrayList<>();
+        List<IRNode> stmts = new ArrayList<>();
         for (Node n : b.statements) {
             IRNode stmt = n.accept(this);
             // TODO: this is just a hack for wrapping an EXPR with an EXP
@@ -190,7 +199,7 @@ public class Emitter extends Visitor<IRNode> {
 
     public IRNode visit(Call c) throws XicException {
         IRName target = new IRName(context.lookup(c.id));
-        ArrayList<IRNode> argList = new ArrayList<>();
+        List<IRNode> argList = new ArrayList<>();
         for (Node n : c.getArgs()) {
             argList.add(n.accept(this));
         }
