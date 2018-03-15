@@ -7,7 +7,7 @@ package type;
  * but implemented for future-proofing purposes. TypeContext maintains
  * a tree mapping child types to parent types.
  */
-public class TypeContext extends Context<Type, Type> {
+public class TypeContext extends Context<Type,Type> {
 
 	/**
 	 * Default constructor initializes the context with primitive types.

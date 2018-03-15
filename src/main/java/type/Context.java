@@ -1,8 +1,12 @@
 package type;
 
 import org.pcollections.*;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Iterator;
 
 import type.TypeException.Kind;
+import xic.XicInternalException;
 
 /**
  * Persistent implementation of a generic symbol table. Reinforces uniqueness of symbols.
@@ -19,7 +23,7 @@ import type.TypeException.Kind;
  * @see TypeContext
  * @see VarContext
  */
-public abstract class Context<S, T> {
+public abstract class Context<S,T> {
 
 	/**
 	 * The backing persistent data structure.
@@ -27,7 +31,7 @@ public abstract class Context<S, T> {
 	 * We use a PStack to represent entering and leaving different scopes,
 	 * and PMaps to record key-value pairs.
 	 */
-    protected PStack<PMap<S, T>> context;
+    protected PStack<PMap<S,T>> context;
 
     /**
      * Default constructor initializes a single empty map.
@@ -41,7 +45,7 @@ public abstract class Context<S, T> {
      * 
      * @param c Context to clone
      */
-    protected Context(Context<S, T> c) {
+    protected Context(Context<S,T> c) {
     	this.context = c.context;
     }
 
@@ -52,7 +56,7 @@ public abstract class Context<S, T> {
      * @return Type t if it exists in this context, else null
      */
     public T lookup(S s) {
-        for (PMap<S, T> map : context) {
+        for (PMap<S,T> map : context) {
             T t = map.get(s);
             if (t != null){
                 return t;
@@ -88,7 +92,10 @@ public abstract class Context<S, T> {
      * Pops the last scope off the stack.
      */
     public void pop() {
-    	context = context.minus(0);
+        if (context.size() > 1) {
+            context = context.minus(0);
+        }
+        throw XicInternalException.internal("Cannot remove global context.");
     }
 
     /**
@@ -99,5 +106,20 @@ public abstract class Context<S, T> {
      */
     public boolean contains(S s) {
         return lookup(s) != null;
-	}
+    }
+    
+    /**
+     * Returns a Map of all the bindings in the context
+     */
+    public Map<S,T> getMap() {
+        Map<S,T> aggregateMap = new LinkedHashMap<>();
+        for (PMap<S,T> map : context) {
+            Iterator<Map.Entry<S T>> it = map.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<S,T> e = (Map.Entry<S,T>) it.next();
+                aggregateMap.put(e.getKey(), e.getValue());
+            }
+        }
+        return aggregateMap;
+    }
 }
