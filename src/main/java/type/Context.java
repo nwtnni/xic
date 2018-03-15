@@ -92,6 +92,7 @@ public abstract class Context<S,T> {
     public void pop() {
         if (context.size() > 1) {
             context = context.minus(0);
+            return;
         }
         throw XicInternalException.internal("Cannot remove global context.");
     }
