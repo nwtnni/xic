@@ -272,14 +272,10 @@ BlockStmts ::=
     {:
         if (el.size() == 0) {
         	slnr.add(new Return(rxleft));
-            RESULT = new Block(slnr);
-        } else if (el.size() == 1) {
-        	slnr.add(new Return(rxleft, el.get(0)));
-            RESULT = new Block(slnr);
         } else {
             slnr.add(new Return(rxleft, el));
-            RESULT = new Block(slnr);
         }
+        RESULT = new Block(slnr);
     :}
     | StmtListNoReturn:slnr
     {:
