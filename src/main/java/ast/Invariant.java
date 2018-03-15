@@ -1,7 +1,5 @@
 package ast;
 
-import javax.security.auth.callback.NameCallback;
-
 import xic.XicException;
 
 /* Visits a constructed AST and checks all node invariants.

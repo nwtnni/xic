@@ -1,6 +1,7 @@
 package ast;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
@@ -15,6 +16,13 @@ public class Call extends Node {
         this.location = location;
         this.id = id; 
         this.args = args;
+    }
+
+    public Call(Location location, String id, Node arg) {
+        this.location = location;
+        this.id = id;
+        this.args = new ArrayList<>();
+        args.add(arg);
     }
 
     public <T> T accept(Visitor<T> v) throws XicException {
