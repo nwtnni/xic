@@ -219,6 +219,14 @@ public class Type {
         }
     }
 
+    /**
+     * Returns true if type is primative.
+     */
+    public boolean isPrimative() {
+        return this.equals(INT) || this.equals(BOOL);
+
+    }
+
     @Override
     public String toString() {
         switch (kind) {

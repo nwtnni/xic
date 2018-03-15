@@ -5,9 +5,8 @@ import java.util.ArrayList;
 import ast.*;
 import ir.*;
 import type.FnContext;
-import type.FnType;
-import type.Type;
 import xic.XicException;
+import xic.XicInternalException;
 
 public class Emitter extends Visitor<IRNode> {
 
@@ -77,9 +76,12 @@ public class Emitter extends Visitor<IRNode> {
      * Statement nodes
      */
 
-    // TODO: variable declaration
     public IRNode visit(Declare d) throws XicException {
-        return null;
+        if (d.type.isPrimative()) {
+            return new IRTemp(d.id);
+        }
+        // TODO: dealing with array declarations
+        throw XicInternalException.internal("todo");
     }
 
     // TODO: assignment, cases:
