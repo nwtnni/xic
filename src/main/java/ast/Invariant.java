@@ -1,5 +1,7 @@
 package ast;
 
+import javax.security.auth.callback.NameCallback;
+
 import xic.XicException;
 
 /* Visits a constructed AST and checks all node invariants.
@@ -76,8 +78,13 @@ public class Invariant extends Visitor<Void> {
         assert f.args != null;
         assert f.returns != null;
         
-        f.args.accept(this);
-        f.returns.accept(this);
+        for (Node arg : f.args) {
+            arg.accept(this);
+        }
+
+        for (Node ret : f.returns) {
+            ret.accept(this);
+        }
 
         if (f.isDef()) {
             assert f.block instanceof Block;
@@ -121,9 +128,11 @@ public class Invariant extends Visitor<Void> {
     //
     public Void visit(Assign a) throws XicException {
         assert a.location != null;
-        assert a.lhs != null;   
-        assert a.rhs != null;   
-        a.lhs.accept(this);
+        assert a.lhs != null;
+        assert a.rhs != null;
+        for (Node n : a.lhs) {
+            n.accept(this);
+        }
         a.rhs.accept(this);
         return null;
     }
@@ -137,11 +146,13 @@ public class Invariant extends Visitor<Void> {
     //
     public Void visit(Return r) throws XicException {
         assert r.location != null;
-        if (r.hasValue()) {
-            assert r.value != null; 
-            r.value.accept(this);
+        if (r.hasValues()) {
+            assert r.values != null; 
+            for (Node n : r.values) {
+                n.accept(this);
+            }
         } else {
-            assert r.value == null;
+            assert r.values == null;
         }
         return null;
     }
@@ -239,7 +250,9 @@ public class Invariant extends Visitor<Void> {
         assert c.location != null;
         assert c.id != null; 
         assert c.args != null;
-        c.args.accept(this);
+        for (Node n: c.args) {
+            n.accept(this);
+        }
         return null;
     }
 

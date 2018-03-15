@@ -1,5 +1,7 @@
 package ast;
 
+import java.util.List;
+
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
@@ -11,21 +13,21 @@ public class Return extends Node {
     }
 
     public Kind kind;
-    public Node value;
+    public List<Node> values;
 
-    public Return(Location location, Node value) {
+    public Return(Location location, List<Node> values) {
         this.kind = Kind.VALUE;
         this.location = location;
-        this.value = value;
+        this.values = values;
     }
 
     public Return(Location location) {
         this.kind = Kind.VOID; 
         this.location = location;
-        this.value = null;
+        this.values = null;
     }
 
-    public boolean hasValue() {
+    public boolean hasValues() {
         return kind == Kind.VALUE; 
     }
 

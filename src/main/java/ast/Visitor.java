@@ -66,10 +66,6 @@ public abstract class Visitor<T> {
         return null;
     }
 
-    public T visit(Multiple m) throws XicException {
-        return null;
-    }
-
     public T visit(Index i) throws XicException {
         return null;
     }

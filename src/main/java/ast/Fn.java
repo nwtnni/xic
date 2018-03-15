@@ -1,9 +1,11 @@
 package ast;
 
+import java.util.List;
 import java.util.ArrayList;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
+import xic.XicInternalException;
 
 // Function Declaration
 public class Fn extends Node {
@@ -15,11 +17,11 @@ public class Fn extends Node {
 
     public Kind kind;
     public String id;
-    public Node args;
-    public Node returns;
+    public List<Node> args;
+    public List<Node> returns;
     public Node block;
 
-    public Fn(Location location, String id, Node args, Node returns) {
+    public Fn(Location location, String id, List<Node> args, List<Node> returns) {
         this.kind = Kind.FN_HEADER;
         this.location = location;
         this.id = id;  
@@ -28,27 +30,27 @@ public class Fn extends Node {
         this.block = null;
     }
 
-    public Fn(Location location, String id, Node args) {
+    public Fn(Location location, String id, List<Node> args) {
         this.kind = Kind.PROC_HEADER; 
         this.location = location;
-        this.id = id;  
+        this.id = id; 
         this.args = args;
-        this.returns = new Multiple(location, new ArrayList<>(), Multiple.Kind.FN_RETURNS);
+        this.returns = new ArrayList<>();
         this.block = null;
     }
 
     public Fn(Location location, Fn f, Node block) {
-        if (f.kind == Kind.FN_HEADER) {
-            this.kind = Kind.FN;
+        switch (f.kind) {
+            case FN_HEADER:
+                this.kind = Kind.FN;
+                break;
+            case PROC_HEADER:
+                this.kind = Kind.PROC;
+                break;
+            default:
+                throw XicInternalException.internal("Not a function declaration.");
         }
-        else if (f.kind == Kind.PROC_HEADER) {
-            this.kind = Kind.PROC;
-        }
-        else {
-            // TODO
-            // Should Have error handling
-            // throw new Exception("WHAT");
-        }
+
         this.location = location;
         this.id = f.id;
         this.args = f.args;
