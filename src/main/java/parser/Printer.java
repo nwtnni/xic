@@ -115,12 +115,16 @@ public class Printer extends Visitor<Void> {
         
         // Fn arguments
         printer.startList();
-        f.args.accept(this);
+        for (Node n : f.args) {
+            n.accept(this);
+        }
         printer.endList();
 
         // Fn return types
         printer.startList();
-        f.returns.accept(this);
+        for (Node n : f.returns) {
+            n.accept(this);
+        }
         printer.endList();
 
         // Statement block
@@ -152,7 +156,9 @@ public class Printer extends Visitor<Void> {
         printer.startList();
 
         printer.printAtom("=");
-        a.lhs.accept(this);
+        for (Node n : a.lhs) {
+            n.accept(this);
+        }
         a.rhs.accept(this);
 
         printer.endList();
@@ -164,8 +170,10 @@ public class Printer extends Visitor<Void> {
 
         printer.printAtom("return");
         
-        if (r.hasValue()) {
-            r.value.accept(this);
+        if (r.hasValues()) {
+            for (Node n : r.values) {
+                n.accept(this);
+            }
         }
 
         printer.endList();
@@ -218,7 +226,9 @@ public class Printer extends Visitor<Void> {
 
         printer.printAtom(c.id);
         
-        c.args.accept(this);
+        for (Node n : c.args) {
+            n.accept(this);
+        }
 
         printer.endList();
         return null;
@@ -247,19 +257,6 @@ public class Printer extends Visitor<Void> {
 
     public Void visit(Var v) throws XicException{
         printer.printAtom(v.id);
-        return null;
-    }
-
-    public Void visit(Multiple m) throws XicException{
-        boolean isParen = m.isAssign() && m.values.size() > 1;
-
-        if (isParen) { printer.startList(); }
-
-        for (Node value : m.values) {
-            value.accept(this);
-        }
-
-        if (isParen) { printer.endList(); }
         return null;
     }
 
