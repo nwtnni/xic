@@ -20,6 +20,7 @@ public class Emitter extends Visitor<IRNode> {
         return (IRCompUnit) ast.accept(new Emitter(context));
     }
 
+    private int labelIndex = 0;
     public Emitter(FnContext context) {
         this.typeContext = context;
         this.context = new ABIContext(context);
@@ -35,6 +36,10 @@ public class Emitter extends Visitor<IRNode> {
     /* 
      * Utility methods
      */
+    private String generateLabel() {
+        labelIndex++;
+        return "label_"+Integer.toString(labelIndex);
+    }
 
 
     /*
@@ -61,10 +66,11 @@ public class Emitter extends Visitor<IRNode> {
         // TODO: visit args and prepend MOVE into TEMP to body
         // see interpret.Configuration for useful constants
         // see interpret.Sample for examples of how to use them
-        IRNode args = f.args.accept(this);
+        // IRNode args = f.args.accept(this);
 
         IRSeq body = (IRSeq) f.block.accept(this);
 
+        // If no trailing return, add a return (TODO ensure that it is a procedure?)
         if (!(body.stmts.get(body.stmts.size() - 1) instanceof IRReturn)) {
             body.stmts.add(new IRReturn());
         }
@@ -121,9 +127,23 @@ public class Emitter extends Visitor<IRNode> {
         return null;
     }
 
-    // TODO: while
     public IRNode visit(While w) throws XicException {
-        return null;
+        IRNode guard = w.guard.accept(this);
+        IRNode block = w.block.accept(this);
+        
+        String headLabel = generateLabel();
+        String trueLabel = generateLabel();
+        String falseLabel = generateLabel();
+
+        IRSeq whilestmt = new IRSeq(
+            new IRLabel(headLabel),
+            new IRCJump(guard, trueLabel, falseLabel),
+            new IRLabel(trueLabel),
+            new IRJump(new IRName(headLabel)),
+            new IRLabel(falseLabel)
+            );
+
+        return whilestmt;
     }
 
     /*

@@ -21,6 +21,7 @@ public class Declare extends Node {
         this.xiType = type;
     }
 
+    // Used for underscores
     public Declare(Location location) {
         this.kind = Kind.UNDERSCORE;
         this.location = location;
