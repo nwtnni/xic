@@ -192,24 +192,7 @@ public class Emitter extends Visitor<IRNode> {
     public IRNode visit(While w) throws XicException {
         IRNode guard = w.guard.accept(this);
         IRNode block = w.block.accept(this);
-<<<<<<< HEAD
-
-        String headLabel = generateLabel();
-        String trueLabel = generateLabel();
-        String falseLabel = generateLabel();
-
-        IRSeq whilestmt = new IRSeq(
-            new IRLabel(headLabel),
-            new IRCJump(guard, trueLabel, falseLabel),
-            new IRLabel(trueLabel),
-            new IRJump(new IRName(headLabel)),
-            new IRLabel(falseLabel)
-            );
-
-        return whilestmt;
-=======
         return generateLoop(guard, block);
->>>>>>> fee3af01469197872a5d5cc9dc7f46d50cee41c0
     }
 
     /*
