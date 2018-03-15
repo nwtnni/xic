@@ -36,6 +36,8 @@ public class Emitter extends Visitor<IRNode> {
     /* 
      * Utility methods
      */
+
+    //TODO Worry about max_int overflow
     private String generateLabel() {
         labelIndex++;
         return "label_"+Integer.toString(labelIndex);
@@ -130,7 +132,7 @@ public class Emitter extends Visitor<IRNode> {
     public IRNode visit(While w) throws XicException {
         IRNode guard = w.guard.accept(this);
         IRNode block = w.block.accept(this);
-        
+
         String headLabel = generateLabel();
         String trueLabel = generateLabel();
         String falseLabel = generateLabel();
