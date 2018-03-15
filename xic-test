@@ -44,11 +44,6 @@ test_type() {
     test_type_man
 }
 
-test_ir() {
-    xth/xth -compilerpath . -workpath tests/ir -testpath tests/ir tests/ir/xthScript
-    printf "\n========================================\n\n"
-}
-
 test_type_valid() {
     xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
     printf "\n========================================\n\n"
@@ -61,6 +56,11 @@ test_type_err() {
 
 test_type_man() {
     xth/xth -compilerpath . -workpath tests/type/pa3-tests-manual -testpath tests/type/pa3-tests-manual tests/type/pa3-tests-manual/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_ir() {
+    xth/xth -compilerpath . -workpath tests/ir -testpath tests/ir tests/ir/xthScript
     printf "\n========================================\n\n"
 }
 
@@ -97,9 +97,6 @@ p|parser)
 t|type)
     test_type
     ;;
-i|ir)
-    test_ir
-    ;;
 te)
     test_type_err
     ;;
@@ -109,12 +106,16 @@ tv)
 tm)
     test_type_man
     ;;
+i|ir)
+    test_ir
+    ;;
 c|course)
     test_course
     ;;
 *)
     echo "Usage: xic-test [options] <command>"
     echo "  --nb:   Skips running xic-build"
-    echo "  Possible commands: a[ll] r[egression] f[ails] l[exer] p[arser] t[ype] te tv tm c[ourse]"
+    echo "  Possible commands: a[ll] r[egression] f[ails] c[ourse]"
+    echo "  l[exer] p[arser] t[ype] te tv tm i[r]"
     ;;
 esac

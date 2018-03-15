@@ -6,6 +6,7 @@ import ast.*;
 import ir.*;
 import type.FnContext;
 import type.FnType;
+import type.Type;
 import xic.XicException;
 
 public class Emitter extends Visitor<IRNode> {
@@ -57,13 +58,17 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Fn f) throws XicException {
-        IRSeq body = (IRSeq) f.block.accept(this);
 
         // TODO: visit args and prepend MOVE into TEMP to body
         // see interpret.Configuration for useful constants
         // see interpret.Sample for examples of how to use them
+        IRNode args = f.args.accept(this);
 
-        // TODO: make sure there is a return is at the end of the function.
+        IRSeq body = (IRSeq) f.block.accept(this);
+
+        if (!(body.stmts.get(body.stmts.size() - 1) instanceof IRReturn)) {
+            body.stmts.add(new IRReturn());
+        }
 
         return new IRFuncDecl(context.lookup(f.id), body);
     }
