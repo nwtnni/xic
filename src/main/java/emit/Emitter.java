@@ -126,9 +126,9 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /**
-     * Shift the value of a pointer by shift * WORD_SIZE bytes.
+     * Is the value of a pointer by shift * WORD_SIZE bytes.
      */
-    private IRExpr shiftPointer(IRTemp pointer, int shift) {
+    private IRExpr shiftAddr(IRTemp pointer, int shift) {
         IRConst byteShift = new IRConst(shift * Configuration.WORD_SIZE);
         IRExpr addr = new IRBinOp(IRBinOp.OpType.ADD, pointer, byteShift);
 
@@ -138,6 +138,20 @@ public class Emitter extends Visitor<IRNode> {
         // );
         // return newPointer;
         return addr;
+    }
+
+    /**
+     * Shifts the value of a pointer by shift * WORD_SIZE bytes.
+     */
+    private IRExpr shiftPointer(IRTemp pointer, int shift) {
+        IRConst byteShift = new IRConst(shift * Configuration.WORD_SIZE);
+        IRExpr addr = new IRBinOp(IRBinOp.OpType.ADD, pointer, byteShift);
+
+        IRESeq newPointer = new IRESeq(
+            new IRMove(pointer, addr), 
+            pointer
+        );
+        return newPointer;
     }
 
     /**
@@ -166,7 +180,7 @@ public class Emitter extends Visitor<IRNode> {
         // Storing array into memory
         for(int i = 0; i < length; i++) {
             IRNode n = array.get(i);
-            stmts.add(new IRMove(new IRMem(shiftPointer(pointer, i + 1)), n));
+            stmts.add(new IRMove(new IRMem(shiftAddr(pointer, i + 1)), n));
         }
 
         return new IRESeq(new IRSeq(stmts), shiftPointer(pointer, 1));
@@ -182,7 +196,6 @@ public class Emitter extends Visitor<IRNode> {
         }
         return alloc(chars);
     }
-
 
     /**
      * Generate code for the length built-in function.
