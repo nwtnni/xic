@@ -37,9 +37,11 @@ public class Emitter extends Visitor<IRNode> {
      * Utility methods for generating code
      */
 
-     /**
-      * Generate a new unique label name.
-      */
+    
+    /**
+     * Generate a new unique label name.
+     */
+    //TODO Worry about max_int overflow
     private String generateLabel() {
         return "label_"+Integer.toString(++labelIndex);
     }
