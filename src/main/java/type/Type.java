@@ -299,13 +299,13 @@ public class Type {
                 return args;
             case TUPLE:
                 if (children.size() == 0) {
-                    return "p";
+                    return "";
                 }
                 String encoding = "";
                 for (Type t : children) {
                     encoding += t.toString();
                 }
-                return "t" + encoding;
+                return "t" + children.size() + encoding;
         }
         // Unreachable
         assert false;

@@ -1,6 +1,7 @@
 package ast;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import xic.XicException;
 
@@ -11,10 +12,11 @@ public abstract class Visitor<T> {
      * Psuedo-visit method for visiting a list of nodes.
      */
     public List<T> visit(List<Node> nodes) throws XicException {
+        List<T> t = new ArrayList<>();
         for (Node n : nodes) {
-            n.accept(this);
+            t.add(n.accept(this));
         }
-        return null;
+        return t;
     }
 
     /*

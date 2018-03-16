@@ -1,6 +1,20 @@
 package ir;
 
+import java.util.List;
+import java.util.ArrayList;
+
 public abstract class IRVisitor<T> {
+
+    /*
+     * Psuedo-visit method for visiting a list of nodes.
+     */
+    public List<T> visit(List<IRNode> nodes) {
+        List<T> t = new ArrayList<>();
+        for (IRNode n : nodes) {
+            t.add(n.accept(this));
+        }
+        return t;
+	}
 	
 	public T visit(IRCompUnit c) {
 		return null;

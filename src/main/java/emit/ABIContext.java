@@ -5,6 +5,7 @@ import java.util.Map;
 import type.Context;
 import type.FnContext;
 import type.FnType;
+import type.Type;
 
 public class ABIContext extends Context<String, String> {
 
@@ -21,7 +22,8 @@ public class ABIContext extends Context<String, String> {
     protected static String makeABIName(String name, FnType type) {
         String args = type.args.toString();
         String returns = type.returns.toString();
+        String p = type.returns.equals(Type.UNIT) ? "p" : "";
         name = name.replaceAll("_", "__");
-        return "_I" + name + "_" + returns + args;
+        return "_I" + name + "_" + p + returns + args;
     }
 }
