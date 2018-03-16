@@ -724,6 +724,14 @@ Expr ::=
         :}
     | STRING:s
         {:
+
+        // debug
+        System.out.println("parsed string " + s.name);
+        for (Long c : s.value) {
+            System.out.print("" + c);
+        }
+        System.out.println();
+        // debug
             RESULT = new XiString(sxleft, s.name, s.value);
         :}
     | IDENTIFIER:id

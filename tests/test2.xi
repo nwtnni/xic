@@ -2,10 +2,8 @@ use io
 use conv
 
 main(args: int[][]) {
-  str:int[] = "0123456789";
+  str:int[] = "A";
   println(str)
-  // println(unparseInt(length(str)))
-  _ = readln()
-  // if true println("foobar")
-  // else println("not an int")
+  str = "Z"
+  println(str)
 }

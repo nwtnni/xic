@@ -133,6 +133,15 @@ import lexer.LexException.Kind;
         yybegin(YYINITIAL);
         Location l = new Location(unit, row(), startColumn);
         Location r = new Location(unit, row(), column());
+
+        // debug
+        System.out.println("lexed string " + literal.toString());
+        for (Long c : value) {
+            System.out.print("" + c);
+        }
+        System.out.println();
+        // debug
+
         StringWrapper v = new StringWrapper(literal.toString(), value);
         return symbolFactory.newSymbol(literal.toString(), STRING, l, r, v);
     }
