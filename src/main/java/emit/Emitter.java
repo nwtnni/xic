@@ -278,7 +278,11 @@ public class Emitter extends Visitor<IRNode> {
         IRNode rhs = a.rhs.accept(this);
 
         if (lhs.size() == 1) {
-            return new IRMove(lhs.get(0), rhs);
+            if (lhs.get(0) != null) {
+                return new IRMove(lhs.get(0), rhs);
+            } else {
+                return new IRExp(rhs);
+            }
         }
 
         List<IRNode> stmts = new ArrayList<>();
