@@ -15,7 +15,7 @@ public class Emitter extends Visitor<IRNode> {
 
     /**
      * Factory method to generate IR from the given AST.
-	 * @param ast AST to typecheck
+	 * @param ast AST to generate into IR
      * @param context function context corresponding to the AST
 	 * @throws XicException if a semantic error was found
      */

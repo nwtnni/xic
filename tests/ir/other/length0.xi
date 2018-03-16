@@ -2,5 +2,5 @@ use io
 use conv
 
 main(args:int[][]) {
-    print(length({1,2}));
+    print(unparseInt(length({})));
 }

@@ -120,7 +120,7 @@ task testType(type: Exec, dependsOn:xic) {
 
 task testIr(type: Exec, dependsOn:xic) {
     executable "sh"
-    args "-c", "xth/xth -compilerpath . -workpath tests/ir -testpath tests/ir tests/ir/xthScript\
+    args "-c", "xth/xth -compilerpath . -workpath tests/ir/simple -testpath tests/ir/simple tests/ir/simple/xthScript\
     && printf \"\\n========================================\\n\\n\""
 }
 

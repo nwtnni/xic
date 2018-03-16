@@ -9,6 +9,15 @@ import java.math.BigInteger;
 
 public class ConstantFolder extends IRVisitor<OptionalLong> {
 
+    /**
+     * Factory method to constant fold a compilation unit.
+     * 
+     * @param compUnit
+     */
+    public static void constantFold(IRCompUnit compUnit) {
+        compUnit.accept(new ConstantFolder());
+    }
+
     IRNode tree;
 
 	public OptionalLong visit(IRBinOp b) {

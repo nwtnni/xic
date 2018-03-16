@@ -59,8 +59,18 @@ test_type_man() {
     printf "\n========================================\n\n"
 }
 
-test_ir() {
-    xth/xth -compilerpath . -workpath tests/ir -testpath tests/ir tests/ir/xthScript
+test_ir_simple() {
+    xth/xth -compilerpath . -workpath tests/ir/simple -testpath tests/ir/simple tests/ir/simple/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_ir_arrays() {
+    xth/xth -compilerpath . -workpath tests/ir/arrays -testpath tests/ir/arrays tests/ir/arrays/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_ir_other() {
+    xth/xth -compilerpath . -workpath tests/ir/other -testpath tests/ir/other tests/ir/other/xthScript
     printf "\n========================================\n\n"
 }
 
@@ -107,7 +117,18 @@ tm)
     test_type_man
     ;;
 i|ir)
-    test_ir
+    test_ir_simple
+    test_ir_other
+    test_ir_arrays
+    ;;
+is)
+    test_ir_simple
+    ;;
+io)
+    test_ir_other
+    ;;
+ia)
+    test_ir_arrays
     ;;
 c|course)
     test_course

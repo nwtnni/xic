@@ -8,6 +8,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
 import polyglot.util.OptimalCodeWriter;
 
 import xic.XicException;
+import emit.ConstantFolder;
 import emit.Emitter;
 import interpret.IRSimulator;
 import parser.XiParser;
@@ -43,14 +44,18 @@ public class Printer extends IRVisitor<Void> {
                 FnContext context = TypeChecker.check(lib, ast);
                 comp = Emitter.emitIR((Program) ast, context);
 
+                if (opt) {
+                    ConstantFolder.constantFold(comp);
+                }
+
                 // Generate .ir file
 	            OutputStream stream = new FileOutputStream(output);
                 Printer p = new Printer(stream);
                 comp.accept(p);
 
                 // Print IR to console
-                debug(comp);
-                System.out.println();
+                // debug(comp);
+                // System.out.println();
 
                 if (run) {
                     IRSimulator sim = new IRSimulator(comp);
