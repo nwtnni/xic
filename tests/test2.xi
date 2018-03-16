@@ -1,7 +1,10 @@
 use io
+use conv
 
 main(args: int[][]) {
-  print("Hello, Worl\x64!\n")
-  c3po: int = 'x' + 47;
-  r2d2: int = c3po // No Han Solo
+  str:int[] = "0123456789";
+  println(str)
+  println(unparseInt(length(str)))
+  i:int, b:bool = parseInt(str);
+  if b println(unparseInt(i))
 }

@@ -128,7 +128,7 @@ public class Emitter extends Visitor<IRNode> {
     /**
      * Is the value of a pointer by shift * WORD_SIZE bytes.
      */
-    private IRExpr shiftAddr(IRTemp pointer, int shift) {
+    private IRExpr shiftAddr(IRExpr pointer, int shift) {
         IRConst byteShift = new IRConst(shift * Configuration.WORD_SIZE);
         IRExpr addr = new IRBinOp(IRBinOp.OpType.ADD, pointer, byteShift);
 
@@ -200,10 +200,10 @@ public class Emitter extends Visitor<IRNode> {
     /**
      * Generate code for the length built-in function.
      */
-    private IRNode length() {
+    private IRNode length(IRExpr pointer) {
         // TODO: this will not actually be a function but rather an
         // expression that evaluates to the length of an array
-        return null;
+        return new IRMem(shiftAddr(pointer, -1));
     }
 
     /*
@@ -344,6 +344,10 @@ public class Emitter extends Visitor<IRNode> {
      */
 
     public IRNode visit(Call c) throws XicException {
+        if (c.id.equals("length")) {
+            return length((IRExpr) c.args.get(0).accept(this));
+        }
+
         IRName target = new IRName(context.lookup(c.id));
         List<IRNode> argList = new ArrayList<>();
         for (Node n : c.getArgs()) {
