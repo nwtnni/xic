@@ -17,6 +17,10 @@ xic ("Test --irgen") "--irgen" {
     simple_while1.xi;
     simple_while2.xi;
     simple_assign1.xi;
+    simple_funcs1.xi;
+    simple_funcs2.xi;
+    simple_funcs3.xi;
+    simple_funcs4.xi;
 
 
     /* Temporarily commented out
