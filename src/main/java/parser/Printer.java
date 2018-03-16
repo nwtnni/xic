@@ -149,7 +149,13 @@ public class Printer extends Visitor<Void> {
         printer.startList();
 
         printer.printAtom("=");
-        visit(a.lhs);
+        if (a.lhs.size() > 1) {
+            printer.startList();
+            visit(a.lhs);
+            printer.endList();
+        } else {
+            visit(a.lhs);
+        }
         a.rhs.accept(this);
 
         printer.endList();
