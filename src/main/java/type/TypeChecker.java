@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import ast.*;
 import type.TypeException.Kind;
 import xic.XicException;
+import xic.XicInternalException;
 
 /**
  * Main type checking implementation. Recursively traverses the AST
@@ -73,6 +74,17 @@ public class TypeChecker extends Visitor<Type> {
 	 */
 	private Type returns;
 
+	/**
+	 * Returns a list of types from visiting a list of nodes.
+	 */
+	public List<Type> visit(List<Node> nodes) throws XicException {
+		List<Type> types = new ArrayList<>();
+		for (Node n : nodes) {
+			types.add(n.accept(this));
+		}
+		return types;
+	}
+
 	/*
 	 * Top-level AST nodes
 	 */
@@ -103,26 +115,22 @@ public class TypeChecker extends Visitor<Type> {
 	 * @throws XicException if function has semantic errors
 	 */
 	public Type visit(Fn f) throws XicException {
-
 		vars.push();
-		f.args.accept(this);
-
-		FnType fn = fns.lookup(f.id);
-
-		if (fn == null) {
+		FnType fnType = fns.lookup(f.id);
+		if (fnType == null) {
 			// Internal error occurred; should never happen
-			throw new TypeException(Kind.SYMBOL_NOT_FOUND, f.location);
+			throw XicInternalException.internal("Function not found. Fix Importer.");
 		}
 
-		returns = fn.returns;
-
+		visit(f.args);
+		returns = fnType.returns;
 		Type ft = f.block.accept(this);
-		vars.pop();
 
 		if (f.isFn() && !ft.equals(Type.VOID)) {
 			throw new TypeException(Kind.CONTROL_FLOW, f.location);
 		}
 
+		vars.pop();
 		f.type = Type.UNIT;
 		return f.type;
 	}
@@ -161,7 +169,7 @@ public class TypeChecker extends Visitor<Type> {
 	 */
 	public Type visit(Assign a) throws XicException {
 		Type rt = a.rhs.accept(this);
-		Type lt = a.lhs.accept(this);
+		Type lt = Type.tupleFromList(visit(a.lhs));
 
 		if (!types.isSubType(rt, lt)) {
 			throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
@@ -182,8 +190,8 @@ public class TypeChecker extends Visitor<Type> {
 	 * @throws XicException if return type doesn't match
 	 */
 	public Type visit(Return r) throws XicException {
-		if (r.hasValue()) {
-			Type value = r.value.accept(this);
+		if (r.hasValues()) {
+			Type value = Type.tupleFromList(visit(r.values));
 			if (!value.equals(Type.UNIT) && returns.equals(value)) {
 				r.type = Type.VOID;
 				return r.type;
@@ -289,8 +297,8 @@ public class TypeChecker extends Visitor<Type> {
 	 */
 	public Type visit(Call c) throws XicException {
 		if (c.id.equals("length")) {
-			Type args = c.args.accept(this);
-			if (!args.kind.equals(Type.Kind.ARRAY)) {
+			Type arg = c.args.get(0).accept(this);
+			if (!arg.isArray()) {
 				throw new TypeException(Kind.NOT_AN_ARRAY, c.location);
 			}
 			c.type = Type.INT;
@@ -301,8 +309,7 @@ public class TypeChecker extends Visitor<Type> {
 				throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
 			}
 
-			Type args = c.args.accept(this);
-
+			Type args = Type.listFromList(visit(c.args));
 			if (args.equals(fn.args)) {
 				c.type = fn.returns;
 				return c.type;
@@ -379,39 +386,6 @@ public class TypeChecker extends Visitor<Type> {
 			throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
 		}
 		return v.type;
-	}
-
-	/**
-	 * A multiple nonterminal is valid if its children are valid.
-	 * 
-	 * @returns Tuple of child types if valid
-	 * @throws XicException if invalid
-	 */
-	public Type visit(Multiple m) throws XicException {
-		// TODO: remove when we convert UNIT to a tuple type
-		if (m.values.size() == 0) {
-			m.type = Type.UNIT;
-			return Type.UNIT;
-		}
-
-		List<Type> types = new ArrayList<>();
-		for (Node value : m.values) {
-			types.add(value.accept(this));
-		}
-		switch (m.kind) {
-			case ASSIGN:
-			case RETURN:
-			case FN_RETURNS:
-				m.type = new Type(types, false);
-				return m.type;
-			case FN_CALL:
-			case FN_ARGS:
-				m.type = new Type(types, true);
-				return m.type;
-		}
-		// Unreachable
-		assert false;
-		return null;
 	}
 
 	/**

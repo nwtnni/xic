@@ -10,12 +10,19 @@ import xic.XicException;
 public class Call extends Node {
     
     public String id;
-    public Node args; 
+    public List<Node> args; 
     
-    public Call(Location location, String id, Node args) {
+    public Call(Location location, String id, List<Node> args) {
         this.location = location;
         this.id = id; 
         this.args = args;
+    }
+
+    public Call(Location location, String id, Node arg) {
+        this.location = location;
+        this.id = id;
+        this.args = new ArrayList<>();
+        args.add(arg);
     }
 
     public <T> T accept(Visitor<T> v) throws XicException {
@@ -23,12 +30,6 @@ public class Call extends Node {
     }
 
     public List<Node> getArgs() {
-        if (args instanceof Multiple) {
-            return ((Multiple) args).values;
-        } else {
-            List<Node> argList = new ArrayList<>();
-            argList.add(args);
-            return argList;
-        }
+        return args;
     }
 }
