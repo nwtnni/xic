@@ -1,7 +1,7 @@
 package emit;
 
 import java.util.List;
-
+import java.util.function.LongConsumer;
 import java.util.ArrayList;
 
 import ast.*;
@@ -26,6 +26,7 @@ public class Emitter extends Visitor<IRNode> {
     public Emitter(FnContext context) {
         this.context = new ABIContext(context);
         this.labelIndex = 0;
+        this.tempIndex = 0;
     }
 
     /**
@@ -33,7 +34,8 @@ public class Emitter extends Visitor<IRNode> {
      */
     protected ABIContext context;
 
-    private int labelIndex;
+    private long labelIndex;
+    private long tempIndex;
 
     /* 
      * Utility methods for generating code
@@ -42,9 +44,15 @@ public class Emitter extends Visitor<IRNode> {
     /**
      * Generate a new unique label name.
      */
-    //TODO Worry about max_int overflow
     private String generateLabel() {
-        return "label_"+Integer.toString(++labelIndex);
+        return "__label_" + Long.toString(++labelIndex);
+    }
+
+    /**
+     * Generate a new temporary name.
+     */
+    private IRTemp generateTemp() {
+        return new IRTemp("__temp_" + Long.toString(++tempIndex));
     }
 
     /**
@@ -65,9 +73,9 @@ public class Emitter extends Visitor<IRNode> {
      * Generate a conditional jump in IR code.
      */
     private IRNode generateBranch(IRNode cond, IRNode t, IRNode f) {
-        String trueLabel = "true_" + generateLabel();
-        String falseLabel = "false_" + generateLabel();
-        String done = "done_" + generateLabel();
+        String trueLabel = "__true_" + generateLabel();
+        String falseLabel = "__false_" + generateLabel();
+        String done = "__done_" + generateLabel();
 
         IRSeq stmts = new IRSeq(
             new IRCJump(cond, trueLabel, falseLabel),
@@ -81,17 +89,29 @@ public class Emitter extends Visitor<IRNode> {
         return stmts;
     }
 
+    /**
+     * Generate a conditional jump with no false block.
+     */
     private IRNode generateBranch(IRNode cond, IRNode t) {
-        return generateBranch(cond, t, null);
+        String trueLabel = "true_" + generateLabel();
+        String falseLabel = "false_" + generateLabel();
+        
+        IRSeq stmts = new IRSeq(
+            new IRCJump(cond, trueLabel, falseLabel),
+            new IRLabel(trueLabel),
+            t,
+            new IRLabel(falseLabel)
+        );
+        return stmts;
     }
 
     /**
      * Generate a loop in IR code.
      */
     private IRNode generateLoop(IRNode guard, IRNode block) {
-        String headLabel = "while_" + generateLabel();
-        String trueLabel = "true_" + generateLabel();
-        String falseLabel = "false_" + generateLabel();
+        String headLabel = "__while_" + generateLabel();
+        String trueLabel = "__true_" + generateLabel();
+        String falseLabel = "__false_" + generateLabel();
 
         IRSeq loop = new IRSeq(
             new IRLabel(headLabel),
@@ -106,10 +126,61 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /**
+     * Shift the value of a pointer by shift * WORD_SIZE bytes.
+     */
+    private IRExpr shiftPointer(IRTemp pointer, int shift) {
+        IRConst byteShift = new IRConst(shift * Configuration.WORD_SIZE);
+        IRExpr addr = new IRBinOp(IRBinOp.OpType.ADD, pointer, byteShift);
+
+        // IRESeq newPointer = new IRESeq(
+        //     new IRMove(pointer, addr), 
+        //     pointer
+        // );
+        // return newPointer;
+        return addr;
+    }
+
+    /**
      * Allocate memory for an array of size n.
      */
     private IRNode alloc(int n) {
         return null;
+    }
+
+    /**
+     * Allocate memory for an array and copy the values into memory.
+     */
+    public IRNode alloc(List<IRNode> array) throws XicException {
+
+        ArrayList<IRNode> stmts = new ArrayList<>();
+        int length = array.size();
+        IRConst size = new IRConst((length + 1) * Configuration.WORD_SIZE);
+        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
+        IRTemp pointer = generateTemp();
+        
+        stmts.add(new IRMove(pointer, addr));
+
+        //Store length of array
+        stmts.add(new IRMove(new IRMem(pointer), new IRConst(length)));
+
+        // Storing array into memory
+        for(int i = 0; i < length; i++) {
+            IRNode n = array.get(i);
+            stmts.add(new IRMove(new IRMem(shiftPointer(pointer, i + 1)), n));
+        }
+
+        return new IRESeq(new IRSeq(stmts), shiftPointer(pointer, 1));
+    }
+
+    /**
+     * Allocate memory for a string.
+     */
+    public IRNode alloc(XiString s) throws XicException {
+        List<IRNode> chars = new ArrayList<>();
+        for (Long c : s.value) {
+            chars.add(new IRConst(c));
+        }
+        return alloc(chars);
     }
 
 
@@ -338,36 +409,19 @@ public class Emitter extends Visitor<IRNode> {
         return new IRConst(c.value);
     }
 
-    // TODO: strings and arrays - should we even have strings at this point?
     public IRNode visit(XiString s) throws XicException {
-        return null;
+        return alloc(s);
     }
 
     public IRNode visit(XiArray a) throws XicException {
-        ArrayList<IRNode> stmts = new ArrayList<>();
-        int length = a.values.size();
-        IRExpr pointer =  new IRCall(new IRName("_xi_alloc"), new IRConst((length+1)*Configuration.WORD_SIZE));
-        
-        stmts.add(new IRExp(pointer)); //TODO Is this bad?
-        stmts.add(new IRMove(new IRMem(pointer), new IRConst(length))); //Store length
-
-        // Storing array into memory
-        for(int i=0; i<length; i++) {
-            IRNode n = a.values.get(i).accept(this);
-            stmts.add(new IRMove(new IRMem(pointerAdd(pointer,1+i)), n));
-        }
-
-        return new IRESeq(new IRSeq(stmts), pointerAdd(pointer,1));
-    }
-
-    private IRExpr pointerAdd(IRExpr pointer, int shift) {
-        return new IRBinOp(IRBinOp.OpType.ADD, pointer, new IRConst(shift*Configuration.WORD_SIZE));
+        return alloc(visit(a.values));
     }
 
     /*
      * Other nodes
      */
     public IRNode visit(XiType t) throws XicException {
+        // TODO: invoke array alloc here or in Declare?
         return null;
     }
 }
