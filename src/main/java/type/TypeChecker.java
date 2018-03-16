@@ -115,24 +115,22 @@ public class TypeChecker extends Visitor<Type> {
 	 * @throws XicException if function has semantic errors
 	 */
 	public Type visit(Fn f) throws XicException {
-
 		vars.push();
-		visit(f.args);
-
-		// Internal error occurred; should never happen
-		if (fns.lookup(f.id) == null) {
+		FnType fnType = fns.lookup(f.id);
+		if (fnType == null) {
+			// Internal error occurred; should never happen
 			throw XicInternalException.internal("Function not found. Fix Importer.");
 		}
 
-		returns = new Type(visit(f.returns), false);
-
+		visit(f.args);
+		returns = fnType.returns;
 		Type ft = f.block.accept(this);
-		vars.pop();
 
 		if (f.isFn() && !ft.equals(Type.VOID)) {
 			throw new TypeException(Kind.CONTROL_FLOW, f.location);
 		}
 
+		vars.pop();
 		f.type = Type.UNIT;
 		return f.type;
 	}
@@ -171,7 +169,7 @@ public class TypeChecker extends Visitor<Type> {
 	 */
 	public Type visit(Assign a) throws XicException {
 		Type rt = a.rhs.accept(this);
-		Type lt = new Type(visit(a.lhs), false);
+		Type lt = Type.tupleFromList(visit(a.lhs));
 
 		if (!types.isSubType(rt, lt)) {
 			throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
@@ -193,7 +191,7 @@ public class TypeChecker extends Visitor<Type> {
 	 */
 	public Type visit(Return r) throws XicException {
 		if (r.hasValues()) {
-			Type value = new Type(visit(r.values), false);
+			Type value = Type.tupleFromList(visit(r.values));
 			if (!value.equals(Type.UNIT) && returns.equals(value)) {
 				r.type = Type.VOID;
 				return r.type;
@@ -311,7 +309,7 @@ public class TypeChecker extends Visitor<Type> {
 				throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
 			}
 
-			Type args = new Type(visit(c.args), true);
+			Type args = Type.listFromList(visit(c.args));
 			if (args.equals(fn.args)) {
 				c.type = fn.returns;
 				return c.type;

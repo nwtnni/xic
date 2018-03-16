@@ -71,9 +71,9 @@ public class FnType extends Visitor<Type> {
 	 * Visits a Fn and populates the fields of this FnType.
 	 */
     public Type visit(Fn f) throws XicException {
-		location = f.location;	
-		args = new Type(visit(f.args), true);
-		returns = new Type(visit(f.returns), false);
+		location = f.location;
+		args = Type.listFromList(visit(f.args));
+		returns = Type.tupleFromList(visit(f.returns));
     	return null;
     }
 

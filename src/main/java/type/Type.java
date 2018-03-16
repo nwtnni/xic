@@ -1,6 +1,7 @@
 package type;
 
 import java.util.List;
+
 import java.util.ArrayList;
 
 import ast.XiType;
@@ -49,7 +50,44 @@ public class Type {
      * 
      * Represents the type of polymorphic length-0 arrays.
      */
-    public static final Type POLY = new Type(new Type(POLY_ID)); // For the empty array {}
+    public static final Type POLY = new Type(new Type(POLY_ID));
+
+    /**
+     * Factory method for making a type from a list of types.
+     * 
+     * @param children list of children types
+     * @param isList is true if the type is a list type
+     */
+    private static Type fromList(List<Type> children, boolean isList) {
+        switch (children.size()) {
+            case 0:
+                return new Type();
+            case 1:
+                return children.get(0);
+            default:
+                return new Type(children, isList);
+        }
+    }
+
+    /**
+     * Factory method for making a list type from a list of types.
+     * Returns a class type if the length of the list is one.
+     * 
+     * @param children list of children types
+     */
+    public static Type listFromList(List<Type> children) {
+        return fromList(children, true);
+    }
+
+    /**
+     * Factory method for making a tuple type from a list of types.
+     * Returns a class type if the length of the list is one.
+     * 
+     * @param children list of children types
+     */
+    public static Type tupleFromList(List<Type> children) {
+        return fromList(children, false);
+    }
 
     /**
      * Denotes the possible categories of Types.
@@ -98,12 +136,12 @@ public class Type {
      */
     private Type() {
         this.kind = Kind.TUPLE;
-        this.id = null;
+        this.id = "_unit";
         this.children = new ArrayList<>();
     }
 
     /**
-     * Creates a new primitive type.
+     * Creates a new class type. Primitives also fall under this category.
      */
     public Type(String id) {
         this.kind = Kind.CLASS;
@@ -124,15 +162,17 @@ public class Type {
     }
     
     /**
-     * Creates a new list or tuple type of its argument.
+     * Creates a new list or tuple type of its argument requires that
+     * the number of elements in children is greater than 1.
      * 
      * @param children Types to create a list of, in order
      * @param isList is true if the type is a list type
      */
-    public Type(List<Type> children, boolean isList) {
-    	this.kind = isList ? Kind.LIST : Kind.TUPLE;
-    	this.id = null;
-    	this.children = children;
+    private Type(List<Type> children, boolean isList) {
+        assert children.size() > 1;
+        this.kind = isList ? Kind.LIST : Kind.TUPLE;
+        this.id = null;
+        this.children = children;
     }
 
     /**

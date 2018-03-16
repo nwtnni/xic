@@ -107,8 +107,7 @@ public class Importer extends TypeChecker {
     public Type visit(Fn f) throws XicException {
     	if (!populate) {
 			visit(f.args);
-			// No need to visit the list of return types because there won't be
-			// any name space conflicts
+			visit(f.returns);
     	} else if (fns.contains(f.id)) {
     		throw new TypeException(Kind.DECLARATION_CONFLICT, f.location);
     	} else {
