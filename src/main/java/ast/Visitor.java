@@ -11,6 +11,9 @@ public abstract class Visitor<T> {
      * Psuedo-visit method for visiting a list of nodes.
      */
     public List<T> visit(List<Node> nodes) throws XicException {
+        for (Node n : nodes) {
+            n.accept(this);
+        }
         return null;
     }
 

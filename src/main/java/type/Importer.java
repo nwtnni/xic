@@ -45,7 +45,7 @@ public class Importer extends TypeChecker {
     private String lib;
     
     /**
-     * Record whether this Importer is on its first or second pass through the Fn nodes
+     * True when this Importer is on its first or second pass through the Fn nodes
      */
     private boolean populate;
     
@@ -106,7 +106,9 @@ public class Importer extends TypeChecker {
     @Override
     public Type visit(Fn f) throws XicException {
     	if (!populate) {
-    		f.args.accept(this);
+			visit(f.args);
+			// No need to visit the list of return types because there won't be
+			// any name space conflicts
     	} else if (fns.contains(f.id)) {
     		throw new TypeException(Kind.DECLARATION_CONFLICT, f.location);
     	} else {

@@ -296,23 +296,6 @@ public class Invariant extends Visitor<Void> {
         return null;
     }
 
-    // Multiple invariants:
-    //
-    // [m.location] non-null
-    //
-    // [m.values]   non-null && size != 1
-    //
-    public Void visit(Multiple m) throws XicException {
-        assert m.location != null; 
-        assert m.values != null;
-        assert m.values.size() != 1;
-
-        for (Node value : m.values) {
-            value.accept(this);
-        }
-        return null;
-    }
-
     // Index invariants:
     //
     // [i.location] non-null

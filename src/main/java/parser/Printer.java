@@ -71,13 +71,6 @@ public class Printer extends Visitor<Void> {
      * Visitor logic
      */
 
-    public List<Void> visit(List<Node> nodes) throws XicException {
-        for (Node n : nodes) {
-            n.accept(this);
-        }
-        return null;
-    }
-
     /*
      * Top-level AST nodes
      */

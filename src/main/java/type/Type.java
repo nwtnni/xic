@@ -98,7 +98,7 @@ public class Type {
      */
     private Type() {
         this.kind = Kind.TUPLE;
-        this.id = "_unit";
+        this.id = null;
         this.children = new ArrayList<>();
     }
 
@@ -225,6 +225,13 @@ public class Type {
     public boolean isPrimitive() {
         return this.equals(INT) || this.equals(BOOL);
 
+    }
+
+    /**
+     * Returns true if type is an array type.
+     */
+    public boolean isArray() {
+        return kind.equals(Kind.ARRAY);
     }
 
     @Override
