@@ -15,6 +15,12 @@ xic ("Test --irgen") "--irgen" {
     simple_ifelse1.xi;
     simple_ifelse2.xi;
     simple_while1.xi;
+    simple_while2.xi;
+    simple_assign1.xi;
+    simple_funcs1.xi;
+    simple_funcs2.xi;
+    simple_funcs3.xi;
+    simple_funcs4.xi;
 
 
     /* Temporarily commented out
@@ -30,11 +36,15 @@ xic ("Test --irgen") "--irgen" {
     hello2.xi;
     hello3.xi;
     if1.xi;
+    length0.xi;
+    length1.xi;
+    length2.xi;
     lessthan1.xi;
     lessthan2.xi;
     lessthanequals1.xi;
     lessthanequals2.xi;
     mult1.xi;
     while1.xi;
+
     */
 }
