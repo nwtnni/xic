@@ -50,25 +50,7 @@ public class Printer extends IRVisitor<Void> {
 
                 // Print IR to console
                 debug(comp);
-
-                // System.out.println("\nRunning example: \n");
-
-                // IRStmt cBody =
-        		// 	new IRSeq(new IRExp(new IRCall(new IRName("_Iprintln_pai"),
-        		// 						new IRCall(new IRName("_IunparseInt_aii"),
-        		// 									new IRConst(5)
-        		// 								))),
-        		// 			new IRReturn());
-                // IRFuncDecl func = new IRFuncDecl("_Imain_paai", cBody);
-
-                // IRCompUnit compUnit = new IRCompUnit("test");
-                // compUnit.appendFunc(func);
-
-                // System.out.println("Generated code: \n");
-                // debug(compUnit);
-                // compUnit.accept(p);
-                // System.out.println("\nEvaluating: \n");
-                // (new IRSimulator(compUnit)).call("_Imain_paai", 0);
+                System.out.println();
 
                 if (run) {
                     IRSimulator sim = new IRSimulator(comp);

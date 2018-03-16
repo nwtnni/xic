@@ -190,15 +190,6 @@ public class Emitter extends Visitor<IRNode> {
      * Allocate memory for a string.
      */
     public IRNode alloc(XiString s) throws XicException {
-
-        // debug
-        System.out.println("translating string " + s.escaped);
-        for (Long c : s.value) {
-            System.out.print("" + c);
-        }
-        System.out.println();
-        // debug
-
         List<IRNode> chars = new ArrayList<>();
         for (Long c : s.value) {
             chars.add(new IRConst(c));

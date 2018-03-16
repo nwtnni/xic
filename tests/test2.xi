@@ -2,8 +2,9 @@ use io
 use conv
 
 main(args: int[][]) {
-  str:int[] = "A";
-  println(str)
-  str = "Z"
-  println(str)
+  str:int[] = "ABC";
+  println(str) // should be "ABC"
+  str = "DEF"
+  println(str) // should be "DEF"
+  println("GHI") // should be "GHI"
 }
