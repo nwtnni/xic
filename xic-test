@@ -59,6 +59,11 @@ test_type_man() {
     printf "\n========================================\n\n"
 }
 
+test_ir_basic() {
+    xth/xth -compilerpath . -workpath tests/ir/basic -testpath tests/ir/basic tests/ir/basic/xthScript
+    printf "\n========================================\n\n"
+}
+
 test_ir_simple() {
     xth/xth -compilerpath . -workpath tests/ir/simple -testpath tests/ir/simple tests/ir/simple/xthScript
     printf "\n========================================\n\n"
@@ -117,9 +122,13 @@ tm)
     test_type_man
     ;;
 i|ir)
+    test_ir_basic
     test_ir_simple
     test_ir_other
     test_ir_arrays
+    ;;
+ib)
+    test_ir_basic
     ;;
 is)
     test_ir_simple
