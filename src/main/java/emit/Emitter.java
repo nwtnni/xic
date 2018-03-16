@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import ast.*;
 import ir.*;
+import interpret.Configuration;
 import type.FnContext;
 import xic.XicException;
 import xic.XicInternalException;
@@ -284,7 +285,24 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(XiArray a) throws XicException {
-        return null;
+        ArrayList<IRNode> stmts = new ArrayList<>();
+        int length = a.values.size();
+        IRExpr pointer =  new IRCall(new IRName("_xi_alloc"), new IRConst((length+1)*Configuration.WORD_SIZE));
+        
+        stmts.add(new IRExp(pointer)); //TODO Is this bad?
+        stmts.add(new IRMove(new IRMem(pointer), new IRConst(length))); //Store length
+
+        // Storing array into memory
+        for(int i=0; i<length; i++) {
+            IRNode n = a.values.get(i).accept(this);
+            stmts.add(new IRMove(new IRMem(pointerAdd(pointer,1+i)), n));
+        }
+
+        return new IRESeq(new IRSeq(stmts), pointerAdd(pointer,1));
+    }
+
+    private IRExpr pointerAdd(IRExpr pointer, int shift) {
+        return new IRBinOp(IRBinOp.OpType.ADD, pointer, new IRConst(shift*Configuration.WORD_SIZE));
     }
 
 }
