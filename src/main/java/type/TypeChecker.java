@@ -74,6 +74,11 @@ public class TypeChecker extends Visitor<Type> {
 	 */
 	private Type returns;
 
+
+	/*
+	 * Vistor methods
+	 */
+
 	/**
 	 * Returns a list of types from visiting a list of nodes.
 	 */

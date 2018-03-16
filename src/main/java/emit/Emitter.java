@@ -1,11 +1,13 @@
 package emit;
 
 import java.util.List;
+
 import java.util.ArrayList;
 
 import ast.*;
-import ir.*;
 import type.FnContext;
+import ir.*;
+import interpret.Configuration;
 import xic.XicException;
 import xic.XicInternalException;
 
@@ -27,7 +29,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /**
-     * Associated function context.
+     * Associated function name to ABI name context.
      */
     protected ABIContext context;
 
@@ -37,13 +39,26 @@ public class Emitter extends Visitor<IRNode> {
      * Utility methods for generating code
      */
 
-    
     /**
      * Generate a new unique label name.
      */
     //TODO Worry about max_int overflow
     private String generateLabel() {
         return "label_"+Integer.toString(++labelIndex);
+    }
+
+    /**
+     * Generate the temp for argument i.
+     */
+    private IRTemp getArgument(int i) {
+        return new IRTemp(Configuration.ABSTRACT_ARG_PREFIX + i);
+    }
+
+    /**
+     * Generate the time for return i.
+     */
+    private IRTemp getReturn(int i) {
+        return new IRTemp(Configuration.ABSTRACT_RET_PREFIX + i);
     }
 
     /**
@@ -82,12 +97,21 @@ public class Emitter extends Visitor<IRNode> {
             new IRLabel(headLabel),
             new IRCJump(guard, trueLabel, falseLabel),
             new IRLabel(trueLabel),
+            block,
             new IRJump(new IRName(headLabel)),
             new IRLabel(falseLabel)
             );
 
         return loop;
     }
+
+    /**
+     * Allocate memory for an array of size n.
+     */
+    private IRNode alloc(int n) {
+        return null;
+    }
+
 
     /**
      * Generate code for the length built-in function.
@@ -98,6 +122,20 @@ public class Emitter extends Visitor<IRNode> {
         return null;
     }
 
+    /*
+     * Visitor methods
+     */
+
+    /**
+     * Returns a list of IRNodes from visiting a list of AST nodes.
+     */
+    public List<IRNode> visit(List<Node> nodes) throws XicException {
+        List<IRNode> ir = new ArrayList<>();
+		for (Node n : nodes) {
+			ir.add(n.accept(this));
+		}
+		return ir;
+    }
 
     /*
      * Top-level AST nodes
@@ -117,13 +155,13 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Fn f) throws XicException {
-
-        // TODO: visit args and prepend MOVE into TEMP to body
-        // see interpret.Configuration for useful constants
-        // see interpret.Sample for examples of how to use them
-        // IRNode args = f.args.accept(this);
-
         IRSeq body = (IRSeq) f.block.accept(this);
+
+        // Bind arguments to temps
+        List<IRNode> args = visit(f.args);
+        for (int i = 0; i < args.size(); i++) {
+            body.stmts.add(i, new IRMove(args.get(i), getArgument(i)));
+        }
 
         // Insert empty return if needed
         if (!(body.stmts.get(body.stmts.size() - 1) instanceof IRReturn)) {
@@ -138,19 +176,41 @@ public class Emitter extends Visitor<IRNode> {
      */
 
     public IRNode visit(Declare d) throws XicException {
-        if (d.type.isPrimitive()) {
-            return new IRTemp(d.id);
+        if (d.isUnderscore()) {
+            return null;
         }
-        // TODO: dealing with array declarations
-        throw XicInternalException.internal("todo");
+        if (!d.type.isPrimitive()) {
+            XiType t = (XiType) d.xiType;
+            if (t.hasSize()) {
+                // TODO: allocate arrays as needed
+            }
+            // TODO: else need to calculate offset to return proper MEM()
+        }
+        return new IRTemp(d.id);
     }
 
-    // TODO: assignment, cases:
-    // declr, var, multiple, arrays
     public IRNode visit(Assign a) throws XicException {
-        // TODO: deal with calling convention for returns
+        List<IRNode> lhs = visit(a.lhs);
+        IRNode rhs = a.rhs.accept(this);
 
-        return null;
+        if (lhs.size() == 1) {
+            return new IRMove(lhs.get(0), rhs);
+        }
+
+        List<IRNode> stmts = new ArrayList<>();
+        if (lhs.get(0) == null) {
+            stmts.add(new IRExp(rhs));
+        } else {
+            stmts.add(new IRMove(lhs.get(0), rhs));
+        }
+        for (int i = 1; i < lhs.size(); i++) {
+            IRNode n = lhs.get(i);
+            if (n != null) {
+                stmts.add(new IRMove(n, getReturn(i)));
+            }
+        }
+
+        return new IRSeq(stmts);
     }
 
     public IRNode visit(Return r) throws XicException {
@@ -168,7 +228,7 @@ public class Emitter extends Visitor<IRNode> {
         List<IRNode> stmts = new ArrayList<>();
         for (Node n : b.statements) {
             IRNode stmt = n.accept(this);
-            // TODO: this is just a hack for wrapping an EXPR with an EXP
+            // TODO: is this just a hack for wrapping an EXPR with an EXP?
             // we need to find a better way to wrap function/procedure calls
             if (stmt instanceof IRExpr) {
                 stmts.add(new IRExp(stmt));
@@ -225,9 +285,9 @@ public class Emitter extends Visitor<IRNode> {
             case MINUS:
                 return new IRBinOp(IRBinOp.OpType.SUB, left, right);
             case LT:
-                return new IRBinOp(IRBinOp.OpType.LEQ, left, right);
-            case LE:
                 return new IRBinOp(IRBinOp.OpType.LT, left, right);
+            case LE:
+                return new IRBinOp(IRBinOp.OpType.LEQ, left, right);
             case GE:
                 return new IRBinOp(IRBinOp.OpType.GEQ, left, right);
             case GT:
@@ -287,4 +347,10 @@ public class Emitter extends Visitor<IRNode> {
         return null;
     }
 
+    /*
+     * Other nodes
+     */
+    public IRNode visit(XiType t) throws XicException {
+        return null;
+    }
 }

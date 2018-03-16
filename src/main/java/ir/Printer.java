@@ -123,9 +123,7 @@ public class Printer extends IRVisitor<Void> {
         printer.startList();
         printer.printAtom("CALL");
         c.target.accept(this);
-        for (IRNode arg : c.args) {
-            arg.accept(this);
-        }
+        visit(c.args);
         printer.endList();
 		return null;
 	}
@@ -232,9 +230,7 @@ public class Printer extends IRVisitor<Void> {
 	public Void visit(IRReturn r) {
         printer.startList();
         printer.printAtom("RETURN");
-        for (IRNode ret : r.rets) {
-            ret.accept(this);
-        }
+        visit(r.rets);
         printer.endList();
 		return null;
 	}
@@ -242,9 +238,7 @@ public class Printer extends IRVisitor<Void> {
 	public Void visit(IRSeq s) {
         printer.startUnifiedList();
         printer.printAtom("SEQ");
-        for (IRNode stmt : s.stmts) {
-            stmt.accept(this);
-        }
+        visit(s.stmts);
         printer.endList();
 		return null;
 	}
