@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import ast.*;
 import type.FnContext;
 import ir.*;
+import ir.IRBinOp.OpType;
 import interpret.Configuration;
 import xic.XicException;
 import xic.XicInternalException;
@@ -36,6 +37,8 @@ public class Emitter extends Visitor<IRNode> {
 
     private long labelIndex;
     private long tempIndex;
+
+    private static final IRConst WORD_SIZE = new IRConst(Configuration.WORD_SIZE);
 
     /* 
      * Utility methods for generating code
@@ -140,38 +143,23 @@ public class Emitter extends Visitor<IRNode> {
         return addr;
     }
 
-    /**
-     * Shifts the value of a pointer by shift * WORD_SIZE bytes.
-     */
-    private IRExpr shiftPointer(IRTemp pointer, int shift) {
-        IRConst byteShift = new IRConst(shift * Configuration.WORD_SIZE);
+    private IRExpr shiftAddr(IRExpr pointer, IRExpr shift) {
+        IRExpr byteShift = new IRBinOp(OpType.MUL, shift, WORD_SIZE);
         IRExpr addr = new IRBinOp(IRBinOp.OpType.ADD, pointer, byteShift);
-
-        IRESeq newPointer = new IRESeq(
-            new IRMove(pointer, addr), 
-            pointer
-        );
-        return newPointer;
-    }
-
-    /**
-     * Allocate memory for an array of size n.
-     */
-    private IRNode alloc(int n) {
-        return null;
+        return addr;
     }
 
     /**
      * Allocate memory for an array and copy the values into memory.
      */
     public IRNode alloc(List<IRNode> array) throws XicException {
-
         ArrayList<IRNode> stmts = new ArrayList<>();
+        
         int length = array.size();
         IRConst size = new IRConst((length + 1) * Configuration.WORD_SIZE);
+        
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
         IRTemp pointer = generateTemp();
-        
         stmts.add(new IRMove(pointer, addr));
 
         //Store length of array
@@ -183,7 +171,7 @@ public class Emitter extends Visitor<IRNode> {
             stmts.add(new IRMove(new IRMem(shiftAddr(pointer, i + 1)), n));
         }
 
-        return new IRESeq(new IRSeq(stmts), shiftPointer(pointer, 1));
+        return new IRESeq(new IRSeq(stmts), shiftAddr(pointer, 1));
     }
 
     /**
@@ -195,6 +183,32 @@ public class Emitter extends Visitor<IRNode> {
             chars.add(new IRConst(c));
         }
         return alloc(chars);
+    }
+
+    /**
+     * Dynamically allocate memory for an an array of length length
+     */
+    private IRNode dalloc(IRExpr length) {
+        ArrayList<IRNode> stmts = new ArrayList<>();
+        
+        // Calculate size of array
+        IRExpr byteSize = new IRBinOp(
+            OpType.MUL,
+            new IRBinOp(OpType.ADD, length, new IRConst(1)), 
+            WORD_SIZE
+        );
+        IRTemp size = generateTemp();
+        stmts.add(new IRMove(size, byteSize));
+
+        // Allocate memory and save pointer
+        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
+        IRTemp pointer = generateTemp();
+        stmts.add(new IRMove(pointer, addr));
+
+        //Store length of array
+        stmts.add(new IRMove(new IRMem(pointer), length));
+
+        return new IRESeq(new IRSeq(stmts), shiftAddr(pointer, 1));
     }
 
     /**
@@ -328,6 +342,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(If i) throws XicException {
+        // TODO: fix quard to use control flow
         IRNode cond = i.guard.accept(this);
         IRNode t = i.block.accept(this);
         if (i.hasElse()) {
@@ -338,6 +353,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(While w) throws XicException {
+        // TODO: fix quard to use control flow
         IRNode guard = w.guard.accept(this);
         IRNode block = w.block.accept(this);
         return generateLoop(guard, block);
@@ -388,11 +404,27 @@ public class Emitter extends Visitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.EQ, left, right);
             case NE:
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
-            // TODO: fix boolean operators to use control flow
             case AND:
-                return new IRBinOp(IRBinOp.OpType.AND, left, right);
+                IRTemp b1 = generateTemp();
+                IRESeq and = new IRESeq(
+                    new IRSeq(
+                        new IRMove(b1, new IRConst(0)),
+                        generateBranch(left, new IRMove(b1, right))
+                    ), 
+                    b1
+                );
+                return and;
             case OR:
-                return new IRBinOp(IRBinOp.OpType.OR, left, right);
+                IRExpr cond = new IRBinOp(IRBinOp.OpType.XOR, left, new IRConst(1));
+                IRTemp b2 = generateTemp();
+                IRESeq or = new IRESeq(
+                    new IRSeq(
+                        new IRMove(b2, new IRConst(1)),
+                        generateBranch(cond, new IRMove(b2, right))
+                    ), 
+                    b2
+                );
+                return or;
         }
         // Unreachable
         assert false;
@@ -412,9 +444,12 @@ public class Emitter extends Visitor<IRNode> {
         return new IRTemp(v.id);
     }
 
-    // TODO: array indexing
     public IRNode visit(Index i) throws XicException {
-        return null;
+        // TODO: check out of bounds
+        IRExpr pointer = (IRExpr) i.array.accept(this);
+        IRExpr index = (IRExpr) i.index.accept(this);
+        IRExpr addr = shiftAddr(pointer, index);
+        return new IRMem(addr);
     }
 
     public IRNode visit(XiInt i) throws XicException {
