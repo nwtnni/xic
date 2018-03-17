@@ -24,7 +24,6 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 	public OptionalLong visit(IRBinOp b) {
 		OptionalLong ltol = b.left.accept(this);
         OptionalLong rtol = b.right.accept(this);
-        // if (b.left instanceof IRESeq && b.right instanceof IRESeq)
         if (ltol.isPresent() && rtol.isPresent()) {
             long c;
             long lt = ltol.getAsLong();
@@ -76,11 +75,27 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                 break;
             // TODO: fix for arrays. array comparison should be physical equality
             case EQ:
-                c = ((lt == 1) == (rt == 1)) ? 1 : 0;
+                if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
+                    if (((IRESeq) b.left).expr == ((IRESeq) b.right).expr) {
+                        c = 1;
+                    } else {
+                        c = 0;
+                    }
+                } else {
+                    c = ((lt == 1) == (rt == 1)) ? 1 : 0;
+                }
                 break;
             // TODO: fix for arrays. array comparison should be physical equality
             case NEQ:
-                c = ((lt == 1) != (rt == 1)) ? 1 : 0;
+                if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
+                    if (((IRESeq) b.left).expr != ((IRESeq) b.right).expr) {
+                        c = 1;
+                    } else {
+                        c = 0;
+                    }
+                } else {
+                    c = ((lt == 1) != (rt == 1)) ? 1 : 0;
+                }
                 break;
             case LT:
                 c = (lt < rt) ? 1 : 0;
@@ -148,11 +163,15 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
 	public OptionalLong visit(IRESeq e) {
         /* e.stmt cannot be constant, do not need to check */
-		OptionalLong sol = e.stmt.accept(this);
+		e.stmt.accept(this);
         OptionalLong eol = e.expr.accept(this);
 
         if (eol.isPresent()) {
             e.expr = new IRConst(eol.getAsLong());
+        }
+
+        if (e.hasValues()) {
+            return OptionalLong.of(-1);
         }
 
         return OptionalLong.empty();
