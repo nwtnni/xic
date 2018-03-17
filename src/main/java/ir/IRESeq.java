@@ -1,5 +1,7 @@
 package ir;
 
+import java.util.List;
+
 /**
  * An intermediate representation for an expression evaluated under side effects
  * ESEQ(stmt, expr)
@@ -16,6 +18,18 @@ public class IRESeq extends IRExpr {
     public IRESeq(IRNode stmt, IRNode expr) {
         this.stmt = stmt;
         this.expr = expr;
+    }
+
+    /**
+     *
+     * @param stmt IR statement that allocates memory for an array
+     * @param expr IR expression that is address of this array
+     * @param values list of values in this array
+     */
+    public IRESeq(IRNode stmt, IRNode expr, List<IRNode> values) {
+        this.stmt = stmt;
+        this.expr = expr;
+        this.values = values;
     }
 
     public IRNode stmt() {

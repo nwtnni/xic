@@ -326,11 +326,11 @@ public class IRSimulator {
                                    .longValue();
                 break;
             case DIV:
-                if (r == 0) throw new Trap("Division by zero!");
+                if (r == 0) throw new DivisionByZeroTrap("Division by zero!");
                 result = l / r;
                 break;
             case MOD:
-                if (r == 0) throw new Trap("Division by zero!");
+                if (r == 0) throw new DivisionByZeroTrap("Division by zero!");
                 result = l % r;
                 break;
             case AND:
@@ -648,6 +648,15 @@ public class IRSimulator {
                 SerialVersionUID.generate();
 
         public OutOfBoundTrap(String message) {
+            super(message);
+        }
+    };
+
+    public static class DivisionByZeroTrap extends Trap {
+        private static final long serialVersionUID =
+                SerialVersionUID.generate();
+
+        public DivisionByZeroTrap(String message) {
             super(message);
         }
     };

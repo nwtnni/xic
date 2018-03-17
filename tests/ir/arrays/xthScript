@@ -1,3 +1,7 @@
 xic ("Test --irgen [arrays]") "--irgen" {
+    dynamic_array01.xi;
+    dynamic_nested_array01.xi;
+    nested_arrays01.xi;
+    nested_arrays02.xi;
     string_assign.xi;
 }

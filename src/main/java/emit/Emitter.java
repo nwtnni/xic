@@ -45,94 +45,84 @@ public class Emitter extends Visitor<IRNode> {
     /**
      * Generate a new unique label name with description.
      */
-    private String generateLabel(String name) {
-        return "__label_" + Long.toString(++labelIndex);
+    private IRLabel generateLabel(String name) {
+        return new IRLabel(name + "__label_" + Long.toString(++labelIndex));
     }
 
-    /**
-     * Generate a conditional jump in IR code.
-     */
-    private IRNode generateBranch(IRNode cond, IRNode t, IRNode f) {
-        String trueLabel = generateLabel("true");
-        String falseLabel = generateLabel("false");
-        String done = generateLabel("done");
+    // /**
+    //  * Generate a conditional jump in IR code.
+    //  */
+    // private IRNode generateBranch(IRNode cond, IRNode t, IRNode f) {
+    //     String trueLabel = generateLabel("true");
+    //     String falseLabel = generateLabel("false");
+    //     String done = generateLabel("done");
 
-        IRSeq stmts = new IRSeq(
-            new IRCJump(cond, trueLabel, falseLabel),
-            new IRLabel(trueLabel),
-            t,
-            new IRJump(new IRName(done)),
-            new IRLabel(falseLabel),
-            f,
-            new IRLabel(done)
-        );
-        return stmts;
-    }
+    //     IRSeq stmts = new IRSeq(
+    //         new IRCJump(cond, trueLabel, falseLabel),
+    //         new IRLabel(trueLabel),
+    //         t,
+    //         new IRJump(new IRName(done)),
+    //         new IRLabel(falseLabel),
+    //         f,
+    //         new IRLabel(done)
+    //     );
+    //     return stmts;
+    // }
 
     /**
-     * Generate a conditional jump with no false block.
+     * Generate a conditional jump where true falls through.
      */
     private IRNode generateBranch(IRNode cond, IRNode t) {
-        String trueLabel = generateLabel("true");
-        String falseLabel = generateLabel("false");
+        IRLabel tL = generateLabel("true");
+        IRLabel fL = generateLabel("false");
         
-        IRSeq stmts = new IRSeq(
-            new IRCJump(cond, trueLabel, falseLabel),
-            new IRLabel(trueLabel),
+        return new IRSeq(
+            new IRCJump(cond, tL.name, fL.name),
+            tL,
             t,
-            new IRLabel(falseLabel)
+            fL
         );
-        return stmts;
     }
 
     /**
      * Generate a loop in IR code.
      */
     private IRNode generateLoop(IRNode guard, IRNode block) {
-        String headLabel = generateLabel("while");
-        String trueLabel = generateLabel("true");
-        String falseLabel = generateLabel("false");
+        IRLabel hL = generateLabel("while");
+        IRLabel tL = generateLabel("true");
+        IRLabel fL = generateLabel("false");
 
-        IRSeq loop = new IRSeq(
-            new IRLabel(headLabel),
-            new IRCJump(guard, trueLabel, falseLabel),
-            new IRLabel(trueLabel),
+        return new IRSeq(
+            hL,
+            new IRCJump(guard, tL.name, fL.name),
+            tL,
             block,
-            new IRJump(new IRName(headLabel)),
-            new IRLabel(falseLabel)
-            );
-
-        return loop;
+            new IRJump(new IRName(hL.name)),
+            fL
+        );
     }
 
     /**
-     * Is the value of a pointer by shift * WORD_SIZE bytes.
-     */
-    private IRExpr shiftAddr(IRExpr pointer, int shift) {
-        IRConst byteShift = new IRConst(shift * Configuration.WORD_SIZE);
-        IRExpr addr = new IRBinOp(IRBinOp.OpType.ADD, pointer, byteShift);
-
-        // IRESeq newPointer = new IRESeq(
-        //     new IRMove(pointer, addr), 
-        //     pointer
-        // );
-        // return newPointer;
-        return addr;
-    }
-
-    /**
-     * Is the value of a pointer by the value of shift * WORD_SIZE bytes.
+     * Is the value of a expression shifted by shift * WORD_SIZE bytes.
      */
     private IRExpr shiftAddr(IRExpr pointer, IRExpr shift) {
         IRExpr byteShift = new IRBinOp(OpType.MUL, shift, WORD_SIZE);
-        IRExpr addr = new IRBinOp(IRBinOp.OpType.ADD, pointer, byteShift);
+        IRExpr addr = new IRBinOp(OpType.ADD, pointer, byteShift);
         return addr;
     }
 
     /**
-     * Increments a temp.
+     * Increment pointer by WORD_SIZE bytes.
      */
-    private IRStmt incr(IRTemp i) {
+    private IRStmt incrPointer(IRTemp pointer) {
+        IRExpr addr = new IRBinOp(OpType.ADD, pointer, WORD_SIZE);
+        return new IRMove(pointer, addr);
+    }
+
+    /**
+     * Increments a temp by 1.
+     */
+    private IRStmt increment(IRTemp i) {
         IRExpr plus = new IRBinOp(IRBinOp.OpType.ADD, i, ONE);
         return new IRMove(i, plus);
     }
@@ -143,23 +133,34 @@ public class Emitter extends Visitor<IRNode> {
     public IRExpr alloc(List<IRNode> array) throws XicException {
         ArrayList<IRNode> stmts = new ArrayList<>();
         
+        // Calcuate size of array
         int length = array.size();
         IRConst size = new IRConst((length + 1) * Configuration.WORD_SIZE);
         
+        // Generate pointers and allocate memory
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
         IRTemp pointer = IRTempFactory.generateTemp("array");
+        IRTemp workPointer = IRTempFactory.generateTemp("work_ptr");
         stmts.add(new IRMove(pointer, addr));
+        stmts.add(new IRMove(workPointer, pointer));
+        // Shift pointer to head of array
+        stmts.add(incrPointer(pointer));
 
         //Store length of array
-        stmts.add(new IRMove(new IRMem(pointer), new IRConst(length)));
+        stmts.add(new IRMove(new IRMem(workPointer), new IRConst(length)));
 
-        // Storing array into memory
+        // Storing values of array into memory
         for(int i = 0; i < length; i++) {
             IRNode n = array.get(i);
-            stmts.add(new IRMove(new IRMem(shiftAddr(pointer, i + 1)), n));
+            stmts.add(incrPointer(workPointer));
+            stmts.add(new IRMove(new IRMem(workPointer), n));
         }
 
-        return new IRESeq(new IRSeq(stmts), shiftAddr(pointer, 1));
+        return new IRESeq(
+            new IRSeq(stmts), 
+            pointer,
+            array
+        );
     }
 
     /**
@@ -177,57 +178,123 @@ public class Emitter extends Visitor<IRNode> {
      * Dynamically allocate memory for an an array of size length
      */
     private IRExpr alloc(IRExpr length) {
-        ArrayList<IRNode> stmts = new ArrayList<>();
-        
+        List<IRNode> stmts = new ArrayList<>();
+
         // Calculate size of array
         IRExpr byteSize = new IRBinOp(
             OpType.MUL,
             new IRBinOp(OpType.ADD, length, ONE), 
             WORD_SIZE
         );
-        IRTemp size = IRTempFactory.generateTemp("size");
+
+        IRTemp size = IRTempFactory.generateTemp("d_size");
         stmts.add(new IRMove(size, byteSize));
 
-        // Allocate memory and save pointer
+        // Generate pointers and llocate memory
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
-        IRTemp pointer = IRTempFactory.generateTemp("array");
+        IRTemp pointer = IRTempFactory.generateTemp("d_array");
         stmts.add(new IRMove(pointer, addr));
 
-        //Store length of array
+        // Store length then shift pointer
         stmts.add(new IRMove(new IRMem(pointer), length));
+        stmts.add(incrPointer(pointer));
 
-        return new IRESeq(new IRSeq(stmts), shiftAddr(pointer, 1));
+        return new IRESeq(
+            new IRSeq(stmts),
+            pointer
+        );
     }
 
     /**
-     * Dynamically allocate memory for an array of size length and
+     * Dynamically allocate memory for an array of length size and
      * populate each entry with a copy of child. 
      */
-    private IRExpr populate(IRExpr length, IRExpr child) {
-        IRExpr array = IRTempFactory.generateTemp("array");
-        IRTemp i = IRTempFactory.generateTemp("incr");
-        IRESeq populated = new IRESeq(
+    private IRExpr populate(IRExpr size, IRExpr child) {
+        List<IRNode> stmts = new ArrayList<>();
+
+        // Generate pointers and allocate memory
+        IRTemp pointer = IRTempFactory.generateTemp("populate_array");
+        IRTemp workPointer = IRTempFactory.generateTemp("work_ptr");
+        stmts.add(new IRMove(pointer, alloc(size)));
+        stmts.add(new IRMove(workPointer, pointer));
+
+        // Create copies of the child (so no checking if child is an alloc)
+        IRTemp i = IRTempFactory.generateTemp("i");
+        stmts.add(new IRMove(i, ZERO));
+        stmts.add(generateLoop(
+            new IRBinOp(OpType.LT, i, size),
             new IRSeq(
-                new IRMove(array, alloc(length)),
-                new IRMove(i, ZERO),
-                generateLoop(
-                    new IRBinOp(OpType.LT, i, length), 
-                    new IRSeq(
-                        new IRMove(new IRMem(shiftAddr(array, i)), child),
-                        incr(i)
-                    )
-                )
-            ), 
-            array
+                new IRMove(new IRMem(workPointer), child),
+                incrPointer(workPointer),
+                increment(i)
+            )
+        ));
+
+        return new IRESeq(
+            new IRSeq(stmts), 
+            pointer
         );
-        return populated;
     }
 
     /**
      * Generate code for the length built-in function.
      */
-    private IRNode length(IRExpr pointer) {
-        return new IRMem(shiftAddr(pointer, -1));
+    private IRExpr length(IRExpr pointer) {
+        return new IRMem(new IRBinOp(OpType.SUB, pointer, WORD_SIZE));
+    }
+
+    /**
+     * Generate code for concatenating two arrays.
+     */
+    protected IRExpr concat(IRExpr a, IRExpr b) {
+        List<IRNode> stmts = new ArrayList<>();
+
+        // Make copies of pointers
+        IRTemp ap = IRTempFactory.generateTemp("a_ptr_copy");
+        stmts.add(new IRMove(ap, a));
+        IRTemp bp = IRTempFactory.generateTemp("b_ptr_copy");
+        stmts.add(new IRMove(bp, b));
+
+        // Calculate new array size
+        IRExpr aLen = IRTempFactory.generateTemp("a_len");
+        stmts.add(new IRMove(aLen, length(ap)));
+        IRExpr bLen = IRTempFactory.generateTemp("b_len");
+        stmts.add(new IRMove(bLen, length(bp)));
+        IRTemp size = IRTempFactory.generateTemp("concat_size");
+        stmts.add(new IRMove(size, new IRBinOp(OpType.ADD, aLen, bLen)));
+
+        // Generate pointers and allocate memory
+        IRTemp pointer = IRTempFactory.generateTemp("concat_array");
+        IRTemp workPointer = IRTempFactory.generateTemp("work_ptr");
+        stmts.add(new IRMove(pointer, alloc(size)));
+        stmts.add(new IRMove(workPointer, pointer));
+
+        IRTemp i = IRTempFactory.generateTemp("i");
+        stmts.add(new IRMove(i, ZERO));
+        stmts.add(generateLoop(
+            new IRBinOp(OpType.LT, i, aLen), 
+            new IRSeq(
+                new IRMove(new IRMem(workPointer), new IRMem(ap)),
+                increment(i),
+                incrPointer(workPointer),
+                incrPointer(ap)
+            )
+        ));
+        stmts.add(new IRMove(i, ZERO));
+        stmts.add(generateLoop(
+            new IRBinOp(OpType.LT, i, bLen), 
+            new IRSeq(
+                new IRMove(new IRMem(workPointer), new IRMem(bp)),
+                increment(i),
+                incrPointer(workPointer),
+                incrPointer(bp)
+            )
+        ));
+
+        return new IRESeq(
+            new IRSeq(stmts),
+            pointer
+        );
     }
 
     /*
@@ -291,7 +358,7 @@ public class Emitter extends Visitor<IRNode> {
         if (!d.type.isPrimitive()) {
             IRNode arr = d.xiType.accept(this);
             if (arr != null) {
-                return new IRESeq(new IRMove(var, arr), var);
+                return new IRMove(var, arr);
             }
         }
         return var;
@@ -340,8 +407,7 @@ public class Emitter extends Visitor<IRNode> {
         List<IRNode> stmts = new ArrayList<>();
         for (Node n : b.statements) {
             IRNode stmt = n.accept(this);
-            // TODO: is this just a hack for wrapping an EXPR with an EXP?
-            // we need to find a better way to wrap function/procedure calls
+            // For procedures
             if (stmt instanceof IRExpr) {
                 stmts.add(new IRExp(stmt));
             } else {
@@ -357,7 +423,14 @@ public class Emitter extends Visitor<IRNode> {
         IRNode t = i.block.accept(this);
         if (i.hasElse()) {
             IRNode f = i.elseBlock.accept(this);
-            return generateBranch(cond, t, f);
+            IRLabel done = generateLabel("done");
+            return new IRSeq(
+                generateBranch(cond, 
+                    new IRSeq(t, new IRJump(new IRName(done.name)))
+                ),
+                f,
+                done
+            );
         }
         return generateBranch(cond, t);
     }
@@ -387,8 +460,8 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Binary b) throws XicException {
-        IRNode left = b.lhs.accept(this);
-        IRNode right = b.rhs.accept(this);
+        IRExpr left = (IRExpr) b.lhs.accept(this);
+        IRExpr right = (IRExpr) b.rhs.accept(this);
         switch (b.kind) {
             case TIMES:
                 return new IRBinOp(IRBinOp.OpType.MUL, left, right);
@@ -399,6 +472,9 @@ public class Emitter extends Visitor<IRNode> {
             case MODULO:
                 return new IRBinOp(IRBinOp.OpType.MOD, left, right);
             case PLUS:
+                if (b.lhs.type.isArray()) {
+                    return concat(left, right);
+                }
                 return new IRBinOp(IRBinOp.OpType.ADD, left, right);
             case MINUS:
                 return new IRBinOp(IRBinOp.OpType.SUB, left, right);
@@ -455,11 +531,35 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Index i) throws XicException {
-        // TODO: check out of bounds
-        IRExpr pointer = (IRExpr) i.array.accept(this);
-        IRExpr index = (IRExpr) i.index.accept(this);
-        IRExpr addr = shiftAddr(pointer, index);
-        return new IRMem(addr);
+        List<IRNode> stmts = new ArrayList<>();
+        IRLabel done = generateLabel("done");
+        IRTemp result = IRTempFactory.generateTemp("result");
+
+        // Store index
+        IRTemp index = IRTempFactory.generateTemp("index");
+        stmts.add(new IRMove(index, i.index.accept(this)));
+
+        // Store array reference
+        IRTemp pointer = IRTempFactory.generateTemp("array_ref");
+        stmts.add(new IRMove(pointer, i.array.accept(this)));
+
+        // Check bounds
+        stmts.add(
+            generateBranch(
+                new IRBinOp(OpType.GEQ, index, ZERO), 
+                generateBranch(
+                    new IRBinOp(OpType.LT, index, length(pointer)),
+                    new IRSeq(
+                        new IRMove(result, new IRMem(shiftAddr(pointer, index))),
+                        new IRJump(new IRName(done.name))
+                    )
+                )
+            )
+        );
+        stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
+        stmts.add(done);
+
+        return new IRESeq(new IRSeq(stmts), result);
     }
 
     public IRNode visit(XiInt i) throws XicException {
