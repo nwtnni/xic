@@ -1,7 +1,6 @@
 package emit;
 
 import java.util.List;
-import java.util.function.LongConsumer;
 import java.util.ArrayList;
 
 import ast.*;
@@ -10,7 +9,6 @@ import ir.*;
 import ir.IRBinOp.OpType;
 import interpret.Configuration;
 import xic.XicException;
-import xic.XicInternalException;
 
 public class Emitter extends Visitor<IRNode> {
 
@@ -39,15 +37,17 @@ public class Emitter extends Visitor<IRNode> {
     private long tempIndex;
 
     private static final IRConst WORD_SIZE = new IRConst(Configuration.WORD_SIZE);
+    private static final IRConst ZERO = new IRConst(0);
+    private static final IRConst ONE = new IRConst(1);
 
     /* 
      * Utility methods for generating code
      */
 
     /**
-     * Generate a new unique label name.
+     * Generate a new unique label name with description.
      */
-    private String generateLabel() {
+    private String generateLabel(String name) {
         return "__label_" + Long.toString(++labelIndex);
     }
 
@@ -56,6 +56,13 @@ public class Emitter extends Visitor<IRNode> {
      */
     private IRTemp generateTemp() {
         return new IRTemp("__temp_" + Long.toString(++tempIndex));
+    }
+
+    /**
+     * Generate a new temporary with a descriptive name.
+     */
+    private IRTemp generateTemp(String name) {
+        return new IRTemp(name + "__temp_" + Long.toString(++tempIndex));
     }
 
     /**
@@ -76,9 +83,9 @@ public class Emitter extends Visitor<IRNode> {
      * Generate a conditional jump in IR code.
      */
     private IRNode generateBranch(IRNode cond, IRNode t, IRNode f) {
-        String trueLabel = "__true_" + generateLabel();
-        String falseLabel = "__false_" + generateLabel();
-        String done = "__done_" + generateLabel();
+        String trueLabel = generateLabel("true");
+        String falseLabel = generateLabel("false");
+        String done = generateLabel("done");
 
         IRSeq stmts = new IRSeq(
             new IRCJump(cond, trueLabel, falseLabel),
@@ -96,8 +103,8 @@ public class Emitter extends Visitor<IRNode> {
      * Generate a conditional jump with no false block.
      */
     private IRNode generateBranch(IRNode cond, IRNode t) {
-        String trueLabel = "true_" + generateLabel();
-        String falseLabel = "false_" + generateLabel();
+        String trueLabel = generateLabel("true");
+        String falseLabel = generateLabel("false");
         
         IRSeq stmts = new IRSeq(
             new IRCJump(cond, trueLabel, falseLabel),
@@ -112,9 +119,9 @@ public class Emitter extends Visitor<IRNode> {
      * Generate a loop in IR code.
      */
     private IRNode generateLoop(IRNode guard, IRNode block) {
-        String headLabel = "__while_" + generateLabel();
-        String trueLabel = "__true_" + generateLabel();
-        String falseLabel = "__false_" + generateLabel();
+        String headLabel = generateLabel("while");
+        String trueLabel = generateLabel("true");
+        String falseLabel = generateLabel("false");
 
         IRSeq loop = new IRSeq(
             new IRLabel(headLabel),
@@ -143,6 +150,9 @@ public class Emitter extends Visitor<IRNode> {
         return addr;
     }
 
+    /**
+     * Is the value of a pointer by the value of shift * WORD_SIZE bytes.
+     */
     private IRExpr shiftAddr(IRExpr pointer, IRExpr shift) {
         IRExpr byteShift = new IRBinOp(OpType.MUL, shift, WORD_SIZE);
         IRExpr addr = new IRBinOp(IRBinOp.OpType.ADD, pointer, byteShift);
@@ -150,16 +160,24 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /**
+     * Increments a temp.
+     */
+    private IRStmt incr(IRTemp i) {
+        IRExpr plus = new IRBinOp(IRBinOp.OpType.ADD, i, ONE);
+        return new IRMove(i, plus);
+    }
+
+    /**
      * Allocate memory for an array and copy the values into memory.
      */
-    public IRNode alloc(List<IRNode> array) throws XicException {
+    public IRExpr alloc(List<IRNode> array) throws XicException {
         ArrayList<IRNode> stmts = new ArrayList<>();
         
         int length = array.size();
         IRConst size = new IRConst((length + 1) * Configuration.WORD_SIZE);
         
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
-        IRTemp pointer = generateTemp();
+        IRTemp pointer = generateTemp("array");
         stmts.add(new IRMove(pointer, addr));
 
         //Store length of array
@@ -177,7 +195,7 @@ public class Emitter extends Visitor<IRNode> {
     /**
      * Allocate memory for a string.
      */
-    public IRNode alloc(XiString s) throws XicException {
+    public IRExpr alloc(XiString s) throws XicException {
         List<IRNode> chars = new ArrayList<>();
         for (Long c : s.value) {
             chars.add(new IRConst(c));
@@ -186,23 +204,23 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /**
-     * Dynamically allocate memory for an an array of length length
+     * Dynamically allocate memory for an an array of size length
      */
-    private IRNode dalloc(IRExpr length) {
+    private IRExpr alloc(IRExpr length) {
         ArrayList<IRNode> stmts = new ArrayList<>();
         
         // Calculate size of array
         IRExpr byteSize = new IRBinOp(
             OpType.MUL,
-            new IRBinOp(OpType.ADD, length, new IRConst(1)), 
+            new IRBinOp(OpType.ADD, length, ONE), 
             WORD_SIZE
         );
-        IRTemp size = generateTemp();
+        IRTemp size = generateTemp("size");
         stmts.add(new IRMove(size, byteSize));
 
         // Allocate memory and save pointer
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
-        IRTemp pointer = generateTemp();
+        IRTemp pointer = generateTemp("array");
         stmts.add(new IRMove(pointer, addr));
 
         //Store length of array
@@ -212,11 +230,33 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /**
+     * Dynamically allocate memory for an array of size length and
+     * populate each entry with a copy of child. 
+     */
+    private IRExpr populate(IRExpr length, IRExpr child) {
+        IRExpr array = generateTemp("array");
+        IRTemp i = generateTemp("incr");
+        IRESeq populated = new IRESeq(
+            new IRSeq(
+                new IRMove(array, alloc(length)),
+                new IRMove(i, ZERO),
+                generateLoop(
+                    new IRBinOp(OpType.LT, i, length), 
+                    new IRSeq(
+                        new IRMove(new IRMem(shiftAddr(array, i)), child),
+                        incr(i)
+                    )
+                )
+            ), 
+            array
+        );
+        return populated;
+    }
+
+    /**
      * Generate code for the length built-in function.
      */
     private IRNode length(IRExpr pointer) {
-        // TODO: this will not actually be a function but rather an
-        // expression that evaluates to the length of an array
         return new IRMem(shiftAddr(pointer, -1));
     }
 
@@ -277,14 +317,14 @@ public class Emitter extends Visitor<IRNode> {
         if (d.isUnderscore()) {
             return null;
         }
+        IRTemp var = new IRTemp(d.id);
         if (!d.type.isPrimitive()) {
-            XiType t = (XiType) d.xiType;
-            if (t.hasSize()) {
-                // TODO: allocate arrays as needed
+            IRNode arr = d.xiType.accept(this);
+            if (arr != null) {
+                return new IRESeq(new IRMove(var, arr), var);
             }
-            // TODO: else need to calculate offset to return proper MEM()
         }
-        return new IRTemp(d.id);
+        return var;
     }
 
     public IRNode visit(Assign a) throws XicException {
@@ -476,8 +516,20 @@ public class Emitter extends Visitor<IRNode> {
     /*
      * Other nodes
      */
+
     public IRNode visit(XiType t) throws XicException {
-        // TODO: invoke array alloc here or in Declare?
-        return null;
+        // Only allocate memory for special case of syntactic sugar
+        // for array declarations with dimensions specified
+        if (t.hasSize()) {
+            IRExpr length = (IRExpr) t.size.accept(this);
+            IRExpr child = (IRExpr) t.child.accept(this);
+            if (child == null) {
+                return alloc(length);
+            } else {
+                return populate(length, child);
+            }
+        } else {
+            return null;
+        }
     }
 }
