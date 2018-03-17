@@ -1,8 +1,16 @@
 xic ("Test --irgen [arrays]") "--irgen" {
+    1Dalloc1.xi;
+    2Dalloc1.xi;
+    3Dalloc1.xi;
+
     1Darray1.xi;
     1Darray2.xi;
     1Darray3.xi;
-    
+
+    2Darray1.xi;
+    2Darray2.xi;
+    2Darray3.xi;
+
     dynamic_array01.xi;
     dynamic_nested_array01.xi;
     nested_arrays01.xi;

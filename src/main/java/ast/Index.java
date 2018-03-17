@@ -8,11 +8,13 @@ public class Index extends Node {
     
     public Node array; //The "name" of the array
     public Node index;
+    public boolean isExpr; // on RHS
 
-    public Index(Location location, Node array, Node index) {
+    public Index(Location location, Node array, Node index, boolean isExpr) {
         this.location = location;
         this.array = array; 
         this.index = index;
+        this.isExpr = isExpr;
     }
 
     public <T> T accept(Visitor<T> v) throws XicException {

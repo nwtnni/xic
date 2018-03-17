@@ -77,7 +77,8 @@ public class Emitter extends Visitor<IRNode> {
         IRLabel fL = generateLabel("false");
         
         return new IRSeq(
-            new IRCJump(cond, tL.name, fL.name),
+            new IRCJump(cond, tL.name),
+            new IRJump(new IRName(fL.name)),
             tL,
             t,
             fL
@@ -94,7 +95,8 @@ public class Emitter extends Visitor<IRNode> {
 
         return new IRSeq(
             hL,
-            new IRCJump(guard, tL.name, fL.name),
+            new IRCJump(guard, tL.name),
+            new IRJump(new IRName(fL.name)),
             tL,
             block,
             new IRJump(new IRName(hL.name)),
@@ -369,8 +371,14 @@ public class Emitter extends Visitor<IRNode> {
         IRNode rhs = a.rhs.accept(this);
 
         if (lhs.size() == 1) {
-            if (lhs.get(0) != null) {
-                return new IRMove(lhs.get(0), rhs);
+            // If not an underscore
+            IRExpr var = (IRExpr) lhs.get(0);
+            if (var != null) {
+                // Wrap array access with mem
+                if (var instanceof IRESeq) {
+                    var = new IRMem(var);
+                }
+                return new IRMove(var, rhs);
             } else {
                 return new IRExp(rhs);
             }
@@ -530,10 +538,15 @@ public class Emitter extends Visitor<IRNode> {
         return new IRTemp(v.id);
     }
 
+    /**
+     * Returns an expression that
+     *  - containing the memory address for an array access on LHS.
+     *  - the value at the memory address for an array access on RHS.
+     */ 
     public IRNode visit(Index i) throws XicException {
         List<IRNode> stmts = new ArrayList<>();
         IRLabel done = generateLabel("done");
-        IRTemp result = IRTempFactory.generateTemp("result");
+        IRExpr result = IRTempFactory.generateTemp("result");
 
         // Store index
         IRTemp index = IRTempFactory.generateTemp("index");
@@ -543,6 +556,7 @@ public class Emitter extends Visitor<IRNode> {
         IRTemp pointer = IRTempFactory.generateTemp("array_ref");
         stmts.add(new IRMove(pointer, i.array.accept(this)));
 
+
         // Check bounds
         stmts.add(
             generateBranch(
@@ -550,7 +564,7 @@ public class Emitter extends Visitor<IRNode> {
                 generateBranch(
                     new IRBinOp(OpType.LT, index, length(pointer)),
                     new IRSeq(
-                        new IRMove(result, new IRMem(shiftAddr(pointer, index))),
+                        new IRMove(result, shiftAddr(pointer, index)),
                         new IRJump(new IRName(done.name))
                     )
                 )
@@ -558,6 +572,12 @@ public class Emitter extends Visitor<IRNode> {
         );
         stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
         stmts.add(done);
+
+
+        // Different cases for array on LHS and RHS
+        if (i.isExpr || i.array instanceof Index) {
+            result = new IRMem(result);
+        }
 
         return new IRESeq(new IRSeq(stmts), result);
     }
