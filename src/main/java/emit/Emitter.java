@@ -25,7 +25,6 @@ public class Emitter extends Visitor<IRNode> {
     public Emitter(FnContext context) {
         this.context = new ABIContext(context);
         this.labelIndex = 0;
-        this.tempIndex = 0;
     }
 
     /**
@@ -34,7 +33,6 @@ public class Emitter extends Visitor<IRNode> {
     protected ABIContext context;
 
     private long labelIndex;
-    private long tempIndex;
 
     private static final IRConst WORD_SIZE = new IRConst(Configuration.WORD_SIZE);
     private static final IRConst ZERO = new IRConst(0);
@@ -49,34 +47,6 @@ public class Emitter extends Visitor<IRNode> {
      */
     private String generateLabel(String name) {
         return "__label_" + Long.toString(++labelIndex);
-    }
-
-    /**
-     * Generate a new temporary name.
-     */
-    private IRTemp generateTemp() {
-        return new IRTemp("__temp_" + Long.toString(++tempIndex));
-    }
-
-    /**
-     * Generate a new temporary with a descriptive name.
-     */
-    private IRTemp generateTemp(String name) {
-        return new IRTemp(name + "__temp_" + Long.toString(++tempIndex));
-    }
-
-    /**
-     * Generate the temp for argument i.
-     */
-    private IRTemp getArgument(int i) {
-        return new IRTemp(Configuration.ABSTRACT_ARG_PREFIX + i);
-    }
-
-    /**
-     * Generate the time for return i.
-     */
-    private IRTemp getReturn(int i) {
-        return new IRTemp(Configuration.ABSTRACT_RET_PREFIX + i);
     }
 
     /**
@@ -177,7 +147,7 @@ public class Emitter extends Visitor<IRNode> {
         IRConst size = new IRConst((length + 1) * Configuration.WORD_SIZE);
         
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
-        IRTemp pointer = generateTemp("array");
+        IRTemp pointer = IRTempFactory.generateTemp("array");
         stmts.add(new IRMove(pointer, addr));
 
         //Store length of array
@@ -215,12 +185,12 @@ public class Emitter extends Visitor<IRNode> {
             new IRBinOp(OpType.ADD, length, ONE), 
             WORD_SIZE
         );
-        IRTemp size = generateTemp("size");
+        IRTemp size = IRTempFactory.generateTemp("size");
         stmts.add(new IRMove(size, byteSize));
 
         // Allocate memory and save pointer
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
-        IRTemp pointer = generateTemp("array");
+        IRTemp pointer = IRTempFactory.generateTemp("array");
         stmts.add(new IRMove(pointer, addr));
 
         //Store length of array
@@ -234,8 +204,8 @@ public class Emitter extends Visitor<IRNode> {
      * populate each entry with a copy of child. 
      */
     private IRExpr populate(IRExpr length, IRExpr child) {
-        IRExpr array = generateTemp("array");
-        IRTemp i = generateTemp("incr");
+        IRExpr array = IRTempFactory.generateTemp("array");
+        IRTemp i = IRTempFactory.generateTemp("incr");
         IRESeq populated = new IRESeq(
             new IRSeq(
                 new IRMove(array, alloc(length)),
@@ -298,7 +268,7 @@ public class Emitter extends Visitor<IRNode> {
         // Bind arguments to temps
         List<IRNode> args = visit(f.args);
         for (int i = 0; i < args.size(); i++) {
-            body.stmts.add(i, new IRMove(args.get(i), getArgument(i)));
+            body.stmts.add(i, new IRMove(args.get(i), IRTempFactory.getArgument(i)));
         }
 
         // Insert empty return if needed
@@ -348,7 +318,7 @@ public class Emitter extends Visitor<IRNode> {
         for (int i = 1; i < lhs.size(); i++) {
             IRNode n = lhs.get(i);
             if (n != null) {
-                stmts.add(new IRMove(n, getReturn(i)));
+                stmts.add(new IRMove(n, IRTempFactory.getReturn(i)));
             }
         }
 
@@ -445,7 +415,7 @@ public class Emitter extends Visitor<IRNode> {
             case NE:
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
             case AND:
-                IRTemp b1 = generateTemp();
+                IRTemp b1 = IRTempFactory.generateTemp();
                 IRESeq and = new IRESeq(
                     new IRSeq(
                         new IRMove(b1, new IRConst(0)),
@@ -456,7 +426,7 @@ public class Emitter extends Visitor<IRNode> {
                 return and;
             case OR:
                 IRExpr cond = new IRBinOp(IRBinOp.OpType.XOR, left, new IRConst(1));
-                IRTemp b2 = generateTemp();
+                IRTemp b2 = IRTempFactory.generateTemp();
                 IRESeq or = new IRESeq(
                     new IRSeq(
                         new IRMove(b2, new IRConst(1)),

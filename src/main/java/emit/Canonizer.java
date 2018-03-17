@@ -2,70 +2,116 @@ package emit;
 
 import ir.*;
 
-public class Canonizer extends IRVisitor<IRNode> {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-	public IRNode visit(IRBinOp b) {
+public class Canonizer extends IRVisitor<Void> {
+	
+	public static IRNode canonize(IRNode ast) {
+		Canonizer canonizer = new Canonizer();
+		ast.accept(canonizer);
+		return new IRSeq(
+			canonizer.stmts
+				.stream()
+				.map(stmt -> (IRNode) stmt)
+				.collect(Collectors.toList())
+		);
+	}
+	
+	private IRExpr expr;
+	private List<IRStmt> stmts;
+
+	public Void visit(IRBinOp b) {
 		return null;
 	}
 	
-	public IRNode visit(IRCall c) {
+	public Void visit(IRCall c) {
 		return null;
 	}
 
-	public IRNode visit(IRCJump c) {
+	public Void visit(IRCJump c) {
+		c.cond.accept(this);
+		stmts.add(new IRCJump(expr, c.trueLabel, c.falseLabel));
+		expr = null;
 		return null;
 	}
 
-	public IRNode visit(IRJump j) {
+	public Void visit(IRJump j) {
+		j.target.accept(this);
+		stmts.add(new IRJump(expr));
+		expr = null;
 		return null;
 	}
 	
-	public IRNode visit(IRCompUnit c) {
+	public Void visit(IRCompUnit c) {
 		return null;
 	}
 
-	public IRNode visit(IRConst c) {
+	/**
+	 * Trivially lowers an IRConst node, which is an expression leaf.
+	 */
+	public Void visit(IRConst c) {
+		expr = c;
 		return null;
 	}
 
-	public IRNode visit(IRESeq e) {
+	/**
+	 * Lowers an IRSeq node by evaluating its statement, and then
+	 * hoisting its expression.
+	 */
+	public Void visit(IRESeq e) {
+		stmts.add((IRStmt) e.stmt);
+		e.expr.accept(this);
 		return null;
 	}
 
-	public IRNode visit(IRExp e) {
+	public Void visit(IRExp e) {
 		return null;
 	}
 
-	public IRNode visit(IRFuncDecl f) {
+	public Void visit(IRFuncDecl f) {
 		return null;
 	}
 
-	public IRNode visit(IRLabel l) {
+	public Void visit(IRLabel l) {
 		return null;
 	}
 
-	public IRNode visit(IRMem m) {
+	/**
+	 * Lowers an IRMem node by hoisting its inner expression.
+	 */
+	public Void visit(IRMem m) {
+		m.expr.accept(this);
+		expr = new IRMem(expr);
 		return null;
 	}
 
-	public IRNode visit(IRMove m) {
+	public Void visit(IRMove m) {
 		return null;
 	}
 
-	public IRNode visit(IRName n) {
+	/**
+	 * Trivially lowers an IRName node, which is an expression leaf.
+	 */
+	public Void visit(IRName n) {
+		expr = n;
 		return null;
 	}
 
-	public IRNode visit(IRReturn r) {
+	public Void visit(IRReturn r) {
 		return null;
 	}
 
-	public IRNode visit(IRSeq s) {
+	public Void visit(IRSeq s) {
 		return null;
 	}
 
-	public IRNode visit(IRTemp t) {
+	/**
+	 * Trivially lowers an IRTemp node, which is an expression leaf.
+	 */
+	public Void visit(IRTemp t) {
+		expr = t;
 		return null;
     }
-
 }
