@@ -112,7 +112,7 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 	}
 
 	public OptionalLong visit(IRCJump c) {
-        OptionalLong ol = c.accept(this);
+        OptionalLong ol = c.cond.accept(this);
         if (ol.isPresent()) {
             c.cond = new IRConst(ol.getAsLong());
         }
@@ -120,10 +120,17 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 	}
 
 	public OptionalLong visit(IRJump j) {
+		OptionalLong ol = j.target.accept(this);
+		if (ol.isPresent()) {
+			j.target = new IRConst(ol.getAsLong());
+		}
 		return OptionalLong.empty();
 	}
 	
 	public OptionalLong visit(IRCompUnit c) {
+		for (IRFuncDecl fd : c.functions.values()) {
+			fd.accept(this);
+		}
 		return OptionalLong.empty();
 	}
 
@@ -208,7 +215,7 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
 	public OptionalLong visit(IRSeq s) {
         for (IRNode n : s.stmts) {
-            OptionalLong ol = n.accept(this);
+            n.accept(this);
         }
         
         return OptionalLong.empty();
