@@ -14,7 +14,9 @@ test_all() {
 
 test_reg() {
     test_lex
+    test_lex_fails
     test_parse
+    test_parse_fails
     test_type
 }
 
