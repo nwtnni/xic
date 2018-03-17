@@ -1,0 +1,11 @@
+xic ("Test --irgen [folding constants") "--irgen" {
+    add1.xi;
+    sub1.xi;
+    mult1.xi;
+    div1.xi;
+    highmult1.xi;
+    mod1.xi;
+    and1.xi;
+    or1.xi;
+    
+}

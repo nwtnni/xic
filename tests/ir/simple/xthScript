@@ -21,4 +21,5 @@ xic ("Test --irgen [simple]") "--irgen" {
     simple_funcs2.xi;
     simple_funcs3.xi;
     simple_funcs4.xi;
+    simple_funcs5.xi;
 }

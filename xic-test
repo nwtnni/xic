@@ -66,6 +66,11 @@ test_ir_basic() {
     printf "\n========================================\n\n"
 }
 
+test_ir_const_fold() {
+    xth/xth -compilerpath . -workpath tests/ir/const_fold -testpath tests/ir/const_fold tests/ir/const_fold/xthScript
+    printf "\n========================================\n\n"
+}
+
 test_ir_simple() {
     xth/xth -compilerpath . -workpath tests/ir/simple -testpath tests/ir/simple tests/ir/simple/xthScript
     printf "\n========================================\n\n"
@@ -125,12 +130,16 @@ tm)
     ;;
 i|ir)
     test_ir_basic
+    test_ir_const_fold
     test_ir_simple
     test_ir_other
     test_ir_arrays
     ;;
 ib)
     test_ir_basic
+    ;;
+ic)
+    test_ir_const_fold
     ;;
 is)
     test_ir_simple
