@@ -103,7 +103,6 @@ public class Printer extends IRVisitor<Void> {
         b.left.accept(this);
         b.right.accept(this);
         printer.endList();
-        printer.flush();
         return null;
 	}
 	
@@ -113,7 +112,6 @@ public class Printer extends IRVisitor<Void> {
         c.target.accept(this);
         visit(c.args);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -126,7 +124,6 @@ public class Printer extends IRVisitor<Void> {
             printer.printAtom(c.falseLabel);
         }
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -135,7 +132,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom("JUMP");
         j.target.accept(this);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 	
@@ -156,7 +152,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom("CONST");
         printer.printAtom(String.valueOf(c.value));
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -166,7 +161,6 @@ public class Printer extends IRVisitor<Void> {
         e.stmt.accept(this);
         e.expr.accept(this);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -175,7 +169,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom("EXP");
         e.expr.accept(this);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -185,7 +178,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom(f.name);
         f.body.accept(this);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -194,7 +186,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom("LABEL");
         printer.printAtom(l.name);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -203,7 +194,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom(m.memType.toString());
         m.expr.accept(this);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -213,7 +203,6 @@ public class Printer extends IRVisitor<Void> {
         m.target.accept(this);
         m.src.accept(this);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -222,7 +211,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom("NAME");
         printer.printAtom(n.name);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -231,7 +219,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom("RETURN");
         visit(r.rets);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -240,7 +227,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom("SEQ");
         visit(s.stmts);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 
@@ -249,7 +235,6 @@ public class Printer extends IRVisitor<Void> {
         printer.printAtom("TEMP");
         printer.printAtom(t.name);
         printer.endList();
-        printer.flush();
 		return null;
 	}
 }
