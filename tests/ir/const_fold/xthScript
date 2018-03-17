@@ -7,5 +7,15 @@ xic ("Test --irgen [folding constants") "--irgen" {
     mod1.xi;
     and1.xi;
     or1.xi;
-    
+    logical_negation1.xi;
+
+    eq1.xi;
+    eq2.xi;
+    eq3.xi;
+
+    neq1.xi;
+    neq2.xi;
+    neq3.xi;
+
+
 }
