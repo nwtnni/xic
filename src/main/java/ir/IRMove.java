@@ -30,6 +30,15 @@ public class IRMove extends IRStmt {
     public String label() {
         return "MOVE";
     }
+    
+    //TODO: is there a better way to do this?
+    public boolean isMem() {
+    	return target instanceof IRMem;
+    }
+    
+    public IRMem getMem() {
+    	return (IRMem) target;
+    }
 
     // @Override
     // public IRNode visitChildren(IRVisitor v) {

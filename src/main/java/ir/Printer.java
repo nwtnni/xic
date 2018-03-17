@@ -8,6 +8,7 @@ import edu.cornell.cs.cs4120.util.SExpPrinter;
 import polyglot.util.OptimalCodeWriter;
 
 import xic.XicException;
+import emit.Canonizer;
 import emit.ConstantFolder;
 import emit.Emitter;
 import interpret.IRSimulator;
@@ -44,6 +45,7 @@ public class Printer extends IRVisitor<Void> {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);
                 comp = Emitter.emitIR((Program) ast, context);
+                comp = (IRCompUnit) Canonizer.canonize(comp);
 
                 if (opt) {
                     ConstantFolder.constantFold(comp);

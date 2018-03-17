@@ -10,12 +10,12 @@ import java.math.BigInteger;
 public class ConstantFolder extends IRVisitor<OptionalLong> {
 
     /**
-     * Factory method to constant fold a compilation unit.
+     * Factory method to constant fold an IR AST.
      * 
-     * @param compUnit
+     * @param ast
      */
-    public static void constantFold(IRCompUnit compUnit) {
-        compUnit.accept(new ConstantFolder());
+    public static void constantFold(IRNode ast) {
+        ast.accept(new ConstantFolder());
     }
 
     IRNode tree;
