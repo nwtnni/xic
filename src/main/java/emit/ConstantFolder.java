@@ -24,6 +24,7 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 	public OptionalLong visit(IRBinOp b) {
 		OptionalLong ltol = b.left.accept(this);
         OptionalLong rtol = b.right.accept(this);
+        // if (b.left instanceof IRESeq && b.right instanceof IRESeq)
         if (ltol.isPresent() && rtol.isPresent()) {
             long c;
             long lt = ltol.getAsLong();
