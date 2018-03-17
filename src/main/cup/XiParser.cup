@@ -389,20 +389,20 @@ ArrayCall ::=
     FnCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
             il.add(0, evalExpr(e));
-            Index index = new Index(fcxleft, fc, il.get(0), false);
+            Index index = new Index(fcxleft, fc, il.get(0));
             for(int i =1; i<il.size(); i++) {
                 Node n = il.get(i);
-                index = new Index(n.location, index, n, false);
+                index = new Index(n.location, index, n);
             }
             RESULT = index;
         :}
     | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
         {:
             il.add(0, evalExpr(e));
-            Index index = new Index(idxleft, new Var(idxleft, id), il.get(0), false);
+            Index index = new Index(idxleft, new Var(idxleft, id), il.get(0));
             for(int i =1; i<il.size(); i++) {
                 Node n = il.get(i);
-                index = new Index(n.location, index, n, false);
+                index = new Index(n.location, index, n);
             }
             RESULT = index;
         :}
@@ -699,7 +699,7 @@ Expr ::=
         %prec FUNCTIONCALL
     | Expr:e1 LBRACK Expr:e2 RBRACK
         {:
-            Index index = new Index(e1xleft, evalExpr(e1), evalExpr(e2), true);
+            Index index = new Index(e1xleft, evalExpr(e1), evalExpr(e2));
             RESULT = index;
         :}
     | LBRACE ArrayElems:ae RBRACE
