@@ -374,10 +374,6 @@ public class Emitter extends Visitor<IRNode> {
             // If not an underscore
             IRExpr var = (IRExpr) lhs.get(0);
             if (var != null) {
-                // Wrap array access with mem
-                if (var instanceof IRESeq) {
-                    var = new IRMem(var);
-                }
                 return new IRMove(var, rhs);
             } else {
                 return new IRExp(rhs);
@@ -556,7 +552,6 @@ public class Emitter extends Visitor<IRNode> {
         IRTemp pointer = IRTempFactory.generateTemp("array_ref");
         stmts.add(new IRMove(pointer, i.array.accept(this)));
 
-
         // Check bounds
         stmts.add(
             generateBranch(
@@ -573,13 +568,7 @@ public class Emitter extends Visitor<IRNode> {
         stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
         stmts.add(done);
 
-
-        // Different cases for array on LHS and RHS
-        if (i.isExpr || i.array instanceof Index) {
-            result = new IRMem(result);
-        }
-
-        return new IRESeq(new IRSeq(stmts), result);
+        return new IRMem(new IRESeq(new IRSeq(stmts), result));
     }
 
     public IRNode visit(XiInt i) throws XicException {
