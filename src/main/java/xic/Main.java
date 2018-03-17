@@ -76,21 +76,24 @@ public class Main {
      * Helper function to display usage information.
      */
     private static void displayHelp() {
-        System.out.println("-----------------------------------------------------------------------------------");
-        System.out.println("Usage: xic <OPTION>* <OPERATION>+ <FILE>+                                          ");
-        System.out.println("-----------------------------------------------------------------------------------");
-        System.out.println("Where <OPTION> is zero or more of:                                                 ");
-        System.out.println("  --help                  : Print synopsis of options                              ");
-        System.out.println("  -D          <DIRECTORY> : Output diagnostic files to <DIRECTORY>                 ");
-        System.out.println("  -libpath    <DIRECTORY> : Search for interface files in <DIRECTORY>              ");
-        System.out.println("  -sourcepath <DIRECTORY> : Search for source files in <DIRECTORY>                 ");
-        System.out.println("-----------------------------------------------------------------------------------");
-        System.out.println("Where <OPERATION> is one or more of:                                               ");
-        System.out.println("  --lex                   : For each f.(i)xi, generate lex diagnostic file f.lexed ");
-        System.out.println("  --parse                 : For each f.(i)xi, generate parse diagnostic f.(i)parsed");
-        System.out.println("  --typecheck             : For each f.xi, generate type check diagnostic f.typed  ");
-        System.out.println("-----------------------------------------------------------------------------------");
-        System.out.println("Where <FILE> is one or more source files to operate on                             ");
-        System.out.println("-----------------------------------------------------------------------------------");
+        System.out.println("-------------------------------------------------------------------------------------");
+        System.out.println("Usage: xic <OPTION>* <OPERATION>+ <FILE>+                                            ");
+        System.out.println("-------------------------------------------------------------------------------------");
+        System.out.println("Where <OPTION> is zero or more of:                                                   ");
+        System.out.println("  --help                  : Print synopsis of options                                ");
+        System.out.println("  -D          <DIRECTORY> : Output diagnostic files to <DIRECTORY>                   ");
+        System.out.println("  -libpath    <DIRECTORY> : Search for interface files in <DIRECTORY>                ");
+        System.out.println("  -sourcepath <DIRECTORY> : Search for source files in <DIRECTORY>                   ");
+        System.out.println("  -O                      : Disable optimizations                                    ");
+        System.out.println("-------------------------------------------------------------------------------------");
+        System.out.println("Where <OPERATION> is one or more of:                                                 ");
+        System.out.println("  --lex                   : For each f.(i)xi, generate lex diagnostic file f.lexed   ");
+        System.out.println("  --parse                 : For each f.(i)xi, generate parse diagnostic f.(i)parsed  ");
+        System.out.println("  --typecheck             : For each f.xi, generate type check diagnostic f.typed    ");
+        System.out.println("  --irgen                 : For each f.xi, generate intermediate representation f.ir ");
+        System.out.println("  --irrun                 : For each f.xi, generate interpreted intermediate f.ir.nml");
+        System.out.println("-------------------------------------------------------------------------------------");
+        System.out.println("Where <FILE> is one or more source files to operate on                               ");
+        System.out.println("-------------------------------------------------------------------------------------");
     }
 }
