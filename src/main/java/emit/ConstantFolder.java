@@ -20,6 +20,7 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
     IRNode tree;
 
+    // Todo: bugfix: deal with the case where only one side is constant folded
 	public OptionalLong visit(IRBinOp b) {
 		OptionalLong ltol = b.left.accept(this);
         OptionalLong rtol = b.right.accept(this);
@@ -43,9 +44,15 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                     multiply(BigInteger.valueOf(rt)).shiftRight(64).longValue();
                 break;
             case DIV:
+                if (rt == 0) {
+                    return OptionalLong.empty();
+                }
                 c = lt / rt;
                 break;
             case MOD:
+                if (rt == 0) {
+                    return OptionalLong.empty();
+                }
                 c = lt % rt;
                 break;
             case AND:

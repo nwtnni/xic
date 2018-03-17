@@ -11,6 +11,7 @@ import xic.XicException;
 import emit.ConstantFolder;
 import emit.Emitter;
 import interpret.IRSimulator;
+import interpret.IRSimulator.Trap;
 import parser.XiParser;
 import type.TypeChecker;
 import type.FnContext;
@@ -56,10 +57,13 @@ public class Printer extends IRVisitor<Void> {
                 // Print IR to console
                 // debug(comp);
                 // System.out.println();
-
                 if (run) {
-                    IRSimulator sim = new IRSimulator(comp);
-                    sim.call("_Imain_paai", 0);
+                    try {
+                        IRSimulator sim = new IRSimulator(comp);
+                        sim.call("_Imain_paai", 0);
+                    } catch (Trap e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
 
 	    	} catch (XicException xic) {
