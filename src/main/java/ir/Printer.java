@@ -45,11 +45,12 @@ public class Printer extends IRVisitor<Void> {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);
                 comp = Emitter.emitIR((Program) ast, context);
-                comp = (IRCompUnit) Canonizer.canonize(comp);
 
                 if (opt) {
                     ConstantFolder.constantFold(comp);
                 }
+
+                comp = (IRCompUnit) Canonizer.canonize(comp);
 
                 // Generate .ir file
 	            OutputStream stream = new FileOutputStream(output);
