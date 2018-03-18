@@ -2,7 +2,7 @@ use io
 use conv
 
 main(args:int[][]) {
-    print("Is " + " This " + " Constant Folded?")
+    print("Is " + "This " + "Constant Folded?")
 }
 
 printInt(x:int) {
