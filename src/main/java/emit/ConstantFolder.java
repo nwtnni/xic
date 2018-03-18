@@ -106,6 +106,11 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
             }
             return OptionalLong.of(c);
         }
+        if (ltol.isPresent()) {
+            b.left = new IRConst(ltol.getAsLong());
+        } else if (rtol.isPresent()) {
+            b.right = new IRConst(rtol.getAsLong());
+        }
         return OptionalLong.empty();
         
 	}

@@ -1,7 +1,14 @@
 xic ("Test --irgen [arrays]") "--irgen" {
     1Dalloc1.xi;
+    1Dalloc2.xi;
     2Dalloc1.xi;
+    2Dalloc2.xi;
     3Dalloc1.xi;
+    3Dalloc2.xi;
+
+    1Ddynamic_alloc1.xi;
+    2Ddynamic_alloc1.xi;
+    3Ddynamic_alloc1.xi;
 
     1Darray1.xi;
     1Darray2.xi;
@@ -10,6 +17,15 @@ xic ("Test --irgen [arrays]") "--irgen" {
     2Darray1.xi;
     2Darray2.xi;
     2Darray3.xi;
+
+    3Darray1.xi;
+    3Darray2.xi;
+    3Darray3.xi;
+
+    bad_1D_out_of_bounds1.xi;
+    bad_1D_out_of_bounds2.xi;
+    bad_1D_out_of_bounds3.xi;
+    bad_2D_out_of_bounds1.xi;
 
     dynamic_array01.xi;
     dynamic_nested_array01.xi;
