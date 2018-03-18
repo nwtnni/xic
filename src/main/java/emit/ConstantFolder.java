@@ -20,7 +20,6 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
     IRNode tree;
 
-    // Todo: bugfix: deal with the case where only one side is constant folded
 	public OptionalLong visit(IRBinOp b) {
 		OptionalLong ltol = b.left.accept(this);
         OptionalLong rtol = b.right.accept(this);
@@ -29,7 +28,6 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
             long lt = ltol.getAsLong();
             long rt = rtol.getAsLong();
             switch (b.type) {
-            // TODO: fix for array concat
             case ADD: 
                 c = lt + rt;
                 break;
@@ -73,7 +71,6 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
             case ARSHIFT:
                 c = lt >>> rt;
                 break;
-            // TODO: fix for arrays. array comparison should be physical equality
             case EQ:
                 if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
                     if (((IRESeq) b.left).expr == ((IRESeq) b.right).expr) {
@@ -85,7 +82,6 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                     c = ((lt == 1) == (rt == 1)) ? 1 : 0;
                 }
                 break;
-            // TODO: fix for arrays. array comparison should be physical equality
             case NEQ:
                 if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
                     if (((IRESeq) b.left).expr != ((IRESeq) b.right).expr) {
