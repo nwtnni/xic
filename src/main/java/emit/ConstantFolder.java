@@ -7,6 +7,11 @@ import java.util.ArrayList;
 import ir.*;
 import java.math.BigInteger;
 
+/**
+ * Main implementation of IR to IR constant folding optimizations.
+ * This optimization only folds primitive constants and checks a
+ * specific case for equality comparison on array literals.
+ */
 public class ConstantFolder extends IRVisitor<OptionalLong> {
 
     /**
@@ -127,7 +132,6 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
     }
     
     public OptionalLong visit(IRCall c) {
-        // TODO: add constant folding for length
         List<IRNode> children = new ArrayList<IRNode>();
         for (IRNode n : c.args) {
             OptionalLong ol = n.accept(this);

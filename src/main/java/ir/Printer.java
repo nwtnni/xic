@@ -57,18 +57,12 @@ public class Printer extends IRVisitor<Void> {
                 Printer p = new Printer(stream);
                 comp.accept(p);
 
-                // Print IR to console
-                // debug(comp);
-                // System.out.println();
                 if (run) {
                     try {
                         IRSimulator sim = new IRSimulator(comp);
                         sim.call("_Imain_paai", 0);
                     } catch (Trap e) {
                         System.out.println(e.getMessage());
-
-                        // debug
-                        e.printStackTrace();
                     }
                 }
 

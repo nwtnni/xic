@@ -10,6 +10,10 @@ import ir.IRBinOp.OpType;
 import interpret.Configuration;
 import xic.XicException;
 
+/**
+ * Main decorated AST to IR translation implementation. Recursively 
+ * traverses the AST and constructs a new IR tree that represents the AST.
+ */
 public class Emitter extends Visitor<IRNode> {
 
     /**
@@ -34,11 +38,11 @@ public class Emitter extends Visitor<IRNode> {
 
     private long labelIndex;
 
-    private static final IRConst WORD_SIZE = new IRConst(Configuration.WORD_SIZE);
-    private static final IRConst ZERO = new IRConst(0);
-    private static final IRConst ONE = new IRConst(1);
+    protected static final IRConst WORD_SIZE = new IRConst(Configuration.WORD_SIZE);
+    protected static final IRConst ZERO = new IRConst(0);
+    protected static final IRConst ONE = new IRConst(1);
 
-    private static final IRName ARRAY_CONCAT_FUNC = new IRName("_xi_array_concat");
+    protected static final IRName ARRAY_CONCAT_FUNC = new IRName("_xi_array_concat");
 
     /* 
      * Utility methods for generating code
@@ -50,26 +54,6 @@ public class Emitter extends Visitor<IRNode> {
     private IRLabel generateLabel(String name) {
         return new IRLabel(name + "__label_" + Long.toString(++labelIndex));
     }
-
-    // /**
-    //  * Generate a conditional jump in IR code.
-    //  */
-    // private IRNode generateBranch(IRNode cond, IRNode t, IRNode f) {
-    //     String trueLabel = generateLabel("true");
-    //     String falseLabel = generateLabel("false");
-    //     String done = generateLabel("done");
-
-    //     IRSeq stmts = new IRSeq(
-    //         new IRCJump(cond, trueLabel, falseLabel),
-    //         new IRLabel(trueLabel),
-    //         t,
-    //         new IRJump(new IRName(done)),
-    //         new IRLabel(falseLabel),
-    //         f,
-    //         new IRLabel(done)
-    //     );
-    //     return stmts;
-    // }
 
     /**
      * Generate a conditional jump where true falls through.
@@ -261,60 +245,6 @@ public class Emitter extends Visitor<IRNode> {
      */
     private IRExpr length(IRExpr pointer) {
         return new IRMem(new IRBinOp(OpType.SUB, pointer, WORD_SIZE));
-    }
-
-    /**
-     * Generate code for concatenating two arrays.
-     */
-    protected IRExpr concat(IRExpr a, IRExpr b) {
-        List<IRNode> stmts = new ArrayList<>();
-
-        // Make copies of pointers
-        IRTemp ap = IRTempFactory.generateTemp("a_ptr_copy");
-        stmts.add(new IRMove(ap, a));
-        IRTemp bp = IRTempFactory.generateTemp("b_ptr_copy");
-        stmts.add(new IRMove(bp, b));
-
-        // Calculate new array size
-        IRExpr aLen = IRTempFactory.generateTemp("a_len");
-        stmts.add(new IRMove(aLen, length(ap)));
-        IRExpr bLen = IRTempFactory.generateTemp("b_len");
-        stmts.add(new IRMove(bLen, length(bp)));
-        IRTemp size = IRTempFactory.generateTemp("concat_size");
-        stmts.add(new IRMove(size, new IRBinOp(OpType.ADD, aLen, bLen)));
-
-        // Generate pointers and allocate memory
-        IRTemp pointer = IRTempFactory.generateTemp("concat_array");
-        IRTemp workPointer = IRTempFactory.generateTemp("work_ptr");
-        stmts.add(new IRMove(pointer, alloc(size)));
-        stmts.add(new IRMove(workPointer, pointer));
-
-        IRTemp i = IRTempFactory.generateTemp("i");
-        stmts.add(new IRMove(i, ZERO));
-        stmts.add(generateLoop(
-            new IRBinOp(OpType.LT, i, aLen), 
-            new IRSeq(
-                new IRMove(new IRMem(workPointer), new IRMem(ap)),
-                increment(i),
-                incrPointer(workPointer),
-                incrPointer(ap)
-            )
-        ));
-        stmts.add(new IRMove(i, ZERO));
-        stmts.add(generateLoop(
-            new IRBinOp(OpType.LT, i, bLen), 
-            new IRSeq(
-                new IRMove(new IRMem(workPointer), new IRMem(bp)),
-                increment(i),
-                incrPointer(workPointer),
-                incrPointer(bp)
-            )
-        ));
-
-        return new IRESeq(
-            new IRSeq(stmts),
-            pointer
-        );
     }
 
     /**
@@ -687,4 +617,4 @@ public class Emitter extends Visitor<IRNode> {
             return null;
         }
     }
-}
+}   
