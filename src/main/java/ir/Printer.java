@@ -49,6 +49,8 @@ public class Printer extends IRVisitor<Void> {
                 if (opt) {
                     ConstantFolder.constantFold(comp);
                 }
+                
+                comp = (IRCompUnit) Canonizer.canonize(comp);
 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
 
@@ -66,6 +68,9 @@ public class Printer extends IRVisitor<Void> {
                         sim.call("_Imain_paai", 0);
                     } catch (Trap e) {
                         System.out.println(e.getMessage());
+
+                        // debug
+                        e.printStackTrace();
                     }
                 }
 
