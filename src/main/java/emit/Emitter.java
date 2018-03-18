@@ -482,7 +482,6 @@ public class Emitter extends Visitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.MOD, left, right);
             case PLUS:
                 if (b.lhs.type.isArray()) {
-                    // return concat(left, right);
                     return new IRCall(ARRAY_CONCAT_FUNC, left, right);
                 }
                 return new IRBinOp(IRBinOp.OpType.ADD, left, right);
