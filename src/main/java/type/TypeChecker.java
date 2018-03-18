@@ -197,6 +197,13 @@ public class TypeChecker extends Visitor<Type> {
 	public Type visit(Return r) throws XicException {
 		if (r.hasValues()) {
 			Type value = Type.tupleFromList(visit(r.values));
+			for (Node n : r.values) {
+				if (n instanceof Call) {
+					if (n.type.kind.equals(Type.Kind.TUPLE)) {
+						throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
+					}
+				}
+			}
 			if (!value.equals(Type.UNIT) && returns.equals(value)) {
 				r.type = Type.VOID;
 				return r.type;
