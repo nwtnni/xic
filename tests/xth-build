@@ -1,5 +1,0 @@
-build
-
-xic ("Test --help") "--help" {
-    ;
-}

@@ -5,7 +5,7 @@ import ast.Node;
 import lexer.XiLexer;
 import parser.IXiParser;
 import parser.XiParser;
-import type.TypeCheck;
+import type.TypeChecker;
 
 /**
  * Main compiler class. Wraps around and provides convenience methods
@@ -97,7 +97,7 @@ public class Xic {
 	 */
 	public Node typeCheck(String unit) throws XicException {
 		Node ast = parse(unit);
-		TypeCheck.check(lib, ast);
+		TypeChecker.check(lib, ast);
 		return ast;
 	}
 	
@@ -130,5 +130,18 @@ public class Xic {
 	 */
 	public void printTyped(String unit) throws XicException {
 		type.Printer.print(source, sink, lib, unit);
+	}
+
+	/**
+	 * Prints and writes diagnostics for the lexed, parsed, and typechecked input
+	 * file.
+	 * 
+	 * @param unit The path to the input file, relative to source
+	 * @param run Run IR interpreter on generated IR code
+	 * @param opt enable optimizations if true 
+	 * @throws XicException if lexing, parsing, or typechecking failed
+	 */
+	public void printIR(String unit, boolean run, boolean opt) throws XicException {
+		ir.Printer.print(source, sink, lib, unit, run, opt);
 	}
 }

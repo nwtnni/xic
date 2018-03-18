@@ -100,8 +100,9 @@ public class XicException extends Exception {
 			return description;
 		} else {
 			return String.format(
-				"%s error beginning at %d:%d: %s",
+				"%s error at %s:%d:%d: %s",
 				kind.toString(),
+				location.getUnit(),
 				location.getLine(),
 				location.getColumn(),
 				description

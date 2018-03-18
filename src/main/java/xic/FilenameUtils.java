@@ -1,7 +1,6 @@
 package xic;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Filename and filepath manipulation methods for xic.

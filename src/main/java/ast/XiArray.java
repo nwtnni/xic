@@ -3,14 +3,14 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
-import java.util.ArrayList;
+import java.util.List;
 
 // A Xi array
 public class XiArray extends Node {
 
-    public ArrayList<Node> values;
+    public List<Node> values;
 
-    public XiArray(Location location, ArrayList<Node> values) {
+    public XiArray(Location location, List<Node> values) {
         this.location = location;
         this.values = values;
     }

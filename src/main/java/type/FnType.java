@@ -1,5 +1,6 @@
 package type;
 
+import java.util.List;
 import java.util.ArrayList;
 
 import ast.*;
@@ -26,7 +27,12 @@ public class FnType extends Visitor<Type> {
 	 */
 	public static FnType from(Fn f) {
 		FnType type = new FnType();
-		type.visit(f);
+		try {
+			type.visit(f);
+		} catch (XicException e) {
+			// Unreachable because FnType visitor does not throw type execptions
+			assert false;
+		}
 		return type;
 	}
 
@@ -36,7 +42,7 @@ public class FnType extends Visitor<Type> {
 	public Location location;
 	
 	/**
-	 * Stores the Fn's arguments. Can be a {@link Type.Kind#TUPLE} for
+	 * Stores the Fn's arguments. Can be a {@link Type.Kind#LIST} for
 	 * functions with zero or more than one argument types, or a {@link Type.Kind#CLASS}
 	 * for functions with one return type.
 	 */
@@ -50,30 +56,25 @@ public class FnType extends Visitor<Type> {
 	public Type returns;
 
 	/**
-	 * Visits a Fn's children.
+	 * Override to create a list of types from a list of nodes.
 	 */
-    public Type visit(Fn f) {
-    	try {
-    		location = f.location;
-    		args = f.args.accept(this);
-    		returns = f.returns.accept(this);
-    	} catch (XicException xic) {
-    		// Unreachable
-    		assert false;
-    	}
+	@Override
+	public List<Type> visit(List<Node> nodes) throws XicException {
+		List<Type> types = new ArrayList<>();
+		for (Node n : nodes) {
+			types.add(n.accept(this));
+		}
+		return types;
+	}
+
+	/**
+	 * Visits a Fn and populates the fields of this FnType.
+	 */
+    public Type visit(Fn f) throws XicException {
+		location = f.location;
+		args = Type.listFromList(visit(f.args));
+		returns = Type.tupleFromList(visit(f.returns));
     	return null;
-    }
-    
-    /**
-     * Visits a Multiple's children and collects them into a tuple.
-     */
-    public Type visit(Multiple m) throws XicException {
-    	if (m.values.size() == 0) { return Type.UNIT; }
-    	ArrayList<Type> types = new ArrayList<>();
-    	for (Node value : m.values) {
-    		types.add(value.accept(this));
-    	}
-    	return new Type(types);
     }
 
     /**

@@ -1,5 +1,7 @@
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
+
+import java.util.List;
 import java.util.ArrayList;
 
 import lexer.*;
@@ -43,10 +45,11 @@ parser code {:
 
     private Node evalInt(TempInt expr, boolean negate) throws ParseException {
         try {
+            String orig = expr.literal;
             if (negate) {
                 expr.literal = "-" + expr.literal;
             }
-            return new XiInt(expr.location, Long.valueOf(expr.literal));
+            return new XiInt(expr.location, Long.valueOf(expr.literal), orig, negate);
         } catch (NumberFormatException ex) {
             throw ParseException.numberFormatException(expr.location, expr.literal);
         }
@@ -86,29 +89,29 @@ terminal    StringWrapper   STRING;
 terminal                    FUNCTIONCALL, ARRAYCALL; //TODO ARRAYCALL is implemented via LBRACK
 
 /* Non terminals */
-non terminal    Node                Expr;
-non terminal    ArrayList<Node>     ExprList, FExprList;
-non terminal    Node                FnCall;
-non terminal    ArrayList<Node>     Args, FArgs; 
-non terminal    Node                ArrayCall;
-non terminal    ArrayList<Node>     IndexList;
-non terminal    ArrayList<Node>     ArrayElems, FArrayElems;
-non terminal    Node                VarDeclr, VarType, KeyType;
-non terminal    ArrayList<Node>     VarTypeIndexList, VarTypeIndexListNoExpr;
-non terminal    Node                Assign, SingleAssignName, MultiAssignName;
-non terminal    Node                AssignVarDeclr, AssignVarType;
-non terminal    ArrayList<Node>     IDList, FIDList;
-non terminal    Node                WhileStmt, IfStmt, ElseStmt;
-non terminal    Node                BlockOptBraces, BlockStmts;
-non terminal    Node                SingleStmtNoReturn, StmtNoReturn;
-non terminal    ArrayList<Node>     StmtListNoReturn;
-non terminal    Node                FnDeclr, FnDef;
-non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
-non terminal    Node                FnType;
-non terminal    Node                UseDeclr;
-non terminal    ArrayList<Node>     UseDeclarations, FnDeclarations;
-non terminal    Node                Program;
-non terminal                        OptSemicolon;
+non terminal    Node            Expr;
+non terminal    List<Node>      ExprList, FExprList;
+non terminal    Node            FnCall;
+non terminal    List<Node>      Args, FArgs; 
+non terminal    Node            ArrayCall;
+non terminal    List<Node>      IndexList;
+non terminal    List<Node>      ArrayElems, FArrayElems;
+non terminal    Node            VarDeclr, VarType, KeyType;
+non terminal    List<Node>      VarTypeIndexList, VarTypeIndexListNoExpr;
+non terminal    Node            Assign, SingleAssignName, MultiAssignName;
+non terminal    Node            AssignVarDeclr, AssignVarType;
+non terminal    List<Node>      IDList, FIDList;
+non terminal    Node            WhileStmt, IfStmt, ElseStmt;
+non terminal    Node            BlockOptBraces, BlockStmts;
+non terminal    Node            SingleStmtNoReturn, StmtNoReturn;
+non terminal    List<Node>      StmtListNoReturn;
+non terminal    Node            FnDeclr, FnDef;
+non terminal    List<Node>      ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
+non terminal    Node            FnType;
+non terminal    Node            UseDeclr;
+non terminal    List<Node>      UseDeclarations, FnDeclarations;
+non terminal    Node            Program;
+non terminal                    OptSemicolon;
 
 /* Precedences */
 precedence nonassoc     ELSE;
@@ -183,14 +186,11 @@ FnDeclr ::=
 FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-    	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
-    	Node returns = rtl.size() == 1 ? rtl.get(0) : new Multiple(rtlxleft, rtl, Multiple.Kind.FN_RETURNS);
-        RESULT = new Fn(idxleft, id, args, returns);
+        RESULT = new Fn(idxleft, id, atl, rtl);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-    	Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
-        RESULT = new Fn(idxleft, id, args);
+        RESULT = new Fn(idxleft, id, atl);
     :}
     ;
 
@@ -259,9 +259,10 @@ BlockOptBraces ::=
     :}
     | SingleStmtNoReturn:ssnr
     {:
-        ArrayList<Node> block = new ArrayList<>();
-        block.add(ssnr);
-        RESULT = new Block(ssnrxleft, block);
+        // ArrayList<Node> block = new ArrayList<>();
+        // block.add(ssnr);
+        // RESULT = new Block(ssnrxleft, block);
+        RESULT = ssnr;
     :}
     ;
 
@@ -271,15 +272,10 @@ BlockStmts ::=
     {:
         if (el.size() == 0) {
         	slnr.add(new Return(rxleft));
-            RESULT = new Block(slnr);
-        } else if (el.size() == 1) {
-        	slnr.add(new Return(rxleft, el.get(0)));
-            RESULT = new Block(slnr);
         } else {
-            Multiple m = new Multiple(elxleft, el, Multiple.Kind.RETURN);
-            slnr.add(new Return(rxleft, m));
-            RESULT = new Block(slnr);
+            slnr.add(new Return(rxleft, el));
         }
+        RESULT = new Block(slnr);
     :}
     | StmtListNoReturn:slnr
     {:
@@ -361,8 +357,7 @@ StmtNoReturn ::=
 FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
-        	Node arg = args.size() == 1 ? args.get(0) : new Multiple(argsxleft, args, Multiple.Kind.FN_CALL);
-            RESULT = new Call(idxleft, id, arg);
+            RESULT = new Call(idxleft, id, args);
         :}
         %prec FUNCTIONCALL
     ;
@@ -501,23 +496,6 @@ VarTypeIndexListNoExpr ::=
     :}
     ;
 
-/*
-VarType ::= 
-    VarType:type LBRACK RBRACK
-    {:
-        RESULT = new XiType(typexleft, type);
-    :}
-    | VarType:type LBRACK Expr:e RBRACK
-    {:
-        RESULT = new XiType(typexleft, type, evalExpr(e));
-    :}
-    | KeyType:type 
-    {:
-        RESULT = type;
-    :}
-    ;
-*/
-
 KeyType ::= 
     INT:i
     {:
@@ -533,7 +511,7 @@ KeyType ::=
 Assign ::= 
     IDList:il EQ Expr:e
     {:
-        RESULT = new Assign(ilxleft, new Multiple(ilxleft, il, Multiple.Kind.ASSIGN), evalExpr(e));
+        RESULT = new Assign(ilxleft, il, evalExpr(e));
     :}
     | SingleAssignName:san EQ Expr:e
     {:
@@ -542,7 +520,7 @@ Assign ::=
     ;
 
 IDList ::= 
-    MultiAssignName:an COMMA MultiAssignName: bn FIDList:fl
+    MultiAssignName:an COMMA MultiAssignName:bn FIDList:fl
     {:
         fl.add(0, bn);
         fl.add(0, an);
@@ -604,7 +582,7 @@ AssignVarType ::=
     {:
         for(int i=vtilne.size()-1; i>=0; i--) {
             if(vtilne.get(i) == null){
-                type = new XiType(typexleft,type);
+                type = new XiType(typexleft, type);
             }
             else {
                 type = new XiType(typexleft, type, vtilne.get(i));

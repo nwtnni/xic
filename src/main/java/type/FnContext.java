@@ -8,7 +8,7 @@ import org.pcollections.PMap;
  * 
  * @see Context
  */
-public class FnContext extends Context<String, FnType> {
+public class FnContext extends Context<String,FnType> {
 	
 	/**
 	 * Adds all bindings in FnContext other to this context
@@ -18,7 +18,7 @@ public class FnContext extends Context<String, FnType> {
 	 * 			but the bound types differ
 	 */
 	public void merge(FnContext other) throws TypeException {
-		for (PMap<String, FnType> map : other.context) {
+		for (PMap<String,FnType> map : other.context) {
 			for (String id : map.keySet()) {
 				FnType existing = lookup(id);
 				FnType type = other.lookup(id);

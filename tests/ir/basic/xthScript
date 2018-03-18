@@ -1,0 +1,8 @@
+xic ("Test --irgen -O [basic]") "--irgen -O" {
+    assign01.xi;
+    assign02.xi;
+    assign03.xi;
+    assign04.xi;
+    assign05.xi;
+    empty.xi;
+}

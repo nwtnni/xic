@@ -1,5 +1,7 @@
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
+
+import java.util.List;
 import java.util.ArrayList;
 
 import lexer.*;
@@ -46,25 +48,19 @@ parser code {:
 scan with {: return lexer.nextToken(); :};
 
 /* Terminals (tokens returned by the scanner). */
-terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                    USE;
 terminal                    INT, BOOL;
-terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
-terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
 terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
-terminal    Boolean         TRUE, FALSE; 
+terminal                    COLON, COMMA;
 terminal    String          IDENTIFIER;
-terminal    String          INTEGER;
-terminal    CharWrapper     CHAR;
-terminal    StringWrapper   STRING;
 
 /* Non terminals */
-non terminal    Node                FnDef, ProcedureDef;
-non terminal    ArrayList<Node>     FnDefList;
-non terminal    ArrayList<Node>     ArgsTypeList, FArgsTypeList;
-non terminal    ArrayList<Node>     ReturnTypeList, FReturnTypeList;
-non terminal    Node                FnType;
-non terminal    Node                Interface;
+non terminal    Node            FnDef;
+non terminal    List<Node>      FnDefList;
+non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
+non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
+non terminal    Node            FnType;
+non terminal    Node            Interface;
 
 /* The grammar rules */
 start with      Interface;
@@ -73,14 +69,11 @@ start with      Interface;
 FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-        Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
-        Node returns = rtl.size() == 1 ? rtl.get(0) : new Multiple(rtlxleft, rtl, Multiple.Kind.FN_RETURNS);
-        RESULT = new Fn(idxleft, id, args, returns);
+        RESULT = new Fn(idxleft, id, atl, rtl);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        Node args = atl.size() == 1 ? atl.get(0) : new Multiple(atlxleft, atl, Multiple.Kind.FN_ARGS);
-        RESULT = new Fn(idxleft, id, args);
+        RESULT = new Fn(idxleft, id, atl);
     :}
     ;
 

@@ -7,10 +7,14 @@ import xic.XicException;
 public class XiInt extends Node {
 
     public long value;
+    public String literal;
+    public boolean negated;
 
-    public XiInt(Location location, long value) {
+    public XiInt(Location location, long value, String literal, boolean negated) {
         this.location = location;
         this.value = value;
+        this.literal = literal;
+        this.negated = negated;
     }
 
     public <T> T accept(Visitor<T> v) throws XicException {

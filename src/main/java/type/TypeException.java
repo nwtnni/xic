@@ -2,7 +2,6 @@ package type;
 
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
-import ast.*;
 
 /**
  * Represents all possible semantic exceptions.

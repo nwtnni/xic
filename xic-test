@@ -1,23 +1,31 @@
 #!/bin/bash
 
 build() {
-   xth/xth -compilerpath . -testpath tests tests/xth-build
+   gradle xic
    printf "\n========================================\n\n"
 }
 
 test_all() {
   test_reg
-  test_fails
+  test_lex_fails
+  test_parse_fails
   test_course
 }
 
 test_reg() {
     test_lex
+    test_lex_fails
     test_parse
+    test_parse_fails
     test_type
 }
 
-test_fails() {
+test_lex_fails() {
+    xth/xth -compilerpath . -workpath tests/lexer/failed_tests -testpath tests/lexer/failed_tests tests/lexer/failed_tests/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_parse_fails() {
     xth/xth -compilerpath . -workpath tests/parser/failed_tests -testpath tests/parser/failed_tests tests/parser/failed_tests/xthScript
     printf "\n========================================\n\n" 
 }
@@ -53,8 +61,33 @@ test_type_man() {
     printf "\n========================================\n\n"
 }
 
+test_ir_basic() {
+    xth/xth -compilerpath . -workpath tests/ir/basic -testpath tests/ir/basic tests/ir/basic/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_ir_const_fold() {
+    xth/xth -compilerpath . -workpath tests/ir/const_fold -testpath tests/ir/const_fold tests/ir/const_fold/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_ir_simple() {
+    xth/xth -compilerpath . -workpath tests/ir/simple -testpath tests/ir/simple tests/ir/simple/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_ir_arrays() {
+    xth/xth -compilerpath . -workpath tests/ir/arrays -testpath tests/ir/arrays tests/ir/arrays/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_ir_other() {
+    xth/xth -compilerpath . -workpath tests/ir/other -testpath tests/ir/other tests/ir/other/xthScript
+    printf "\n========================================\n\n"
+}
+
 test_course() {
-    xth/xth -compilerpath . -workpath xth/tests/pa4 xth/tests/pa4/xthScript
+    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa4 xth/tests/pa4/xthScript
     printf "\n========================================\n\n" 
 }
 
@@ -74,7 +107,8 @@ r|regression)
     test_reg
     ;;
 f|fails)
-    test_fails
+    test_lex_fails
+    test_parse_fails
     ;;
 l|lexer)
     test_lex
@@ -94,12 +128,35 @@ tv)
 tm)
     test_type_man
     ;;
+i|ir)
+    test_ir_basic
+    test_ir_const_fold
+    test_ir_simple
+    test_ir_other
+    test_ir_arrays
+    ;;
+ib)
+    test_ir_basic
+    ;;
+ic)
+    test_ir_const_fold
+    ;;
+is)
+    test_ir_simple
+    ;;
+io)
+    test_ir_other
+    ;;
+ia)
+    test_ir_arrays
+    ;;
 c|course)
     test_course
     ;;
 *)
     echo "Usage: xic-test [options] <command>"
     echo "  --nb:   Skips running xic-build"
-    echo "  Possible commands: a[ll] r[egression] f[ails] l[exer] p[arser] t[ype] te tv tm c[ourse]"
+    echo "  Possible commands: a[ll] r[egression] f[ails] c[ourse]"
+    echo "  l[exer] p[arser] t[ype] te tv tm i[r]"
     ;;
 esac

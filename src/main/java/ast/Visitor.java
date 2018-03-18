@@ -1,9 +1,23 @@
 package ast;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import xic.XicException;
 
 // Boilerplate code to implement the visitor pattern
 public abstract class Visitor<T> {
+
+    /*
+     * Psuedo-visit method for visiting a list of nodes.
+     */
+    public List<T> visit(List<Node> nodes) throws XicException {
+        List<T> t = new ArrayList<>();
+        for (Node n : nodes) {
+            t.add(n.accept(this));
+        }
+        return t;
+    }
 
     /*
      * Top-level AST nodes
@@ -63,10 +77,6 @@ public abstract class Visitor<T> {
     }
 
     public T visit(Var v) throws XicException {
-        return null;
-    }
-
-    public T visit(Multiple m) throws XicException {
         return null;
     }
 

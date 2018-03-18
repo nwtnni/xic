@@ -1,6 +1,7 @@
 package type;
 
-import java.io.*;
+import java.io.FileWriter;
+import java.io.IOException;
 import xic.FilenameUtils;
 
 import ast.Node;
@@ -26,34 +27,30 @@ public class Printer {
 		String ext = FilenameUtils.getExtension(unit);
     	String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
 	    output = FilenameUtils.setExtension(output, "typed");
-        FilenameUtils.makePathTo(output);
 
-    	Node ast = null;
-        FileWriter writer = null;
-
+		FileWriter writer = null;
         try {
+        	FilenameUtils.makePathTo(output);
+			writer = new FileWriter(output);
         	try {
             	switch (ext) {
 	        		case "xi":
-	        			ast = XiParser.from(source, unit);
-	        			TypeCheck.check(lib, ast);
+	        			Node ast = XiParser.from(source, unit);
+	        			TypeChecker.check(lib, ast);
 	        			break;
 	        		default:
 	        			throw XicException.unsupported(unit);
             	}
     	
-	            writer = new FileWriter(output);
 	            writer.write("Valid Xi Program");
 	        	writer.close();
-	            
 	    	} catch (XicException xic) {
-	            writer = new FileWriter(output);
 	            writer.write(xic.toWrite());
 	        	writer.close();
 	            throw xic;
 	    	}
         } catch (IOException io) {
         	throw XicException.write(output);
-        }
+		}
 	}
 }

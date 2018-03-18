@@ -1,5 +1,7 @@
 package type;
 
+import java.util.List;
+
 import java.util.ArrayList;
 
 import ast.XiType;
@@ -31,7 +33,7 @@ public class Type {
      * Represents the type of both wildcards and
      * statements that might complete normally.
      */
-    public static final Type UNIT = new Type("_unit");
+    public static final Type UNIT = new Type();
     
     /**
      * Primitive void.
@@ -48,7 +50,44 @@ public class Type {
      * 
      * Represents the type of polymorphic length-0 arrays.
      */
-    public static final Type POLY = new Type(new Type(POLY_ID)); // For the empty array {}
+    public static final Type POLY = new Type(new Type(POLY_ID));
+
+    /**
+     * Factory method for making a type from a list of types.
+     * 
+     * @param children list of children types
+     * @param isList is true if the type is a list type
+     */
+    private static Type fromList(List<Type> children, boolean isList) {
+        switch (children.size()) {
+            case 0:
+                return new Type();
+            case 1:
+                return children.get(0);
+            default:
+                return new Type(children, isList);
+        }
+    }
+
+    /**
+     * Factory method for making a list type from a list of types.
+     * Returns a class type if the length of the list is one.
+     * 
+     * @param children list of children types
+     */
+    public static Type listFromList(List<Type> children) {
+        return fromList(children, true);
+    }
+
+    /**
+     * Factory method for making a tuple type from a list of types.
+     * Returns a class type if the length of the list is one.
+     * 
+     * @param children list of children types
+     */
+    public static Type tupleFromList(List<Type> children) {
+        return fromList(children, false);
+    }
 
     /**
      * Denotes the possible categories of Types.
@@ -64,6 +103,11 @@ public class Type {
          * Represents a single type
          */
         CLASS,
+
+        /**
+         * Represents a list type constructor
+         */
+        LIST,
         
         /**
          * Represents a tuple type constructor
@@ -85,12 +129,21 @@ public class Type {
     /**
      * The children of this Type, if it is a Type constructor
      */
-    public ArrayList<Type> children;
+    public List<Type> children;
 
     /**
-     * Creates a new primitive type.
+     * Creates a unit type.
      */
-    protected Type(String id) {
+    private Type() {
+        this.kind = Kind.TUPLE;
+        this.id = "_unit";
+        this.children = new ArrayList<>();
+    }
+
+    /**
+     * Creates a new class type. Primitives also fall under this category.
+     */
+    public Type(String id) {
         this.kind = Kind.CLASS;
         this.id = id;
         this.children = null;
@@ -109,14 +162,17 @@ public class Type {
     }
     
     /**
-     * Creates a new tuple type of its argument.
+     * Creates a new list or tuple type of its argument requires that
+     * the number of elements in children is greater than 1.
      * 
-     * @param children Types to create a tuple of, in order
+     * @param children Types to create a list of, in order
+     * @param isList is true if the type is a list type
      */
-    public Type(ArrayList<Type> children) {
-    	this.kind = Kind.TUPLE;
-    	this.id = null;
-    	this.children = children;
+    private Type(List<Type> children, boolean isList) {
+        assert children.size() > 1;
+        this.kind = isList ? Kind.LIST : Kind.TUPLE;
+        this.id = null;
+        this.children = children;
     }
 
     /**
@@ -149,16 +205,17 @@ public class Type {
         Type t = (Type) o;
 
         if (kind == Kind.CLASS && t.kind == Kind.CLASS) {
-            if (this.id.equals(POLY_ID)) {
-                this.id = t.id;
+            if (id.equals(POLY_ID)) {
+                id = t.id;
             }
             if (t.id.equals(POLY_ID)) {
-                t.id = this.id;
+                t.id = id;
             }
             return t.id.equals(id);
         } else if (kind == Kind.ARRAY && t.kind == Kind.ARRAY) {
             return t.children.get(0).equals(children.get(0)) || this == POLY || t == POLY;
-        } else if (kind == Kind.TUPLE && t.kind == Kind.TUPLE) {
+        } else if (kind == Kind.TUPLE && t.kind == Kind.TUPLE ||
+                   kind == Kind.LIST && t.kind == Kind.LIST) {
         	if (children.size() != t.children.size()) { return false; }
         	for (int i = 0; i < children.size(); i++) {
         		if (!children.get(i).equals(t.children.get(i))) {
@@ -200,5 +257,58 @@ public class Type {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Returns true if type is primitive.
+     */
+    public boolean isPrimitive() {
+        return this.equals(INT) || this.equals(BOOL);
+
+    }
+
+    /**
+     * Returns true if type is an array type.
+     */
+    public boolean isArray() {
+        return kind.equals(Kind.ARRAY);
+    }
+
+    @Override
+    public String toString() {
+        switch (kind) {
+            case CLASS:
+                if (this.equals(INT)) {
+                    return "i";
+                } else if (this.equals(BOOL)) {
+                    return "b";
+                } else if (this.equals(UNIT)) {
+                    return "";
+                } else {
+                    // TODO for future extension
+                    assert false;
+                    return null;
+                }
+            case ARRAY:
+                return "a" + children.get(0).toString();
+            case LIST:
+                String args = "";
+                for (Type t : children) {
+                    args += t.toString();
+                }
+                return args;
+            case TUPLE:
+                if (children.size() == 0) {
+                    return "";
+                }
+                String encoding = "";
+                for (Type t : children) {
+                    encoding += t.toString();
+                }
+                return "t" + children.size() + encoding;
+        }
+        // Unreachable
+        assert false;
+        return null;
     }
 }

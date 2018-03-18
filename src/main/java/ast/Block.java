@@ -1,21 +1,28 @@
 package ast;
 
+import java.util.List;
+import java.util.Arrays;
+import java_cup.runtime.ComplexSymbolFactory.Location;
+
 import xic.XicException;
 
-import java.util.ArrayList;
-import java_cup.runtime.ComplexSymbolFactory.Location;
 
 // A Block of statements
 public class Block extends Node {
 
-    public ArrayList<Node> statements;
+    public List<Node> statements;
 
-    public Block(Location location, ArrayList<Node> statements) {
+    public Block(Location location, List<Node> statements) {
         this.location = location;
     	this.statements = statements;
     }
+
+    public Block(Location location, Node... statements) {
+        this.location = location;
+    	this.statements = Arrays.asList(statements);
+    }
     
-    public Block(ArrayList<Node> statements) {
+    public Block(List<Node> statements) {
         this.statements = statements;
     }
 
