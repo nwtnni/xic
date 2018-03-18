@@ -17,5 +17,10 @@ xic ("Test --irgen [folding constants") "--irgen" {
     neq2.xi;
     neq3.xi;
 
+    greater_than1.xi;
+    greater_than_equal1.xi;
+    less_than1.xi;
+    less_than_equal1.xi;
+
 
 }
