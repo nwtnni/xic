@@ -21,6 +21,15 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
     IRNode tree;
 
 	public OptionalLong visit(IRBinOp b) {
+        if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
+            IRESeq l = (IRESeq) b.left;
+            IRESeq r = (IRESeq) b.right;
+            if (l.hasValues() && r.hasValues()) {
+                
+            }
+        }
+
+
 		OptionalLong ltol = b.left.accept(this);
         OptionalLong rtol = b.right.accept(this);
         if (ltol.isPresent() && rtol.isPresent()) {
@@ -72,26 +81,10 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                 c = lt >>> rt;
                 break;
             case EQ:
-                if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
-                    if (((IRESeq) b.left).expr == ((IRESeq) b.right).expr) {
-                        c = 1;
-                    } else {
-                        c = 0;
-                    }
-                } else {
-                    c = ((lt == 1) == (rt == 1)) ? 1 : 0;
-                }
+                c = (lt == rt) ? 1 : 0;
                 break;
             case NEQ:
-                if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
-                    if (((IRESeq) b.left).expr != ((IRESeq) b.right).expr) {
-                        c = 1;
-                    } else {
-                        c = 0;
-                    }
-                } else {
-                    c = ((lt == 1) != (rt == 1)) ? 1 : 0;
-                }
+                c = (lt != rt) ? 1 : 0;
                 break;
             case LT:
                 c = (lt < rt) ? 1 : 0;
@@ -169,10 +162,6 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
         if (eol.isPresent()) {
             e.expr = new IRConst(eol.getAsLong());
-        }
-
-        if (e.hasValues()) {
-            return OptionalLong.of(-1);
         }
 
         return OptionalLong.empty();

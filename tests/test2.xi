@@ -4,9 +4,12 @@ use conv
 main(args: int[][]) {
     // fix bugs with empty array
 
-    arr:int[][] = {{0, 1}, {2, 3}}
+    b:bool = true & true & true
+    if b println(unparseInt(1))
 
-    println(unparseInt(arr[0][0]))
+    // arr:int[][] = {{0, 1}, {2, 3}}
+
+    // println(unparseInt(length(arr)))
     // arr[0][0] = 2
     // println(unparseInt(arr[0][0]))
     // arr[0][1][0] = 'W'
