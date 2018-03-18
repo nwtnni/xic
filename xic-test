@@ -18,6 +18,7 @@ test_reg() {
     test_parse
     test_parse_fails
     test_type
+    test_ir
 }
 
 test_lex_fails() {
@@ -45,6 +46,7 @@ test_type() {
     test_type_valid
     test_type_man
 }
+
 
 test_type_valid() {
     xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
@@ -84,6 +86,14 @@ test_ir_arrays() {
 test_ir_other() {
     xth/xth -compilerpath . -workpath tests/ir/other -testpath tests/ir/other tests/ir/other/xthScript
     printf "\n========================================\n\n"
+}
+
+test_ir() {
+    test_ir_basic
+    test_ir_const_fold
+    test_ir_simple
+    test_ir_other
+    test_ir_arrays
 }
 
 test_course() {
@@ -129,11 +139,7 @@ tm)
     test_type_man
     ;;
 i|ir)
-    test_ir_basic
-    test_ir_const_fold
-    test_ir_simple
-    test_ir_other
-    test_ir_arrays
+    test_ir
     ;;
 ib)
     test_ir_basic
