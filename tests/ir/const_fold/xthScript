@@ -22,6 +22,8 @@ xic ("Test --irgen [folding constants") "--irgen" {
     less_than1.xi;
     less_than_equal1.xi;
 
+    array_concat1.xi;
+
     bad_div_by_zero1.xi;
     bad_div_by_zero2.xi;
 
