@@ -4,8 +4,7 @@ use conv
 main(args: int[][]) {
     // fix bugs with empty array
 
-    b:bool = true & true & true
-    if b println(unparseInt(1))
+    println("hello world")
 
     // arr:int[][] = {{0, 1}, {2, 3}}
 

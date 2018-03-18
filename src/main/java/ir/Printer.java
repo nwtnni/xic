@@ -52,8 +52,6 @@ public class Printer extends IRVisitor<Void> {
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
 
-                comp = (IRCompUnit) Canonizer.canonize(comp);
-
                 // Generate .ir file
 	            OutputStream stream = new FileOutputStream(output);
                 Printer p = new Printer(stream);
