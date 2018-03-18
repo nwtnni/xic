@@ -7,6 +7,11 @@ import java.util.ArrayList;
 import ir.*;
 import java.math.BigInteger;
 
+/**
+ * Main implementation of IR to IR constant folding optimizations.
+ * This optimization only folds primitive constants and checks a
+ * specific case for equality comparison on array literals.
+ */
 public class ConstantFolder extends IRVisitor<OptionalLong> {
 
     /**
@@ -20,25 +25,33 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
     IRNode tree;
 
-    // Todo: bugfix: deal with the case where only one side is constant folded
-	public OptionalLong visit(IRBinOp b) {
+    public OptionalLong visit(IRBinOp b) {
+
+        // Array literal equality checks
         if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
             IRESeq l = (IRESeq) b.left;
             IRESeq r = (IRESeq) b.right;
             if (l.hasValues() && r.hasValues()) {
-                
+                switch (b.type) {
+                    case NEQ:
+                        return OptionalLong.of(1);
+                    case EQ:
+                        return OptionalLong.of(0);
+                    default:
+                        break;
+                }
             }
         }
 
-
-		OptionalLong ltol = b.left.accept(this);
+        OptionalLong ltol = b.left.accept(this);
         OptionalLong rtol = b.right.accept(this);
+
+        // Check boolean and arithmetic
         if (ltol.isPresent() && rtol.isPresent()) {
             long c;
             long lt = ltol.getAsLong();
             long rt = rtol.getAsLong();
             switch (b.type) {
-            // TODO: fix for array concat
             case ADD: 
                 c = lt + rt;
                 break;
@@ -106,19 +119,21 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
             }
             return OptionalLong.of(c);
         }
+
+        // Constant fold one side of array
         if (ltol.isPresent()) {
             b.left = new IRConst(ltol.getAsLong());
         } else if (rtol.isPresent()) {
             b.right = new IRConst(rtol.getAsLong());
         }
+
         return OptionalLong.empty();
         
-	}
-	
-	public OptionalLong visit(IRCall c) {
-        // TODO: add constant folding for length
+    }
+    
+    public OptionalLong visit(IRCall c) {
         List<IRNode> children = new ArrayList<IRNode>();
-		for (IRNode n : c.args) {
+        for (IRNode n : c.args) {
             OptionalLong ol = n.accept(this);
             if (ol.isPresent()) {
                 children.add(new IRConst(ol.getAsLong()));
@@ -128,38 +143,38 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
         }
         c.args = children;
         return OptionalLong.empty();
-	}
+    }
 
-	public OptionalLong visit(IRCJump c) {
+    public OptionalLong visit(IRCJump c) {
         OptionalLong ol = c.cond.accept(this);
         if (ol.isPresent()) {
             c.cond = new IRConst(ol.getAsLong());
         }
-		return OptionalLong.empty();
-	}
+        return OptionalLong.empty();
+    }
 
-	public OptionalLong visit(IRJump j) {
-		OptionalLong ol = j.target.accept(this);
-		if (ol.isPresent()) {
-			j.target = new IRConst(ol.getAsLong());
-		}
-		return OptionalLong.empty();
-	}
-	
-	public OptionalLong visit(IRCompUnit c) {
-		for (IRFuncDecl fd : c.functions.values()) {
-			fd.accept(this);
-		}
-		return OptionalLong.empty();
-	}
+    public OptionalLong visit(IRJump j) {
+        OptionalLong ol = j.target.accept(this);
+        if (ol.isPresent()) {
+            j.target = new IRConst(ol.getAsLong());
+        }
+        return OptionalLong.empty();
+    }
+    
+    public OptionalLong visit(IRCompUnit c) {
+        for (IRFuncDecl fd : c.functions.values()) {
+            fd.accept(this);
+        }
+        return OptionalLong.empty();
+    }
 
-	public OptionalLong visit(IRConst c) {
-		return OptionalLong.of(c.value);
-	}
+    public OptionalLong visit(IRConst c) {
+        return OptionalLong.of(c.value);
+    }
 
-	public OptionalLong visit(IRESeq e) {
+    public OptionalLong visit(IRESeq e) {
         /* e.stmt cannot be constant, do not need to check */
-		e.stmt.accept(this);
+        e.stmt.accept(this);
         OptionalLong eol = e.expr.accept(this);
 
         if (eol.isPresent()) {
@@ -167,40 +182,40 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
         }
 
         return OptionalLong.empty();
-	}
+    }
 
-	public OptionalLong visit(IRExp e) {
-		OptionalLong eol = e.expr.accept(this);
+    public OptionalLong visit(IRExp e) {
+        OptionalLong eol = e.expr.accept(this);
 
         if (eol.isPresent()) {
             return OptionalLong.of(eol.getAsLong());
         }
 
         return OptionalLong.empty();
-	}
+    }
 
-	public OptionalLong visit(IRFuncDecl f) {
+    public OptionalLong visit(IRFuncDecl f) {
         OptionalLong bol = f.body.accept(this);
 
-		return OptionalLong.empty();
-	}
+        return OptionalLong.empty();
+    }
 
-	public OptionalLong visit(IRLabel l) {
-		return OptionalLong.empty();
-	}
+    public OptionalLong visit(IRLabel l) {
+        return OptionalLong.empty();
+    }
 
-	public OptionalLong visit(IRMem m) {
+    public OptionalLong visit(IRMem m) {
         OptionalLong eol = m.expr.accept(this);
 
         if (eol.isPresent()) {
             m.expr = new IRConst(eol.getAsLong());
         }
 
-		return OptionalLong.empty();
-	}
+        return OptionalLong.empty();
+    }
 
-	public OptionalLong visit(IRMove m) {
-		OptionalLong tol = m.target.accept(this);
+    public OptionalLong visit(IRMove m) {
+        OptionalLong tol = m.target.accept(this);
         OptionalLong sol = m.src.accept(this);
 
         if (tol.isPresent()) {
@@ -212,14 +227,14 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
         }
 
         return OptionalLong.empty();
-	}
+    }
 
-	public OptionalLong visit(IRName n) {
-		return OptionalLong.empty();
-	}
+    public OptionalLong visit(IRName n) {
+        return OptionalLong.empty();
+    }
 
-	public OptionalLong visit(IRReturn r) {
-		List<IRNode> children = new ArrayList<IRNode>();
+    public OptionalLong visit(IRReturn r) {
+        List<IRNode> children = new ArrayList<IRNode>();
         for (IRNode n : r.rets) {
             OptionalLong ol = n.accept(this);
             if (ol.isPresent()) {
@@ -230,17 +245,17 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
         }
         r.rets = children;
         return OptionalLong.empty();
-	}
+    }
 
-	public OptionalLong visit(IRSeq s) {
+    public OptionalLong visit(IRSeq s) {
         for (IRNode n : s.stmts) {
             n.accept(this);
         }
         
         return OptionalLong.empty();
-	}
+    }
 
-	public OptionalLong visit(IRTemp t) {
-		return OptionalLong.empty();
-	}
+    public OptionalLong visit(IRTemp t) {
+        return OptionalLong.empty();
+    }
 }

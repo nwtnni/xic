@@ -2,6 +2,9 @@ package ir;
 
 import interpret.Configuration;
 
+/**
+ * Unique temporary generators for IR productions.
+ */
 public class IRTempFactory {
 
 	private static long tempIndex = 0;
