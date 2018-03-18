@@ -2,24 +2,37 @@ xic ("Test --irgen [simple]") "--irgen" {
     simple_int0.xi;
     simple_int1.xi;
     simple_int-1.xi;
+    
     simple_add1.xi;
+    
     simple_sub1.xi;
+    
     simple_mult1.xi;
+    
     simple_div1.xi;
     simple_div2.xi;
+    
     simple_mod1.xi;
     simple_mod2.xi;
     simple_mod3.xi;
+    
     simple_highmult1.xi;
     simple_highmult2.xi;
+    
     simple_ifelse1.xi;
     simple_ifelse2.xi;
+    
     simple_while1.xi;
     simple_while2.xi;
+    
     simple_assign1.xi;
+    
     simple_funcs1.xi;
     simple_funcs2.xi;
     simple_funcs3.xi;
     simple_funcs4.xi;
     simple_funcs5.xi;
+    simple_funcs6.xi;
+    
+    simple_recursive_func1.xi;
 }
