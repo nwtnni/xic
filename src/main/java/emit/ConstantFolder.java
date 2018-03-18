@@ -18,9 +18,8 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
         ast.accept(new ConstantFolder());
     }
 
-    IRNode tree;
-
 	public OptionalLong visit(IRBinOp b) {
+        // checking for 
         if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
             IRESeq l = (IRESeq) b.left;
             IRESeq r = (IRESeq) b.right;
@@ -178,6 +177,7 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 	}
 
 	public OptionalLong visit(IRFuncDecl f) {
+        // The body is statements, will never return constants
         OptionalLong bol = f.body.accept(this);
 
 		return OptionalLong.empty();
