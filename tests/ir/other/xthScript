@@ -34,4 +34,7 @@ xic ("Test --irgen [other]") "--irgen" {
     mult1.xi;
     
     while1.xi;
+
+    bad_divide_by_zero1.xi;
 }
+
