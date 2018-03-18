@@ -33,6 +33,7 @@ xic ("Test --irgen [simple]") "--irgen" {
     simple_funcs4.xi;
     simple_funcs5.xi;
     simple_funcs6.xi;
+    simple_funcs7.xi;
     
     simple_recursive_func1.xi;
 }
