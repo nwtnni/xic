@@ -38,6 +38,8 @@ public class Emitter extends Visitor<IRNode> {
     private static final IRConst ZERO = new IRConst(0);
     private static final IRConst ONE = new IRConst(1);
 
+    private static final IRName ARRAY_CONCAT_FUNC = new IRName("_xi_array_concat");
+
     /* 
      * Utility methods for generating code
      */
@@ -83,6 +85,13 @@ public class Emitter extends Visitor<IRNode> {
             t,
             fL
         );
+
+        // return new IRSeq(
+        //     new IRCJump(cond, tL.name, fL.name),
+        //     tL,
+        //     t,
+        //     fL
+        // );
     }
 
     /**
@@ -102,6 +111,15 @@ public class Emitter extends Visitor<IRNode> {
             new IRJump(new IRName(hL.name)),
             fL
         );
+
+        // return new IRSeq(
+        //     hL,
+        //     new IRCJump(guard, tL.name, fL.name),
+        //     tL,
+        //     block,
+        //     new IRJump(new IRName(hL.name)),
+        //     fL
+        // );
     }
 
     /**
@@ -299,6 +317,60 @@ public class Emitter extends Visitor<IRNode> {
         );
     }
 
+    /**
+     * Generates library function for accessing an array.
+     * _xi_array_concat(a, b)
+     */
+    private IRFuncDecl xiArrayConcat() {
+        List<IRNode> body = new ArrayList<>();
+
+        // Make copies of pointers
+        IRTemp ap = IRTempFactory.generateTemp("a_ptr_copy");
+        body.add(new IRMove(ap, IRTempFactory.getArgument(0)));
+        IRTemp bp = IRTempFactory.generateTemp("b_ptr_copy");
+        body.add(new IRMove(bp, IRTempFactory.getArgument(1)));
+
+        // Calculate new array size
+        IRExpr aLen = IRTempFactory.generateTemp("a_len");
+        body.add(new IRMove(aLen, length(ap)));
+        IRExpr bLen = IRTempFactory.generateTemp("b_len");
+        body.add(new IRMove(bLen, length(bp)));
+        IRTemp size = IRTempFactory.generateTemp("concat_size");
+        body.add(new IRMove(size, new IRBinOp(OpType.ADD, aLen, bLen)));
+
+        // Generate pointers and allocate memory
+        IRTemp pointer = IRTempFactory.generateTemp("concat_array");
+        IRTemp workPointer = IRTempFactory.generateTemp("work_ptr");
+        body.add(new IRMove(pointer, alloc(size)));
+        body.add(new IRMove(workPointer, pointer));
+
+        IRTemp i = IRTempFactory.generateTemp("i");
+        body.add(new IRMove(i, ZERO));
+        body.add(generateLoop(
+            new IRBinOp(OpType.LT, i, aLen), 
+            new IRSeq(
+                new IRMove(new IRMem(workPointer), new IRMem(ap)),
+                increment(i),
+                incrPointer(workPointer),
+                incrPointer(ap)
+            )
+        ));
+        body.add(new IRMove(i, ZERO));
+        body.add(generateLoop(
+            new IRBinOp(OpType.LT, i, bLen), 
+            new IRSeq(
+                new IRMove(new IRMem(workPointer), new IRMem(bp)),
+                increment(i),
+                incrPointer(workPointer),
+                incrPointer(bp)
+            )
+        ));
+
+        body.add(new IRReturn(pointer));
+
+        return new IRFuncDecl("_xi_array_concat", new IRSeq(body));
+    }
+
     /*
      * Visitor methods
      */
@@ -320,6 +392,9 @@ public class Emitter extends Visitor<IRNode> {
 
     public IRNode visit(Program p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
+
+        program.appendFunc(xiArrayConcat());
+
         for (Node n : p.fns) {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
             program.appendFunc(f);
@@ -477,7 +552,8 @@ public class Emitter extends Visitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.MOD, left, right);
             case PLUS:
                 if (b.lhs.type.isArray()) {
-                    return concat(left, right);
+                    // return concat(left, right);
+                    return new IRCall(ARRAY_CONCAT_FUNC, left, right);
                 }
                 return new IRBinOp(IRBinOp.OpType.ADD, left, right);
             case MINUS:
