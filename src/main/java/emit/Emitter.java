@@ -549,13 +549,13 @@ public class Emitter extends Visitor<IRNode> {
         IRLabel done = generateLabel("done");
         IRExpr result = IRTempFactory.generateTemp("result");
 
-        // Store index
-        IRTemp index = IRTempFactory.generateTemp("index");
-        stmts.add(new IRMove(index, i.index.accept(this)));
-
         // Store array reference
         IRTemp pointer = IRTempFactory.generateTemp("array_ref");
         stmts.add(new IRMove(pointer, i.array.accept(this)));
+
+        // Store index
+        IRTemp index = IRTempFactory.generateTemp("index");
+        stmts.add(new IRMove(index, i.index.accept(this)));
 
         // Check bounds
         stmts.add(

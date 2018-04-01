@@ -1,0 +1,11 @@
+xic ("Test --irgen -O [failed]") "--irgen -O" {
+    2Darray_order_of_exec.xi;
+    arracc04.xi;
+    arracc08.xi;
+    assign09.xi;
+    assign10.xi;
+    localdecl13.xi;
+    localdecl14.xi;
+    // procedurecall02.xi;
+    // procedurecall04.xi;
+}
