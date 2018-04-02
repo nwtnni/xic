@@ -182,31 +182,7 @@ public class Emitter extends Visitor<IRNode> {
      * Dynamically allocate memory for an an array of size length
      */
     private IRExpr alloc(IRExpr length) {
-        List<IRNode> stmts = new ArrayList<>();
-
-        // Calculate size of array
-        IRExpr byteSize = new IRBinOp(
-            OpType.MUL,
-            new IRBinOp(OpType.ADD, length, ONE), 
-            WORD_SIZE
-        );
-
-        IRTemp size = IRTempFactory.generateTemp("d_size");
-        stmts.add(new IRMove(size, byteSize));
-
-        // Generate pointers and llocate memory
-        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
-        IRTemp pointer = IRTempFactory.generateTemp("d_array");
-        stmts.add(new IRMove(pointer, addr));
-
-        // Store length then shift pointer
-        stmts.add(new IRMove(new IRMem(pointer), length));
-        stmts.add(incrPointer(pointer));
-
-        return new IRESeq(
-            new IRSeq(stmts),
-            pointer
-        );
+        return new IRCall(new IRName("_xi_dalloc"), length);
     }
 
     /**
@@ -245,6 +221,40 @@ public class Emitter extends Visitor<IRNode> {
      */
     private IRExpr length(IRExpr pointer) {
         return new IRMem(new IRBinOp(OpType.SUB, pointer, WORD_SIZE));
+    }
+
+
+    /**
+     * Generates library function for allocating memory for an dynamic array.
+     */
+    private IRFuncDecl dAlloc() {
+        List<IRNode> stmts = new ArrayList<>();
+
+        IRTemp length = IRTempFactory.generateTemp("d_length");
+        stmts.add(new IRMove(length, IRTempFactory.getArgument(0)));
+
+        // Calculate size of array
+        IRExpr byteSize = new IRBinOp(
+            OpType.MUL,
+            new IRBinOp(OpType.ADD, length, ONE), 
+            WORD_SIZE
+        );
+
+        IRTemp size = IRTempFactory.generateTemp("d_size");
+        stmts.add(new IRMove(size, byteSize));
+
+        // Generate pointers and llocate memory
+        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
+        IRTemp pointer = IRTempFactory.generateTemp("d_array");
+        stmts.add(new IRMove(pointer, addr));
+
+        // Store length then shift pointer
+        stmts.add(new IRMove(new IRMem(pointer), length));
+        stmts.add(incrPointer(pointer));
+
+        stmts.add(new IRReturn(pointer));
+
+        return new IRFuncDecl("_xi_dalloc", new IRSeq(stmts));
     }
 
     /**
@@ -324,6 +334,7 @@ public class Emitter extends Visitor<IRNode> {
         IRCompUnit program = new IRCompUnit("program");
 
         program.appendFunc(xiArrayConcat());
+        program.appendFunc(dAlloc());
 
         for (Node n : p.fns) {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
@@ -605,7 +616,7 @@ public class Emitter extends Visitor<IRNode> {
         // Only allocate memory for special case of syntactic sugar
         // for array declarations with dimensions specified
         if (t.hasSize()) {
-            IRExpr length = (IRExpr) t.size.accept(this);
+            IRExpr length =  (IRExpr) t.size.accept(this);
             IRExpr child = (IRExpr) t.child.accept(this);
             if (child == null) {
                 return alloc(length);
