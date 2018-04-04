@@ -19,76 +19,76 @@ import xic.XicException;
  */
 public class FnType extends Visitor<Type> {
 
-	/**
-	 * Convenience factory method to create a FnType from a Fn.
-	 * 
-	 * @param f Fn node to convert
-	 * @return FnType corresponding to Fn f
-	 */
-	public static FnType from(Fn f) {
-		FnType type = new FnType();
-		try {
-			type.visit(f);
-		} catch (XicException e) {
-			// Unreachable because FnType visitor does not throw type execptions
-			assert false;
-		}
-		return type;
-	}
+    /**
+     * Convenience factory method to create a FnType from a Fn.
+     * 
+     * @param f Fn node to convert
+     * @return FnType corresponding to Fn f
+     */
+    public static FnType from(Fn f) {
+        FnType type = new FnType();
+        try {
+            type.visit(f);
+        } catch (XicException e) {
+            // Unreachable because FnType visitor does not throw type execptions
+            assert false;
+        }
+        return type;
+    }
 
-	/**
-	 * Stores the Fn's location for error display.
-	 */
-	public Location location;
-	
-	/**
-	 * Stores the Fn's arguments. Can be a {@link Type.Kind#LIST} for
-	 * functions with zero or more than one argument types, or a {@link Type.Kind#CLASS}
-	 * for functions with one return type.
-	 */
-	public Type args;
-	
-	/**
-	 * Stores the Fn's return types. Can be a {@link Type.Kind#TUPLE} for
-	 * functions with zero or more than one return types, or a {@link Type.Kind#CLASS}
-	 * for functions with one return type.
-	 */
-	public Type returns;
+    /**
+     * Stores the Fn's location for error display.
+     */
+    public Location location;
+    
+    /**
+     * Stores the Fn's arguments. Can be a {@link Type.Kind#LIST} for
+     * functions with zero or more than one argument types, or a {@link Type.Kind#CLASS}
+     * for functions with one return type.
+     */
+    public Type args;
+    
+    /**
+     * Stores the Fn's return types. Can be a {@link Type.Kind#TUPLE} for
+     * functions with zero or more than one return types, or a {@link Type.Kind#CLASS}
+     * for functions with one return type.
+     */
+    public Type returns;
 
-	/**
-	 * Override to create a list of types from a list of nodes.
-	 */
-	@Override
-	public List<Type> visit(List<Node> nodes) throws XicException {
-		List<Type> types = new ArrayList<>();
-		for (Node n : nodes) {
-			types.add(n.accept(this));
-		}
-		return types;
-	}
+    /**
+     * Override to create a list of types from a list of nodes.
+     */
+    @Override
+    public List<Type> visit(List<Node> nodes) throws XicException {
+        List<Type> types = new ArrayList<>();
+        for (Node n : nodes) {
+            types.add(n.accept(this));
+        }
+        return types;
+    }
 
-	/**
-	 * Visits a Fn and populates the fields of this FnType.
-	 */
+    /**
+     * Visits a Fn and populates the fields of this FnType.
+     */
     public Type visit(Fn f) throws XicException {
-		location = f.location;
-		args = Type.listFromList(visit(f.args));
-		returns = Type.tupleFromList(visit(f.returns));
-    	return null;
+        location = f.location;
+        args = Type.listFromList(visit(f.args));
+        returns = Type.tupleFromList(visit(f.returns));
+        return null;
     }
 
     /**
      * Visits a Declare node and returns its type.
      */
     public Type visit(Declare d) throws XicException {
-    	return d.xiType.accept(this);
+        return d.xiType.accept(this);
     }
 
     /**
      * Visits a XiType node and converts it to a Type.
      */
     public Type visit(XiType xt) {
-    	return new Type(xt);
+        return new Type(xt);
     }
 
     /**
@@ -97,9 +97,9 @@ public class FnType extends Visitor<Type> {
      */
     @Override
     public boolean equals(Object o) {
-    	if (!(o instanceof FnType)) { return false; }
-    	FnType type = (FnType) o;
-    	return args.equals(type.args) && returns.equals(type.returns);
+        if (!(o instanceof FnType)) { return false; }
+        FnType type = (FnType) o;
+        return args.equals(type.args) && returns.equals(type.returns);
     }
 
     /**
@@ -107,6 +107,6 @@ public class FnType extends Visitor<Type> {
      */
     @Override
     public int hashCode() {
-    	return args.hashCode() * returns.hashCode();
+        return args.hashCode() * returns.hashCode();
     }
 }

@@ -24,12 +24,12 @@ import xic.XicInternalException;
  */
 public abstract class Context<S,T> {
 
-	/**
-	 * The backing persistent data structure.
-	 * 
-	 * We use a PStack to represent entering and leaving different scopes,
-	 * and PMaps to record key-value pairs.
-	 */
+    /**
+     * The backing persistent data structure.
+     * 
+     * We use a PStack to represent entering and leaving different scopes,
+     * and PMaps to record key-value pairs.
+     */
     protected PStack<PMap<S,T>> context;
 
     /**
@@ -45,7 +45,7 @@ public abstract class Context<S,T> {
      * @param c Context to clone
      */
     protected Context(Context<S,T> c) {
-    	this.context = c.context;
+        this.context = c.context;
     }
 
     /**
@@ -83,7 +83,7 @@ public abstract class Context<S,T> {
      * Pushes a new scope onto the stack.
      */
     public void push() {
-    	context = context.plus(HashTreePMap.empty());
+        context = context.plus(HashTreePMap.empty());
     }
 
     /**

@@ -25,18 +25,18 @@ import xic.XicException;
  */
 public class Importer extends TypeChecker {
 
-	/**
-	 * Factory method to resolve dependencies in an AST into a FnContext.
-	 * 
-	 * @param lib Directory to search for .ixi files
-	 * @param ast Parsed source AST to extract use dependencies from
-	 * @return Top-level function declarations in FnContext form
-	 * @throws XicException if any functions are illegally shadowed
-	 */
+    /**
+     * Factory method to resolve dependencies in an AST into a FnContext.
+     * 
+     * @param lib Directory to search for .ixi files
+     * @param ast Parsed source AST to extract use dependencies from
+     * @return Top-level function declarations in FnContext form
+     * @throws XicException if any functions are illegally shadowed
+     */
     public static FnContext resolve(String lib, Node ast) throws XicException {
-    	Importer resolver = new Importer(lib);
-    	ast.accept(resolver);
-    	return resolver.fns;
+        Importer resolver = new Importer(lib);
+        ast.accept(resolver);
+        return resolver.fns;
     }
     
     /**
@@ -54,11 +54,11 @@ public class Importer extends TypeChecker {
      * 
      * @param lib Directory to search for .ixi files
      * @throws XicException if importing failed (e.g. invalid .ixi file
-     *   		or illegal function shadowing)
+     *           or illegal function shadowing)
      */
     private Importer(String lib) throws XicException {
-    	this.lib = lib;
-    	this.populate = true;
+        this.lib = lib;
+        this.populate = true;
     }
     
     /**
@@ -67,27 +67,27 @@ public class Importer extends TypeChecker {
      */
     @Override
     public Type visit(Program p) throws XicException {
-		// First pass: populate top-level environment with function IDs
-    	for (Node fn : p.fns) {
-    		fn.accept(this);
-    	}
-    	
-    	populate = false;
-    	
-		// Second pass: check for shadowed arguments against top-level
-    	for (Node fn : p.fns) {
-    		vars.push();
-    		fn.accept(this);
-    		vars.pop();
-    	}
-		
-		if (p.isProgram()) {
-    		for (Node use : p.uses) {
-    			use.accept(this);
-    		}
-    	}
+        // First pass: populate top-level environment with function IDs
+        for (Node fn : p.fns) {
+            fn.accept(this);
+        }
+        
+        populate = false;
+        
+        // Second pass: check for shadowed arguments against top-level
+        for (Node fn : p.fns) {
+            vars.push();
+            fn.accept(this);
+            vars.pop();
+        }
+        
+        if (p.isProgram()) {
+            for (Node use : p.uses) {
+                use.accept(this);
+            }
+        }
 
-    	return null;
+        return null;
     }
     
     /**
@@ -95,9 +95,9 @@ public class Importer extends TypeChecker {
      */
     @Override
     public Type visit(Use u) throws XicException {
-    	Node ast = IXiParser.from(lib, u.file + ".ixi");
-    	fns.merge(Importer.resolve(lib, ast));
-    	return null;
+        Node ast = IXiParser.from(lib, u.file + ".ixi");
+        fns.merge(Importer.resolve(lib, ast));
+        return null;
     }
     
     /**
@@ -105,14 +105,14 @@ public class Importer extends TypeChecker {
      */
     @Override
     public Type visit(Fn f) throws XicException {
-    	if (!populate) {
-			visit(f.args);
-			visit(f.returns);
-    	} else if (fns.contains(f.id)) {
-    		throw new TypeException(Kind.DECLARATION_CONFLICT, f.location);
-    	} else {
-    		fns.add(f.id, FnType.from(f));
-    	}
-    	return null;
+        if (!populate) {
+            visit(f.args);
+            visit(f.returns);
+        } else if (fns.contains(f.id)) {
+            throw new TypeException(Kind.DECLARATION_CONFLICT, f.location);
+        } else {
+            fns.add(f.id, FnType.from(f));
+        }
+        return null;
     }
 }

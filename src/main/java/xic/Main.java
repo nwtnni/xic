@@ -10,9 +10,9 @@ import java.util.ArrayList;
  */
 public class Main {
 
-	/**
-	 * Main compiler interface. Usage information can be printed with the --help flag.
-	 */
+    /**
+     * Main compiler interface. Usage information can be printed with the --help flag.
+     */
     public static void main(String[] args) {
         boolean lexFlag = false;
         boolean parseFlag = false;

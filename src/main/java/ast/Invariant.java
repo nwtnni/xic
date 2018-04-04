@@ -12,11 +12,11 @@ public class Invariant extends Visitor<Void> {
 
     public static void check(Node ast) {
         try {
-			ast.accept(CHECKER);
-		} catch (Exception e) {
-			// TODO what should we do here?
-			e.printStackTrace();
-		}
+            ast.accept(CHECKER);
+        } catch (Exception e) {
+            // TODO what should we do here?
+            e.printStackTrace();
+        }
     }
 
     // Program invariants:
@@ -109,7 +109,7 @@ public class Invariant extends Visitor<Void> {
             assert d.id == null;
             assert d.xiType == null;
         } else {
-        	assert d.id != null;
+            assert d.id != null;
             assert d.xiType instanceof XiType;
             d.xiType.accept(this);
         }

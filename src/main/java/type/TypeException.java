@@ -9,19 +9,19 @@ import xic.XicException;
 @SuppressWarnings("serial")
 public class TypeException extends XicException {
 
-	/**
-	 * Enums allow for compile-time assurance that all thrown TypeExceptions
-	 * are drawn from the following set.
-	 */
+    /**
+     * Enums allow for compile-time assurance that all thrown TypeExceptions
+     * are drawn from the following set.
+     */
     public enum Kind {
         // Statement exceptions
-    	CONTROL_FLOW("Control reached end of non-void function"),
+        CONTROL_FLOW("Control reached end of non-void function"),
         MISMATCHED_ASSIGN("Mismatched types for assignment"),
         INVALID_WILDCARD("Wildcard can only be used with function call"),
-    	MISMATCHED_RETURN("Mismatched return type for function"),
+        MISMATCHED_RETURN("Mismatched return type for function"),
         UNUSED_FUNCTION("Unused function result"),
-    	UNREACHABLE("Unreachable statement"),
-    	INVALID_GUARD("Guard expressions must be type bool"),
+        UNREACHABLE("Unreachable statement"),
+        INVALID_GUARD("Guard expressions must be type bool"),
         
         // Expression exceptions
         INVALID_ARG_TYPES("Invalid arguments for function call"),
@@ -35,7 +35,7 @@ public class TypeException extends XicException {
         NOT_AN_ARRAY("Expected array"),
         
         // Context exceptions
-    	DECLARATION_CONFLICT("Conflicting declarations"),
+        DECLARATION_CONFLICT("Conflicting declarations"),
         SYMBOL_NOT_FOUND("Symbol not found"),
         CYCLIC_TYPE_DEPENDENCY("Found cyclic type dependency");
 
@@ -57,7 +57,7 @@ public class TypeException extends XicException {
      * @param location Location of error
      */
     public TypeException(Kind kind, Location location) {
-    	super(XicException.Kind.SEMANTIC, location, kind.toString());
+        super(XicException.Kind.SEMANTIC, location, kind.toString());
     }
 
     /**
@@ -65,7 +65,7 @@ public class TypeException extends XicException {
      * 
      * @param kind Kind of TypeException to throw
      */
-	public TypeException(Kind kind) {
-		super(XicException.Kind.SEMANTIC, kind.toString());
-	}
+    public TypeException(Kind kind) {
+        super(XicException.Kind.SEMANTIC, kind.toString());
+    }
 }

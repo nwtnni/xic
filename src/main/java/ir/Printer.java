@@ -21,27 +21,27 @@ import ast.Program;
 
 public class Printer extends IRVisitor<Void> {
 
-	/**
-	 * Parses the given file, runs the type checker, generates IR 
+    /**
+     * Parses the given file, runs the type checker, generates IR 
      * and outputs diagnostic information to the given output file.
-	 * 
-	 * @param source Directory to search for the source
-	 * @param sink Directory to output the result
-	 * @param lib Directory to search for interface files
- 	 * @param unit Path to the target source file, relative to source
-	 * @param run Run IR interpreter on generated IR code
-	 * @param opt enable optimizations if true 
-	 * @throws XicException if the Printer was unable to write to the given file
-	 */
+     * 
+     * @param source Directory to search for the source
+     * @param sink Directory to output the result
+     * @param lib Directory to search for interface files
+      * @param unit Path to the target source file, relative to source
+     * @param run Run IR interpreter on generated IR code
+     * @param opt enable optimizations if true 
+     * @throws XicException if the Printer was unable to write to the given file
+     */
     public static void print(String source, String sink, String lib, String unit, boolean run, boolean opt) throws XicException {
         String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
-	    output = FilenameUtils.setExtension(output, "ir");
+        output = FilenameUtils.setExtension(output, "ir");
 
         IRCompUnit comp = null;
 
         try {
             FilenameUtils.makePathTo(output);
-        	try {
+            try {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);
                 comp = Emitter.emitIR((Program) ast, context);
@@ -53,7 +53,7 @@ public class Printer extends IRVisitor<Void> {
                 comp = (IRCompUnit) Canonizer.canonize(comp);
 
                 // Generate .ir file
-	            OutputStream stream = new FileOutputStream(output);
+                OutputStream stream = new FileOutputStream(output);
                 Printer p = new Printer(stream);
                 comp.accept(p);
 
@@ -66,11 +66,11 @@ public class Printer extends IRVisitor<Void> {
                     }
                 }
 
-	    	} catch (XicException xic) {
-	            throw xic;
-	    	}
+            } catch (XicException xic) {
+                throw xic;
+            }
         } catch (IOException io) {
-        	throw XicException.write(output);
+            throw XicException.write(output);
         }
     }
 
@@ -101,25 +101,25 @@ public class Printer extends IRVisitor<Void> {
      * Visitor methods
      */
 
-	public Void visit(IRBinOp b) {
+    public Void visit(IRBinOp b) {
         printer.startList();
         printer.printAtom(b.type.toString());
         b.left.accept(this);
         b.right.accept(this);
         printer.endList();
         return null;
-	}
-	
-	public Void visit(IRCall c) {
+    }
+    
+    public Void visit(IRCall c) {
         printer.startList();
         printer.printAtom("CALL");
         c.target.accept(this);
         visit(c.args);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRCJump c) {
+    public Void visit(IRCJump c) {
         printer.startList();
         printer.printAtom("CJUMP");
         c.cond.accept(this);
@@ -128,18 +128,18 @@ public class Printer extends IRVisitor<Void> {
             printer.printAtom(c.falseLabel);
         }
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRJump j) {
+    public Void visit(IRJump j) {
         printer.startList();
         printer.printAtom("JUMP");
         j.target.accept(this);
         printer.endList();
-		return null;
-	}
-	
-	public Void visit(IRCompUnit c) {
+        return null;
+    }
+    
+    public Void visit(IRCompUnit c) {
         printer.startUnifiedList();
         printer.printAtom("COMPUNIT");
         printer.printAtom(c.name);
@@ -148,97 +148,97 @@ public class Printer extends IRVisitor<Void> {
         }
         printer.endList();
         printer.flush();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRConst c) {
+    public Void visit(IRConst c) {
         printer.startList();
         printer.printAtom("CONST");
         printer.printAtom(String.valueOf(c.value));
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRESeq e) {
+    public Void visit(IRESeq e) {
         printer.startList();
         printer.printAtom("ESEQ");
         e.stmt.accept(this);
         e.expr.accept(this);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRExp e) {
+    public Void visit(IRExp e) {
         printer.startList();
         printer.printAtom("EXP");
         e.expr.accept(this);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRFuncDecl f) {
+    public Void visit(IRFuncDecl f) {
         printer.startList();
         printer.printAtom("FUNC");
         printer.printAtom(f.name);
         f.body.accept(this);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRLabel l) {
+    public Void visit(IRLabel l) {
         printer.startList();
         printer.printAtom("LABEL");
         printer.printAtom(l.name);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRMem m) {
+    public Void visit(IRMem m) {
         printer.startList();
         printer.printAtom(m.memType.toString());
         m.expr.accept(this);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRMove m) {
+    public Void visit(IRMove m) {
         printer.startList();
         printer.printAtom("MOVE");
         m.target.accept(this);
         m.src.accept(this);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRName n) {
+    public Void visit(IRName n) {
         printer.startList();
         printer.printAtom("NAME");
         printer.printAtom(n.name);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRReturn r) {
+    public Void visit(IRReturn r) {
         printer.startList();
         printer.printAtom("RETURN");
         visit(r.rets);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRSeq s) {
+    public Void visit(IRSeq s) {
         printer.startUnifiedList();
         printer.printAtom("SEQ");
         visit(s.stmts);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 
-	public Void visit(IRTemp t) {
+    public Void visit(IRTemp t) {
         printer.startList();
         printer.printAtom("TEMP");
         printer.printAtom(t.name);
         printer.endList();
-		return null;
-	}
+        return null;
+    }
 }
