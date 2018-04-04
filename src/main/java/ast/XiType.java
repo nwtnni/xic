@@ -48,6 +48,6 @@ public class XiType extends Node {
     }
     
     public boolean hasSize() {
-    	return size != null;
+        return size != null;
     }
 }

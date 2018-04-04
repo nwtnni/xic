@@ -16,47 +16,47 @@ import xic.XicException;
  */
 public class Printer extends Visitor<Void> {
 
-	/**
-	 * Parses the given file, and outputs diagnostic
-	 * information to the given output file.
-	 * 
-	 * @param source Directory to search for the source
-	 * @param sink Directory to output the result
- 	 * @param unit Path to the target source file, relative to source
-	 * @throws XicException if the Printer was unable to write to the given file
-	 */
+    /**
+     * Parses the given file, and outputs diagnostic
+     * information to the given output file.
+     * 
+     * @param source Directory to search for the source
+     * @param sink Directory to output the result
+      * @param unit Path to the target source file, relative to source
+     * @throws XicException if the Printer was unable to write to the given file
+     */
     public static void print(String source, String sink, String unit) throws XicException {
-    	String ext = FilenameUtils.getExtension(unit);
-    	String output = FilenameUtils.concat(sink, unit);
+        String ext = FilenameUtils.getExtension(unit);
+        String output = FilenameUtils.concat(sink, unit);
 
         try {
             FilenameUtils.makePathTo(output);
-        	try {
+            try {
                 Node ast = null;
-            	switch (ext) {
-	        		case "xi":
-	        			output = FilenameUtils.setExtension(output, "parsed");
-	        			ast = XiParser.from(source, unit);
-	        			break;
-	        		case "ixi":
-	        			output = FilenameUtils.setExtension(output, "iparsed");
-	        			ast = IXiParser.from(source, unit);
-	        			break;
-	        		default:
-	        			throw XicException.unsupported(unit);
-            	}
-    	
-	            OutputStream stream = new FileOutputStream(output);
-	            Printer printer = new Printer(stream);
-	            ast.accept(printer);
-	    	} catch (XicException xic) {
-	            BufferedWriter w = new BufferedWriter(new FileWriter(output));
-	            w.write(xic.toWrite());
-	            w.close();
-	            throw xic;
-	    	}
+                switch (ext) {
+                    case "xi":
+                        output = FilenameUtils.setExtension(output, "parsed");
+                        ast = XiParser.from(source, unit);
+                        break;
+                    case "ixi":
+                        output = FilenameUtils.setExtension(output, "iparsed");
+                        ast = IXiParser.from(source, unit);
+                        break;
+                    default:
+                        throw XicException.unsupported(unit);
+                }
+        
+                OutputStream stream = new FileOutputStream(output);
+                Printer printer = new Printer(stream);
+                ast.accept(printer);
+            } catch (XicException xic) {
+                BufferedWriter w = new BufferedWriter(new FileWriter(output));
+                w.write(xic.toWrite());
+                w.close();
+                throw xic;
+            }
         } catch (IOException io) {
-        	throw XicException.write(output);
+            throw XicException.write(output);
         }
     }
 

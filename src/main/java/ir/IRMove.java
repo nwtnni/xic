@@ -33,11 +33,11 @@ public class IRMove extends IRStmt {
     
     //TODO: is there a better way to do this?
     public boolean isMem() {
-    	return target instanceof IRMem;
+        return target instanceof IRMem;
     }
     
     public IRMem getMem() {
-    	return (IRMem) target;
+        return (IRMem) target;
     }
 
     // @Override

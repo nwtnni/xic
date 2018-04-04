@@ -7,12 +7,12 @@ import interpret.Configuration;
  */
 public class IRTempFactory {
 
-	private static long tempIndex = 0;
-	
+    private static long tempIndex = 0;
+    
     /**
      * Generate a new temporary name.
      */
-	public static IRTemp generateTemp() {
+    public static IRTemp generateTemp() {
         return new IRTemp("__temp_" + Long.toString(++tempIndex));
     }
 
@@ -36,5 +36,5 @@ public class IRTempFactory {
     public static IRTemp getReturn(int i) {
         return new IRTemp(Configuration.ABSTRACT_RET_PREFIX + i);
     }
-	
+    
 }

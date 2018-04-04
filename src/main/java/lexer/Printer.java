@@ -13,40 +13,40 @@ import xic.XicException;
  */
 public class Printer {
 
-	/**
-	 * Lexes the given file, and outputs diagnostic
-	 * information to the given output file.
-	 * 
-	 * @param source Directory to search for the source
-	 * @param sink Directory to output the result
- 	 * @param unit Path to the target source file, relative to source
-	 * @throws XicException if the Printer was unable to write to the given file
-	 */
-	public static void print(String source, String sink, String unit) throws XicException {
+    /**
+     * Lexes the given file, and outputs diagnostic
+     * information to the given output file.
+     * 
+     * @param source Directory to search for the source
+     * @param sink Directory to output the result
+      * @param unit Path to the target source file, relative to source
+     * @throws XicException if the Printer was unable to write to the given file
+     */
+    public static void print(String source, String sink, String unit) throws XicException {
         String lexed = FilenameUtils.setExtension(unit, "lexed");
         lexed = FilenameUtils.concat(sink, lexed);
         try {
             FilenameUtils.makePathTo(lexed);
             BufferedWriter writer = new BufferedWriter(new FileWriter(lexed, false));
-        	try {
+            try {
                 XiLexer lexer = XiLexer.from(source, unit);
 
-	            ComplexSymbol s = (ComplexSymbol) lexer.nextToken();
-	            while (s.sym != XiSymbol.EOF) {
-	                writer.append(format(s) + "\n");
-	                s = (ComplexSymbol) lexer.nextToken();
+                ComplexSymbol s = (ComplexSymbol) lexer.nextToken();
+                while (s.sym != XiSymbol.EOF) {
+                    writer.append(format(s) + "\n");
+                    s = (ComplexSymbol) lexer.nextToken();
                 }
                 
-	            writer.close();
-        	} catch (LexException e) {
+                writer.close();
+            } catch (LexException e) {
                 writer.append(e.toWrite());
                 writer.close();
                 throw e;
-        	}
+            }
         } catch (IOException io) {
-        	throw XicException.write(lexed);
+            throw XicException.write(lexed);
         }
-	}
+    }
 
     private static String format(ComplexSymbol s) {
         String label;
