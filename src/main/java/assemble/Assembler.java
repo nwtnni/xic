@@ -2,6 +2,7 @@ package assemble;
 
 import ir.*;
 import type.FnContext;
+import interpret.Configuration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 // TODO Currently hardcoded in AT&T syntax, add factory methods instead of dealing with pure strings
+// TODO Currently hardcoded all ARG1() and _ARG1 calls
 
 public class Assembler extends IRVisitor<Integer> {
     
@@ -60,6 +62,11 @@ public class Assembler extends IRVisitor<Integer> {
         throw new RuntimeException("This is an invalid ABI name."); //TODO Fix exception
     }
 
+    // TODO
+    private int numArgs(String fn) {
+        throw new RuntimeException("IMPLEMENT");
+    }
+
     // Visitor Methods ---------------------------------------------------------------------
 
     public Integer visit(IRBinOp b) {
@@ -106,7 +113,8 @@ public class Assembler extends IRVisitor<Integer> {
 
         // TODO CHECK THIS Can you call anything other than an IRName?
         cmds.add("callq FUNC("+((IRName) c.target).name+")");
-        return null;
+
+        return null;    // Caller should know where to find the returns
     }
 
     public Integer visit(IRCJump c) {
@@ -146,6 +154,8 @@ public class Assembler extends IRVisitor<Integer> {
 
     public Integer visit(IRFuncDecl f) {
         tempCounter = 0;
+        maxArgs = 0;
+        maxReturn = 0;
         // Prelude
         cmds.add(".globl "+f.name);
         cmds.add(".align 4");
@@ -156,11 +166,16 @@ public class Assembler extends IRVisitor<Integer> {
         cmds.add("movq %rsp, %rbp");
         cmds.add("subq tempCounter, %rsp: REPLACE THIS"); //Placeholder text
         int replaceIndex = cmds.size()-1;
+        
 
-        f.body.accept(this);    // This already moves args off of registers onto the stack
+        f.body.accept(this); // TODO Move arguments off registers onto stack NEED TO KNOW #ARGUMENTS
 
-        // Use tempCounter to shift rsp
-        cmds.set(replaceIndex, String.format("subq $%d, %%rsp", replaceIndex));
+        // Need to shift rsp
+        int rspShift = tempCounter + maxArgs + maxReturn;
+        if (rspShift%2 == 1) {
+            rspShift += 1;
+        }
+        cmds.set(replaceIndex, String.format("subq $%d, %%rsp", rspShift));
 
         //Tear down stack
         cmds.add("addq $%d, %rsp");
@@ -193,17 +208,17 @@ public class Assembler extends IRVisitor<Integer> {
     public Integer visit(IRReturn r) {
         // First two returns
         if(0<r.rets.size()) {
-            cmds.add(String.format("-%d(%rbp), %%rax", r.rets.get(0).accept(this)));
+            cmds.add(String.format("movq -%d(%rbp), %%rax", r.rets.get(0).accept(this)));
         }
         if(1<r.rets.size()) {
-            cmds.add(String.format("-%d(%rbp), %%rdx", r.rets.get(1).accept(this)));
+            cmds.add(String.format("movq -%d(%rbp), %%rdx", r.rets.get(1).accept(this)));
         }
 
-        // For multiple returns (>2)
+        // For multiple returns (>2) TODO CAN'T MOVE MEMORY TO MEMORY
         for(int i=2;i<r.rets.size();i++) {
             int fromLoc = r.rets.get(i).accept(this);
-            int toLoc = namedTemps.get("_ARG1")+8*(i-2);
-            cmds.add(String.format("-%d(%rbp), -%d(%rbp)", fromLoc, toLoc));
+            int toLoc = namedTemps.get("_ARG1");
+            cmds.add(String.format("movq -%d(%rbp), (-%d(%rbp))", fromLoc, toLoc));
         }
 
         return null;
