@@ -26,4 +26,9 @@ public class ABIContext extends Context<String, String> {
         name = name.replaceAll("_", "__");
         return "_I" + name + "_" + p + returns + args;
     }
+
+    // TODO Verify this actually works (Not sure if it matters)
+    protected static String unmakeABIName(String name) {
+        return name.substring(2,name.lastIndexOf("_"));
+    }
 }
