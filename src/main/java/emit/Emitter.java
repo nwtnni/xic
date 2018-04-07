@@ -182,7 +182,7 @@ public class Emitter extends Visitor<IRNode> {
      * Dynamically allocate memory for an an array of size length
      */
     private IRExpr alloc(IRExpr length) {
-        return new IRCall(new IRName("_xi_dalloc"), length);
+        return new IRCall(new IRName("_xi_d_alloc"), length);
     }
 
     /**
@@ -243,7 +243,7 @@ public class Emitter extends Visitor<IRNode> {
         IRTemp size = IRTempFactory.generateTemp("d_size");
         stmts.add(new IRMove(size, byteSize));
 
-        // Generate pointers and llocate memory
+        // Generate pointers and llocate memoryG
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
         IRTemp pointer = IRTempFactory.generateTemp("d_array");
         stmts.add(new IRMove(pointer, addr));
@@ -254,7 +254,7 @@ public class Emitter extends Visitor<IRNode> {
 
         stmts.add(new IRReturn(pointer));
 
-        return new IRFuncDecl("_xi_dalloc", new IRSeq(stmts));
+        return new IRFuncDecl("_xi_d_alloc", new IRSeq(stmts));
     }
 
     /**
@@ -374,7 +374,9 @@ public class Emitter extends Visitor<IRNode> {
         }
         IRTemp var = new IRTemp(d.id);
         if (!d.type.isPrimitive()) {
-            IRNode arr = d.xiType.accept(this);
+
+            // Case for array declaration with dimensions
+            IRESeq arr = (IRESeq) d.xiType.accept(this);
             if (arr != null) {
                 return new IRMove(var, arr);
             }
@@ -616,12 +618,22 @@ public class Emitter extends Visitor<IRNode> {
         // Only allocate memory for special case of syntactic sugar
         // for array declarations with dimensions specified
         if (t.hasSize()) {
-            IRExpr length =  (IRExpr) t.size.accept(this);
-            IRExpr child = (IRExpr) t.child.accept(this);
-            if (child == null) {
-                return alloc(length);
+            IRTemp size = IRTempFactory.generateTemp("size");
+            IRExpr sizeExpr =  (IRExpr) t.size.accept(this);
+            IRESeq children = (IRESeq) t.child.accept(this);
+            if (children == null) {
+                List<IRNode> n = new ArrayList<>();
+                n.add(new IRMove(size, sizeExpr));
+                IRESeq tuple = new IRESeq(
+                    new IRSeq(n), 
+                    alloc(size));
+                return tuple;
             } else {
-                return populate(length, child);
+                IRSeq sizes = (IRSeq) children.stmt;
+                IRExpr alloc = (IRExpr) children.expr;
+                sizes.stmts.add(0, new IRMove(size, sizeExpr));
+                children.expr = populate(size, alloc);
+                return children;
             }
         } else {
             return null;
