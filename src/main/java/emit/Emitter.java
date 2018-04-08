@@ -18,9 +18,9 @@ public class Emitter extends Visitor<IRNode> {
 
     /**
      * Factory method to generate IR from the given AST.
-	 * @param ast AST to generate into IR
+     * @param ast AST to generate into IR
      * @param context function context corresponding to the AST
-	 * @throws XicException if a semantic error was found
+     * @throws XicException if a semantic error was found
      */
     public static IRCompUnit emitIR(Program ast, FnContext context) throws XicException {
         return (IRCompUnit) ast.accept(new Emitter(context));
@@ -326,10 +326,10 @@ public class Emitter extends Visitor<IRNode> {
      */
     public List<IRNode> visit(List<Node> nodes) throws XicException {
         List<IRNode> ir = new ArrayList<>();
-		for (Node n : nodes) {
-			ir.add(n.accept(this));
-		}
-		return ir;
+        for (Node n : nodes) {
+            ir.add(n.accept(this));
+        }
+        return ir;
     }
 
     /*
@@ -446,7 +446,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(If i) throws XicException {
-        // TODO: fix quard to use control flow
+        // TODO: fix guard to use control flow
         IRNode cond = i.guard.accept(this);
         IRNode t = i.block.accept(this);
         if (i.hasElse()) {

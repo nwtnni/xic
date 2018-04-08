@@ -17,9 +17,9 @@ import ast.XiType;
  */
 public class Type {
 
-	/**
-	 * Primitive int.
-	 */
+    /**
+     * Primitive int.
+     */
     public static final Type INT = new Type("int");
     
     /**
@@ -93,10 +93,10 @@ public class Type {
      * Denotes the possible categories of Types.
      */
     public enum Kind {
-    	
-    	/**
-    	 * Represents an array type constructor
-    	 */
+        
+        /**
+         * Represents an array type constructor
+         */
         ARRAY, 
         
         /**
@@ -216,15 +216,15 @@ public class Type {
             return t.children.get(0).equals(children.get(0)) || this == POLY || t == POLY;
         } else if (kind == Kind.TUPLE && t.kind == Kind.TUPLE ||
                    kind == Kind.LIST && t.kind == Kind.LIST) {
-        	if (children.size() != t.children.size()) { return false; }
-        	for (int i = 0; i < children.size(); i++) {
-        		if (!children.get(i).equals(t.children.get(i))) {
-        			return false;
-        		}
-        	}
+            if (children.size() != t.children.size()) { return false; }
+            for (int i = 0; i < children.size(); i++) {
+                if (!children.get(i).equals(t.children.get(i))) {
+                    return false;
+                }
+            }
             return true;
         } else {
-        	return false;
+            return false;
         }
     }
 
@@ -235,13 +235,13 @@ public class Type {
         if (kind == Kind.CLASS) {
             return id.hashCode();
         } else if (kind == Kind.ARRAY) {
-        	return 100;
+            return 100;
         } else {
-        	int hash = 1;
-        	for (Type child : children) {
-        		hash += 10 * child.hashCode();
-        	}
-        	return hash;
+            int hash = 1;
+            for (Type child : children) {
+                hash += 10 * child.hashCode();
+            }
+            return hash;
         }
     }
 
