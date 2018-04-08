@@ -7,8 +7,6 @@ build() {
 
 test_all() {
   test_reg
-  test_lex_fails
-  test_parse_fails
   test_course
 }
 
@@ -19,6 +17,13 @@ test_reg() {
     test_parse_fails
     test_type
     test_ir
+    test_ir_fails
+}
+
+test_fails() {
+    test_lex_fails
+    test_parse_fails
+    test_ir_fails
 }
 
 test_lex_fails() {
@@ -88,6 +93,11 @@ test_ir_other() {
     printf "\n========================================\n\n"
 }
 
+test_ir_fails() {
+    xth/xth -compilerpath . -workpath tests/ir/failed_tests -testpath tests/ir/failed_tests tests/ir/failed_tests/xthScript
+    printf "\n========================================\n\n"
+}
+
 test_ir() {
     test_ir_basic
     test_ir_const_fold
@@ -117,8 +127,7 @@ r|regression)
     test_reg
     ;;
 f|fails)
-    test_lex_fails
-    test_parse_fails
+    test_fails
     ;;
 l|lexer)
     test_lex
@@ -156,6 +165,9 @@ io)
 ia)
     test_ir_arrays
     ;;
+if)
+    test_ir_fails
+    ;;
 c|course)
     test_course
     ;;
@@ -163,6 +175,6 @@ c|course)
     echo "Usage: xic-test [options] <command>"
     echo "  --nb:   Skips running xic-build"
     echo "  Possible commands: a[ll] r[egression] f[ails] c[ourse]"
-    echo "  l[exer] p[arser] t[ype] te tv tm i[r]"
+    echo "  l[exer] p[arser] t[ype] te tv tm i[r, b, c, s, o, a, f]"
     ;;
 esac

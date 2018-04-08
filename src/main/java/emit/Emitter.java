@@ -42,10 +42,13 @@ public class Emitter extends Visitor<IRNode> {
     protected static final IRConst ZERO = new IRConst(0);
     protected static final IRConst ONE = new IRConst(1);
 
-    protected static final IRName ARRAY_CONCAT_FUNC = new IRName("_xi_array_concat");
+    // ABI names for array library functions ignore the types of arrays
+    // and treat each argument as a 64-bit pointer (equivalent to an integer)
+    protected static final String ARRAY_ALLOC = "_I_xi_d_alloc_ii";
+    protected static final String ARRAY_CONCAT = "_I_xi_array_concat_iii";
 
     /* 
-     * Utility methods for generating code
+     * Utility methods for code generation
      */
 
     /**
@@ -182,31 +185,7 @@ public class Emitter extends Visitor<IRNode> {
      * Dynamically allocate memory for an an array of size length
      */
     private IRExpr alloc(IRExpr length) {
-        List<IRNode> stmts = new ArrayList<>();
-
-        // Calculate size of array
-        IRExpr byteSize = new IRBinOp(
-            OpType.MUL,
-            new IRBinOp(OpType.ADD, length, ONE), 
-            WORD_SIZE
-        );
-
-        IRTemp size = IRTempFactory.generateTemp("d_size");
-        stmts.add(new IRMove(size, byteSize));
-
-        // Generate pointers and llocate memory
-        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
-        IRTemp pointer = IRTempFactory.generateTemp("d_array");
-        stmts.add(new IRMove(pointer, addr));
-
-        // Store length then shift pointer
-        stmts.add(new IRMove(new IRMem(pointer), length));
-        stmts.add(incrPointer(pointer));
-
-        return new IRESeq(
-            new IRSeq(stmts),
-            pointer
-        );
+        return new IRCall(new IRName(ARRAY_ALLOC), length);
     }
 
     /**
@@ -245,6 +224,43 @@ public class Emitter extends Visitor<IRNode> {
      */
     private IRExpr length(IRExpr pointer) {
         return new IRMem(new IRBinOp(OpType.SUB, pointer, WORD_SIZE));
+    }
+
+    /*
+     * Library functions
+     */
+
+    /**
+     * Generates library function for allocating memory for an dynamic array.
+     */
+    private IRFuncDecl xiDynamicAlloc() {
+        List<IRNode> stmts = new ArrayList<>();
+
+        IRTemp length = IRTempFactory.generateTemp("d_length");
+        stmts.add(new IRMove(length, IRTempFactory.getArgument(0)));
+
+        // Calculate size of array
+        IRExpr byteSize = new IRBinOp(
+            OpType.MUL,
+            new IRBinOp(OpType.ADD, length, ONE), 
+            WORD_SIZE
+        );
+
+        IRTemp size = IRTempFactory.generateTemp("d_size");
+        stmts.add(new IRMove(size, byteSize));
+
+        // Generate pointers and llocate memoryG
+        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
+        IRTemp pointer = IRTempFactory.generateTemp("d_array");
+        stmts.add(new IRMove(pointer, addr));
+
+        // Store length then shift pointer
+        stmts.add(new IRMove(new IRMem(pointer), length));
+        stmts.add(incrPointer(pointer));
+
+        stmts.add(new IRReturn(pointer));
+
+        return new IRFuncDecl(ARRAY_ALLOC, new IRSeq(stmts));
     }
 
     /**
@@ -298,7 +314,7 @@ public class Emitter extends Visitor<IRNode> {
 
         body.add(new IRReturn(pointer));
 
-        return new IRFuncDecl("_xi_array_concat", new IRSeq(body));
+        return new IRFuncDecl(ARRAY_CONCAT, new IRSeq(body));
     }
 
     /*
@@ -324,6 +340,7 @@ public class Emitter extends Visitor<IRNode> {
         IRCompUnit program = new IRCompUnit("program");
 
         program.appendFunc(xiArrayConcat());
+        program.appendFunc(xiDynamicAlloc());
 
         for (Node n : p.fns) {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
@@ -363,7 +380,9 @@ public class Emitter extends Visitor<IRNode> {
         }
         IRTemp var = new IRTemp(d.id);
         if (!d.type.isPrimitive()) {
-            IRNode arr = d.xiType.accept(this);
+
+            // Case for array declaration with dimensions
+            IRESeq arr = (IRESeq) d.xiType.accept(this);
             if (arr != null) {
                 return new IRMove(var, arr);
             }
@@ -482,7 +501,7 @@ public class Emitter extends Visitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.MOD, left, right);
             case PLUS:
                 if (b.lhs.type.isArray()) {
-                    return new IRCall(ARRAY_CONCAT_FUNC, left, right);
+                    return new IRCall(new IRName(ARRAY_CONCAT), left, right);
                 }
                 return new IRBinOp(IRBinOp.OpType.ADD, left, right);
             case MINUS:
@@ -549,13 +568,13 @@ public class Emitter extends Visitor<IRNode> {
         IRLabel done = generateLabel("done");
         IRExpr result = IRTempFactory.generateTemp("result");
 
-        // Store index
-        IRTemp index = IRTempFactory.generateTemp("index");
-        stmts.add(new IRMove(index, i.index.accept(this)));
-
         // Store array reference
         IRTemp pointer = IRTempFactory.generateTemp("array_ref");
         stmts.add(new IRMove(pointer, i.array.accept(this)));
+
+        // Store index
+        IRTemp index = IRTempFactory.generateTemp("index");
+        stmts.add(new IRMove(index, i.index.accept(this)));
 
         // Check bounds
         stmts.add(
@@ -605,12 +624,22 @@ public class Emitter extends Visitor<IRNode> {
         // Only allocate memory for special case of syntactic sugar
         // for array declarations with dimensions specified
         if (t.hasSize()) {
-            IRExpr length = (IRExpr) t.size.accept(this);
-            IRExpr child = (IRExpr) t.child.accept(this);
-            if (child == null) {
-                return alloc(length);
+            IRTemp size = IRTempFactory.generateTemp("size");
+            IRExpr sizeExpr =  (IRExpr) t.size.accept(this);
+            IRESeq children = (IRESeq) t.child.accept(this);
+            if (children == null) {
+                List<IRNode> n = new ArrayList<>();
+                n.add(new IRMove(size, sizeExpr));
+                IRESeq tuple = new IRESeq(
+                    new IRSeq(n), 
+                    alloc(size));
+                return tuple;
             } else {
-                return populate(length, child);
+                IRSeq sizes = (IRSeq) children.stmt;
+                IRExpr alloc = (IRExpr) children.expr;
+                sizes.stmts.add(0, new IRMove(size, sizeExpr));
+                children.expr = populate(size, alloc);
+                return children;
             }
         } else {
             return null;

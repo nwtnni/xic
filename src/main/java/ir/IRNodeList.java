@@ -48,6 +48,14 @@ public class IRNodeList extends IRNode {
         return "INTERNAL_LIST";
     }
 
+    public void add(IRNode n) {
+        nodes.add(n);
+    }
+
+    public void add(int index, IRNode n) {
+        nodes.add(index, n);
+    }
+
     /**
      * IRNodeList should never be visited.
      */

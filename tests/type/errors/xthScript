@@ -38,6 +38,7 @@ xic ("Test --typecheck") "--typecheck" {
     bad_underscore_tuple.xi;
     bad-assign-procedure.xi;
     bad-mixed-array.xi;
+    bad-multiple-return.xi;
     bad-nested-array.xi;
     bad-procedure-return.xi;
     bad-use-conflict.xi;
