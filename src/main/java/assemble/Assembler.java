@@ -12,16 +12,17 @@ import java.util.Map;
 // TODO Currently hardcoded in AT&T syntax, add factory methods instead of dealing with pure strings
 // TODO Currently hardcoded all ARG1() and _ARG1 calls
 
+// Strings that the visits return correspond to inputs into the tile above
 public class Assembler extends IRVisitor<String> {
     
     /**
-     * Returns the assembly code given a canonical IR AST
+     * Returns the assembly code as a String given a canonical IR AST
      *
      */
     public static String assemble(IRNode ast) {
         Assembler assembler = new Assembler();
         ast.accept(assembler);
-        return null;
+        return String.join("\n", assembler.cmds);
     }
 
     /**
@@ -30,10 +31,10 @@ public class Assembler extends IRVisitor<String> {
     public List<String> cmds;                       // Assembly Code
     private int tempCounter = 0;                    // How many temps are used
     private HashMap<IRTemp, Integer> namedTemps;    // Translates IRTemp to memory offset
-    private int maxReturn = 0;
-    private int maxArgs = 0;
-    private int isMultipleReturn;
-    private int returnLoc;
+    private int maxReturn = 0;                      // Amount of stack space for returns
+    private int maxArgs = 0;                        // Amount of stack space for args
+    private int isMultipleReturn;                   // 1 if the function returns > 2 elements
+    private int returnLoc;                          // Offset from rbp that stores the mem address for multiple returns
 
     /**
      * Constructor initializes @param cmds.
@@ -43,8 +44,11 @@ public class Assembler extends IRVisitor<String> {
         namedTemps = new HashMap<>();
     }
 
+    /**
+     * Generates temp offsets relative to rbp. Use -tempCounter(%rbp) to access.
+     */
     private int genTemp() {
-        tempCounter -= 8;
+        tempCounter += 8;
         return tempCounter;
     }
 
@@ -64,7 +68,7 @@ public class Assembler extends IRVisitor<String> {
         throw new RuntimeException("This is an invalid ABI name."); //TODO Fix exception
     }
 
-    // TODO
+    // TODO This might not be necessary
     private int numArgs(String fn) {
         throw new RuntimeException("IMPLEMENT");
     }
@@ -179,6 +183,7 @@ public class Assembler extends IRVisitor<String> {
 
     public String visit(IRCJump c) {
         // TODO do we want to fold comparison operators into tile? Or assume it's always a temp?
+        // TODO Potentially add more tiles here
         String condTemp = c.cond.accept(this);
         cmds.add(String.format("cmpq $1, %s", condTemp));
         cmds.add("jnz "+c.trueLabel);
@@ -201,7 +206,6 @@ public class Assembler extends IRVisitor<String> {
     }
 
     public String visit(IRConst c) {
-        //TODO Is this actually needed?
         return "$"+Long.toString(c.value);
     }
 
@@ -240,7 +244,7 @@ public class Assembler extends IRVisitor<String> {
             cmds.add(String.format("movq ARG1(), -%d(%%rbp)", returnLoc));
         }
         
-        f.body.accept(this); // The IR moves arguments off registers onto stack. See visit(IRMove) below
+        f.body.accept(this); // The IR moves arguments off registers onto stack. See visit(IRTemp)
 
         // Need to shift rsp
         int rspShift = tempCounter + maxArgs + maxReturn;
@@ -264,11 +268,13 @@ public class Assembler extends IRVisitor<String> {
     }
 
     public String visit(IRMem m) {
+        // TODO Will this always generate valid assembly? May be too dense
         return "("+m.expr.accept(this)+")"; // Exprs shouldn't return null
     }
 
     public String visit(IRMove m) {
         // TODO Uses %rax to move things around; is this safe?
+        // TODO Add more tiles here
         String target = m.target.accept(this);
         String src = m.src.accept(this);
         cmds.add(String.format("movq %s, %%rax", src));
