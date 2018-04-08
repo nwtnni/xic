@@ -42,10 +42,13 @@ public class Emitter extends Visitor<IRNode> {
     protected static final IRConst ZERO = new IRConst(0);
     protected static final IRConst ONE = new IRConst(1);
 
-    protected static final IRName ARRAY_CONCAT_FUNC = new IRName("_xi_array_concat");
+    // ABI names for array library functions ignore the types of arrays
+    // and treat each argument as a 64-bit pointer (equivalent to an integer)
+    protected static final String ARRAY_ALLOC = "_I_xi_d_alloc_ii";
+    protected static final String ARRAY_CONCAT = "_I_xi_array_concat_iii";
 
     /* 
-     * Utility methods for generating code
+     * Utility methods for code generation
      */
 
     /**
@@ -182,7 +185,7 @@ public class Emitter extends Visitor<IRNode> {
      * Dynamically allocate memory for an an array of size length
      */
     private IRExpr alloc(IRExpr length) {
-        return new IRCall(new IRName("_xi_d_alloc"), length);
+        return new IRCall(new IRName(ARRAY_ALLOC), length);
     }
 
     /**
@@ -223,11 +226,14 @@ public class Emitter extends Visitor<IRNode> {
         return new IRMem(new IRBinOp(OpType.SUB, pointer, WORD_SIZE));
     }
 
+    /*
+     * Library functions
+     */
 
     /**
      * Generates library function for allocating memory for an dynamic array.
      */
-    private IRFuncDecl dAlloc() {
+    private IRFuncDecl xiDynamicAlloc() {
         List<IRNode> stmts = new ArrayList<>();
 
         IRTemp length = IRTempFactory.generateTemp("d_length");
@@ -254,7 +260,7 @@ public class Emitter extends Visitor<IRNode> {
 
         stmts.add(new IRReturn(pointer));
 
-        return new IRFuncDecl("_xi_d_alloc", new IRSeq(stmts));
+        return new IRFuncDecl(ARRAY_ALLOC, new IRSeq(stmts));
     }
 
     /**
@@ -308,7 +314,7 @@ public class Emitter extends Visitor<IRNode> {
 
         body.add(new IRReturn(pointer));
 
-        return new IRFuncDecl("_xi_array_concat", new IRSeq(body));
+        return new IRFuncDecl(ARRAY_CONCAT, new IRSeq(body));
     }
 
     /*
@@ -334,7 +340,7 @@ public class Emitter extends Visitor<IRNode> {
         IRCompUnit program = new IRCompUnit("program");
 
         program.appendFunc(xiArrayConcat());
-        program.appendFunc(dAlloc());
+        program.appendFunc(xiDynamicAlloc());
 
         for (Node n : p.fns) {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
@@ -495,7 +501,7 @@ public class Emitter extends Visitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.MOD, left, right);
             case PLUS:
                 if (b.lhs.type.isArray()) {
-                    return new IRCall(ARRAY_CONCAT_FUNC, left, right);
+                    return new IRCall(new IRName(ARRAY_CONCAT), left, right);
                 }
                 return new IRBinOp(IRBinOp.OpType.ADD, left, right);
             case MINUS:
