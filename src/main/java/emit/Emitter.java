@@ -427,7 +427,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(If i) throws XicException {
-        // TODO: fix quard to use control flow
+        // TODO: fix guard to use control flow
         IRNode cond = i.guard.accept(this);
         IRNode t = i.block.accept(this);
         if (i.hasElse()) {
