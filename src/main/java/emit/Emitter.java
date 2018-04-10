@@ -7,7 +7,6 @@ import ast.*;
 import type.FnContext;
 import ir.*;
 import ir.IRBinOp.OpType;
-import reorder.Block;
 import interpret.Configuration;
 import xic.XicException;
 

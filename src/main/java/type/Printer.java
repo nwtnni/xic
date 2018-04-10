@@ -5,7 +5,7 @@ import java.io.IOException;
 import xic.FilenameUtils;
 
 import ast.Node;
-import parser.XiParser;
+import parse.XiParser;
 import xic.XicException;
 
 /**

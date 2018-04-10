@@ -9,7 +9,7 @@ class JFlexXi extends DefaultTask {
 
     String lexer = 'XiLexer'
     String source = 'src/main/jflex/'
-    String sink = 'src/main/java/lexer/'
+    String sink = 'src/main/java/lex/'
 
     @PathSensitive(PathSensitivity.RELATIVE)
     @InputDirectory

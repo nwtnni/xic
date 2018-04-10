@@ -13,7 +13,7 @@ import emit.ConstantFolder;
 import emit.Emitter;
 import interpret.IRSimulator;
 import interpret.IRSimulator.Trap;
-import parser.XiParser;
+import parse.XiParser;
 import type.TypeChecker;
 import type.FnContext;
 import ast.Node;

@@ -6,8 +6,8 @@ import org.gradle.api.tasks.*;
 class CupXi extends DefaultTask {
 
     static final String source = 'src/main/cup/'
-    static final String sink = 'src/main/java/parser/'
-    static final String pkg = 'parser'
+    static final String sink = 'src/main/java/parse/'
+    static final String pkg = 'parse'
     static final String parser = 'XiParser'
     static final String symbol = 'XiSymbol'
 

@@ -19,6 +19,7 @@ public class ControlFlow {
 	}
 	
 	public static ControlFlow from(List<IRNode> program) {
+        return null;
 	}
 	
 }

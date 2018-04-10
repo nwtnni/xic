@@ -1,11 +1,11 @@
-package lexer;
+package lex;
 
 import java.io.*;
 import xic.FilenameUtils;
 
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
-import parser.XiSymbol;
+import parse.XiSymbol;
 import xic.XicException;
 
 /**
