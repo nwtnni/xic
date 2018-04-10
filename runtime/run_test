@@ -1,0 +1,5 @@
+#!/bin/bash
+# Run as ./run_test <FILE> For file FILE.S
+gcc -o test tests/"$1".S -L. -lxi -lpthread
+./test
+rm test
