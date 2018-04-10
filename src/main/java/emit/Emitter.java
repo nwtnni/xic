@@ -363,7 +363,7 @@ public class Emitter extends Visitor<IRNode> {
         }
 
         // Insert empty return if needed
-        if (!(body.stmts.get(body.stmts.size() - 1) instanceof IRReturn)) {
+        if (body.stmts.size() == 0 || !(body.stmts.get(body.stmts.size() - 1) instanceof IRReturn)) {
             body.stmts.add(new IRReturn());
         }
 
