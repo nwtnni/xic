@@ -176,7 +176,7 @@ public class Assembler extends IRVisitor<String> {
         }
 
         // TODO CHECK THIS Can you call anything other than an IRName?
-        cmds.add("callq FUNC("+((IRName) c.target).name+")");
+        cmds.add("callq FUNC("+((IRName) c.target).name.substring(1)+")");
 
         return "%rax";
     }
@@ -198,6 +198,7 @@ public class Assembler extends IRVisitor<String> {
     }
     
     public String visit(IRCompUnit c) {
+        cmds.add("#include \"defs.h\"");
         cmds.add(".text");
         for (IRFuncDecl fn : c.functions.values()) {
             fn.accept(this);
@@ -229,9 +230,9 @@ public class Assembler extends IRVisitor<String> {
         }
 
         // Prelude
-        cmds.add(".globl "+f.name);
+        cmds.add(".globl "+"FUNC("+f.name.substring(1)+")");
         cmds.add(".align 4");
-        cmds.add("FUNC("+f.name+"):");
+        cmds.add("FUNC("+f.name.substring(1)+"):");
         
         // Set up stack
         cmds.add("pushq %rbp");
@@ -247,14 +248,14 @@ public class Assembler extends IRVisitor<String> {
         f.body.accept(this); // The IR moves arguments off registers onto stack. See visit(IRTemp)
 
         // Need to shift rsp
-        int rspShift = tempCounter + maxArgs + maxReturn;
-        if (rspShift%2 == 1) {
-            rspShift += 1;
+        int rspShift = tempCounter + maxArgs*8 + maxReturn*8;
+        if (rspShift%16 == 8) {
+            rspShift += 8;
         }
         cmds.set(replaceIndex, String.format("subq $%d, %%rsp", rspShift));
 
         //Tear down stack
-        cmds.add("addq $%d, %rsp");
+        cmds.add(String.format("addq $%d, %%rsp", rspShift));
         cmds.add("popq %rbp");
         cmds.add("retq");
         cmds.add("");   //New Line
