@@ -1,3 +1,3 @@
 #!/bin/bash
 
-watchman-make -p "**/*.java" --run "gradle build"
+watchman-make -p "**/*.java" --run "gradle test"
