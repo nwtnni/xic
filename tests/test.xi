@@ -6,9 +6,4 @@ main (args:int[][]) {
 }
 
 foo() {
-    n:int = 1
-    m:int = 2
-    b:int[n][3 + 3]
-    // b = {{}}
-    // c:bool[bar()]
 }

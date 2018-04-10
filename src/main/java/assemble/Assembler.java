@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import emit.ABIContext;
+
 // TODO Currently hardcoded in AT&T syntax, add factory methods instead of dealing with pure strings
 // TODO Currently hardcoded all ARG1() and _ARG1 calls
 
@@ -19,8 +21,8 @@ public class Assembler extends IRVisitor<String> {
      * Returns the assembly code as a String given a canonical IR AST
      *
      */
-    public static String assemble(IRNode ast) {
-        Assembler assembler = new Assembler();
+    public static String assemble(IRNode ast, ABIContext context) {
+        Assembler assembler = new Assembler(context);
         ast.accept(assembler);
         return String.join("\n", assembler.cmds);
     }
@@ -37,12 +39,14 @@ public class Assembler extends IRVisitor<String> {
     private int returnLoc;                          // Offset from rbp that stores the mem address for multiple returns
     private String fnName;                          // TODO Name of current function used for hack
 
+    private ABIContext context;
     /**
      * Constructor initializes @param cmds.
      */
-    private Assembler() {
+    private Assembler(ABIContext c) {
         cmds = new ArrayList<String>();
         namedTemps = new HashMap<>();
+        context = c;
     }
 
     /**
@@ -62,23 +66,20 @@ public class Assembler extends IRVisitor<String> {
             return 0;
         }
 
-        fn = fn.substring(fn.lastIndexOf("_")+1);
-        if(fn.charAt(0) == 'p'){
-            return 0;
-        }
-        else if (fn.charAt(0) == 'i' || fn.charAt(0) == 'b' || fn.charAt(0) == 'a') {
-            return 1;
-        }
-        else if (fn.charAt(0) == 't') {
-            fn = fn.replaceAll("[^\\d]", "");    //TODO Verify that this actually works
-            return Integer.parseInt(fn);
-        }
-        throw new RuntimeException("This is an invalid ABI name."); //TODO Fix exception
-    }
+        return context.getNumReturns(fn);
 
-    // TODO This might not be necessary
-    private int numArgs(String fn) {
-        throw new RuntimeException("IMPLEMENT");
+        // fn = fn.substring(fn.lastIndexOf("_")+1);
+        // if(fn.charAt(0) == 'p'){
+        //     return 0;
+        // }
+        // else if (fn.charAt(0) == 'i' || fn.charAt(0) == 'b' || fn.charAt(0) == 'a') {
+        //     return 1;
+        // }
+        // else if (fn.charAt(0) == 't') {
+        //     fn = fn.replaceAll("[^\\d]", "");    //TODO Verify that this actually works
+        //     return Integer.parseInt(fn);
+        // }
+        // throw new RuntimeException("This is an invalid ABI name."); //TODO Fix exception
     }
 
     // Visitor Methods ---------------------------------------------------------------------
