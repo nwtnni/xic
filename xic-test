@@ -106,6 +106,10 @@ test_ir() {
     test_ir_arrays
 }
 
+test_assemble() {
+    xth/xth -compilerpath . -workpath tests/assemble -testpath tests/assemble tests/assemble/xthScript
+}
+
 test_course() {
     xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa4 xth/tests/pa4/xthScript
     printf "\n========================================\n\n" 
@@ -167,6 +171,9 @@ ia)
     ;;
 if)
     test_ir_fails
+    ;;
+assemble)
+    test_assemble
     ;;
 c|course)
     test_course

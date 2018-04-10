@@ -30,11 +30,12 @@ public class Assembler extends IRVisitor<String> {
      */
     public List<String> cmds;                       // Assembly Code
     private int tempCounter = 0;                    // How many temps are used
-    private HashMap<IRTemp, Integer> namedTemps;    // Translates IRTemp to memory offset
+    private HashMap<String, Integer> namedTemps;    // Translates IRTemp to memory offset
     private int maxReturn = 0;                      // Amount of stack space for returns
     private int maxArgs = 0;                        // Amount of stack space for args
     private int isMultipleReturn;                   // 1 if the function returns > 2 elements
     private int returnLoc;                          // Offset from rbp that stores the mem address for multiple returns
+    private String fnName;                          // TODO Name of current function used for hack
 
     /**
      * Constructor initializes @param cmds.
@@ -54,6 +55,13 @@ public class Assembler extends IRVisitor<String> {
 
     // TODO This may be slightly hacky
     private int numReturn(String fn) {
+        if(fn.equals("_xi_alloc")) {
+            return 1;
+        }
+        else if (fn.equals("_xi_out_of_bounds")) {
+            return 0;
+        }
+
         fn = fn.substring(fn.lastIndexOf("_")+1);
         if(fn.charAt(0) == 'p'){
             return 0;
@@ -77,61 +85,88 @@ public class Assembler extends IRVisitor<String> {
 
     public String visit(IRBinOp b) {
         // Uses %rax to operate on things. Returns %rax (sometimes %rdx)
-        String left = b.left.accept(this);
+        
+        //Autospill temp onto stack
         String right = b.right.accept(this);
+        cmds.add(String.format("movq %s, %%rax", right));
+        right = String.format("-%d(%%rbp)", genTemp());
+        cmds.add(String.format("movq %%rax, %s", right));
+        
+        String left = b.left.accept(this);
         cmds.add(String.format("movq %s, %%rax", left));
+        
         switch(b.type) {
             case ADD:
                 cmds.add(String.format("addq %s, %%rax", right));
+                return "%rax";
             case SUB:
                 cmds.add(String.format("subq %s, %%rax", right));
+                return "%rax";
             case MUL:
                 // TODO do we need to deal with rdx overwrite??
-                cmds.add(String.format("imulq %s", right));
+                cmds.add(String.format("movq %s, %%rdx", right));
+                cmds.add("imulq %rdx");
+                return "%rax";
             case HMUL:
                 // TODO do we need to deal with rdx overwrite??
-                cmds.add(String.format("imulq %s", right));
+            cmds.add(String.format("movq %s, %%rdx", right));
+                cmds.add("imulq %rdx");
                 return "%rdx";
             case DIV:
                 cmds.add("cdqo");   // sign-extend %rax into %rdx TODO Check this is right
                 cmds.add(String.format("idivq %s", right));
+                return "%rax";
             case MOD:
                 cmds.add("cdqo");   // sign-extend %rax into %rdx TODO Check this is right
                 cmds.add(String.format("idivq %s", right));
                 return "%rdx"; 
             case AND:
                 cmds.add(String.format("andb %s, %%rax", right));
+                return "%rax";
             case OR:
                 cmds.add(String.format("orb %s, %%rax", right));
+                return "%rax";
             case XOR:
                 cmds.add(String.format("xorb %s, %%rax", right));
+                return "%rax";
             case LSHIFT:
                 cmds.add(String.format("shlq %s, %%rax", right));   //TODO need to guarantee right is an immediate or cl
+                return "%rax";
             case RSHIFT:
                 cmds.add(String.format("shrq %s, %%rax", right));   //TODO need to guarantee right is an immediate or cl
+                return "%rax";
             case ARSHIFT:
                 cmds.add(String.format("sarq %s, %%rax", right));   //TODO need to guarantee right is an immediate or cl
+                return "%rax";
             case EQ:
                 cmds.add(String.format("cmpq %s, %%rax", right));
                 cmds.add("sete %al");  //set lower bits of %rax to 1 if equal
+                return "%rax";
             case NEQ:
                 cmds.add(String.format("cmpq %s, %%rax", right));
                 cmds.add("setne %al");
+                return "%rax";
             case LT:
                 cmds.add(String.format("cmpq %s, %%rax", right));
                 cmds.add("setl %al");
+                return "%rax";
             case GT:
                 cmds.add(String.format("cmpq %s, %%rax", right));
                 cmds.add("setg %al");
+                return "%rax";
             case LEQ:
                 cmds.add(String.format("cmpq %s, %%rax", right));
                 cmds.add("setle %al");
+                return "%rax";
             case GEQ:
                 cmds.add(String.format("cmpq %s, %%rax", right));
                 cmds.add("setge %al");
+                return "%rax";
         }
 
-        return "%rax";
+        // These cases should be exhaustive
+        assert false;
+        return null;
     }
     
     public String visit(IRCall c) {
@@ -144,17 +179,17 @@ public class Assembler extends IRVisitor<String> {
         int numReturn = numReturn(((IRName) c.target).name);
 
         // Need to pass in mem address into ARG1()
-        if(numReturn > 3) {
-            memLoc = args.size()+1-6+numReturn;   //+1 for adding mem address, -6 for 6 registers
+        if(numReturn > 2) {
+            memLoc = args.size()+1-6+numReturn-2;   //+1 for adding mem address, -6 for 6 arg registers, -2 for 2 return registers
             isMultipleReturn = 1;
         }
 
         // Used to help setup stack pointer
-        if(numReturn > maxReturn) {
-            maxReturn = numReturn;
+        if(numReturn - 2> maxReturn) {
+            maxReturn = numReturn-2;
         }
-        if(args.size() > maxArgs) {
-            maxArgs = args.size();
+        if(args.size()+isMultipleReturn - 6 > maxArgs) {
+            maxArgs = args.size()+isMultipleReturn-6;
         }
 
         // Push any argument above 6 onto the stack
@@ -185,8 +220,9 @@ public class Assembler extends IRVisitor<String> {
         // TODO do we want to fold comparison operators into tile? Or assume it's always a temp?
         // TODO Potentially add more tiles here
         String condTemp = c.cond.accept(this);
-        cmds.add(String.format("cmpq $1, %s", condTemp));
-        cmds.add("jnz "+c.trueLabel);
+        cmds.add(String.format("movq %s, %%rax", condTemp)); // TODO only needed if condTemp is an immediate
+        cmds.add("cmpq $1, %rax");  // TODO Is this correct? Should we comparing %al instead?
+        cmds.add("jz "+c.trueLabel);
 
         return null;
     }
@@ -224,6 +260,8 @@ public class Assembler extends IRVisitor<String> {
         maxReturn = 0;
         isMultipleReturn = 0;
         returnLoc = 0;
+        namedTemps.clear();
+        fnName = f.name;
 
         if(numReturn(f.name) > 2) {
             isMultipleReturn = 1;
@@ -235,6 +273,7 @@ public class Assembler extends IRVisitor<String> {
         cmds.add("FUNC("+f.name.substring(1)+"):");
         
         // Set up stack
+        cmds.add("# Stack Setup");  // TODO Debugging comment
         cmds.add("pushq %rbp");
         cmds.add("movq %rsp, %rbp");
         cmds.add("subq tempCounter, %rsp: REPLACE THIS"); //Placeholder text
@@ -255,10 +294,12 @@ public class Assembler extends IRVisitor<String> {
         cmds.set(replaceIndex, String.format("subq $%d, %%rsp", rspShift));
 
         //Tear down stack
+        cmds.add("\n# Stack Teardown");   // TODO Debugging comment
+        cmds.add("ret__label"+fnName+":");    //TODO Is this too hacky?
         cmds.add(String.format("addq $%d, %%rsp", rspShift));
         cmds.add("popq %rbp");
         cmds.add("retq");
-        cmds.add("");   //New Line
+        cmds.add("\n");   //New Line
 
         return null;
     }
@@ -269,17 +310,18 @@ public class Assembler extends IRVisitor<String> {
     }
 
     public String visit(IRMem m) {
-        // TODO Will this always generate valid assembly? May be too dense
-        return "("+m.expr.accept(this)+")"; // Exprs shouldn't return null
+        // TODO Uses %rax to move things around; is this safe? (Should be)
+        cmds.add(String.format("movq %s, %%rax", m.expr.accept(this))); // Exprs shouldn't return null
+        return "(%rax)"; 
     }
 
     public String visit(IRMove m) {
-        // TODO Uses %rax to move things around; is this safe?
+        // TODO Uses %rcx to move things around; is this safe? (Only because exprs use %rax and %rdx)
         // TODO Add more tiles here
-        String target = m.target.accept(this);
         String src = m.src.accept(this);
-        cmds.add(String.format("movq %s, %%rax", src));
-        cmds.add(String.format("movq %%rax, %s", target));
+        cmds.add(String.format("movq %s, %%rcx", src));
+        String target = m.target.accept(this);
+        cmds.add(String.format("movq %%rcx, %s", target));
         return null;
     }
 
@@ -289,28 +331,31 @@ public class Assembler extends IRVisitor<String> {
 
     public String visit(IRReturn r) {
         // For multiple returns (>2)
-        // Uses %rax to move data around. Safe because it must use %rax, %rdx
+        // Uses %rax, %rdx to move data around. Safe because it must use %rax, %rdx
         for(int i=2;i<r.rets.size();i++) {
             String fromLoc = r.rets.get(i).accept(this);
             cmds.add(String.format("movq %s, %%rax", fromLoc));
-
-            // TODO Not sure if valid assembly. Is this too dense?
-            cmds.add(String.format("movq %%rax, -%d(-%d(%%rbp))", (i-2)*8 ,returnLoc*8));
+            cmds.add(String.format("movq -%d(%%rbp), %%rdx",returnLoc));
+            cmds.add(String.format("movq %%rax, -%d(%%rdx)",(i-2)*8));
         }
 
         // First two returns
         if(0<r.rets.size()) {
-            cmds.add(String.format("movq -%d(%rbp), %%rax", r.rets.get(0).accept(this)));
+            cmds.add(String.format("movq %s, %%rax", r.rets.get(0).accept(this)));
         }
         if(1<r.rets.size()) {
-            cmds.add(String.format("movq -%d(%rbp), %%rdx", r.rets.get(1).accept(this)));
+            cmds.add(String.format("movq %s, %%rdx", r.rets.get(1).accept(this)));
         }
+        cmds.add("jmp ret__label"+fnName); //TODO is this too hacky?
 
         return null;
     }
 
     public String visit(IRSeq s) {
+        int i = 0;
         for(IRNode stmt:s.stmts) {
+            cmds.add("\n# IR Statement "+i);   // TODO Debugging comment
+            i++;
             stmt.accept(this);
         }
         return null;
@@ -321,14 +366,14 @@ public class Assembler extends IRVisitor<String> {
 
         // Handling special named temps (_ARG and _RET)
         // Shift by one if number of returns > 2
-        if(name.substring(0,4).equals("_ARG")) {
+        if(name.length() > 3 && name.substring(0,4).equals("_ARG")) {
             int i = Integer.parseInt(name.substring(4))+1+isMultipleReturn;  //+1 to 1-index
             if(i <= 6) {
                 return String.format("ARG%d()", i);
             }
             return String.format("+%d(%%rbp)", (i-6+1)*8);  // -6 for 6 args, +1 to move above rbp
         }
-        else if(name.substring(0,4).equals("_RET")) {
+        else if(name.length() > 3 && name.substring(0,4).equals("_RET")) {
             int i = Integer.parseInt(name.substring(4))+1; //+1 to 1-index
             if(i==1) {
                 return "%rax";
@@ -338,14 +383,14 @@ public class Assembler extends IRVisitor<String> {
             }
             else {
                 // TODO is this valid assembly? Not sure if too dense
-                return String.format("-%d(-%d(%%rbp))",(i-2)*8,returnLoc*8);
+                return String.format("-%d(-%d(%%rbp))",(i-2)*8,returnLoc);
             }
         }
 
         // Generic named temps
-        if(!namedTemps.containsKey(t)) {
-            namedTemps.put(t,genTemp());
+        if(!namedTemps.containsKey(name)) {
+            namedTemps.put(name,genTemp());
         } 
-        return String.format("-%d(%%rbp)",namedTemps.get(t));
+        return String.format("-%d(%%rbp)",namedTemps.get(name));
     }
 }
