@@ -54,11 +54,11 @@ public class Assembler extends IRVisitor<String> {
 
     // TODO This may be slightly hacky
     private int numReturn(String fn) {
-        fn = fn.substring(fn.lastIndexOf("_"));
+        fn = fn.substring(fn.lastIndexOf("_")+1);
         if(fn.charAt(0) == 'p'){
             return 0;
         }
-        else if (fn.charAt(0) == 'i' || fn.charAt(0) == 'b') {
+        else if (fn.charAt(0) == 'i' || fn.charAt(0) == 'b' || fn.charAt(0) == 'a') {
             return 1;
         }
         else if (fn.charAt(0) == 't') {
@@ -159,13 +159,13 @@ public class Assembler extends IRVisitor<String> {
 
         // Push any argument above 6 onto the stack
         for(i=args.size()-1;i>5-isMultipleReturn;i--) {
-            cmds.add(String.format("movq -%d(%%rbp),%d(%%rsp)",args.get(i).accept(this),(i+1)*8));
+            cmds.add(String.format("movq %s,%d(%%rsp)",args.get(i).accept(this),(i+1)*8));
         }
 
         // Assign all arguments 6 or below into the appropriate register
         // Their arguments are 1-indexed. (Why... T_T)
-        while(i>=0) {
-            cmds.add(String.format("movq -%d(%%rbp), ARG%d()",args.get(i).accept(this),i+1+isMultipleReturn));
+        for(;i>=0;i--) {
+            cmds.add(String.format("movq %s, ARG%d()",args.get(i).accept(this),i+1+isMultipleReturn));
         }
 
         if(isMultipleReturn == 1) {

@@ -75,7 +75,7 @@ public class Main {
                 if (typeFlag) { xic.printTyped(unit); }
                 if (irGenFlag || irRunFlag) { xic.printIR(unit, irRunFlag, optFlag); }
                 //TODO ADD targetOSFlag CASE
-                //TODO OUTPUT ASSEMBLY
+                xic.printAssembly(unit, optFlag);
             }
         } catch (XicException e) {
             System.out.println(e.toPrint());

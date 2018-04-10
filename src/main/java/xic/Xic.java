@@ -144,4 +144,15 @@ public class Xic {
     public void printIR(String unit, boolean run, boolean opt) throws XicException {
         ir.Printer.print(source, sink, lib, unit, run, opt);
     }
+
+    /**
+     * Prints and writes diagnostics for the lexed, parsed, and typechecked input
+     * file.
+     * 
+     * @param unit The path to the input file, relative to source
+     * @throws XicException if lexing, parsing, or typechecking failed
+     */
+    public void printAssembly(String unit, boolean opt) throws XicException {
+        assemble.Printer.print(source, sink, lib, unit, opt);
+    }
 }
