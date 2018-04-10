@@ -49,12 +49,13 @@ public class Printer {
                 }
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
-                String cmds = Assembler.assemble(comp);
+                String cmds = Assembler.assemble(comp, new ABIContext(context));
                 // Generate .s file
                 writer.write(cmds);
                 writer.close();
                 
             } catch (XicException xic) {
+                writer.close();
                 throw xic;
             }
         } catch (IOException io) {

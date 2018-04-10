@@ -36,6 +36,17 @@ public class FnType extends Visitor<Type> {
         return type;
     }
 
+    public FnType() {
+        super();
+    }
+
+    public FnType(Type args, Type returns) {
+        super();
+        this.location = null;
+        this.args = args;
+        this.returns = returns;
+    }
+
     /**
      * Stores the Fn's location for error display.
      */

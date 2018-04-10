@@ -44,8 +44,8 @@ public class Emitter extends Visitor<IRNode> {
 
     // ABI names for array library functions ignore the types of arrays
     // and treat each argument as a 64-bit pointer (equivalent to an integer)
-    protected static final String ARRAY_ALLOC = "_I_xi_d_alloc_ii";
-    protected static final String ARRAY_CONCAT = "_I_xi_array_concat_iii";
+    protected static final String ARRAY_ALLOC = "_xi_d_alloc";
+    protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
     /* 
      * Utility methods for code generation
@@ -363,7 +363,7 @@ public class Emitter extends Visitor<IRNode> {
         }
 
         // Insert empty return if needed
-        if (!(body.stmts.get(body.stmts.size() - 1) instanceof IRReturn)) {
+        if (body.stmts.size() == 0 || !(body.stmts.get(body.stmts.size() - 1) instanceof IRReturn)) {
             body.stmts.add(new IRReturn());
         }
 
