@@ -53,7 +53,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by checking for commuting.
      */
     public IRNode visit(IRBinOp b) {
-        IRTemp temp = IRTempFactory.generateTemp();
+        IRTemp temp = IRTempFactory.generate();
         IRNode leftExpr = b.left.accept(this);
         stmts.add(new IRMove(temp, leftExpr));
         IRNode rightExpr = b.right.accept(this);
@@ -70,12 +70,12 @@ public class Canonizer extends IRVisitor<IRNode> {
         
         for (IRNode arg : c.args) {
             IRNode argExpr = arg.accept(this);
-            IRTemp temp = IRTempFactory.generateTemp();
+            IRTemp temp = IRTempFactory.generate();
             temps.add(temp);
             stmts.add(new IRMove(temp, argExpr));
         }
         
-        IRTemp result = IRTempFactory.generateTemp();
+        IRTemp result = IRTempFactory.generate();
         stmts.add(new IRMove(result, new IRCall(c.target, temps)));
         return result;
     }
@@ -173,7 +173,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      */
     public IRNode visit(IRMove m) {
         if (m.isMem()) {
-            IRTemp temp = IRTempFactory.generateTemp();
+            IRTemp temp = IRTempFactory.generate();
             IRMem mem = m.getMem();
             IRNode memExpr = mem.expr.accept(this);
             stmts.add(new IRMove(temp, memExpr));
@@ -202,7 +202,7 @@ public class Canonizer extends IRVisitor<IRNode> {
         
         for (IRNode ret : r.rets) {
             IRNode retExpr = ret.accept(this);
-            IRTemp temp = IRTempFactory.generateTemp();
+            IRTemp temp = IRTempFactory.generate();
             temps.add(temp);
             stmts.add(new IRMove(temp, retExpr));
         }

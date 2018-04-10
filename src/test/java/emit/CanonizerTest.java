@@ -70,7 +70,7 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRCall() {
-		IRTemp temp = IRTempFactory.generateTemp();
+		IRTemp temp = IRTempFactory.generate();
 		IRConst val = new IRConst(6);
 		IRESeq a1 = new IRESeq(new IRMove(temp, val), temp);
 		IRConst a2 = new IRConst(5);
@@ -108,7 +108,7 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRCJump() {
-		IRTemp temp = IRTempFactory.generateTemp();
+		IRTemp temp = IRTempFactory.generate();
 		IRConst cond = new IRConst(1);
 		IRESeq c = new IRESeq(new IRMove(temp, cond), temp);
 		IRCJump j = new IRCJump(c, "true", "false");
@@ -135,7 +135,7 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRJump() {
-		IRTemp temp = IRTempFactory.generateTemp();
+		IRTemp temp = IRTempFactory.generate();
 		IRConst c = new IRConst(1);
 		IRESeq e = new IRESeq(new IRMove(temp, c), temp);
 		IRJump j = new IRJump(e);
@@ -160,8 +160,8 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRESeq() {
-		IRTemp t1 = IRTempFactory.generateTemp();
-		IRTemp t2 = IRTempFactory.generateTemp();
+		IRTemp t1 = IRTempFactory.generate();
+		IRTemp t2 = IRTempFactory.generate();
 		IRConst c = new IRConst(0);
 		IRESeq e1 = new IRESeq(new IRMove(t1, c), t1);
 		IRESeq e2 = new IRESeq(new IRMove(t2, e1), t2);
@@ -218,7 +218,7 @@ public class CanonizerTest {
 	@Test
 	public void testIRMoveTemp() {
 		IRConst c = new IRConst(0);
-		IRTemp t = IRTempFactory.generateTemp();
+		IRTemp t = IRTempFactory.generate();
 		IRMove m = new IRMove(t, c);
 		
 		IRNode result = Canonizer.canonize(m);
@@ -239,7 +239,7 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRMoveMem() {
-		IRTemp t = IRTempFactory.generateTemp();
+		IRTemp t = IRTempFactory.generate();
 		IRConst c = new IRConst(0);
 		IRMem mem = new IRMem(new IRESeq(new IRMove(t, c), t));
 		IRMove m = new IRMove(mem, t);
@@ -283,7 +283,7 @@ public class CanonizerTest {
 	@Test
 	public void testIRReturn() {
 		IRConst a1 = new IRConst(2);
-		IRTemp temp = IRTempFactory.generateTemp();
+		IRTemp temp = IRTempFactory.generate();
 		IRConst val = new IRConst(6);
 		IRESeq a2 = new IRESeq(new IRMove(temp, val), temp);
 		IRReturn r = new IRReturn(a1, a2);
