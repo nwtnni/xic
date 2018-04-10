@@ -1,9 +1,10 @@
-package emit;
+package reorder;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import ir.*;
+import reorder.Tracer;
 
 public class TracerTest {
 	
@@ -45,11 +46,5 @@ public class TracerTest {
 		assertEquals(f.t, "test");
 		assertEquals(f.f, null);
 		assertEquals(f.kind, Tracer.Flow.Kind.LABEL);
-	}
-	
-	@Test
-	public void testBlock() {
-		
-		
 	}
 }
