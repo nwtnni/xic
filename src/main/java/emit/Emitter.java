@@ -44,8 +44,8 @@ public class Emitter extends Visitor<IRNode> {
 
     // ABI names for array library functions ignore the types of arrays
     // and treat each argument as a 64-bit pointer (equivalent to an integer)
-    protected static final String ARRAY_ALLOC = "_I_xi_d_alloc_ii";
-    protected static final String ARRAY_CONCAT = "_I_xi_array_concat_iii";
+    protected static final String ARRAY_ALLOC = "_xi_d_alloc";
+    protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
     /* 
      * Utility methods for code generation
@@ -339,8 +339,8 @@ public class Emitter extends Visitor<IRNode> {
     public IRNode visit(Program p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
 
-        // program.appendFunc(xiArrayConcat());
-        // program.appendFunc(xiDynamicAlloc());
+        program.appendFunc(xiArrayConcat());
+        program.appendFunc(xiDynamicAlloc());
 
         for (Node n : p.fns) {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);

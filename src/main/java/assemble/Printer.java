@@ -55,6 +55,7 @@ public class Printer {
                 writer.close();
                 
             } catch (XicException xic) {
+                writer.close();
                 throw xic;
             }
         } catch (IOException io) {

@@ -506,7 +506,11 @@ public class TypeChecker extends Visitor<Type> {
         if (t.hasSize() && !t.size.accept(this).equals(Type.INT)) {
             throw new TypeException(Kind.INVALID_ARRAY_SIZE, t.size.location);
         }
-        
+
+        if (t.child != null) {
+            t.child.accept(this);
+        }
+
         return t.type;
     }
 }
