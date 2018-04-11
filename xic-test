@@ -230,5 +230,6 @@ c|course)
     echo "  --nb:   Skips running xic-build"
     echo "  Possible commands: a[ll] r[egression] f[ails] c[ourse]"
     echo "  l[exer] p[arser] t[ype] te tv tm i[r, b, c, s, o, a, f]"
+    echo "  assemble as aa ab airf ao aas"
     ;;
 esac

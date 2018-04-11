@@ -9,6 +9,7 @@ import ir.*;
 import ir.IRBinOp.OpType;
 import interpret.Configuration;
 import xic.XicException;
+import util.Pair;
 
 /**
  * Main decorated AST to IR translation implementation. Recursively 
@@ -22,8 +23,9 @@ public class Emitter extends Visitor<IRNode> {
      * @param context function context corresponding to the AST
      * @throws XicException if a semantic error was found
      */
-    public static IRCompUnit emitIR(Program ast, FnContext context) throws XicException {
-        return (IRCompUnit) ast.accept(new Emitter(context));
+    public static Pair<IRCompUnit, ABIContext> emitIR(Program ast, FnContext context) throws XicException {
+        Emitter e = new Emitter(context);
+        return new Pair<>((IRCompUnit) ast.accept(e), e.context);
     }
 
     public Emitter(FnContext context) {
