@@ -1,3 +1,0 @@
-xic ("Test assembler") "-target linux" {
-    const1.xi;
-}

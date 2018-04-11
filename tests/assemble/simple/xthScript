@@ -1,4 +1,4 @@
-xic ("Test assembler") "-target linux" {
+xic ("Test assemble simple") "-target linux" {
     simple_add1.xi;
     simple_assign1.xi;
     simple_div1.xi;
