@@ -383,17 +383,17 @@ public class Assembler extends IRVisitor<String> {
             return String.format("%d(%%rbp)", (i-6+1)*8);  // -6 for 6 args, +1 to move above rbp
         }
         else if(name.length() > 3 && name.substring(0,4).equals("_RET")) {
-            int i = Integer.parseInt(name.substring(4))+1; //+1 to 1-index
-            if(i==1) {
+            int i = Integer.parseInt(name.substring(4));
+            if(i==0) {
                 return "%rax";
             }
-            else if(i==2) {
+            else if(i==1) {
                 return "%rdx";
             }
             else {
                 // TODO Uses %rax, is this safe?
                 cmds.add(String.format("movq -%d(%%rbp), %%rax",returnLoc));
-                return String.format("-%d(%%rax)", (i-2*8));
+                return String.format("-%d(%%rax)", (i-1)*8);
             }
         }
 
