@@ -1,0 +1,4 @@
+xic ("Test assemble [assemble_specific") "-target linux" {
+    many_args_and_returns.xi;
+    multiple_return1.xi;
+}
