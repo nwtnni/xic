@@ -1,12 +1,20 @@
 package assemble;
 
 import assemble.tiles.*;
+import emit.ABIContext;
 import ir.*;
 
 import java.util.List;
 import java.util.ArrayList;
 
 public class Tiler extends IRVisitor<Tile> {
+
+    private int tempCounter = 0;                    // How many temps are used
+    private int maxReturn = 0;                      // Amount of stack space for returns
+    private int maxArgs = 0;                        // Amount of stack space for args
+    private int isMultipleReturn = 0;                   // 1 if the function returns > 2 elements
+
+    private ABIContext context;
 
     /*
      * Psuedo-visit method for visiting a list of nodes.
