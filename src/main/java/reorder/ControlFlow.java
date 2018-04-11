@@ -2,8 +2,10 @@ package reorder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import emit.IRLabelFactory;
@@ -63,7 +65,7 @@ public class ControlFlow {
 			
 			// Should never happen: unreachable code generated
 			if (state.equals(State.AFTER_JUMP)) {
-				assert false;
+				continue;
 			} else {
 				block.add(s);
 			}
@@ -97,6 +99,10 @@ public class ControlFlow {
 	
 	public int size() {
 		return blocks.size();
+	}
+	
+	public Set<Block> blocks() {
+		return new HashSet<>(blocks.values());
 	}
 	
 	public List<Block> neighbors(Block block) {

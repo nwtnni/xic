@@ -55,20 +55,20 @@ public class Emitter extends Visitor<IRNode> {
         IRLabel tL = IRLabelFactory.generate("true");
         IRLabel fL = IRLabelFactory.generate("false");
         
-        return new IRSeq(
-            new IRCJump(cond, tL.name),
-            new IRJump(new IRName(fL.name)),
-            tL,
-            t,
-            fL
-        );
+//        return new IRSeq(
+//            new IRCJump(cond, tL.name),
+//            new IRJump(new IRName(fL.name)),
+//            tL,
+//            t,
+//            fL
+//        );
 
-        // return new IRSeq(
-        //     new IRCJump(cond, tL.name, fL.name),
-        //     tL,
-        //     t,
-        //     fL
-        // );
+         return new IRSeq(
+             new IRCJump(cond, tL.name, fL.name),
+             tL,
+             t,
+             fL
+         );
     }
 
     /**
@@ -79,24 +79,24 @@ public class Emitter extends Visitor<IRNode> {
         IRLabel tL = IRLabelFactory.generate("true");
         IRLabel fL = IRLabelFactory.generate("false");
 
-        return new IRSeq(
-            hL,
-            new IRCJump(guard, tL.name),
-            new IRJump(new IRName(fL.name)),
-            tL,
-            block,
-            new IRJump(new IRName(hL.name)),
-            fL
-        );
+//        return new IRSeq(
+//            hL,
+//            new IRCJump(guard, tL.name),
+//            new IRJump(new IRName(fL.name)),
+//            tL,
+//            block,
+//            new IRJump(new IRName(hL.name)),
+//            fL
+//        );
 
-        // return new IRSeq(
-        //     hL,
-        //     new IRCJump(guard, tL.name, fL.name),
-        //     tL,
-        //     block,
-        //     new IRJump(new IRName(hL.name)),
-        //     fL
-        // );
+         return new IRSeq(
+             hL,
+             new IRCJump(guard, tL.name, fL.name),
+             tL,
+             block,
+             new IRJump(new IRName(hL.name)),
+             fL
+         );
     }
 
     /**
