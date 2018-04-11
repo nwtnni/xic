@@ -1,11 +1,11 @@
-package xic;
+package util;
 
 import java.io.File;
 
 /**
  * Filename and filepath manipulation methods for xic.
  */
-public class FilenameUtils {
+public class Filename {
     private static final int NOT_FOUND = -1;
     public static final char SYSTEM_SEPARATOR = File.separatorChar;
     public static final char EXTENSION_SEPARATOR = '.';

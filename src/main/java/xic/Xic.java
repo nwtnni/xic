@@ -6,6 +6,7 @@ import lex.XiLexer;
 import parse.IXiParser;
 import parse.XiParser;
 import type.TypeChecker;
+import util.Filename;
 
 /**
  * Main compiler class. Wraps around and provides convenience methods
@@ -53,7 +54,7 @@ public class Xic {
      * @throws XicException if lexing failed
      */
     public XiLexer lex(String unit) throws XicException {
-        switch (FilenameUtils.getExtension(unit)) {
+        switch (Filename.getExtension(unit)) {
             case "xi":
             case "ixi":
                 return XiLexer.from(source, unit);
@@ -72,7 +73,7 @@ public class Xic {
     public Node parse(String unit) throws XicException {
         Node ast = null;
         
-        switch (FilenameUtils.getExtension(unit)) {
+        switch (Filename.getExtension(unit)) {
             case "xi":
                 ast = XiParser.from(source, unit);
                 break;

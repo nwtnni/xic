@@ -2,10 +2,10 @@ package type;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import xic.FilenameUtils;
 
 import ast.Node;
 import parse.XiParser;
+import util.Filename;
 import xic.XicException;
 
 /**
@@ -24,13 +24,13 @@ public class Printer {
      * @throws XicException if the Printer was unable to write to the given file
      */
     public static void print(String source, String sink, String lib, String unit) throws XicException {
-        String ext = FilenameUtils.getExtension(unit);
-        String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
-        output = FilenameUtils.setExtension(output, "typed");
+        String ext = Filename.getExtension(unit);
+        String output = Filename.concat(sink, Filename.removeExtension(unit));
+        output = Filename.setExtension(output, "typed");
 
         FileWriter writer = null;
         try {
-            FilenameUtils.makePathTo(output);
+            Filename.makePathTo(output);
             writer = new FileWriter(output);
             try {
                 switch (ext) {

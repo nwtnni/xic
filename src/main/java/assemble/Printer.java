@@ -1,7 +1,6 @@
 package assemble;
 
 import java.io.*;
-import xic.FilenameUtils;
 
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
@@ -12,6 +11,7 @@ import xic.XicException;
 import ir.*;
 import emit.*;
 import type.*;
+import util.Filename;
 import ast.*;
 /**
  * Convenience class to write the result of a lexing run to file.
@@ -29,14 +29,14 @@ public class Printer {
      * @throws XicException if the Printer was unable to write to the given file
      */
     public static void print(String source, String sink, String lib, String unit, boolean opt) throws XicException {
-        String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
-        output = FilenameUtils.setExtension(output, "S");
+        String output = Filename.concat(sink, Filename.removeExtension(unit));
+        output = Filename.setExtension(output, "S");
 
         IRCompUnit comp = null;
         FileWriter writer = null;
 
         try {
-            FilenameUtils.makePathTo(output);
+            Filename.makePathTo(output);
             writer = new FileWriter(output);
             try {
                 Node ast = XiParser.from(source, unit);

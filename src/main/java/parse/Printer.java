@@ -2,11 +2,10 @@ package parse;
 
 import java.util.List;
 import java.io.*;
-import xic.FilenameUtils;
 
 import edu.cornell.cs.cs4120.util.*;
 import polyglot.util.OptimalCodeWriter;
-
+import util.Filename;
 import ast.*;
 import xic.XicException;
 
@@ -26,20 +25,20 @@ public class Printer extends Visitor<Void> {
      * @throws XicException if the Printer was unable to write to the given file
      */
     public static void print(String source, String sink, String unit) throws XicException {
-        String ext = FilenameUtils.getExtension(unit);
-        String output = FilenameUtils.concat(sink, unit);
+        String ext = Filename.getExtension(unit);
+        String output = Filename.concat(sink, unit);
 
         try {
-            FilenameUtils.makePathTo(output);
+            Filename.makePathTo(output);
             try {
                 Node ast = null;
                 switch (ext) {
                     case "xi":
-                        output = FilenameUtils.setExtension(output, "parsed");
+                        output = Filename.setExtension(output, "parsed");
                         ast = XiParser.from(source, unit);
                         break;
                     case "ixi":
-                        output = FilenameUtils.setExtension(output, "iparsed");
+                        output = Filename.setExtension(output, "iparsed");
                         ast = IXiParser.from(source, unit);
                         break;
                     default:

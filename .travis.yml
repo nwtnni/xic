@@ -3,7 +3,7 @@ jdk:
   - oraclejdk9
 install: true
 script:
-  - ./gradlew build
+  - ./gradlew xic
   - ./xic-test a
   - ./gradlew test
 

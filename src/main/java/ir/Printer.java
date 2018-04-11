@@ -1,7 +1,6 @@
 package ir;
 
 import java.io.*;
-import xic.FilenameUtils;
 
 import edu.cornell.cs.cs4120.util.CodeWriterSExpPrinter;
 import edu.cornell.cs.cs4120.util.SExpPrinter;
@@ -15,6 +14,7 @@ import interpret.IRSimulator;
 import interpret.IRSimulator.Trap;
 import parse.XiParser;
 import type.TypeChecker;
+import util.Filename;
 import type.FnContext;
 import ast.Node;
 import ast.Program;
@@ -34,13 +34,13 @@ public class Printer extends IRVisitor<Void> {
      * @throws XicException if the Printer was unable to write to the given file
      */
     public static void print(String source, String sink, String lib, String unit, boolean run, boolean opt) throws XicException {
-        String output = FilenameUtils.concat(sink, FilenameUtils.removeExtension(unit));
-        output = FilenameUtils.setExtension(output, "ir");
+        String output = Filename.concat(sink, Filename.removeExtension(unit));
+        output = Filename.setExtension(output, "ir");
 
         IRCompUnit comp = null;
 
         try {
-            FilenameUtils.makePathTo(output);
+            Filename.makePathTo(output);
             try {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);

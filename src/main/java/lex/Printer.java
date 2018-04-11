@@ -1,11 +1,11 @@
 package lex;
 
 import java.io.*;
-import xic.FilenameUtils;
 
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import parse.XiSymbol;
+import util.Filename;
 import xic.XicException;
 
 /**
@@ -23,10 +23,10 @@ public class Printer {
      * @throws XicException if the Printer was unable to write to the given file
      */
     public static void print(String source, String sink, String unit) throws XicException {
-        String lexed = FilenameUtils.setExtension(unit, "lexed");
-        lexed = FilenameUtils.concat(sink, lexed);
+        String lexed = Filename.setExtension(unit, "lexed");
+        lexed = Filename.concat(sink, lexed);
         try {
-            FilenameUtils.makePathTo(lexed);
+            Filename.makePathTo(lexed);
             BufferedWriter writer = new BufferedWriter(new FileWriter(lexed, false));
             try {
                 XiLexer lexer = XiLexer.from(source, unit);
