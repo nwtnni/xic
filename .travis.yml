@@ -1,0 +1,6 @@
+language: java
+install: true
+script:
+- ./xic-test a
+- ./gradlew test
+
