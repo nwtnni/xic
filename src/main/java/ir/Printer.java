@@ -51,7 +51,7 @@ public class Printer extends IRVisitor<Void> {
                 }
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
-                comp = Tracer.trace(comp);
+                // comp = Tracer.trace(comp);
 
                 // Generate .ir file
                 OutputStream stream = new FileOutputStream(output);
