@@ -112,7 +112,7 @@ public class Assembler extends IRVisitor<String> {
                 return "%rax";
             case HMUL:
                 // TODO do we need to deal with rdx overwrite??
-            cmds.add(String.format("movq %s, %%rdx", right));
+                cmds.add(String.format("movq %s, %%rdx", right));
                 cmds.add("imulq %rdx");
                 return "%rdx";
             case DIV:
