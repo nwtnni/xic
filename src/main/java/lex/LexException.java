@@ -1,4 +1,4 @@
-package lexer;
+package lex;
 
 import java_cup.runtime.ComplexSymbolFactory.*;
 import xic.XicException;

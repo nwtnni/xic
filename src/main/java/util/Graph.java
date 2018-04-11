@@ -1,19 +1,20 @@
-package graph;
-
-import util.Pair;
+package util;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 import java.util.List;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public abstract class Graph<V extends Node, E> {
+public class Graph<V extends Node, E> {
 	
 	protected Map<V, List<Pair<V, E>>> graph;
 	protected Set<V> nodes;
@@ -81,34 +82,5 @@ public abstract class Graph<V extends Node, E> {
 		} else {
 			return new ArrayList<>();
 		}
-	}
-	
-	public List<V> topological() {
-		Set<V> unvisited = new HashSet<>(nodes);
-		Stack<V> stack = new Stack<>();
-		List<V> sorted = new ArrayList<>();
-		
-		while (!unvisited.isEmpty()) {
-			
-			V start = unvisited
-					.stream()
-					.findAny()
-					.get();
-		
-			stack.push(start);
-			
-			while (!stack.isEmpty()) {
-				V node = stack.pop();
-				sorted.add(node);
-				unvisited.remove(node);
-				
-				for (Pair<V, E> edge : neighbors(node)) {
-					if (unvisited.contains(edge.first)) {
-						stack.push(edge.first);
-					}
-				}
-			}
-		}
-		return sorted;
 	}
 }

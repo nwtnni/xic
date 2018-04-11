@@ -1,4 +1,4 @@
-package lexer;
+package lex;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -8,9 +8,9 @@ import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
 
 import xic.FilenameUtils;
-import static parser.XiSymbol.*;
+import static parse.XiSymbol.*;
 import xic.XicException;
-import lexer.LexException.Kind;
+import lex.LexException.Kind;
 
 %%
 

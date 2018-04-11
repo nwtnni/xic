@@ -2,9 +2,9 @@ package xic;
 
 import ast.Invariant;
 import ast.Node;
-import lexer.XiLexer;
-import parser.IXiParser;
-import parser.XiParser;
+import lex.XiLexer;
+import parse.IXiParser;
+import parse.XiParser;
 import type.TypeChecker;
 
 /**
@@ -46,7 +46,7 @@ public class Xic {
     }
 
     /**
-     * Creates a {@link lexer.XiLexer} which reads the input file.
+     * Creates a {@link lex.XiLexer} which reads the input file.
      * 
      * @param unit The path to the input file, relative to source
      * @return A XiLexer instance which will read the input file
@@ -108,7 +108,7 @@ public class Xic {
      * @throws XicException if lexing failed
      */
     public void printLexed(String unit) throws XicException {
-        lexer.Printer.print(source, sink, unit);
+        lex.Printer.print(source, sink, unit);
     }
     
     /**
@@ -118,7 +118,7 @@ public class Xic {
      * @throws XicException if lexing or parsing failed
      */
     public void printParsed(String unit) throws XicException {
-        parser.Printer.print(source, sink, unit);
+        parse.Printer.print(source, sink, unit);
     }
 
     /**

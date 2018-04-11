@@ -1,4 +1,4 @@
-package lexer;
+package lex;
 
 /**
  * Utility class for string symbols. Records

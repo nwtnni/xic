@@ -1,7 +1,7 @@
 package type;
 
 import ast.*;
-import parser.IXiParser;
+import parse.IXiParser;
 import type.TypeException.Kind;
 import xic.XicException;
 

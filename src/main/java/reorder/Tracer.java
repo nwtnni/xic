@@ -1,4 +1,4 @@
-package emit;
+package reorder;
 
 import java.util.TreeSet;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public class Tracer extends IRVisitor<Tracer.Flow> {
     /**
      * Class representing a control flow construct in the IR AST.
      */
-    static class Flow {
+    public static class Flow {
         enum Kind {
             LABEL, JUMP, CJUMP, RETURN
         }

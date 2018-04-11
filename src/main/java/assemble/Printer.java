@@ -5,14 +5,13 @@ import xic.FilenameUtils;
 
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
-import parser.XiSymbol;
+import lex.*;
+import parse.*;
 import xic.XicException;
 
 import ir.*;
 import emit.*;
 import type.*;
-import parser.*;
-import lexer.*;
 import ast.*;
 /**
  * Convenience class to write the result of a lexing run to file.
