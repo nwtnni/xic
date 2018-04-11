@@ -180,37 +180,37 @@ public class Assembler extends IRVisitor<String> {
         int numReturn = numReturn(((IRName) c.target).name);
 
         // Need to pass in mem address into ARG1()
-        if(numReturn > 2) {
-            memLoc = args.size()+1-6+numReturn-2;   //+1 for adding mem address, -6 for 6 arg registers, -2 for 2 return registers
+        if (numReturn > 2) {
+            memLoc = Math.max(args.size() + 1 - 6, 0) + numReturn - 2;   // +1 for adding mem address, -6 for 6 arg registers, -2 for 2 return registers
             isMultipleReturn = 1;
         }
 
         // Used to help setup stack pointer
-        if(numReturn - 2> maxReturn) {
-            maxReturn = numReturn-2;
+        if (numReturn - 2 > maxReturn) {
+            maxReturn = numReturn - 2;
         }
-        if(args.size()+isMultipleReturn - 6 > maxArgs) {
-            maxArgs = args.size()+isMultipleReturn-6;
+        if (args.size() + isMultipleReturn - 6 > maxArgs) {
+            maxArgs = args.size() + isMultipleReturn - 6;
         }
 
         // Push any argument above 6 onto the stack
         // TODO Uses %rax, is this safe?
-        for(i=args.size()-1;i>5-isMultipleReturn;i--) {
-            cmds.add(String.format("movq %s, %%rax",args.get(i).accept(this)));
-            cmds.add(String.format("movq %%rax, %d(%%rsp)", (i-6+isMultipleReturn)*8)); //-6 for 6 arguments, +isMultipleReturn for extra memory argument
+        for (i = args.size() - 1; i > 5 - isMultipleReturn; i--) {
+            cmds.add(String.format("movq %s, %%rax", args.get(i).accept(this)));
+            cmds.add(String.format("movq %%rax, %d(%%rsp)", (i - 6 + isMultipleReturn) * 8)); //-6 for 6 arguments, +isMultipleReturn for extra memory argument
         }
 
         // Assign all arguments 6 or below into the appropriate register
         // Their arguments are 1-indexed. (Why... T_T)
-        for(;i>=0;i--) {
-            cmds.add(String.format("movq %s, ARG%d()",args.get(i).accept(this),i+1+isMultipleReturn));
+        for ( ; i >= 0; i--) {
+            cmds.add(String.format("movq %s, ARG%d()", args.get(i).accept(this), i + 1 + isMultipleReturn));
         }
 
-        if(isMultipleReturn == 1) {
-            if(memLoc == -1) {
+        if (isMultipleReturn == 1) {
+            if (memLoc == -1) {
                 throw new RuntimeException("IRCall: How did you get here?");
             }
-            cmds.add(String.format("leaq %d(%%rsp), ARG1()", memLoc*8));
+            cmds.add(String.format("leaq %d(%%rsp), ARG1()", memLoc * 8));
         }
 
         // TODO CHECK THIS Can you call anything other than an IRName?
@@ -340,10 +340,10 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRReturn r) {
         // For multiple returns (>2)
         // Uses %rax, %rdx to move data around. Safe because it must use %rax, %rdx
-        for(int i=2;i<r.rets.size();i++) {
+        for(int i=2; i < r.rets.size(); i++) {
             String fromLoc = r.rets.get(i).accept(this);
             cmds.add(String.format("movq %s, %%rax", fromLoc));
-            cmds.add(String.format("movq -%d(%%rbp), %%rdx",returnLoc));    //TODO Something is wrong here but idk what
+            cmds.add(String.format("movq -%d(%%rbp), %%rdx", returnLoc));    //TODO Something is wrong here but idk what
             cmds.add(String.format("movq %%rax, -%d(%%rdx)",(i-2)*8));
         }
 
