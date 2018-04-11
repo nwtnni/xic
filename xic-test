@@ -107,7 +107,7 @@ test_ir() {
 }
 
 test_assemble() {
-    xth/xth -compilerpath . -workpath tests/assemble -testpath tests/assemble tests/assemble/xthScript
+    xth/xth -compilerpath . -workpath tests/assemble/simple -testpath tests/assemble/simple tests/assemble/simple/xthScript
 }
 
 test_course() {

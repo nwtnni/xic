@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
 
-import xic.FilenameUtils;
+import util.Filename;
 import static parse.XiSymbol.*;
 import xic.XicException;
 import lex.LexException.Kind;
@@ -30,7 +30,7 @@ import lex.LexException.Kind;
     /* Exposed Interface */
 
     public static XiLexer from(String source, String unit) throws XicException {
-        String input = FilenameUtils.concat(source, unit);
+        String input = Filename.concat(source, unit);
         try {
             XiLexer lexer = new XiLexer(new FileReader(input));
             lexer.init(unit, new ComplexSymbolFactory());

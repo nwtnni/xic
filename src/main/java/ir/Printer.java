@@ -5,7 +5,7 @@ import java.io.*;
 import edu.cornell.cs.cs4120.util.CodeWriterSExpPrinter;
 import edu.cornell.cs.cs4120.util.SExpPrinter;
 import polyglot.util.OptimalCodeWriter;
-
+import reorder.Tracer;
 import xic.XicException;
 import emit.Canonizer;
 import emit.ConstantFolder;
@@ -51,6 +51,7 @@ public class Printer extends IRVisitor<Void> {
                 }
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
+                // comp = Tracer.trace(comp);
 
                 // Generate .ir file
                 OutputStream stream = new FileOutputStream(output);
