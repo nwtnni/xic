@@ -30,7 +30,7 @@ public class Printer {
      */
     public static void print(String source, String sink, String lib, String unit, boolean opt) throws XicException {
         String output = Filename.concat(sink, Filename.removeExtension(unit));
-        output = Filename.setExtension(output, "S");
+        output = Filename.setExtension(output, "s");
 
         IRCompUnit comp = null;
         FileWriter writer = null;

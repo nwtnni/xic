@@ -59,6 +59,28 @@ public class Assembler extends IRVisitor<String> {
         return tempCounter;
     }
 
+    private String getArg(int i) {
+        switch(i) {
+            case 1:
+                return "%rdi";
+            case 2:
+                return "%rsi";
+            case 3:
+                return "%rdx";
+            case 4:
+                return "%rcx";
+            case 5:
+                return "%r8";
+            case 6:
+                return "%r9";
+        }
+        throw new RuntimeException("You typoed somewhere: i = " + i);
+    }
+
+    private String func(String fnName) {
+        return fnName;
+    }
+
     // TODO This may be slightly hacky
     private int numReturn(String fn) {
         if(fn.equals("_xi_alloc")) {
@@ -211,18 +233,18 @@ public class Assembler extends IRVisitor<String> {
         // Assign all arguments 6 or below into the appropriate register
         // Their arguments are 1-indexed. (Why... T_T)
         for ( ; i >= 0; i--) {
-            cmds.add(String.format("movq %s, ARG%d()", args.get(i).accept(this), i + 1 + isMultipleReturn));
+            cmds.add(String.format("movq %s, %s", args.get(i).accept(this), getArg(i + 1 + isMultipleReturn)));
         }
 
         if (isMultipleReturn == 1) {
             if (memLoc == -1) {
                 throw new RuntimeException("IRCall: How did you get here?");
             }
-            cmds.add(String.format("leaq %d(%%rsp), ARG1()", memLoc * 8));
+            cmds.add(String.format("leaq %d(%%rsp), %s", memLoc * 8, getArg(1)));
         }
 
         // TODO CHECK THIS Can you call anything other than an IRName?
-        cmds.add("callq FUNC("+((IRName) c.target).name.substring(1)+")");
+        cmds.add("callq "+((IRName) c.target).name);
 
         return "%rax";
     }
@@ -245,7 +267,7 @@ public class Assembler extends IRVisitor<String> {
     }
     
     public String visit(IRCompUnit c) {
-        cmds.add("#include \"defs.h\"");
+        // cmds.add("#include \"defs.h\"");
         cmds.add(".text");
         for (IRFuncDecl fn : c.functions.values()) {
             fn.accept(this);
@@ -278,10 +300,11 @@ public class Assembler extends IRVisitor<String> {
             isMultipleReturn = 1;
         }
 
+        cmds.add("################################################################################");   //For style
         // Prelude
-        cmds.add(".globl "+"FUNC("+f.name.substring(1)+")");
+        cmds.add(".globl "+f.name);
         cmds.add(".align 4");
-        cmds.add("FUNC("+f.name.substring(1)+"):");
+        cmds.add(f.name+":");
         
         // Set up stack
         cmds.add("# Stack Setup");  // TODO Debugging comment
@@ -292,7 +315,7 @@ public class Assembler extends IRVisitor<String> {
 
         if(isMultipleReturn == 1) {
             returnLoc = genTemp();
-            cmds.add(String.format("movq ARG1(), -%d(%%rbp)", returnLoc));
+            cmds.add(String.format("movq %s, -%d(%%rbp)", getArg(1), returnLoc));
         }
         
         f.body.accept(this); // The IR moves arguments off registers onto stack. See visit(IRTemp)
@@ -311,7 +334,6 @@ public class Assembler extends IRVisitor<String> {
         cmds.add("popq %rbp");
         cmds.add("retq");
         cmds.add("");   //New Line
-        cmds.add("################################################################################");   //For style
 
         return null;
     }
@@ -386,7 +408,7 @@ public class Assembler extends IRVisitor<String> {
         if(name.length() > 3 && name.substring(0,4).equals("_ARG")) {
             int i = Integer.parseInt(name.substring(4))+1+isMultipleReturn;  //+1 to 1-index
             if(i <= 6) {
-                return String.format("ARG%d()", i);
+                return getArg(i);
             }
             return String.format("%d(%%rbp)", (i-6+1)*8);  // -6 for 6 args, +1 to move above rbp
         }
