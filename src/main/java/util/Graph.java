@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
-public class Graph<V extends Node, E> {
+public class Graph<V, E> {
 	
 	protected Map<V, List<Pair<V, E>>> graph;
 	protected Set<V> nodes;
@@ -52,7 +52,11 @@ public class Graph<V extends Node, E> {
 		}
 	}
 	
-	public void insert(V a, V b, E w) {
+	public void insert(V a) {
+		nodes.add(a);
+	}
+	
+	public void put(V a, V b, E w) {
 		remove(a, b);
 		graph.putIfAbsent(a, new ArrayList<>());
 		graph.get(a).add(new Pair<>(b, w));

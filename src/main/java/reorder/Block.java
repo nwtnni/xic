@@ -1,14 +1,25 @@
 package reorder;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import ir.IRLabel;
 import ir.IRNode;
-import util.Node;
 
-public class Block implements Node {
+public class Block {
 
 	public String label;
 	public List<IRNode> statements;
+
+	public Block(IRLabel label) {
+		this.statements = new ArrayList<>();
+		this.statements.add(label);
+		this.label = label.name;
+	}
+	
+	public void add(IRNode statement) {
+		statements.add(statement);
+	}
 	
 	@Override
 	public boolean equals(Object o) {
