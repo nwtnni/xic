@@ -54,10 +54,10 @@ public class ControlFlow {
 					cfg.graph.put(block.label, label.name, null);
 					break;
 				case AFTER_JUMP:
-					block = new Block(label);
 					state = State.WITHIN_BLOCK;
 					break;
 				}
+				block = new Block(label);
 				continue;
 			} 
 			
@@ -87,6 +87,7 @@ public class ControlFlow {
 			}
 		}
 		
+		cfg.blocks.put(block.label, block);
 		return cfg;
 	}
 	
