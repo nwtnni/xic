@@ -37,7 +37,9 @@ public class Assembler extends IRVisitor<String> {
     private int maxArgs = 0;                        // Amount of stack space for args
     private int isMultipleReturn;                   // 1 if the function returns > 2 elements
     private int returnLoc;                          // Offset from rbp that stores the mem address for multiple returns
+    private int memLoc=-1;                          // Offset from rsp that stores the multiple returns results from calls
     private String fnName;                          // TODO Name of current function used for hack
+
 
     private ABIContext context;
     /**
@@ -141,26 +143,32 @@ public class Assembler extends IRVisitor<String> {
                 return "%rax";
             case EQ:
                 cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add("movq $0, %rax");                          //TODO this is hack
                 cmds.add("sete %al");  //set lower bits of %rax to 1 if equal
                 return "%rax";
             case NEQ:
-                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
+                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add("movq $0, %rax");                          //TODO this is hack
                 cmds.add("setne %al");
                 return "%rax";
             case LT:
-                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
-                cmds.add("setl %al");
+                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add("movq $0, %rax");
+                cmds.add("setl %al");                               //TODO this is hack
                 return "%rax";
             case GT:
-                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
+                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add("movq $0, %rax");                          //TODO this is hack
                 cmds.add("setg %al");
                 return "%rax";
             case LEQ:
-                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
+                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add("movq $0, %rax");                          //TODO this is hack
                 cmds.add("setle %al");
                 return "%rax";
             case GEQ:
-                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
+                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add("movq $0, %rax");                          //TODO this is hack
                 cmds.add("setge %al");
                 return "%rax";
         }
@@ -173,15 +181,15 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRCall c) {
         List<IRNode> args = new ArrayList<>(c.args);
         int i;
-        int memLoc=-1;
         int isMultipleReturn=0; //A pseudohack to shift by 1 in the case of multiple returns
+        memLoc = -1;
 
         // TODO CHECK THIS Can you call anything other than an IRName?
         int numReturn = numReturn(((IRName) c.target).name);
 
         // Need to pass in mem address into ARG1()
         if (numReturn > 2) {
-            memLoc = Math.max(args.size() + 1 - 6, 0) + numReturn - 2;   // +1 for adding mem address, -6 for 6 arg registers, -2 for 2 return registers
+            memLoc = Math.max(args.size() + 1 - 6, 0) + numReturn - 2 - 1;   // +1 for adding mem address, -6 for 6 arg registers, -2 for 2 return registers, -1 for 0-offset
             isMultipleReturn = 1;
         }
 
@@ -383,17 +391,15 @@ public class Assembler extends IRVisitor<String> {
             return String.format("%d(%%rbp)", (i-6+1)*8);  // -6 for 6 args, +1 to move above rbp
         }
         else if(name.length() > 3 && name.substring(0,4).equals("_RET")) {
-            int i = Integer.parseInt(name.substring(4))+1; //+1 to 1-index
-            if(i==1) {
+            int i = Integer.parseInt(name.substring(4));
+            if(i==0) {
                 return "%rax";
             }
-            else if(i==2) {
+            else if(i==1) {
                 return "%rdx";
             }
             else {
-                // TODO Uses %rax, is this safe?
-                cmds.add(String.format("movq -%d(%%rbp), %%rax",returnLoc));
-                return String.format("-%d(%%rax)", (i-2*8));
+                return String.format("%d(%%rsp)", (memLoc-(i-2))*8);  //-2 for 2 registers
             }
         }
 
