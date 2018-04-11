@@ -4,15 +4,16 @@ import java.io.*;
 
 import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
 import java_cup.runtime.ComplexSymbolFactory.Location;
-import lex.*;
-import parse.*;
-import xic.XicException;
 
 import ir.*;
 import emit.*;
 import type.*;
-import util.Filename;
 import ast.*;
+import lex.*;
+import parse.*;
+import xic.XicException;
+import util.Filename;
+import util.Pair;
 /**
  * Convenience class to write the result of a lexing run to file.
  */
@@ -41,14 +42,17 @@ public class Printer {
             try {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);
-                comp = Emitter.emitIR((Program) ast, context);
+                Pair<IRCompUnit, ABIContext> ir = Emitter.emitIR((Program) ast, context);
+
+                comp = ir.first;
+                ABIContext mangled = ir.second;
 
                 if (opt) {
                     ConstantFolder.constantFold(comp);
                 }
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
-                String cmds = Assembler.assemble(comp, new ABIContext(context));
+                String cmds = Assembler.assemble(comp, mangled);
                 // Generate .s file
                 writer.write(cmds);
                 writer.close();

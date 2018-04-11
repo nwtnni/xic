@@ -44,7 +44,7 @@ public class Printer extends IRVisitor<Void> {
             try {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);
-                comp = Emitter.emitIR((Program) ast, context);
+                comp = Emitter.emitIR((Program) ast, context).first;
 
                 if (opt) {
                     ConstantFolder.constantFold(comp);
