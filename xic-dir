@@ -8,7 +8,7 @@ if [ $# -gt 0 ]; then
     do
       if [[ -f $file ]]; then
         echo "running $1 on file $file";
-        $XIC $1 $file
+        ./$XIC $1 $file
       fi
     done
   done

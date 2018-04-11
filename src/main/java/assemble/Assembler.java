@@ -114,21 +114,21 @@ public class Assembler extends IRVisitor<String> {
                 cmds.add("imulq %rdx");
                 return "%rdx";
             case DIV:
-                cmds.add("cdqo");   // sign-extend %rax into %rdx TODO Check this is right
+                cmds.add("cqo");   // sign-extend %rax into %rdx TODO Check this is right
                 cmds.add(String.format("idivq %s", right));
                 return "%rax";
             case MOD:
-                cmds.add("cdqo");   // sign-extend %rax into %rdx TODO Check this is right
+                cmds.add("cqo");   // sign-extend %rax into %rdx TODO Check this is right
                 cmds.add(String.format("idivq %s", right));
                 return "%rdx"; 
             case AND:
-                cmds.add(String.format("andb %s, %%rax", right));
+                cmds.add(String.format("andq %s, %%rax", right));   //TODO check if it should be quadword
                 return "%rax";
             case OR:
-                cmds.add(String.format("orb %s, %%rax", right));
+                cmds.add(String.format("orq %s, %%rax", right));    //TODO check if it should be quadword
                 return "%rax";
             case XOR:
-                cmds.add(String.format("xorb %s, %%rax", right));
+                cmds.add(String.format("xorq %s, %%rax", right));   //TODO check if it should be quadword
                 return "%rax";
             case LSHIFT:
                 cmds.add(String.format("shlq %s, %%rax", right));   //TODO need to guarantee right is an immediate or cl
@@ -144,23 +144,23 @@ public class Assembler extends IRVisitor<String> {
                 cmds.add("sete %al");  //set lower bits of %rax to 1 if equal
                 return "%rax";
             case NEQ:
-                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
                 cmds.add("setne %al");
                 return "%rax";
             case LT:
-                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
                 cmds.add("setl %al");
                 return "%rax";
             case GT:
-                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
                 cmds.add("setg %al");
                 return "%rax";
             case LEQ:
-                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
                 cmds.add("setle %al");
                 return "%rax";
             case GEQ:
-                cmds.add(String.format("cmpq %s, %%rax", right));
+                cmds.add(String.format("cmpq %s, %%rax", right));   //TODO check if it should be quadword
                 cmds.add("setge %al");
                 return "%rax";
         }
@@ -194,8 +194,10 @@ public class Assembler extends IRVisitor<String> {
         }
 
         // Push any argument above 6 onto the stack
+        // TODO Uses %rax, is this safe?
         for(i=args.size()-1;i>5-isMultipleReturn;i--) {
-            cmds.add(String.format("movq %s,%d(%%rsp)",args.get(i).accept(this),(i+1)*8));
+            cmds.add(String.format("movq %s, %%rax",args.get(i).accept(this)));
+            cmds.add(String.format("movq %%rax, %d(%%rsp)", (i-6+isMultipleReturn)*8)); //-6 for 6 arguments, +isMultipleReturn for extra memory argument
         }
 
         // Assign all arguments 6 or below into the appropriate register
@@ -300,7 +302,8 @@ public class Assembler extends IRVisitor<String> {
         cmds.add(String.format("addq $%d, %%rsp", rspShift));
         cmds.add("popq %rbp");
         cmds.add("retq");
-        cmds.add("\n");   //New Line
+        cmds.add("");   //New Line
+        cmds.add("################################################################################");   //For style
 
         return null;
     }
@@ -313,16 +316,20 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRMem m) {
         // TODO Uses %rax to move things around; is this safe? (Should be)
         cmds.add(String.format("movq %s, %%rax", m.expr.accept(this))); // Exprs shouldn't return null
-        return "(%rax)"; 
+        return "(%rax)";
     }
 
     public String visit(IRMove m) {
-        // TODO Uses %rcx to move things around; is this safe? (Only because exprs use %rax and %rdx)
+        // TODO Uses %r12 to move things around; is this safe? (Must use rax because ARGS use rdi, rsi, rdx, rcx, r8, and r9)
         // TODO Add more tiles here
+        String r12 = String.format("-%d(%%rbp)",genTemp());
+        cmds.add(String.format("movq %%r12, %s",r12));
         String src = m.src.accept(this);
-        cmds.add(String.format("movq %s, %%rcx", src));
+        cmds.add(String.format("movq %s, %%r12", src));
+        
         String target = m.target.accept(this);
-        cmds.add(String.format("movq %%rcx, %s", target));
+        cmds.add(String.format("movq %%r12, %s", target));
+        cmds.add(String.format("movq %s, %%r12", r12));
         return null;
     }
 
@@ -336,17 +343,18 @@ public class Assembler extends IRVisitor<String> {
         for(int i=2;i<r.rets.size();i++) {
             String fromLoc = r.rets.get(i).accept(this);
             cmds.add(String.format("movq %s, %%rax", fromLoc));
-            cmds.add(String.format("movq -%d(%%rbp), %%rdx",returnLoc));
+            cmds.add(String.format("movq -%d(%%rbp), %%rdx",returnLoc));    //TODO Something is wrong here but idk what
             cmds.add(String.format("movq %%rax, -%d(%%rdx)",(i-2)*8));
         }
 
         // First two returns
-        if(0<r.rets.size()) {
-            cmds.add(String.format("movq %s, %%rax", r.rets.get(0).accept(this)));
-        }
         if(1<r.rets.size()) {
             cmds.add(String.format("movq %s, %%rdx", r.rets.get(1).accept(this)));
         }
+        if(0<r.rets.size()) {
+            cmds.add(String.format("movq %s, %%rax", r.rets.get(0).accept(this)));
+        }
+
         cmds.add("jmp ret__label"+fnName); //TODO is this too hacky?
 
         return null;
@@ -372,7 +380,7 @@ public class Assembler extends IRVisitor<String> {
             if(i <= 6) {
                 return String.format("ARG%d()", i);
             }
-            return String.format("+%d(%%rbp)", (i-6+1)*8);  // -6 for 6 args, +1 to move above rbp
+            return String.format("%d(%%rbp)", (i-6+1)*8);  // -6 for 6 args, +1 to move above rbp
         }
         else if(name.length() > 3 && name.substring(0,4).equals("_RET")) {
             int i = Integer.parseInt(name.substring(4))+1; //+1 to 1-index
@@ -383,8 +391,9 @@ public class Assembler extends IRVisitor<String> {
                 return "%rdx";
             }
             else {
-                // TODO is this valid assembly? Not sure if too dense
-                return String.format("-%d(-%d(%%rbp))",(i-2)*8,returnLoc);
+                // TODO Uses %rax, is this safe?
+                cmds.add(String.format("movq -%d(%%rbp), %%rax",returnLoc));
+                return String.format("-%d(%%rax)", (i-2*8));
             }
         }
 
