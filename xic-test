@@ -106,8 +106,29 @@ test_ir() {
     test_ir_arrays
 }
 
-test_assemble() {
+test_assemble_simple() {
     xth/xth -compilerpath . -workpath tests/assemble/simple -testpath tests/assemble/simple tests/assemble/simple/xthScript
+}
+
+test_assemble_arrays() {
+    xth/xth -compilerpath . -workpath tests/assemble/arrays -testpath tests/assemble/arrays tests/assemble/arrays/xthScript   
+}
+
+test_assemble_basic() {
+    xth/xth -compilerpath . -workpath tests/assemble/basic -testpath tests/assemble/basic tests/assemble/basic/xthScript   
+}
+
+test_assemble_ir_fails() {
+    xth/xth -compilerpath . -workpath tests/assemble/ir_failed_tests -testpath tests/assemble/ir_failed_tests tests/assemble/ir_failed_tests/xthScript
+}
+
+test_assemble_other() {
+    xth/xth -compilerpath . -workpath tests/assemble/other -testpath tests/assemble/other tests/assemble/other/xthScript   
+}
+
+test_assemble() {
+    test_assemble_simple
+    test_assemble_arrays
 }
 
 test_course() {
@@ -174,6 +195,21 @@ if)
     ;;
 assemble)
     test_assemble
+    ;;
+as)
+    test_assemble_simple
+    ;;
+aa)
+    test_assemble_arrays
+    ;;
+ab)
+    test_assemble_basic
+    ;;
+airf)
+    test_assemble_ir_fails
+    ;;
+ao)
+    test_assemble_other
     ;;
 c|course)
     test_course
