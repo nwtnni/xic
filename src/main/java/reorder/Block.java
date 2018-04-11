@@ -3,7 +3,7 @@ package reorder;
 import java.util.List;
 
 import ir.IRNode;
-import graph.Node;
+import util.Node;
 
 public class Block implements Node {
 

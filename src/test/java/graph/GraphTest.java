@@ -2,6 +2,9 @@ package graph;
 
 import org.junit.Test;
 
+import util.Graph;
+import util.Node;
+
 import static org.junit.Assert.assertEquals;
 
 import java.util.List;

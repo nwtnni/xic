@@ -1,6 +1,8 @@
 language: java
+jdk:
+  - oraclejdk9
 install: true
 script:
-- ./xic-test a
-- ./gradlew test
+  - ./xic-test a
+  - ./gradlew test
 

@@ -3,8 +3,8 @@ package reorder;
 import java.util.ArrayList;
 import java.util.List;
 
-import graph.Graph;
 import ir.IRNode;
+import util.Graph;
 
 public class ControlFlow {
 
