@@ -218,7 +218,7 @@ public class Tiler extends IRVisitor<Temp> {
         // Assign multiple return address to argument 0 if needed
         // TODO: handle replacement with actual memory address in reg alloc
         if (callIsMultiple > 0) {
-            args.add(new Lea(TempFactory.getArgument(0), Config.MULT_RETURN));
+            args.add(new Lea(TempFactory.getArgument(0), Config.CALLER_MULT_RETURN));
         }
 
         instrs.add(new Call(target, args));

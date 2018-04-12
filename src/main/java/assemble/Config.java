@@ -12,10 +12,14 @@ public class Config {
     public static final String ABSTRACT_RET_PREFIX = "_RET";
 
     /** 
-     * Name of temp for address to store multiple returns > 2
-     * Translated during register allocation
+     * Name of the callee temp for address to put multiple returns > 2
      */
-    public static final Temp MULT_RETURN = Temp.temp("_RET_ADDR");
+    public static final Temp CALLEE_MULT_RETURN = Temp.temp("_CALLEE_RET_ADDR");
+
+    /** 
+     * Name of the caller temp for address to receive multiple returns > 2
+     */
+    public static final Temp CALLER_MULT_RETURN = Temp.temp("_CALLER_RET_ADDR");
 
     /** Word size; assumes a 64-bit architecture */
     public static final int WORD_SIZE = 8;

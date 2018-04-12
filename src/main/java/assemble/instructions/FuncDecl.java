@@ -34,6 +34,11 @@ public class FuncDecl {
         prelude.add(Text.comment("Subtract from %rsp here:"));
         // TODO: in reg alloc insert subq n, %rsp at prelude[4]
 
+        // If function has multiple returns, save return address from arg 0 to a temp
+        if (rets > 2) {
+            prelude.add(new Mov(TempFactory.getArgument(0), Config.CALLEE_MULT_RETURN));
+        }
+
         // Function epilogue
         epilogue.add(Text.comment("Stack Teardown"));
         epilogue.add(Label.retLabel(name));
