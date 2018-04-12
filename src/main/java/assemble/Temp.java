@@ -6,7 +6,7 @@ package assemble;
  */
 public class Temp {
 
-    public static Temp temp(String name) {
+    protected static Temp temp(String name) {
         return new Temp(Kind.TEMP, name, 0);
     }
 
@@ -26,8 +26,8 @@ public class Temp {
     }
 
     public Kind kind;
-    private String name;
-    private long value;
+    public String name;
+    public long value;
 
     private Temp(Kind kind, String name, long value) {
         this.kind = kind;

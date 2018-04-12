@@ -14,14 +14,14 @@ public class IRTempFactory {
      * Generate a new temporary name.
      */
     public static IRTemp generate() {
-        return new IRTemp("__temp_" + Long.toString(++tempIndex));
+        return new IRTemp("_temp_" + Long.toString(++tempIndex));
     }
 
     /**
      * Generate a new temporary with a descriptive name.
      */
     public static IRTemp generate(String name) {
-        return new IRTemp(name + "__temp_" + Long.toString(++tempIndex));
+        return new IRTemp("_temp_" + Long.toString(++tempIndex) + "_" + name);
     }
 
     /**

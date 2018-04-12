@@ -226,7 +226,7 @@ public class Tiler extends IRVisitor<Temp> {
         callIsMultiple = 0;
         args = new ArrayList<>();
 
-        return Temp.temp("call_" + target);
+        return TempFactory.generate(target);
     }
 
     public Temp visit(IRCJump c) {
@@ -254,11 +254,14 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRLabel l) {
+        instrs.add(Label.label(l.name));
         return null;
     }
 
     public Temp visit(IRMem m) {
-        return null;
+        Temp t = TempFactory.generate(m.toString());
+        instrs.add(new Mov(t, m.expr.accept(this)));
+        return t;
     }
 
     public Temp visit(IRMove m) {
