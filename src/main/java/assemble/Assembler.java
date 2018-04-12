@@ -110,6 +110,7 @@ public class Assembler extends IRVisitor<String> {
 
     public String visit(IRBinOp b) {
         // Uses %rax to operate on things. Returns %rax (sometimes %rdx)
+        // TODO autospilling temps avoids using imm64s which can cause problems
         
         //Autospill temp onto stack
         String right = b.right.accept(this);
@@ -254,7 +255,7 @@ public class Assembler extends IRVisitor<String> {
         // TODO Potentially add more tiles here
         String condTemp = c.cond.accept(this);
         cmds.add(String.format("movq %s, %%rax", condTemp)); // TODO only needed if condTemp is an immediate
-        cmds.add("cmpq $1, %rax");  // TODO Is this correct? Should we comparing %al instead?
+        cmds.add("cmpq $1, %rax");
         cmds.add("jz "+c.trueLabel);
 
         return null;
@@ -328,7 +329,7 @@ public class Assembler extends IRVisitor<String> {
         cmds.set(replaceIndex, String.format("subq $%d, %%rsp", rspShift));
 
         //Tear down stack
-        cmds.add("\n# Stack Teardown");   // TODO Debugging comment
+        cmds.add("\n# Stack Teardown");   // Debugging comment
         cmds.add("ret__label"+fnName+":");    //TODO Is this too hacky?
         cmds.add(String.format("addq $%d, %%rsp", rspShift));
         cmds.add("popq %rbp");
@@ -393,7 +394,7 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRSeq s) {
         int i = 0;
         for(IRNode stmt:s.stmts) {
-            cmds.add("\n# IR Statement "+i);   // TODO Debugging comment
+            cmds.add("\n# IR Statement "+i);   // Debugging comment
             i++;
             stmt.accept(this);
         }
