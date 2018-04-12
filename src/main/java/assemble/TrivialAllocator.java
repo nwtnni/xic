@@ -37,8 +37,6 @@ public class TrivialAllocator {
     // Maximum number of returns from a call in current function
     private int maxRets;
 
-    private int isMultipleReturn;
-
     // Number of words to subtract from base pointer to get location
     // in stack where multiple returns > 2 must be written by callee.
     private Operand calleeReturnAddr;
@@ -55,7 +53,6 @@ public class TrivialAllocator {
         this.tempCounter = 0;
         this.maxArgs = 0;
         this.maxRets = 0;
-        this.isMultipleReturn = 0;
         this.calleeReturnAddr = null;
         this.callerReturnAddr = -1;
     }
@@ -63,8 +60,9 @@ public class TrivialAllocator {
     /**
      * Push a named temp to the stack.
      */
-    private void pushTemp(String name) {
+    private Operand pushTemp(String name) {
         tempStack.put(name, tempCounter++);
+        return getTemp(name);
     }
 
     /**
@@ -76,11 +74,12 @@ public class TrivialAllocator {
 
     /**
      * Get the mem operand to a temp on the stack.
-     * Equivalent to -i*8(%rbp) where name -> i in the tempStack
+     * Equivalent to -(i+1)*8(%rbp) where name -> i in the tempStack
+     * +1 to offset for saved base pointer
      */
     private Operand getTemp(String name) {
         if (tempStack.containsKey(name)) {
-            return Operand.mem(Operand.RBP, -normalize(tempStack.get(name)));
+            return Operand.mem(Operand.RBP, -normalize(tempStack.get(name) + 1));
         }
         throw XicInternalException.internal("Non-existent temp. Check assembly gen.");
     }
@@ -94,6 +93,7 @@ public class TrivialAllocator {
 
     private CompUnit allocate() {
         for (FuncDecl fn : unit.fns) {
+            System.out.println("alloc for " + fn.name);
             allocate(fn);
         }
         return unit;
@@ -104,18 +104,15 @@ public class TrivialAllocator {
         tempCounter = 0;
         maxArgs = 0;
         maxRets = 0;
-        isMultipleReturn = 0;
         calleeReturnAddr = null;
 
         // Store address to put multiple returns from arg0 to stack
         if (fn.rets > 2) {
-            isMultipleReturn = 1;
-            calleeReturnAddr = pushTemp();
-
+            calleeReturnAddr = pushTemp(Config.CALLEE_MULT_RETURN.name);
             Operand dest = calleeReturnAddr;
             Operand src = Config.getArg(0);
             Mov mov = new Mov(dest, src);
-            fn.prelude.set(4, mov);
+            fn.prelude.set(8, mov);
         }
 
         for (Instr i : fn.stmts) {
@@ -130,11 +127,12 @@ public class TrivialAllocator {
 
         // Insert stack setup 
         BinOp sub = new BinOp(Kind.SUB, shift, Operand.RSP);
-        fn.prelude.set(3, sub);
+        fn.prelude.set(7, sub);
 
         // Insert stack teardown
         BinOp add = new BinOp(Kind.ADD, shift, Operand.RSP);
         fn.epilogue.set(2, add);
+
     }
 
     private Operand allocate(Instr ins) {
@@ -153,11 +151,11 @@ public class TrivialAllocator {
             case TEMP:
                 String name = t.name;
                
+                // If temp is an argument
                 String regex = String.format("(%s)(\\d)", Config.ABSTRACT_ARG_PREFIX);
                 Matcher arg = Pattern.compile(regex).matcher(name);
                 if (arg.find()) {
-                    // Get arg, with offset for multiple return
-                    int i = Integer.parseInt(arg.group(1)) + isMultipleReturn;
+                    int i = Integer.parseInt(arg.group(1));
                     if (i < 6) {
                         return Config.getArg(i);
                     }
@@ -167,6 +165,7 @@ public class TrivialAllocator {
                     return Operand.mem(Operand.RBP, offset);
                 } 
                 
+                // If temp is a return
                 regex = String.format("(%s)(\\d)", Config.ABSTRACT_RET_PREFIX);
                 Matcher ret = Pattern.compile(regex).matcher(name); 
                 if (ret.find()) {
@@ -181,6 +180,7 @@ public class TrivialAllocator {
                     return Operand.mem(Operand.RSP, offset);
                 }
 
+                // Generic named temp
                 if (!tempStack.containsKey(name)) {
                     pushTemp(name);
                 }
