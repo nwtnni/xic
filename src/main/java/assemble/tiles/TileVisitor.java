@@ -24,6 +24,22 @@ public abstract class TileVisitor<T> {
         return null;
     }
 
+    public T visit(BinOp n) {
+        return null;
+    }
+
+    public T visit(Call n) {
+        return null;
+    }
+
+    public T visit(CJump n) {
+        return null;
+    }
+
+    public T visit(Jump n) {
+        return null;
+    }
+
     public T visit(Const n) {
         return null;
     }

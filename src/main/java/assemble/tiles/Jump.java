@@ -6,19 +6,12 @@ import java.util.Arrays;
 import ir.*;
 import assemble.*;
 
-public class BinOp extends Tile {
-    public enum Kind {
+public class Jump extends Tile {
 
-    }
+    public Tile target;
 
-    public Kind kind;
-    public Tile left;
-    public Tile right;
-
-    public BinOp(String destTemp, Tile left, Tile right) {
-        this.destTemp = destTemp;
-        this.left = left;
-        this.right = right;
+    public Jump(Tile target) {
+        this.target = target;
     }
 
     /**
@@ -26,7 +19,7 @@ public class BinOp extends Tile {
      * cover a portion of the tree beginning at the root.
      */
     public static boolean matches(IRNode n) {
-        return n instanceof IRBinOp;
+        return n instanceof IRJump;
     }
 
     /**
@@ -35,8 +28,8 @@ public class BinOp extends Tile {
      * children is the same as the order of tiles in children.
      */
     public static List<IRNode> traverse(IRNode n) {
-        IRBinOp op = (IRBinOp) n;
-        return Arrays.asList(op.left, op.right);
+        IRJump j = (IRJump) n;
+        return Arrays.asList(j.target);
     }
 
     @Override
