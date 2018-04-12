@@ -7,9 +7,9 @@ import interpret.Configuration;
 import java.util.List;
 import java.util.ArrayList;
 
-import assemble.tiles.*;
+import assemble.instructions.*;
 import emit.ABIContext;
 
-public class TrivialAllocator extends TileVisitor<Operand> {
+public class TrivialAllocator {
 
 }
