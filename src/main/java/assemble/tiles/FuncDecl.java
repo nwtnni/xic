@@ -1,22 +1,28 @@
 package assemble.tiles;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import ir.*;
 import assemble.*;
 
-public abstract class Tile {
-    protected String destTemp;
+public class FuncDecl extends Tile {
+    public List<Tile> prelude;
+    public List<Tile> stmts;
+    public List<Tile> epilogue;
     
-    public Operand dest;
-    public List<Operand> src;
+    public FuncDecl(List<Tile> prelude, List<Tile> stmts, List<Tile> epilogue) {
+        this.prelude = prelude;
+        this.stmts = stmts;
+        this.epilogue = epilogue;
+    }
 
     /**
      * Takes an IR tree and returns true if this tile can
      * cover a portion of the tree beginning at the root.
      */
     public static boolean matches(IRNode n) {
-        return false;
+        return n instanceof IRFuncDecl;
     }
 
     /**
@@ -26,7 +32,10 @@ public abstract class Tile {
      */
     public static List<IRNode> traverse(IRNode n) {
         return null;
-    };
+    }
 
-    public abstract <T> T accept(TileVisitor<T> v);
+    @Override
+    public <T> T accept(TileVisitor<T> v) {
+        return v.visit(this);
+    }
 }

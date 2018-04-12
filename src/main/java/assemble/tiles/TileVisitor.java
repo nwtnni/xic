@@ -16,4 +16,20 @@ public abstract class TileVisitor<T> {
         return t;
     }
 
+    public T visit(CompUnit n) {
+        return null;
+    }
+
+    public T visit(FuncDecl n) {
+        return null;
+    }
+
+    public T visit(Const n) {
+        return null;
+    }
+
+    public T visit(Temp n) {
+        return null;
+    }
+
 }

@@ -7,11 +7,15 @@ package assemble;
 public class Operand {
 
     public static Operand register(Kind kind) {
-        return new Operand(kind, null);
+        return new Operand(kind, null, 0);
     }
 
     public static Operand memory(String name) {
-        return new Operand(Kind.MEM, name);
+        return new Operand(Kind.MEM, name, 0);
+    }
+
+    public static Operand immediate(long value) {
+        return new Operand(Kind.IMM, null, value);
     }
 
     public enum Kind {
@@ -31,7 +35,8 @@ public class Operand {
         R13 ("%r13"),
         R14 ("%r14"),
         R15 ("%r15"),
-        MEM ("MEM");
+        MEM ("MEM"),
+        IMM ("IMM");
 
         public String name;
 
@@ -42,16 +47,20 @@ public class Operand {
 
     public Kind kind;
     private String name;
+    private long value;
 
-    private Operand(Kind kind, String name) {
+    private Operand(Kind kind, String name, long value) {
         this.kind = kind;
         this.name = name;
+        this.value = value;
     }
 
     @Override
     public String toString() {
         if (kind == Kind.MEM) {
             return name;
+        } else if (kind == Kind.IMM) {
+            return "$" + Long.toString(value);
         }
         return kind.name;
     }
