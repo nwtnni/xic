@@ -20,10 +20,11 @@ public class BinCmp extends Instr {
 
     public Kind kind;
     public Temp destTemp;
-    protected Temp leftTemp;
-    protected Temp rightTemp;
+    public Temp leftTemp;
+    public Temp rightTemp;
 
-    public Operand destination;
+    public Operand dest;
+    private Operand reg;
     public Operand left;
     public Operand right;
 
@@ -34,25 +35,26 @@ public class BinCmp extends Instr {
         this.rightTemp = r;
 
         // Destination is fixed for these instructions
-        this.destination = Operand.RAX;
+        this.dest = Operand.RAX;
     }
-
 
     @Override
     public List<String> toAbstractAssembly() {
         List<String> instrs = new ArrayList<>();
-        instrs.add(String.format("cmpq %s, %s", leftTemp.toString(), rightTemp.toString()));
+        instrs.add(String.format("cmpq %s, %s", leftTemp, rightTemp));
         instrs.add("movq $0, %rax");
         instrs.add(String.format("set%s %%al", kind.flag));
+        instrs.add(String.format("movq %s, %s", reg, destTemp));
         return instrs;
     }
 
     @Override
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();
-        instrs.add(String.format("cmpq %s, %s", left.toString(), right.toString()));
+        instrs.add(String.format("cmpq %s, %s", left, right));
         instrs.add("movq $0, %rax");
         instrs.add(String.format("set%s %%al", kind.flag));
+        instrs.add(String.format("movq %s, %s", reg, dest));
         return instrs;
     }
 }

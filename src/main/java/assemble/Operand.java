@@ -113,6 +113,22 @@ public class Operand {
         this.value = value;
     }
 
+    public boolean isReg() {
+        return kind != Kind.IMM && kind != Kind.MEM;
+    }
+
+    public boolean isImm() {
+        return kind == Kind.IMM;
+    }
+
+    public boolean isMem() {
+        return kind == Kind.MEM;
+    }
+
+    public long value() {
+        return value;
+    }
+
     @Override
     public String toString() {
         if (kind == Kind.MEM) {

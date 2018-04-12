@@ -11,14 +11,14 @@ public class TempFactory {
      * Generate a new temporary name.
      */
     public static Temp generate() {
-        return Temp.temp("_asm_temp_" + Long.toString(++tempIndex));
+        return Temp.temp("_ASM" + Long.toString(++tempIndex));
     }
 
     /**
      * Generate a new temporary with a descriptive name.
      */
     public static Temp generate(String name) {
-        return Temp.temp("_asm_temp_" + Long.toString(++tempIndex) + "_" + name);
+        return Temp.temp("_ASM" + Long.toString(++tempIndex) + "_" + name);
     }
 
     /**

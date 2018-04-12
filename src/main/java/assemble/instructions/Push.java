@@ -20,6 +20,6 @@ public class Push extends Instr {
 
     @Override
     public List<String> toAssembly() {
-        return Arrays.asList("pushq " + operand.toString());
+        return Arrays.asList("pushq " + operand);
     }
 }

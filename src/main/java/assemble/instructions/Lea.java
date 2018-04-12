@@ -19,11 +19,11 @@ public class Lea extends Instr {
 
     @Override
     public List<String> toAbstractAssembly() {
-        return Arrays.asList(String.format("leaq %s %s", srcTemp.toString(), destTemp.toString()));
+        return Arrays.asList(String.format("leaq %s %s", srcTemp, destTemp));
     }
 
     @Override
     public List<String> toAssembly() {
-        return Arrays.asList(String.format("leaq %s %s", src.toString(), dest.toString()));
+        return Arrays.asList(String.format("leaq %s %s", src, dest));
     }
 }

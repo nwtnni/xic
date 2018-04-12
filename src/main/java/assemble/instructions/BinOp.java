@@ -26,7 +26,8 @@ public class BinOp extends Instr {
     public Temp rightTemp;
 
     public Operand dest;
-    public Operand src;
+    public Operand left;
+    public Operand right;
 
     public BinOp(Kind kind, Temp d, Temp l, Temp r) {
         this.kind = kind;
@@ -35,24 +36,27 @@ public class BinOp extends Instr {
         this.rightTemp = r;
     }
 
-    public BinOp(Kind kind, Operand dest, Operand src) {
+    public BinOp(Kind kind, Operand dest, Operand left, Operand right) {
         this.kind = kind;
         this.dest = dest;
-        this.src = src;
+        this.left = left;
+        this.right = right;
     }
 
     @Override
     public List<String> toAbstractAssembly() {
         if (this.leftTemp != null) {
-            String instr = String.format("%s %s, %s", kind.opcode, leftTemp.toString(), rightTemp.toString());
-            return Arrays.asList(instr);
+            String mov = String.format("movq %s, %s", leftTemp.toString(), destTemp.toString());
+            String op = String.format("%s %s, %s", kind.opcode, rightTemp.toString(), destTemp.toString());
+            return Arrays.asList(mov, op);
         }
         return toAssembly();
     }
 
     @Override
     public List<String> toAssembly() {
-        String instr = String.format("%s %s, %s", kind.opcode, src.toString(), dest.toString());
-        return Arrays.asList(instr);
+        String mov = String.format("movq %s, %s", left.toString(), dest.toString());
+        String op = String.format("%s %s, %s", kind.opcode, right.toString(), dest.toString());
+        return Arrays.asList(mov, op);
     }
 }

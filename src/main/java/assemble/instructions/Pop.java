@@ -20,6 +20,6 @@ public class Pop extends Instr {
 
     @Override
     public List<String> toAssembly() {
-        return Arrays.asList("popq " + operand.toString());
+        return Arrays.asList("popq " + operand);
     }
 }
