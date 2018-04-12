@@ -20,7 +20,21 @@ public class TempFactory {
     public static Temp generate(String name) {
         return Temp.temp(name + "_asm__temp_" + Long.toString(++tempIndex));
     }
-    
+
+    /**
+     * Generate the temp for argument i.
+     */
+    public static Temp getArgument(int i) {
+        return Temp.temp(Config.ABSTRACT_ARG_PREFIX + i);
+    }
+
+    /**
+     * Generate the temp for return i.
+     */
+    public static Temp getReturn(int i) {
+        return Temp.temp(Config.ABSTRACT_RET_PREFIX + i);
+    }
+
     /*
      * Reset the counter for generating temps.
      */

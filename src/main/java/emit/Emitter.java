@@ -41,6 +41,7 @@ public class Emitter extends Visitor<IRNode> {
     protected static final IRConst ZERO = new IRConst(0);
     protected static final IRConst ONE = new IRConst(1);
 
+    // TODO: move shared configuration into config classes
     // ABI names for array library functions ignore the types of arrays
     // and treat each argument as a 64-bit pointer (equivalent to an integer)
     protected static final String ARRAY_ALLOC = "_xi_d_alloc";

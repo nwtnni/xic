@@ -33,14 +33,47 @@ public class Tiler extends IRVisitor<Temp> {
     // Current function visited
     String funcName;
 
+    // 1 if current function has multiple returns
+    int isMultiple;
+
     // Current list of instructions
     List<Instr> instrs;
+
+    // > 0 f visting the args of a function call
+    int inCall;
+
+    // 1 if current call has multiple returns else 0
+    int callIsMultiple;
+
+    // List of instructions for args of current call
+    List<Instr> args;
 
     private Tiler(ABIContext c) {
         this.context = c;
         this.unit = new CompUnit();
+        this.instrs = new ArrayList<>();
+
+        this.funcName = null;
+        this.isMultiple = 0;
+
+        this.inCall = 0;
+        this.callIsMultiple = 0;
+        this.args = new ArrayList<>();
     }
 
+    /**
+     * Returns number of return values for a function.
+     * Takes the mangled function name.
+     */
+    private int numArgs(String fn) {
+        if (fn.equals(Config.XI_ALLOC)) {
+            return 1;
+        } else if (fn.equals(Config.XI_OUT_OF_BOUNDS)) {
+            return 0;
+        }
+        return context.getNumArgs(fn);
+    }
+    
     /**
      * Returns number of return values for a function.
      * Takes the mangled function name.
@@ -79,12 +112,21 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRFuncDecl f) {
         // Reset instance variables for each function
         funcName = f.name;
-        instrs = new ArrayList<>();
+
+        int args = numArgs(f.name);
+        int returns = numReturns(f.name);
+        if (returns > 2) {
+            isMultiple = 1;
+        }
 
         // Argument movement is handled in the body
         f.body.accept(this);
 
-        unit.fns.add(new FuncDecl(f.name, instrs));
+        unit.fns.add(new FuncDecl(f.name, args, returns, instrs));
+
+        // Reset shared variables
+        instrs = new ArrayList<>();
+        isMultiple = 0;
         return null;
     }
 
@@ -160,7 +202,33 @@ public class Tiler extends IRVisitor<Temp> {
     }
     
     public Temp visit(IRCall c) {
-        return null;
+        inCall++;
+        String target = ((IRName) c.target).name;
+        if (numReturns(target) > 2) {
+            callIsMultiple = 1;
+        }
+
+        // Assign all arguments into abstract argument registers
+        // TODO: handle spilling and allocate lower 6 args into regs in reg alloc
+        for (int i = c.args.size() - 1; i >= 0; i++) {
+            Temp val = c.args.get(i).accept(this);
+            args.add(new Mov(TempFactory.getArgument(i + callIsMultiple), val));
+        }
+
+        // Assign multiple return address to argument 0 if needed
+        // TODO: handle replacement with actual memory address in reg alloc
+        if (callIsMultiple > 0) {
+            args.add(new Lea(TempFactory.getArgument(0), Config.MULT_RETURN));
+        }
+
+        instrs.add(new Call(target, args));
+
+        // Reset shared variables
+        inCall--;
+        callIsMultiple = 0;
+        args = new ArrayList<>();
+
+        return Temp.temp("call_" + target);
     }
 
     public Temp visit(IRCJump c) {

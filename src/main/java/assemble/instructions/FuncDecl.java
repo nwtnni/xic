@@ -8,13 +8,17 @@ import static assemble.Operand.Kind.*;
 
 public class FuncDecl {
     public String name;
+    public int args;
+    public int rets;
 
     public List<Instr> prelude;
     public List<Instr> stmts;
     public List<Instr> epilogue;
 
-    public FuncDecl(String name, List<Instr> stmts) {
+    public FuncDecl(String name, int args, int rets, List<Instr> stmts) {
         this.name = name;
+        this.args = args;
+        this.rets = rets;
         this.stmts = stmts;
 
         // Function prelude
