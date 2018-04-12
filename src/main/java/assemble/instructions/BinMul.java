@@ -40,6 +40,17 @@ public class BinMul extends Instr {
     }
 
     @Override
+    public List<String> toAbstractAssembly() {
+        List<String> instrs = new ArrayList<>();
+        instrs.add(String.format("movq %s, %%rax", leftTemp.toString()));
+        if (kind == Kind.DIV || kind == Kind.MOD) {
+                instrs.add("cqo");
+        }
+        instrs.add(kind.opcode + " " + rightTemp.toString());
+        return instrs;
+    }
+
+    @Override
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();
         instrs.add(String.format("movq %s, %%rax", left.toString()));

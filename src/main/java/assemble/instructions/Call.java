@@ -18,6 +18,16 @@ public class Call extends Instr {
     }
 
     @Override
+    public List<String> toAbstractAssembly() {
+        List<String> instrs = new ArrayList<>();
+        for (Instr i : args) {
+            instrs.addAll(i.toAbstractAssembly());
+        }
+        instrs.add("callq " + name);
+        return instrs;
+    }
+
+    @Override
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();
         for (Instr i : args) {

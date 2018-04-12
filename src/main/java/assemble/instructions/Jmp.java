@@ -13,7 +13,13 @@ public class Jmp extends Instr {
     }
 
     @Override
+    public List<String> toAbstractAssembly() {
+        return toAssembly();
+    }
+
+    @Override
     public List<String> toAssembly() {
         return Arrays.asList("jmp " + target);
     }
+
 }

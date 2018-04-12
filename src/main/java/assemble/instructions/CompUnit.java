@@ -14,6 +14,16 @@ public class CompUnit {
         this.fns = fns;
     }
 
+   
+    public List<String> toAbstractAssembly() {
+        List<String> instrs = new ArrayList<>();
+        instrs.add(".text");
+        for (FuncDecl f : fns) {
+            instrs.addAll(f.toAbstractAssembly());
+        }
+        return instrs;
+    }
+
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();
         instrs.add(".text");

@@ -111,10 +111,10 @@ public class Tiler extends IRVisitor<Temp> {
 
     public Temp visit(IRFuncDecl f) {
         // Reset instance variables for each function
-        funcName = f.name;
+        funcName = f.name();
 
-        int args = numArgs(f.name);
-        int returns = numReturns(f.name);
+        int args = numArgs(funcName);
+        int returns = numReturns(funcName);
         if (returns > 2) {
             isMultiple = 1;
         }
@@ -122,7 +122,7 @@ public class Tiler extends IRVisitor<Temp> {
         // Argument movement is handled in the body
         f.body.accept(this);
 
-        unit.fns.add(new FuncDecl(f.name, args, returns, instrs));
+        unit.fns.add(new FuncDecl(funcName, args, returns, instrs));
 
         // Reset shared variables
         instrs = new ArrayList<>();
@@ -201,22 +201,24 @@ public class Tiler extends IRVisitor<Temp> {
     
     public Temp visit(IRCall c) {
         inCall++;
-        String target = ((IRName) c.target).name;
+        String target = ((IRName) c.target).name();
         if (numReturns(target) > 2) {
             callIsMultiple = 1;
         }
 
-        // Assign all arguments into abstract argument registers
-        // TODO: handle spilling and allocate lower 6 args into regs in reg alloc
-        for (int i = c.args.size() - 1; i >= 0; i++) {
-            Temp val = c.args.get(i).accept(this);
-            args.add(new Mov(TempFactory.getArgument(i + callIsMultiple), val));
-        }
+        // TODO: separating the moves from the math with args in call might be bad
 
         // Assign multiple return address to argument 0 if needed
         // TODO: handle replacement with actual memory address in reg alloc
         if (callIsMultiple > 0) {
             args.add(new Lea(TempFactory.getArgument(0), Config.CALLER_MULT_RETURN));
+        }
+
+        // Assign all arguments into abstract argument registers
+        // TODO: handle spilling and allocate lower 6 args into regs in reg alloc
+        for (int i = 0; i < c.args.size() - 1; i++) {
+            Temp val = c.args.get(i).accept(this);
+            args.add(new Mov(TempFactory.getArgument(i + callIsMultiple), val));
         }
 
         instrs.add(new Call(target, args));
@@ -237,7 +239,7 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRJump j) {
-        instrs.add(new Jmp(((IRName) j.target).name));
+        instrs.add(new Jmp(((IRName) j.target).name()));
         return null;
     }
 
@@ -254,7 +256,7 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRLabel l) {
-        instrs.add(Label.label(l.name));
+        instrs.add(Label.label(l.name()));
         return null;
     }
 
@@ -276,6 +278,11 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRReturn r) {
+        for (int i = 0; i < r.rets.size(); i++) {
+            Temp val = r.rets.get(i).accept(this);
+            instrs.add(new Mov(TempFactory.getReturn(i), val));
+        }
+        instrs.add(new Jmp(Label.retLabel(funcName).toString()));
         return null;
     }
 
@@ -289,6 +296,6 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRTemp t) {
-        return null;
+        return Temp.temp(t.name());
     }
 }

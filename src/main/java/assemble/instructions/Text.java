@@ -21,6 +21,11 @@ public class Text extends Instr {
     private Text(String text) {
         this.text = text;
     }
+    
+    @Override
+    public List<String> toAbstractAssembly() {
+        return toAssembly();
+    }
 
     @Override
     public List<String> toAssembly() {

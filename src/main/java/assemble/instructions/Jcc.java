@@ -23,6 +23,12 @@ public class Jcc extends Instr {
         this.target = target;
     }
 
+
+    @Override
+    public List<String> toAbstractAssembly() {
+        return toAssembly();
+    }
+
     @Override
     public List<String> toAssembly() {
         return Arrays.asList(String.format("j%s %s", kind.cond, target));

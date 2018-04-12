@@ -23,6 +23,14 @@ public class Mov extends Instr {
     }
 
     @Override
+    public List<String> toAbstractAssembly() {
+        if (srcTemp != null) {
+            return Arrays.asList(String.format("movq %s, %s", srcTemp.toString(), destTemp.toString()));
+        }
+        return toAssembly();
+    }
+
+    @Override
     public List<String> toAssembly() {
         return Arrays.asList(String.format("movq %s, %s", src.toString(), dest.toString()));
     }

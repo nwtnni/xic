@@ -33,6 +33,7 @@ public class FuncDecl {
         prelude.add(new Mov(Operand.reg(RSP), Operand.reg(RBP)));
         prelude.add(Text.comment("Subtract from %rsp here:"));
         // TODO: in reg alloc insert subq n, %rsp at prelude[4]
+        // TODO: in reg alloc handle multiple return addr at prelude[5]
 
         // If function has multiple returns, save return address from arg 0 to a temp
         if (rets > 2) {
@@ -40,6 +41,7 @@ public class FuncDecl {
         }
 
         // Function epilogue
+        epilogue = new ArrayList<>();
         epilogue.add(Text.comment("Stack Teardown"));
         epilogue.add(Label.retLabel(name));
         epilogue.add(Text.comment("Add to %rsp here:"));
@@ -56,6 +58,20 @@ public class FuncDecl {
         this.epilogue = epilogue;
     }
     
+    public List<String> toAbstractAssembly() {
+        List<String> instrs = new ArrayList<>();
+        for (Instr i : prelude) {
+            instrs.addAll(i.toAbstractAssembly());
+        }
+        for (Instr i : stmts) {
+            instrs.addAll(i.toAbstractAssembly());
+        }
+        for (Instr i : epilogue) {
+            instrs.addAll(i.toAbstractAssembly());
+        }
+        return instrs;
+    }
+
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();
         for (Instr i : prelude) {

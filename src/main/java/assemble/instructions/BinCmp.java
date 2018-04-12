@@ -37,6 +37,16 @@ public class BinCmp extends Instr {
         this.destination = Operand.reg(Operand.Kind.RAX);
     }
 
+
+    @Override
+    public List<String> toAbstractAssembly() {
+        List<String> instrs = new ArrayList<>();
+        instrs.add(String.format("cmpq %s, %s", leftTemp.toString(), rightTemp.toString()));
+        instrs.add("movq $0, %rax");
+        instrs.add(String.format("set%s %%al", kind.flag));
+        return instrs;
+    }
+
     @Override
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();

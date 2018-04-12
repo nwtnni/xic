@@ -2,14 +2,11 @@ package assemble;
 
 import java.io.*;
 
-import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
-import java_cup.runtime.ComplexSymbolFactory.Location;
-
+import assemble.instructions.*;
 import ir.*;
 import emit.*;
 import type.*;
 import ast.*;
-import lex.*;
 import parse.*;
 import xic.XicException;
 import util.Filename;
@@ -56,6 +53,11 @@ public class Printer {
                 // Generate .s file
                 writer.write(cmds);
                 writer.close();
+
+                CompUnit u = Tiler.tile(comp, mangled);
+                for (String i : u.toAbstractAssembly()) {
+                    System.out.println(i); 
+                }
                 
             } catch (XicException xic) {
                 writer.close();

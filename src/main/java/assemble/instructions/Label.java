@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Arrays;
 
 public class Label extends Instr {
-    protected String text;
+    protected String name;
 
     public static Label label(String l) {
         return new Label(l + ":");
@@ -14,12 +14,22 @@ public class Label extends Instr {
         return new Label("ret__" + l + ":");
     }
 
-    private Label(String text) {
-        this.text = text;
+    private Label(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+
+    @Override
+    public List<String> toAbstractAssembly() {
+        return toAssembly();
     }
 
     @Override
     public List<String> toAssembly() {
-        return Arrays.asList(text);
+        return Arrays.asList(name);
     }
 }

@@ -18,6 +18,11 @@ public class Cmp extends Instr {
     }
 
     @Override
+    public List<String> toAbstractAssembly() {
+        return Arrays.asList(String.format("cmpq %s, %s", leftTemp.toString(), rightTemp.toString()));
+    }
+
+    @Override
     public List<String> toAssembly() {
         return Arrays.asList(String.format("cmpq %s, %s", left.toString(), right.toString()));
     }

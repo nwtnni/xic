@@ -36,6 +36,12 @@ public class BinOp extends Instr {
     }
 
     @Override
+    public List<String> toAbstractAssembly() {
+        String instr = String.format("%s %s, %s", kind.opcode, leftTemp.toString(), rightTemp.toString());
+        return Arrays.asList(instr);
+    }
+
+    @Override
     public List<String> toAssembly() {
         String instr = String.format("%s %s, %s", kind.opcode, src.toString(), dest.toString());
         return Arrays.asList(instr);
