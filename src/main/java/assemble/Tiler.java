@@ -291,6 +291,7 @@ public class Tiler extends IRVisitor<Temp> {
         for(IRNode stmt : s.stmts) {
             instrs.add(Text.comment("stmt #: " + i));
             stmt.accept(this);
+            i++;
         }
         return null;
     }
