@@ -35,10 +35,19 @@ public class BinOp extends Instr {
         this.rightTemp = r;
     }
 
+    public BinOp(Kind kind, Operand dest, Operand src) {
+        this.kind = kind;
+        this.dest = dest;
+        this.src = src;
+    }
+
     @Override
     public List<String> toAbstractAssembly() {
-        String instr = String.format("%s %s, %s", kind.opcode, leftTemp.toString(), rightTemp.toString());
-        return Arrays.asList(instr);
+        if (this.leftTemp != null) {
+            String instr = String.format("%s %s, %s", kind.opcode, leftTemp.toString(), rightTemp.toString());
+            return Arrays.asList(instr);
+        }
+        return toAssembly();
     }
 
     @Override

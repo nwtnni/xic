@@ -71,29 +71,31 @@ public class Operand {
      * A memory access computed base-relative:
      * In the form: (base)
      */
-    public static Operand mem(Kind base) {
-        assert (base != Kind.IMM && base != Kind.MEM);
-        String mem = String.format("(%s)", base.name);
+    public static Operand mem(Operand base) {
+        assert (base.kind != Kind.IMM && base.kind != Kind.MEM);
+        String mem = String.format("(%s)", base.toString());
         return new Operand(Kind.MEM, mem, 0);
     }
 
     /**
      * A memory access computed base-relative:
-     * In the form: relative(base)
+     * In the form: offset(base)
      */
-    public static Operand mem(Kind base, int relative) {
-        assert (base != Kind.IMM && base != Kind.MEM);
-        String mem = String.format("%d(%s)", relative, base.name);
+    public static Operand mem(Operand base, int offset) {
+        assert (base.kind != Kind.IMM && base.kind != Kind.MEM);
+        String mem = String.format("%d(%s)", offset, base.toString());
         return new Operand(Kind.MEM, mem, 0);
     }
 
     /**
      * A memory access computed offset-scaled-base-relative
-     * In the form relative(base,offset)
+     * In the form offset(base,scale)
+     * 
+     * scale must be 1, 2, 4 or 8
      */
-    public static Operand mem(Kind base, int relative, int offset) {
-        assert (base != Kind.IMM && base != Kind.MEM);
-        String mem = String.format("%d(%s,%d)", relative, base.name, offset);
+    public static Operand mem(Operand base, int offset, int scale) {
+        assert (base.kind != Kind.IMM && base.kind != Kind.MEM);
+        String mem = String.format("%d(%s,%d)", offset, base.toString(), scale);
         return new Operand(Kind.MEM, mem, 0);
     }
 
