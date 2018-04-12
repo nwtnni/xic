@@ -33,9 +33,9 @@ public class BinMul extends Instr {
 
         // Destination is fixed for these instructions
         if (kind == Kind.MUL || kind == Kind.DIV) {
-            this.dest = Operand.reg(Operand.Kind.RAX);
+            this.dest = Operand.RAX;
         } else {
-            this.dest = Operand.reg(Operand.Kind.RDX);
+            this.dest = Operand.RDX;
         }
     }
 

@@ -30,35 +30,18 @@ public class Tiler extends IRVisitor<Temp> {
     // Running list of assembly instructions
     private CompUnit unit;
 
-    // Current function visited
-    String funcName;
-
-    // 1 if current function has multiple returns
-    int isMultiple;
-
     // Current list of instructions
     List<Instr> instrs;
 
-    // > 0 f visting the args of a function call
-    int inCall;
-
-    // 1 if current call has multiple returns else 0
-    int callIsMultiple;
-
-    // List of instructions for args of current call
-    List<Instr> args;
+    // Current function visited
+    String funcName;
 
     private Tiler(ABIContext c) {
         this.context = c;
         this.unit = new CompUnit();
+
         this.instrs = new ArrayList<>();
-
         this.funcName = null;
-        this.isMultiple = 0;
-
-        this.inCall = 0;
-        this.callIsMultiple = 0;
-        this.args = new ArrayList<>();
     }
 
     /**
@@ -115,10 +98,6 @@ public class Tiler extends IRVisitor<Temp> {
 
         int args = numArgs(funcName);
         int returns = numReturns(funcName);
-        if (returns > 2) {
-            isMultiple = 1;
-        }
-
         // Argument movement is handled in the body
         f.body.accept(this);
 
@@ -126,7 +105,6 @@ public class Tiler extends IRVisitor<Temp> {
 
         // Reset shared variables
         instrs = new ArrayList<>();
-        isMultiple = 0;
         return null;
     }
 
@@ -200,13 +178,17 @@ public class Tiler extends IRVisitor<Temp> {
     }
     
     public Temp visit(IRCall c) {
-        inCall++;
+        List<Instr> args = new ArrayList<>();
+
         String target = ((IRName) c.target).name();
+
+        int callIsMultiple = 0;
         if (numReturns(target) > 2) {
             callIsMultiple = 1;
         }
 
-        // TODO: separating the moves from the math with args in call might be bad
+        // TODO: separating the moves from calculating temps to movs
+        // with separate instruction list in call might be bad
 
         // Assign multiple return address to argument 0 if needed
         // TODO: handle replacement with actual memory address in reg alloc
@@ -222,12 +204,6 @@ public class Tiler extends IRVisitor<Temp> {
         }
 
         instrs.add(new Call(target, args));
-
-        // Reset shared variables
-        inCall--;
-        callIsMultiple = 0;
-        args = new ArrayList<>();
-
         return TempFactory.getReturn(0);
     }
 

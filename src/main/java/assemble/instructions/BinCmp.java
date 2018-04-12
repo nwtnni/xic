@@ -34,7 +34,7 @@ public class BinCmp extends Instr {
         this.rightTemp = r;
 
         // Destination is fixed for these instructions
-        this.destination = Operand.reg(Operand.Kind.RAX);
+        this.destination = Operand.RAX;
     }
 
 

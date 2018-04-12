@@ -29,8 +29,8 @@ public class FuncDecl {
         prelude.add(Label.label(name));
         
         prelude.add(Text.comment("Stack Setup"));
-        prelude.add(new Push(Operand.reg(RBP)));
-        prelude.add(new Mov(Operand.reg(RSP), Operand.reg(RBP)));
+        prelude.add(new Push(Operand.RBP));
+        prelude.add(new Mov(Operand.RSP, Operand.RBP));
         prelude.add(Text.comment("Subtract from %rsp here:"));
         // TODO: in reg alloc insert subq n, %rsp at prelude[4]
         // TODO: in reg alloc handle multiple return addr at prelude[5]
@@ -47,7 +47,7 @@ public class FuncDecl {
         epilogue.add(Label.retLabel(name));
         epilogue.add(Text.comment("Add to %rsp here:"));
         // TODO: in reg alloc insert addq n, %rsp at epiloque[2]
-        epilogue.add(new Pop(Operand.reg(RBP)));
+        epilogue.add(new Pop(Operand.RBP));
         epilogue.add(new Ret());
         epilogue.add(Text.comment(""));
     }

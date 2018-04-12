@@ -1,5 +1,7 @@
 package assemble;
 
+import static assemble.Operand.Kind.*;
+
 /** Some special stack-related names that are used in the 
  * IR to assembly transation 
  */
@@ -29,4 +31,26 @@ public class Config {
     
     /** _xi_out_of_bounds function name */
     public static final String XI_OUT_OF_BOUNDS = "_xi_out_of_bounds";
+
+    /**
+     * Get the register for args 0-5 on System V.
+     */
+    public static Operand getArg(int i) {
+        switch (i) {
+            case 0:
+                return Operand.RDI;
+            case 1:
+                return Operand.RSI;
+            case 2:
+                return Operand.RDX;
+            case 3:
+                return Operand.RCX;
+            case 4:
+                return Operand.R8;
+            case 5:
+                return Operand.R9;
+        }
+        assert false;
+        return null;
+    }
 }

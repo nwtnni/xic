@@ -6,18 +6,6 @@ package assemble;
  */
 public class Operand {
 
-    public static Operand reg(Kind kind) {
-        return new Operand(kind, null, 0);
-    }
-
-    public static Operand mem(String mem) {
-        return new Operand(Kind.MEM, mem, 0);
-    }
-
-    public static Operand imm(long value) {
-        return new Operand(Kind.IMM, null, value);
-    }
-
     public enum Kind {
         RAX ("%rax"),
         RBX ("%rbx"),
@@ -43,6 +31,74 @@ public class Operand {
         private Kind(String name) {
             this.name = name;
         }
+    }
+
+    public static final Operand RAX = Operand.reg(Kind.RAX);
+    public static final Operand RBX = Operand.reg(Kind.RBX);
+    public static final Operand RCX = Operand.reg(Kind.RCX);
+    public static final Operand RDX = Operand.reg(Kind.RDX);
+    public static final Operand RSI = Operand.reg(Kind.RSI);
+    public static final Operand RDI = Operand.reg(Kind.RDI);
+    public static final Operand RBP = Operand.reg(Kind.RBP);
+    public static final Operand RSP = Operand.reg(Kind.RSP);
+    public static final Operand R8  = Operand.reg(Kind.R8);
+    public static final Operand R9  = Operand.reg(Kind.R9);
+    public static final Operand R10 = Operand.reg(Kind.R10);
+    public static final Operand R11 = Operand.reg(Kind.R11);
+    public static final Operand R12 = Operand.reg(Kind.R12);
+    public static final Operand R13 = Operand.reg(Kind.R13);
+    public static final Operand R14 = Operand.reg(Kind.R14);
+    public static final Operand R15 = Operand.reg(Kind.R15);
+
+
+    /**
+     * One of the 64-bit registers.
+     */
+    private static Operand reg(Kind kind) {
+        assert (kind != Kind.IMM && kind != Kind.MEM);
+        return new Operand(kind, null, 0);
+    }
+
+    /**
+     * An arbitrary string that is a memory access.
+     * mem must be a valid memory access
+     */
+    public static Operand mem(String mem) {
+        return new Operand(Kind.MEM, mem, 0);
+    }
+
+    /**
+     * A memory access computed base-relative:
+     * In the form: (base)
+     */
+    public static Operand mem(Kind base) {
+        assert (base != Kind.IMM && base != Kind.MEM);
+        String mem = String.format("(%s)", base.name);
+        return new Operand(Kind.MEM, mem, 0);
+    }
+
+    /**
+     * A memory access computed base-relative:
+     * In the form: relative(base)
+     */
+    public static Operand mem(Kind base, int relative) {
+        assert (base != Kind.IMM && base != Kind.MEM);
+        String mem = String.format("%d(%s)", relative, base.name);
+        return new Operand(Kind.MEM, mem, 0);
+    }
+
+    /**
+     * A memory access computed offset-scaled-base-relative
+     * In the form relative(base,offset)
+     */
+    public static Operand mem(Kind base, int relative, int offset) {
+        assert (base != Kind.IMM && base != Kind.MEM);
+        String mem = String.format("%d(%s,%d)", relative, base.name, offset);
+        return new Operand(Kind.MEM, mem, 0);
+    }
+
+    public static Operand imm(long value) {
+        return new Operand(Kind.IMM, null, value);
     }
 
     public Kind kind;
