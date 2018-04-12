@@ -21,16 +21,18 @@ public class BinOp extends Instr {
     }
 
     public Kind kind;
+    public Temp destTemp;
     public Temp leftTemp;
     public Temp rightTemp;
 
     public Operand dest;
     public Operand src;
 
-    public BinOp(Kind kind, Temp leftTemp, Temp rightTemp) {
+    public BinOp(Kind kind, Temp d, Temp l, Temp r) {
         this.kind = kind;
-        this.leftTemp = leftTemp;
-        this.rightTemp = rightTemp;
+        this.destTemp = d;
+        this.leftTemp = l;
+        this.rightTemp = r;
     }
 
     @Override

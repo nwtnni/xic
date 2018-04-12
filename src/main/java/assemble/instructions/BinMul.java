@@ -17,17 +17,21 @@ public class BinMul extends Instr {
     }
 
     public Kind kind;
-    protected Temp leftTemp;
-    protected Temp rightTemp;
+    public Temp destTemp;
+    public Temp leftTemp;
+    public Temp rightTemp;
 
     public Operand dest;
     public Operand left;
     public Operand right;
 
-    public BinMul(Kind kind, Temp leftTemp, Temp rightTemp) {
+    public BinMul(Kind kind, Temp d, Temp l, Temp r) {
         this.kind = kind;
-        this.leftTemp = leftTemp;
-        this.rightTemp = rightTemp;
+        this.destTemp = d;
+        this.leftTemp = l;
+        this.rightTemp = r;
+
+        // Destination is fixed for these instructions
         if (kind == Kind.MUL || kind == Kind.DIV) {
             this.dest = Operand.reg(Operand.Kind.RAX);
         } else {

@@ -19,16 +19,22 @@ public class BinCmp extends Instr {
     }
 
     public Kind kind;
+    public Temp destTemp;
     protected Temp leftTemp;
     protected Temp rightTemp;
 
+    public Operand destination;
     public Operand left;
     public Operand right;
 
-    public BinCmp(Kind kind, Temp leftTemp, Temp rightTemp) {
+    public BinCmp(Kind kind, Temp d, Temp l, Temp r) {
         this.kind = kind;
-        this.leftTemp = leftTemp;
-        this.rightTemp = rightTemp;
+        this.destTemp = d;
+        this.leftTemp = l;
+        this.rightTemp = r;
+
+        // Destination is fixed for these instructions
+        this.destination = Operand.reg(Operand.Kind.RAX);
     }
 
     @Override

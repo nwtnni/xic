@@ -3,10 +3,15 @@ package assemble;
 import java.util.List;
 import java.util.ArrayList;
 
+import static assemble.instructions.BinOp.Kind.*;
+import static assemble.instructions.BinMul.Kind.*;
+import static assemble.instructions.BinCmp.Kind.*;
+
 import assemble.instructions.*;
 import assemble.Config;
 import emit.ABIContext;
 import ir.*;
+import xic.XicInternalException;
 
 public class Tiler extends IRVisitor<Temp> {
 
@@ -83,23 +88,78 @@ public class Tiler extends IRVisitor<Temp> {
         return null;
     }
 
-    public Temp visit(IRSeq s) {
+
+
+    public Temp visit(IRBinOp b) {
+        // Uses %rax to operate on things. Returns %rax (sometimes %rdx)
+        Temp left = b.left.accept(this);
+        Temp right = b.right.accept(this);
+
+        Temp dest = TempFactory.generate(b.type.toString());
+        
+        switch (b.type) {
+            case ADD:
+                instrs.add(new BinOp(ADD, dest, left, right));
+                return dest;
+            case SUB:
+                instrs.add(new BinOp(SUB, dest, left, right));
+                return dest;
+            case AND:
+                instrs.add(new BinOp(SUB, dest, left, right));
+                return dest;
+            case OR:
+                instrs.add(new BinOp(OR, dest, left, right));
+                return dest;
+            case XOR:
+                instrs.add(new BinOp(XOR, dest, left, right));
+                return dest;
+            case LSHIFT:
+                instrs.add(new BinOp(LSHIFT, dest, left, right));
+                return dest;
+            case RSHIFT:
+                instrs.add(new BinOp(RSHIFT, dest, left, right));
+                return dest;
+            case ARSHIFT:
+                instrs.add(new BinOp(ARSHIFT, dest, left, right));
+                return dest;
+            case MUL:
+                instrs.add(new BinMul(MUL, dest, left, right));
+                return dest;
+            case HMUL:
+                instrs.add(new BinMul(HMUL, dest, left, right));
+                return dest;
+            case DIV:
+                instrs.add(new BinMul(DIV, dest, left, right));
+                return dest;
+            case MOD:
+                instrs.add(new BinMul(MOD, dest, left, right));
+                return dest;
+            case EQ:
+                instrs.add(new BinCmp(EQ, dest, left, right));
+                return dest;
+            case NEQ:
+                instrs.add(new BinCmp(NEQ, dest, left, right));
+                return dest;
+            case LT:
+                instrs.add(new BinCmp(LT, dest, left, right));
+                return dest;
+            case GT:
+                instrs.add(new BinCmp(GT, dest, left, right));
+                return dest;
+            case LEQ:
+                instrs.add(new BinCmp(LEQ, dest, left, right));
+                return dest;
+            case GEQ:
+                instrs.add(new BinCmp(GEQ, dest, left, right));
+                return dest;
+        }
+
+        // These cases should be exhaustive
+        assert false;
         return null;
     }
-
-    public Temp visit(IRESeq e) {
-        return null;
-    }
-
-    public Temp visit(IRExp e) {
-        return null;
-    }
-
+    
     public Temp visit(IRCall c) {
-        return null;
-    }
-
-    public Temp visit(IRReturn r) {
         return null;
     }
 
@@ -110,19 +170,23 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRJump j) {
         return null;
     }
-    
-    public Temp visit(IRName n) {
+
+    public Temp visit(IRConst c) {
         return null;
+    }
+
+    public Temp visit(IRESeq e) {
+        throw XicInternalException.internal("IRESeq is not canonical");
+    }
+
+    public Temp visit(IRExp e) {
+        throw XicInternalException.internal("IRExp is not canoncial");        
     }
 
     public Temp visit(IRLabel l) {
         return null;
     }
 
-    public Temp visit(IRTemp t) {
-        return null;
-    }
-    
     public Temp visit(IRMem m) {
         return null;
     }
@@ -131,12 +195,24 @@ public class Tiler extends IRVisitor<Temp> {
         return null;
     }
 
-    public Temp visit(IRBinOp b) {
+    public Temp visit(IRName n) {
+        throw XicInternalException.internal("IRName not visited");
+    }
+
+    public Temp visit(IRReturn r) {
         return null;
     }
-    
-    public Temp visit(IRConst c) {
+
+    public Temp visit(IRSeq s) { 
+        int i = 0;
+        for(IRNode stmt : s.stmts) {
+            instrs.add(Text.comment("stmt #: " + i));
+            stmt.accept(this);
+        }
         return null;
     }
-    
+
+    public Temp visit(IRTemp t) {
+        return null;
+    }
 }
