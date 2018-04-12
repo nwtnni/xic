@@ -10,8 +10,8 @@ public class Operand {
         return new Operand(kind, null, 0);
     }
 
-    public static Operand memory(String name) {
-        return new Operand(Kind.MEM, name, 0);
+    public static Operand memory(String mem) {
+        return new Operand(Kind.MEM, mem, 0);
     }
 
     public static Operand immediate(long value) {
@@ -46,19 +46,19 @@ public class Operand {
     }
 
     public Kind kind;
-    private String name;
+    private String mem;
     private long value;
 
-    private Operand(Kind kind, String name, long value) {
+    private Operand(Kind kind, String mem, long value) {
         this.kind = kind;
-        this.name = name;
+        this.mem = mem;
         this.value = value;
     }
 
     @Override
     public String toString() {
         if (kind == Kind.MEM) {
-            return name;
+            return mem;
         } else if (kind == Kind.IMM) {
             return "$" + Long.toString(value);
         }

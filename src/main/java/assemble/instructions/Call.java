@@ -3,13 +3,14 @@ package assemble.instructions;
 import java.util.List;
 import java.util.ArrayList;
 
-import ir.*;
 import assemble.*;
 
 public class Call extends Instr {
 
     public String name;
     public List<Instr> args;
+
+    public List<Operand> returns;
 
     public Call(String name, List<Instr> args) {
         this.name = name;
@@ -18,6 +19,11 @@ public class Call extends Instr {
 
     @Override
     public List<String> toAssembly() {
-        return null;
+        List<String> instrs = new ArrayList<>();
+        for (Instr i : args) {
+            instrs.addAll(i.toAssembly());
+        }
+        instrs.add("callq " + name);
+        return instrs;
     }
 }

@@ -3,7 +3,6 @@ package assemble.instructions;
 import java.util.List;
 import java.util.Arrays;
 
-import ir.*;
 import assemble.*;
 
 public class Mov extends Instr {
@@ -20,6 +19,6 @@ public class Mov extends Instr {
 
     @Override
     public List<String> toAssembly() {
-        return null;
+        return Arrays.asList(String.format("movq %s, %s", src.toString(), dest.toString()));
     }
 }

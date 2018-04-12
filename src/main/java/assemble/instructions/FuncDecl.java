@@ -3,9 +3,6 @@ package assemble.instructions;
 import java.util.List;
 import java.util.ArrayList;
 
-import ir.*;
-import assemble.*;
-
 public class FuncDecl {
     public List<Instr> prelude;
     public List<Instr> stmts;
@@ -17,4 +14,17 @@ public class FuncDecl {
         this.epilogue = epilogue;
     }
     
+    public List<String> toAssembly() {
+        List<String> instrs = new ArrayList<>();
+        for (Instr i : prelude) {
+            instrs.addAll(i.toAssembly());
+        }
+        for (Instr i : stmts) {
+            instrs.addAll(i.toAssembly());
+        }
+        for (Instr i : epilogue) {
+            instrs.addAll(i.toAssembly());
+        }
+        return instrs;
+    }
 }

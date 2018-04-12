@@ -42,7 +42,7 @@ public class BinMul extends Instr {
         if (kind == Kind.DIV || kind == Kind.MOD) {
                 instrs.add("cqo");
         }
-        instrs.add(String.format("%s %s", kind.opcode, right.toString()));
+        instrs.add(kind.opcode + " " + right.toString());
         return instrs;
     }
 }

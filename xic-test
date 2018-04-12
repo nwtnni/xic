@@ -108,26 +108,32 @@ test_ir() {
 
 test_assemble_simple() {
     xth/xth -compilerpath . -workpath tests/assemble/simple -testpath tests/assemble/simple tests/assemble/simple/xthScript
+    printf "\n========================================\n\n"
 }
 
 test_assemble_arrays() {
     xth/xth -compilerpath . -workpath tests/assemble/arrays -testpath tests/assemble/arrays tests/assemble/arrays/xthScript   
+    printf "\n========================================\n\n"
 }
 
 test_assemble_basic() {
     xth/xth -compilerpath . -workpath tests/assemble/basic -testpath tests/assemble/basic tests/assemble/basic/xthScript   
+    printf "\n========================================\n\n"
 }
 
 test_assemble_ir_fails() {
     xth/xth -compilerpath . -workpath tests/assemble/ir_failed_tests -testpath tests/assemble/ir_failed_tests tests/assemble/ir_failed_tests/xthScript
+    printf "\n========================================\n\n"
 }
 
 test_assemble_other() {
     xth/xth -compilerpath . -workpath tests/assemble/other -testpath tests/assemble/other tests/assemble/other/xthScript   
+    printf "\n========================================\n\n"
 }
 
 test_assemble_assemble_specific() {
     xth/xth -compilerpath . -workpath tests/assemble/assemble-specific -testpath tests/assemble/assemble-specific tests/assemble/assemble-specific/xthScript     
+    printf "\n========================================\n\n"
 }
 
 test_assemble() {
@@ -140,7 +146,7 @@ test_assemble() {
 }
 
 test_course() {
-    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa4 xth/tests/pa4/xthScript
+    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
     printf "\n========================================\n\n" 
 }
 

@@ -3,7 +3,6 @@ package assemble.instructions;
 import java.util.List;
 import java.util.Arrays;
 
-import ir.*;
 import assemble.*;
 
 public class BinOp extends Instr {

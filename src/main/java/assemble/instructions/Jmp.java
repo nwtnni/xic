@@ -3,19 +3,17 @@ package assemble.instructions;
 import java.util.List;
 import java.util.Arrays;
 
-import ir.*;
-import assemble.*;
-
 public class Jmp extends Instr {
 
-    public Temp target;
+    // Only support translating jumps to labels for now
+    public String target;
 
-    public Jmp(Temp target) {
+    public Jmp(String target) {
         this.target = target;
     }
 
     @Override
     public List<String> toAssembly() {
-        return null;
+        return Arrays.asList("jmp " + target);
     }
 }

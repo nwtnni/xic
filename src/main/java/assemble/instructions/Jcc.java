@@ -3,7 +3,6 @@ package assemble.instructions;
 import java.util.List;
 import java.util.Arrays;
 
-import ir.*;
 import assemble.*;
 
 public class Jcc extends Instr {
@@ -17,17 +16,17 @@ public class Jcc extends Instr {
     }
 
     public Kind kind;
+    public Temp cond;
     public String target;
-    public String cond;
 
-    public Jcc(Kind kind, String target, String cond) {
+    public Jcc(Kind kind, Temp cond, String target) {
         this.kind = kind;
-        this.target = target;
         this.cond = cond;
+        this.target = target;
     }
 
     @Override
     public List<String> toAssembly() {
-        return null;
+        return Arrays.asList(String.format("j%s %s", kind.cond, target));
     }
 }

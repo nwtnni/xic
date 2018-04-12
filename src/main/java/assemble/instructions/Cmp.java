@@ -3,23 +3,22 @@ package assemble.instructions;
 import java.util.List;
 import java.util.Arrays;
 
-import ir.*;
 import assemble.*;
 
 public class Cmp extends Instr {
-    protected Temp destTemp;
-    protected Temp srcTemp;
+    protected Temp leftTemp;
+    protected Temp rightTemp;
 
-    public Operand dest;
-    public Operand src;
+    public Operand left;
+    public Operand right;
 
-    public Cmp(Temp destTemp, Temp srcTemp) {
-        this.destTemp = destTemp;
-        this.srcTemp = srcTemp;
+    public Cmp(Temp leftTemp, Temp rightTemp) {
+        this.leftTemp = leftTemp;
+        this.rightTemp = rightTemp;
     }
 
     @Override
     public List<String> toAssembly() {
-        return null;
+        return Arrays.asList(String.format("cmpq %s, %s", left.toString(), right.toString()));
     }
 }
