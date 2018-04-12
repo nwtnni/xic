@@ -130,8 +130,6 @@ public class Tiler extends IRVisitor<Temp> {
         return null;
     }
 
-
-
     public Temp visit(IRBinOp b) {
         // Uses %rax to operate on things. Returns %rax (sometimes %rdx)
         Temp left = b.left.accept(this);
@@ -232,15 +230,19 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRCJump c) {
+        Temp cond = c.cond.accept(this);
+        instrs.add(new Cmp(Temp.imm(1), cond));
+        instrs.add(new Jcc(Jcc.Kind.Z, c.trueLabel));
         return null;
     }
 
     public Temp visit(IRJump j) {
+        instrs.add(new Jmp(((IRName) j.target).name));
         return null;
     }
 
     public Temp visit(IRConst c) {
-        return null;
+        return Temp.imm(c.value);
     }
 
     public Temp visit(IRESeq e) {

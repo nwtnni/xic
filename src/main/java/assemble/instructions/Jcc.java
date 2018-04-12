@@ -16,12 +16,10 @@ public class Jcc extends Instr {
     }
 
     public Kind kind;
-    public Temp cond;
     public String target;
 
-    public Jcc(Kind kind, Temp cond, String target) {
+    public Jcc(Kind kind, String target) {
         this.kind = kind;
-        this.cond = cond;
         this.target = target;
     }
 

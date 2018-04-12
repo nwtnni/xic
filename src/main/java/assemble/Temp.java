@@ -10,7 +10,7 @@ public class Temp {
         return new Temp(Kind.TEMP, name, 0);
     }
 
-    public static Temp immediate(long value) {
+    public static Temp imm(long value) {
         return new Temp(Kind.IMM, null, value);
     }
 
