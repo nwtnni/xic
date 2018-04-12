@@ -216,7 +216,7 @@ public class Tiler extends IRVisitor<Temp> {
 
         // Assign all arguments into abstract argument registers
         // TODO: handle spilling and allocate lower 6 args into regs in reg alloc
-        for (int i = 0; i < c.args.size() - 1; i++) {
+        for (int i = 0; i < c.args.size(); i++) {
             Temp val = c.args.get(i).accept(this);
             args.add(new Mov(TempFactory.getArgument(i + callIsMultiple), val));
         }
@@ -228,7 +228,7 @@ public class Tiler extends IRVisitor<Temp> {
         callIsMultiple = 0;
         args = new ArrayList<>();
 
-        return TempFactory.generate(target);
+        return TempFactory.getReturn(0);
     }
 
     public Temp visit(IRCJump c) {
@@ -289,7 +289,7 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRSeq s) { 
         int i = 0;
         for(IRNode stmt : s.stmts) {
-            instrs.add(Text.comment("stmt #: " + i));
+            instrs.add(Text.comment("stmt: " + i));
             stmt.accept(this);
             i++;
         }

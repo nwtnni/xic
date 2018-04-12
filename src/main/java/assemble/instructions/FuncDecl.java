@@ -37,6 +37,7 @@ public class FuncDecl {
 
         // If function has multiple returns, save return address from arg 0 to a temp
         if (rets > 2) {
+            prelude.add(Text.comment("Callee multiple returns mem address here:"));
             prelude.add(new Mov(TempFactory.getArgument(0), Config.CALLEE_MULT_RETURN));
         }
 
