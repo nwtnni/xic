@@ -6,15 +6,15 @@ package assemble;
  */
 public class Operand {
 
-    public static Operand register(Kind kind) {
+    public static Operand reg(Kind kind) {
         return new Operand(kind, null, 0);
     }
 
-    public static Operand memory(String mem) {
+    public static Operand mem(String mem) {
         return new Operand(Kind.MEM, mem, 0);
     }
 
-    public static Operand immediate(long value) {
+    public static Operand imm(long value) {
         return new Operand(Kind.IMM, null, value);
     }
 
@@ -27,8 +27,8 @@ public class Operand {
         RDI ("%rdi"),
         RBP ("%rbp"),
         RSP ("%rsp"),
-        R8 ("%r8"),
-        R9 ("%r9"),
+        R8  ("%r8"),
+        R9  ("%r9"),
         R10 ("%r10"),
         R11 ("%r11"),
         R12 ("%r12"),

@@ -1,24 +1,53 @@
 package assemble;
 
-import assemble.instructions.*;
-import emit.ABIContext;
-import ir.*;
-
 import java.util.List;
 import java.util.ArrayList;
 
+import assemble.instructions.*;
+import assemble.Config;
+import emit.ABIContext;
+import ir.*;
+
 public class Tiler extends IRVisitor<Temp> {
 
-    private int tempCounter = 0;                    // How many temps are used
-    private int maxReturn = 0;                      // Amount of stack space for returns
-    private int maxArgs = 0;                        // Amount of stack space for args
-    private int isMultipleReturn = 0;                   // 1 if the function returns > 2 elements
+    /**
+     * Returns the list of abstract assembly code given an canonical IR tree
+     */
+    public static CompUnit tile(IRNode t, ABIContext c) {
+        Tiler tiler = new Tiler(c);
+        t.accept(tiler);
+        return tiler.unit;
+    }
 
     // Mangled names context
     private ABIContext context;
 
     // Running list of assembly instructions
-    private List<Instr> instrs;
+    private CompUnit unit;
+
+    // Current function visited
+    String funcName;
+
+    // Current list of instructions
+    List<Instr> instrs;
+
+    private Tiler(ABIContext c) {
+        this.context = c;
+        this.unit = new CompUnit();
+    }
+
+    /**
+     * Returns number of return values for a function.
+     * Takes the mangled function name.
+     */
+    private int numReturns(String fn) {
+        if (fn.equals(Config.XI_ALLOC)) {
+            return 1;
+        } else if (fn.equals(Config.XI_OUT_OF_BOUNDS)) {
+            return 0;
+        }
+        return context.getNumReturns(fn);
+    }
 
     /*
      * Psuedo-visit method for visiting a list of nodes.
@@ -30,12 +59,27 @@ public class Tiler extends IRVisitor<Temp> {
         }
         return t;
     }
+
+    /*
+     * Visitor methods
+     */
     
     public Temp visit(IRCompUnit c) {
+        for (IRFuncDecl fn : c.functions.values()) {
+            fn.accept(this);
+        }
         return null;
     }
 
     public Temp visit(IRFuncDecl f) {
+        // Reset instance variables for each function
+        funcName = f.name;
+        instrs = new ArrayList<>();
+
+        // Argument movement is handled in the body
+        f.body.accept(this);
+
+        unit.fns.add(new FuncDecl(f.name, instrs));
         return null;
     }
 

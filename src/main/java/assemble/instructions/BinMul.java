@@ -29,9 +29,9 @@ public class BinMul extends Instr {
         this.leftTemp = leftTemp;
         this.rightTemp = rightTemp;
         if (kind == Kind.MUL || kind == Kind.DIV) {
-            this.dest = Operand.register(Operand.Kind.RAX);
+            this.dest = Operand.reg(Operand.Kind.RAX);
         } else {
-            this.dest = Operand.register(Operand.Kind.RDX);
+            this.dest = Operand.reg(Operand.Kind.RDX);
         }
     }
 

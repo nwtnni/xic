@@ -17,6 +17,11 @@ public class Mov extends Instr {
         this.srcTemp = srcTemp;
     }
 
+    public Mov(Operand dest, Operand src) {
+        this.dest = dest;
+        this.src = src;
+    }
+
     @Override
     public List<String> toAssembly() {
         return Arrays.asList(String.format("movq %s, %s", src.toString(), dest.toString()));

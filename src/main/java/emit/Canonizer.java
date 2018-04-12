@@ -44,6 +44,10 @@ public class Canonizer extends IRVisitor<IRNode> {
     private Canonizer() {
         stmts = new ArrayList<>();
     }
+    
+    /*
+     * Visitor methods ---------------------------------------------------------------------
+     */
 
     /**
      * Lowers an IRBinOp node by hoisting its first expression,

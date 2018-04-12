@@ -4,7 +4,11 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class CompUnit {
-    protected List<FuncDecl> fns;
+    public List<FuncDecl> fns;
+
+    public CompUnit() {
+        this.fns = new ArrayList<>();
+    }
 
     public CompUnit(List<FuncDecl> fns) {
         this.fns = fns;
@@ -12,6 +16,7 @@ public class CompUnit {
 
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();
+        instrs.add(".text");
         for (FuncDecl f : fns) {
             instrs.addAll(f.toAssembly());
         }

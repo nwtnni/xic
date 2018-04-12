@@ -310,7 +310,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /*
-     * Visitor methods
+     * Visitor methods ---------------------------------------------------------------------
      */
 
     /**
@@ -438,7 +438,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(If i) throws XicException {
-        // TODO: fix guard to use control flow
+        // TODO: improve quard to use control flow translations
         IRNode cond = i.guard.accept(this);
         IRNode t = i.block.accept(this);
         if (i.hasElse()) {
@@ -456,7 +456,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(While w) throws XicException {
-        // TODO: fix quard to use control flow
+        // TODO: improve quard to use control flow translations
         IRNode guard = w.guard.accept(this);
         IRNode block = w.block.accept(this);
         return generateLoop(guard, block);

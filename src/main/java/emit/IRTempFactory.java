@@ -37,5 +37,12 @@ public class IRTempFactory {
     public static IRTemp getReturn(int i) {
         return new IRTemp(Configuration.ABSTRACT_RET_PREFIX + i);
     }
+
+    /*
+     * Reset the counter for generating temps.
+     */
+    public static void reset() {
+        tempIndex = 0;
+    }
     
 }

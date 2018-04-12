@@ -1,4 +1,4 @@
-package type;
+package util;
 
 import org.pcollections.*;
 import java.util.Map;
