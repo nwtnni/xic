@@ -24,6 +24,7 @@ public class Main {
         String sink = "";
         String lib = "";
         String assemblySink = "";
+        boolean assemblyFlag = false;
         boolean optFlag = true;
         boolean targetFlag = false;
         String targetOS;
@@ -47,6 +48,7 @@ public class Main {
             } else if (args[i].equals("-D") && i + 1 < args.length) {
                 sink = args[++i];
             } else if (args[i].equals("-d") && i + 1 < args.length) {
+                assemblyFlag = true;
                 assemblySink = args[++i];
             } else if (args[i].equals("-libpath") && i + 1 < args.length){
                 lib = args[++i];
@@ -75,7 +77,7 @@ public class Main {
                 if (typeFlag) { xic.printTyped(unit); }
                 if (irGenFlag || irRunFlag) { xic.printIR(unit, irRunFlag, optFlag); }
                 //TODO ADD targetOSFlag CASE
-                xic.printAssembly(unit, optFlag);
+                xic.printAssembly(unit, optFlag, assemblyFlag, assemblySink);
             }
         } catch (XicException e) {
             System.out.println(e.toPrint());

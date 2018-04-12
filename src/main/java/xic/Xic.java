@@ -151,9 +151,16 @@ public class Xic {
      * file.
      * 
      * @param unit The path to the input file, relative to source
+     * @param opt enable optimzations if true
+     * @param aFlag If true, -d flag was specified
+     * @param aSink Where to place generated assembly files if aFlag is true
      * @throws XicException if lexing, parsing, or typechecking failed
      */
-    public void printAssembly(String unit, boolean opt) throws XicException {
-        assemble.Printer.print(source, sink, lib, unit, opt);
+    public void printAssembly(String unit, boolean opt, boolean aFlag, String aSink) throws XicException {
+        if (aFlag) {
+            assemble.Printer.print(source, aSink, lib, unit, opt);
+        } else {
+            assemble.Printer.print(source, sink, lib, unit, opt);
+        }
     }
 }
