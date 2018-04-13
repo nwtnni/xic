@@ -50,6 +50,7 @@ public class Main {
             } else if (args[i].equals("-d") && i + 1 < args.length) {
                 assemblyFlag = true;
                 assemblySink = args[++i];
+                assemblyFlag = true;
             } else if (args[i].equals("-libpath") && i + 1 < args.length){
                 lib = args[++i];
             } else if (args[i].equals("-O")) {

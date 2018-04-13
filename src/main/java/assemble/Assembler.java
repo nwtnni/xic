@@ -110,6 +110,7 @@ public class Assembler extends IRVisitor<String> {
 
     public String visit(IRBinOp b) {
         // Uses %rax to operate on things. Returns %rax (sometimes %rdx)
+        // TODO autospilling temps avoids using imm64s which can cause problems
         
         //Autospill temp onto stack
         String right = b.right.accept(this);
@@ -252,9 +253,50 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRCJump c) {
         // TODO do we want to fold comparison operators into tile? Or assume it's always a temp?
         // TODO Potentially add more tiles here
+        if (c.cond instanceof IRBinOp) {
+            IRBinOp bo = (IRBinOp) c.cond;
+            // String l = bo.left.accept(this);
+            // String r = bo.right.accept(this);
+
+            String right = bo.right.accept(this);
+            cmds.add(String.format("movq %s, %%rax", right));
+            right = String.format("-%d(%%rbp)", genTemp());
+            cmds.add(String.format("movq %%rax, %s", right));
+            
+            String left = bo.left.accept(this);
+            cmds.add(String.format("movq %s, %%rax", left));
+
+            cmds.add(String.format("cmpq %s, %%rax", right));
+            switch (bo.type) {
+                case EQ:
+                    cmds.add("je " + c.trueLabel);
+                    return null;
+                case NEQ:
+                    cmds.add("jne " + c.trueLabel);
+                    return null;
+                case LT:
+                    cmds.add("jl " + c.trueLabel);
+                    return null;
+                case GT:
+                    cmds.add("jg " + c.trueLabel);
+                    return null;
+                case LEQ:
+                    cmds.add("jle " + c.trueLabel);
+                    return null;
+                case GEQ:
+                    cmds.add("jge " + c.trueLabel);
+                    return null;
+                case XOR:
+                    cmds.add("jne " + c.trueLabel);
+                    return null;
+                default:
+                    throw new RuntimeException("How did this BinOp get here?");
+            }
+            
+        }
         String condTemp = c.cond.accept(this);
         cmds.add(String.format("movq %s, %%rax", condTemp)); // TODO only needed if condTemp is an immediate
-        cmds.add("cmpq $1, %rax");  // TODO Is this correct? Should we comparing %al instead?
+        cmds.add("cmpq $1, %rax");
         cmds.add("jz "+c.trueLabel);
 
         return null;
@@ -328,7 +370,7 @@ public class Assembler extends IRVisitor<String> {
         cmds.set(replaceIndex, String.format("subq $%d, %%rsp", rspShift));
 
         //Tear down stack
-        cmds.add("\n# Stack Teardown");   // TODO Debugging comment
+        cmds.add("\n# Stack Teardown");   // Debugging comment
         cmds.add("ret__label"+fnName+":");    //TODO Is this too hacky?
         cmds.add(String.format("addq $%d, %%rsp", rspShift));
         cmds.add("popq %rbp");
@@ -352,6 +394,80 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRMove m) {
         // TODO Uses %r12 to move things around; is this safe? (Must use rax because ARGS use rdi, rsi, rdx, rcx, r8, and r9)
         // TODO Add more tiles here
+        
+        // Tiles if dest and left of binop are the same IRTemp
+        if(m.src instanceof IRBinOp && ((IRBinOp) m.src).left instanceof IRTemp && m.target instanceof IRTemp && ((IRTemp) ((IRBinOp) m.src).left).name.equals(((IRTemp) m.target).name)) {
+            String dest_and_left = m.src.accept(this);
+            String right = ((IRBinOp) m.src).right.accept(this);
+            cmds.add(String.format("movq %s, %%rax", right));
+            IRBinOp b = (IRBinOp) m.src;
+
+            switch(b.type) {
+                case ADD:
+                    cmds.add(String.format("addq %%rax, %s", dest_and_left));
+                    return dest_and_left;
+                case SUB:
+                    cmds.add(String.format("subq %%rax, %s", dest_and_left));
+                    return dest_and_left;
+                case MUL:
+                    break;
+                case HMUL:
+                    break;
+                case DIV:
+                    break;
+                case MOD:
+                    break;
+                case AND:
+                    cmds.add(String.format("andq %%rax, %s", dest_and_left));   //TODO check if it should be quadword
+                    return dest_and_left;
+                case OR:
+                    cmds.add(String.format("orq %%rax, %s", dest_and_left));    //TODO check if it should be quadword
+                    return dest_and_left;
+                case XOR:
+                    cmds.add(String.format("xorq %%rax, %s", dest_and_left));   //TODO check if it should be quadword
+                    return dest_and_left;
+                case LSHIFT:
+                    cmds.add(String.format("shlq %%rax, %s", dest_and_left));   //TODO need to guarantee right is an immediate or cl
+                    return dest_and_left;
+                case RSHIFT:
+                    cmds.add(String.format("shrq %%rax, %s", dest_and_left));   //TODO need to guarantee right is an immediate or cl
+                    return dest_and_left;
+                case ARSHIFT:
+                    cmds.add(String.format("sarq %%rax, %s", dest_and_left));   //TODO need to guarantee right is an immediate or cl
+                    return dest_and_left;
+                case EQ:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("sete %al");  //set lower bits of %rax to 1 if equal
+                    return "%rax";
+                case NEQ:
+                    cmds.add(String.format("cmpq %%rax, %S", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("setne %al");
+                    return "%rax";
+                case LT:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");
+                    cmds.add("setl %al");                               //TODO this is hack
+                    return "%rax";
+                case GT:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("setg %al");
+                    return "%rax";
+                case LEQ:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("setle %al");
+                    return "%rax";
+                case GEQ:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("setge %al");
+                    return "%rax";
+            }
+        }
+
         String r12 = String.format("-%d(%%rbp)",genTemp());
         cmds.add(String.format("movq %%r12, %s",r12));
         String src = m.src.accept(this);
@@ -393,7 +509,7 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRSeq s) {
         int i = 0;
         for(IRNode stmt:s.stmts) {
-            cmds.add("\n# IR Statement "+i);   // TODO Debugging comment
+            cmds.add("\n# IR Statement "+i);   // Debugging comment
             i++;
             stmt.accept(this);
         }

@@ -156,9 +156,9 @@ public class Xic {
      * @param aSink Where to place generated assembly files if aFlag is true
      * @throws XicException if lexing, parsing, or typechecking failed
      */
-    public void printAssembly(String unit, boolean opt, boolean aFlag, String aSink) throws XicException {
-        if (aFlag) {
-            assemble.Printer.print(source, aSink, lib, unit, opt);
+    public void printAssembly(String unit, boolean opt, boolean assemblyFlag, String assemblySink) throws XicException {
+        if (assemblyFlag) {
+            assemble.Printer.print(source, assemblySink, lib, unit, opt);
         } else {
             assemble.Printer.print(source, sink, lib, unit, opt);
         }
