@@ -10,6 +10,7 @@ import static assemble.instructions.BinCmp.Kind.*;
 import assemble.instructions.*;
 import assemble.Config;
 import emit.ABIContext;
+import interpret.Configuration;
 import ir.*;
 import xic.XicInternalException;
 
@@ -182,28 +183,19 @@ public class Tiler extends IRVisitor<Temp> {
         String target = ((IRName) c.target).name();
 
         int callIsMultiple = 0;
-        if (numReturns(target) > 2) {
+        int ret = numReturns(target);
+        if (ret > 2) {
             callIsMultiple = 1;
+            args.add(new Lea(Temp.arg(0, false), Temp.MULT_RET_ADDR));
         }
 
-        // TODO: separating the moves from calculating temps to movs
-        // with separate instruction list in call might be bad
-
-        // Assign multiple return address to argument 0 if needed
-        // TODO: handle replacement with actual memory address in reg alloc
-        if (callIsMultiple > 0) {
-            args.add(new Lea(TempFactory.getArgument(0), Config.CALLER_MULT_RETURN));
-        }
-
-        // Assign all arguments into abstract argument registers
-        // TODO: handle spilling and allocate lower 6 args into regs in reg alloc
         for (int i = 0; i < c.args.size(); i++) {
             Temp val = c.args.get(i).accept(this);
-            args.add(new Mov(TempFactory.getArgument(i + callIsMultiple), val));
+            args.add(new Mov(Temp.arg(i + callIsMultiple, false), val));
         }
 
-        instrs.add(new Call(target, args));
-        return TempFactory.getReturn(0);
+        instrs.add(new Call(target, args, ret));
+        return Temp.ret(0, false);
     }
 
     public Temp visit(IRCJump c) {
@@ -253,11 +245,11 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRReturn r) {
-        for (int i = 0; i < r.rets.size(); i++) {
+        for (int i = r.rets.size() - 1; i >= 0; i--) {
             Temp val = r.rets.get(i).accept(this);
-            instrs.add(new Mov(TempFactory.getReturn(i), val));
+            instrs.add(new Mov(Temp.ret(i, true), val));
         }
-        instrs.add(new Jmp(Label.retLabel(funcName).toString()));
+        instrs.add(new Jmp(Label.retLabel(funcName).name()));
         return null;
     }
 
@@ -272,6 +264,20 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRTemp t) {
-        return Temp.temp(t.name());
+        String name = t.name();
+
+        // Argument read by callee
+        if (name.matches(Configuration.ABSTRACT_ARG_PREFIX + "\\d+")) {
+            return Temp.arg(Integer.parseInt(name.substring(4)), true);
+            
+        } 
+        
+        // Return read by caller
+        if (name.matches(Configuration.ABSTRACT_RET_PREFIX + "\\d+")) {
+            return Temp.ret(Integer.parseInt(name.substring(4)), false);
+        }
+
+        // Default temp
+        return Temp.temp(name);
     }
 }

@@ -18,6 +18,10 @@ public class Label extends Instr {
         this.name = name;
     }
 
+    public String name() {
+        return name.substring(0, name.length() - 1);
+    }
+
     @Override
     public String toString() {
         return name;

@@ -51,20 +51,22 @@ public class Printer {
                 comp = (IRCompUnit) Canonizer.canonize(comp);
                 String cmds = Assembler.assemble(comp, mangled);
                 // Generate .s file
-                writer.write(cmds);
-                writer.close();
+                // writer.write(cmds);
+                // writer.close();
 
                 CompUnit u = Tiler.tile(comp, mangled);
 
                 for (String i : u.toAbstractAssembly()) {
-                    System.out.println(i); 
+                    // System.out.println(i);
                 }
 
                 u = TrivialAllocator.allocate(u);
                 
                 for (String i : u.toAssembly()) {
-                    System.out.println(i); 
+                    // System.out.println(i); 
+                    writer.append(i + "\n");
                 }
+                writer.close();
                 
             } catch (XicException xic) {
                 writer.close();

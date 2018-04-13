@@ -7,10 +7,14 @@ public class Call extends Instr {
 
     public String name;
     public List<Instr> args;
+    public int numArgs;
+    public int numRet;
 
-    public Call(String name, List<Instr> args) {
+    public Call(String name, List<Instr> args, int numRet) {
         this.name = name;
         this.args = args;
+        this.numArgs = args.size();
+        this.numRet = numRet;
     }
 
     @Override

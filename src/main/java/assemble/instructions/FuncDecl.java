@@ -30,7 +30,7 @@ public class FuncDecl {
         
         prelude.add(Text.comment("Stack Setup"));
         prelude.add(new Push(Operand.RBP));
-        prelude.add(new Mov(Operand.RSP, Operand.RBP));
+        prelude.add(new Mov(Operand.RBP, Operand.RSP));
         prelude.add(Text.comment("~~~Replace with subtract from %rsp here"));
         // TODO: in reg alloc insert subq n, %rsp at prelude[7]
 

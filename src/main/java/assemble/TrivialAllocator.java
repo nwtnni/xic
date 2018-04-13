@@ -38,6 +38,9 @@ public class TrivialAllocator {
     // Maximum number of returns from a call in current function
     private int maxRets;
 
+    // 1 if current function has multiple returns else 0
+    private int isMultiple;
+
     // Number of words to subtract from base pointer to get location
     // in stack where multiple returns > 2 must be written by callee.
     private Operand calleeReturnAddr;
@@ -54,6 +57,7 @@ public class TrivialAllocator {
         this.tempCounter = 0;
         this.maxArgs = 0;
         this.maxRets = 0;
+        this.isMultiple = 0;
         this.calleeReturnAddr = null;
         this.callerReturnAddr = -1;
     }
@@ -114,11 +118,13 @@ public class TrivialAllocator {
         tempCounter = 0;
         maxArgs = 0;
         maxRets = 0;
+        isMultiple = 0;
         calleeReturnAddr = null;
 
         // Store address to put multiple returns from arg0 to stack
         if (fn.rets > 2) {
-            calleeReturnAddr = pushTemp(Config.CALLEE_MULT_RETURN.name);
+            isMultiple = 1;
+            calleeReturnAddr = pushTemp();
             Operand dest = calleeReturnAddr;
             Operand src = Config.getArg(0);
             Mov mov = new Mov(dest, src);
@@ -131,17 +137,17 @@ public class TrivialAllocator {
         fn.stmts = instrs;
 
         // Calculate words to shift rsp, +1 to offset tempCounter
-        int rsp = tempCounter + maxArgs + maxRets + 1;
+        int rsp = tempCounter + maxArgs + maxRets + 16;
         // 16 byte alignment
         rsp = rsp % 2 == 1 ? rsp + 1 : rsp;
         Operand shift = Operand.imm(normalize(rsp));
 
         // Insert stack setup 
-        BinOp sub = new BinOp(Kind.SUB, Operand.RSP, shift, Operand.RSP);
+        Sub sub = new Sub(Operand.RSP, shift);
         fn.prelude.set(7, sub);
 
         // Insert stack teardown
-        BinOp add = new BinOp(Kind.ADD, Operand.RSP, shift, Operand.RSP);
+        Add add = new Add(Operand.RSP, shift);
         fn.epilogue.set(2, add);
 
     }
@@ -157,7 +163,8 @@ public class TrivialAllocator {
 
             Operand right = allocate(op.rightTemp);
             op.right = right;
-
+            
+            instrs.add(ins);
             instrs.add(new Mov(dest, Operand.RAX));
 
         } else if (ins instanceof BinMul) {
@@ -171,6 +178,8 @@ public class TrivialAllocator {
             instrs.add(new Mov(Operand.RDX, right));
             op.right = Operand.RDX;
 
+            instrs.add(ins);
+
         } else if (ins instanceof BinCmp) {
             BinCmp op = (BinCmp) ins;
             op.dest = allocate(op.destTemp);
@@ -183,14 +192,30 @@ public class TrivialAllocator {
             instrs.add(new Mov(Operand.RDX, right));
             op.right = Operand.RDX;
 
+            instrs.add(ins);
+
         } else if (ins instanceof Call) {
             Call call = (Call) ins;
-            
+
+            // Undo offset for multiple return when making a call
+            int saved = isMultiple;
+            isMultiple = 0;
+
+            maxArgs = Math.max(maxArgs, call.numArgs);
+            maxRets = Math.max(maxRets, call.numRet);
+
+            callerReturnAddr = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
+
             // Hoist args out of call into list of arguments
             for (Instr arg : call.args) {
                 allocate(arg);
             }
             call.args = new ArrayList<>();
+
+            // Reset offset for multiple return
+            isMultiple = saved;
+
+            instrs.add(ins);
 
         } else if (ins instanceof Cmp) {
             Cmp cmp = (Cmp) ins;
@@ -201,20 +226,26 @@ public class TrivialAllocator {
             Operand right = allocate(cmp.rightTemp);
             instrs.add(new Mov(Operand.R10, right));
             cmp.right = Operand.R10;
+            
+            instrs.add(ins);
 
         } else if (ins instanceof Jcc) {
+            instrs.add(ins);
 
         } else if (ins instanceof Jmp) {
+            instrs.add(ins);
 
         } else if (ins instanceof Label) {
+            instrs.add(ins);
 
         } else if (ins instanceof Lea) {
             Lea lea = (Lea) ins;
             lea.dest = allocate(lea.destTemp);
 
             Operand addr = allocate(lea.srcTemp);
-            instrs.add(new Mov(Operand.RAX, addr));
-            lea.src = Operand.RAX;
+            lea.src = addr;
+
+            instrs.add(ins);
 
         } else if (ins instanceof Mov) {
             Mov mov = (Mov) ins;
@@ -225,22 +256,28 @@ public class TrivialAllocator {
                 instrs.add(new Mov(Operand.RAX, src));
                 mov.src = Operand.RAX;
             }
+            instrs.add(ins);
 
         } else if (ins instanceof Pop) {
+            instrs.add(ins);
 
         } else if (ins instanceof Push) {
+            instrs.add(ins);
 
         } else if (ins instanceof Ret) {
+            instrs.add(ins);
 
         } else if (ins instanceof Text) {
-
+            instrs.add(ins);
         }
-        instrs.add(ins);
 
         return null;
     }
 
     private Operand allocate(Temp t) {
+
+        String name = t.name;
+        int i = 0;
         switch (t.kind) {
             case IMM:
                 // TODO: add checks for imms based on parent instruction
@@ -250,40 +287,43 @@ public class TrivialAllocator {
                 // SHIFT only imm8
                 return Operand.imm(t.value);
             case TEMP:
-                String name = t.name;
-               
-                // If temp is an argument
-                String regex = String.format("(%s)(\\d)", Config.ABSTRACT_ARG_PREFIX);
-                Matcher arg = Pattern.compile(regex).matcher(name);
-                if (name.length() > 3 && name.substring(0,4).equals("_ARG")) {
-                    int i = Integer.parseInt(name.substring(4));
-                    if (i < 6) {
-                        return Config.getArg(i);
-                    }
-
-                    // -6 for regs, +1 to move above rbp
-                    int offset = normalize(i - 6 + 1);
-                    return Operand.mem(Operand.RBP, offset);
-                } 
-                
-                // If temp is a return
-                if (name.length() > 3 && name.substring(0,4).equals("_RET")) {
-                    int i = Integer.parseInt(name.substring(4));
-                    if (i == 0) {
-                        return Operand.RAX;
-                    } else if (i == 1) {
-                        return Operand.RDX;
-                    }
-                    // -2 for regs
-                    int offset = normalize(callerReturnAddr - (i - 2));
-                    return Operand.mem(Operand.RSP, offset);
-                }
-
-                // Generic named temp
                 if (!tempStack.containsKey(name)) {
                     return pushTemp(name);
                 }
                 return getTemp(name);
+            case ARG:
+                i = (int) t.value + isMultiple;
+                if (i < 6) {
+                    return Config.getArg(i);
+                }
+
+                if (t.callee) {
+                    // -6 for regs, +1 for base pointer, +1 for return addr
+                    int offset = normalize(i - 6 + 1 + 1);
+                    return Operand.mem(Operand.RBP, offset);
+                } else {
+                    int offset = normalize(i - 6);
+                    return Operand.mem(Operand.RSP, offset);
+                }
+            case RET:
+                i = (int) t.value;
+                if (i == 0) {
+                    return Operand.RAX;
+                } else if (i == 1) {
+                    return Operand.RDX;
+                }
+                // -2 for regs
+                if (t.callee) {
+                    int offset = -normalize(i - 2);
+                    instrs.add(new Mov(Operand.R10, calleeReturnAddr));
+                    return Operand.mem(Operand.R10, offset);
+                } else {
+                    int offset = normalize(callerReturnAddr - (i - 2));
+                    return Operand.mem(Operand.RSP, offset);
+                }
+            case MULT_RET:
+                return Operand.mem(Operand.RSP, normalize(callerReturnAddr));
+
         }
         assert false;
         return null;
