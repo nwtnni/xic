@@ -3,14 +3,10 @@ package assemble.instructions;
 import java.util.List;
 import java.util.ArrayList;
 
-import assemble.*;
-
 public class Call extends Instr {
 
     public String name;
     public List<Instr> args;
-
-    public List<Operand> returns;
 
     public Call(String name, List<Instr> args) {
         this.name = name;

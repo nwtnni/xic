@@ -6,8 +6,8 @@ import java.util.Arrays;
 import assemble.*;
 
 public class Cmp extends Instr {
-    protected Temp leftTemp;
-    protected Temp rightTemp;
+    public Temp leftTemp;
+    public Temp rightTemp;
 
     public Operand left;
     public Operand right;

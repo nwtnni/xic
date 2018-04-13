@@ -2,8 +2,8 @@ use io
 use conv
 
 main (args:int[][]) {
-    x:int = 1
-    y:int = 2 + 3
+    x:int, y:int, z:int = fun(1, 2)
+    
     // a:int, b:int, c:int, d:int, e:int, f:int, g:int, h:int, i:int, j:int, k:int = fun(1,2,3,4,5,6,7,8,9,10,11)
     // println(unparseInt(a))
     // println(unparseInt(b))
@@ -16,6 +16,10 @@ main (args:int[][]) {
     // println(unparseInt(i))
     // println(unparseInt(j))
     // println(unparseInt(k))
+}
+
+fun (a:int, b:int) : int, int, int {
+    return 1, 2, 3
 }
 
 // fun(a:int, b:int, c:int, d:int, e:int, f:int, g:int, h:int, i:int, j:int, k:int):int, int, int, int, int, int, int, int, int, int, int {

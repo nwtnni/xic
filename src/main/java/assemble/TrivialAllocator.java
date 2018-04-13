@@ -92,9 +92,17 @@ public class TrivialAllocator {
         return i * Config.WORD_SIZE;
     }
 
+    /**
+     * Check if value is representable with n-bits in 2's complement notation
+     */
+    private boolean within(int bits, long value) {
+        return Math.abs(value) > Math.pow(2, bits - 1) - 1;
+    }
+
+    /* Recursive descent visitors */
+
     private CompUnit allocate() {
         for (FuncDecl fn : unit.fns) {
-            System.out.println("alloc for " + fn.name);
             allocate(fn);
         }
         return unit;
@@ -142,15 +150,12 @@ public class TrivialAllocator {
         if (ins instanceof BinOp) {
             BinOp op = (BinOp) ins;
             op.dest = allocate(op.destTemp);
-            op.left = allocate(op.leftTemp);
+            
+            Operand left = allocate(op.leftTemp);
             Operand right = allocate(op.rightTemp);
-            if (right.isImm() && Math.abs(right.value()) > Math.pow(2, 31) - 1) {
-                Operand tmp = pushTemp();
-                instrs.add(new Mov(tmp, right));
-                op.right = tmp;
-            } else {
-                op.right = right;
-            }
+            instrs.add(new Mov(Operand.RAX, left));
+            op.left = Operand.RAX;
+            op.right = right;
         } else if (ins instanceof BinMul) {
             BinMul op = (BinMul) ins;
             op.dest = allocate(op.destTemp);
@@ -176,9 +181,31 @@ public class TrivialAllocator {
                 op.right = right;
             }
         } else if (ins instanceof Call) {
-
+            Call call = (Call) ins;
+            
+            // Hoist args out of call
+            for (Instr arg : call.args) {
+                allocate(arg);
+            }
+            call.args = new ArrayList<>();
         } else if (ins instanceof Cmp) {
+            Cmp cmp = (Cmp) ins;
+            Operand left = allocate(cmp.leftTemp);
+            Operand right = allocate(cmp.rightTemp);
 
+            if (left.isImm() && !within(32, left.value())) {
+                instrs.add(new Mov(Operand.RAX, left));
+                cmp.right = right;
+                cmp.left = Operand.RAX;
+            } else if (right.isImm() && !within(32, right.value())) {
+                instrs.add(new Mov(Operand.RAX, right));
+                cmp.right = left;
+                cmp.left = Operand.RAX; 
+            } else {
+                instrs.add(new Mov(Operand.RAX, left));
+                cmp.right = right;
+                cmp.left = Operand.RAX;
+            }
         } else if (ins instanceof Jcc) {
 
         } else if (ins instanceof Jmp) {
@@ -186,9 +213,26 @@ public class TrivialAllocator {
         } else if (ins instanceof Label) {
 
         } else if (ins instanceof Lea) {
+            Lea lea = (Lea) ins;
+            lea.dest = allocate(lea.destTemp);
 
+            Operand addr = allocate(lea.srcTemp);
+            instrs.add(new Mov(Operand.RAX, addr));
+            lea.src = Operand.RAX;
         } else if (ins instanceof Mov) {
+            Mov mov = (Mov) ins;
+            if (mov.dest == null) {
+                Operand dest = allocate(mov.destTemp);
+                Operand src = allocate(mov.srcTemp);
 
+                mov.dest = dest;
+                if (dest.isMem() && src.isImm() && !within(32, src.value())) {
+                    instrs.add(new Mov(Operand.RAX, src));
+                    mov.src = Operand.RAX;
+                } else {
+                    mov.src = src;
+                }
+            }
         } else if (ins instanceof Pop) {
 
         } else if (ins instanceof Push) {
@@ -196,9 +240,10 @@ public class TrivialAllocator {
         } else if (ins instanceof Ret) {
 
         } else if (ins instanceof Text) {
-            
+
         }
         instrs.add(ins);
+
         return null;
     }
 
@@ -217,8 +262,8 @@ public class TrivialAllocator {
                 // If temp is an argument
                 String regex = String.format("(%s)(\\d)", Config.ABSTRACT_ARG_PREFIX);
                 Matcher arg = Pattern.compile(regex).matcher(name);
-                if (arg.find()) {
-                    int i = Integer.parseInt(arg.group(1));
+                if (name.length() > 3 && name.substring(0,4).equals("_ARG")) {
+                    int i = Integer.parseInt(name.substring(4));
                     if (i < 6) {
                         return Config.getArg(i);
                     }
@@ -229,10 +274,8 @@ public class TrivialAllocator {
                 } 
                 
                 // If temp is a return
-                regex = String.format("(%s)(\\d)", Config.ABSTRACT_RET_PREFIX);
-                Matcher ret = Pattern.compile(regex).matcher(name); 
-                if (ret.find()) {
-                    int i = Integer.parseInt(arg.group(1));
+                if (name.length() > 3 && name.substring(0,4).equals("_RET")) {
+                    int i = Integer.parseInt(name.substring(4));
                     if (i == 0) {
                         return Operand.RAX;
                     } else if (i == 1) {
@@ -245,7 +288,7 @@ public class TrivialAllocator {
 
                 // Generic named temp
                 if (!tempStack.containsKey(name)) {
-                    pushTemp(name);
+                    return pushTemp(name);
                 }
                 return getTemp(name);
         }

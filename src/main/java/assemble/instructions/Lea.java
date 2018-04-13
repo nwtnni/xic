@@ -6,8 +6,8 @@ import java.util.Arrays;
 import assemble.*;
 
 public class Lea extends Instr {
-    protected Temp destTemp;
-    protected Temp srcTemp;
+    public Temp destTemp;
+    public Temp srcTemp;
 
     public Operand dest;
     public Operand src;

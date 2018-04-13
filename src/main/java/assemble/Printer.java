@@ -56,7 +56,7 @@ public class Printer {
 
                 CompUnit u = Tiler.tile(comp, mangled);
                 u = TrivialAllocator.allocate(u);
-                for (String i : u.toAbstractAssembly()) {
+                for (String i : u.toAssembly()) {
                     System.out.println(i); 
                 }
                 
