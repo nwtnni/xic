@@ -18,10 +18,11 @@ public class ControlFlowTest {
 		program.add(new IRMove(new IRMem(new IRTemp("test3")), new IRConst(3)));
 		program.add(new IRMove(new IRMem(new IRTemp("test4")), new IRConst(4)));
 		program.add(new IRMove(new IRMem(new IRTemp("test5")), new IRConst(5)));
+		program.add(new IRReturn());
 		
 		ControlFlow cfg = ControlFlow.from(program);
-		assertEquals(cfg.size(), 2);
-		assertEquals(cfg.neighbors(cfg.start()).size(), 1);
+		assertEquals(cfg.size(), 1);
+		assertEquals(cfg.neighbors(cfg.start()).size(), 0);
 	}
 	
 	@Test
@@ -30,14 +31,15 @@ public class ControlFlowTest {
 		
 		program.add(new IRJump(new IRName("test")));
 		program.add(new IRLabel("test"));
+		program.add(new IRReturn());
 		
 		ControlFlow cfg = ControlFlow.from(program);
-		assertEquals(cfg.size(), 3);
+		assertEquals(cfg.size(), 2);
 		
 		Block start = cfg.start();
 		assertEquals(cfg.neighbors(start).size(), 1);
 		Block next = cfg.neighbors(start).get(0);
-		assertEquals(cfg.neighbors(next).size(), 1);
+		assertEquals(cfg.neighbors(next).size(), 0);
 	}
 	
 	@Test
@@ -50,9 +52,10 @@ public class ControlFlowTest {
 		program.add(new IRLabel("false"));
 		program.add(new IRMove(new IRMem(new IRTemp("test2")), new IRConst(2)));
 		program.add(new IRLabel("exit"));
+		program.add(new IRReturn());
 		
 		ControlFlow cfg = ControlFlow.from(program);
-		assertEquals(cfg.size(), 5);
+		assertEquals(cfg.size(), 4);
 		
 		Block start = cfg.start();
 		assertEquals(cfg.neighbors(start).size(), 2);
@@ -80,7 +83,7 @@ public class ControlFlowTest {
 		program.add(new IRLabel("exit"));
 
 		ControlFlow cfg = ControlFlow.from(program);
-		assertEquals(cfg.size(), 5);
+		assertEquals(cfg.size(), 4);
 		
 		Block start = cfg.start();
 		assertEquals(cfg.neighbors(start).size(), 2);

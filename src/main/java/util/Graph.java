@@ -87,4 +87,24 @@ public class Graph<V, E> {
 			return new ArrayList<>();
 		}
 	}
+	
+	public int height(V a) {
+		return heightSearch(a, new HashSet<>());
+	}
+	
+	private int heightSearch(V a, Set<V> visited) {
+		List<Pair<V, E>> neighbors = neighbors(a);
+		if (neighbors.isEmpty()) {
+			return 1;
+		} else {
+			Set<V> updated = new HashSet<>(visited);
+			updated.add(a);
+			return 1 + neighbors.stream()
+				.filter(edge -> !updated.contains(edge.first))
+				.mapToInt(edge -> heightSearch(edge.first, updated))
+				.max()
+				.orElse(0);
+		}
+	}
+	
 }

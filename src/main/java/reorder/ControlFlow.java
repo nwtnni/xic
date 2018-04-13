@@ -36,9 +36,6 @@ public class ControlFlow {
 	public static ControlFlow from(List<IRNode> program) {
 		
 		List<IRNode> statements = new ArrayList<>(program);
-		IRLabel end = IRLabelFactory.generate("_END");
-		statements.add(new IRJump(new IRName(end.name)));
-		statements.add(end);
 		
 		ControlFlow cfg = new ControlFlow();
 		State state = State.WITHIN_BLOCK;
@@ -52,8 +49,8 @@ public class ControlFlow {
 				switch (state) {
 				case WITHIN_BLOCK:
 					block.add(new IRJump(new IRName(label.name)));
-					cfg.blocks.put(block.label, block);
 					cfg.graph.put(block.label, label.name, null);
+                    cfg.blocks.put(block.label, block);
 					break;
 				case AFTER_JUMP:
 					state = State.WITHIN_BLOCK;
@@ -65,7 +62,7 @@ public class ControlFlow {
 			
 			// Should never happen: unreachable code generated
 			if (state.equals(State.AFTER_JUMP)) {
-				continue;
+				assert false;
 			} else {
 				block.add(s);
 			}
@@ -89,7 +86,6 @@ public class ControlFlow {
 			}
 		}
 		
-		cfg.blocks.put(block.label, block);
 		return cfg;
 	}
 	
@@ -99,6 +95,10 @@ public class ControlFlow {
 	
 	public int size() {
 		return blocks.size();
+	}
+	
+	public int height(Block block) {
+		return graph.height(block.label);
 	}
 	
 	public Set<Block> blocks() {

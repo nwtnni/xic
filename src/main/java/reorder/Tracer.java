@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.PriorityQueue;
 
 import ir.*;
 
@@ -84,7 +87,7 @@ public class Tracer extends IRVisitor<Void> {
         if (jump instanceof IRJump) {
         	IRName target = (IRName) ((IRJump) jump).target;
 
-        	// Remove extra jump and label
+        	// Remove extra jump
             if (target.name.equals(label.name)) {
                 merged.remove(merged.size() - 1);
             }
@@ -99,13 +102,11 @@ public class Tracer extends IRVisitor<Void> {
                 IRBinOp lneg = new IRBinOp(IRBinOp.OpType.XOR, one, cjump.cond);
                 
                 merged.set(merged.size() - 1, new IRCJump(lneg, cjump.falseLabel));
-                next.remove(0);
             }
             
             // Fall through on false
             else if (cjump.falseLabel.equals(label.name)) {
                 merged.set(merged.size() - 1, new IRCJump(cjump.cond, cjump.trueLabel));
-                next.remove(0);
             }
         }
 
@@ -120,23 +121,23 @@ public class Tracer extends IRVisitor<Void> {
     	
     	ControlFlow cfg = ControlFlow.from(statements);
     	
-    	Set<Block> unmarked = cfg.blocks();
+        PriorityQueue<Block> unmarked = new PriorityQueue<>((a, b) -> cfg.height(b) - cfg.height(a));
+    	unmarked.addAll(cfg.blocks());
+
     	List<List<IRNode>> traces = new ArrayList<>();
     	
     	while (!unmarked.isEmpty()) {
     		
-    		Block node = unmarked
-    			.stream()
-    			.findAny()
-    			.get();
+    		Block node = unmarked.poll();
 
     		while (true) {
-    			traces.add(node.statements);
+    			traces.add(new ArrayList<>(node.statements));
     			unmarked.remove(node);
     			Optional<Block> next = cfg.neighbors(node)
     				.stream()
     				.filter(block -> unmarked.contains(block))
-    				.findAny();
+    				.sorted(unmarked.comparator())
+    				.findFirst();
     			
     			if (!next.isPresent()) break;
     			else node = next.get();
