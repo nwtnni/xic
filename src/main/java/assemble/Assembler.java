@@ -353,6 +353,80 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRMove m) {
         // TODO Uses %r12 to move things around; is this safe? (Must use rax because ARGS use rdi, rsi, rdx, rcx, r8, and r9)
         // TODO Add more tiles here
+        
+        // Tiles if dest and left of binop are the same IRTemp
+        if(m.src instanceof IRBinOp && ((IRBinOp) m.src).left instanceof IRTemp && m.target instanceof IRTemp && ((IRTemp) ((IRBinOp) m.src).left).name.equals(((IRTemp) m.target).name)) {
+            String dest_and_left = m.src.accept(this);
+            String right = ((IRBinOp) m.src).right.accept(this);
+            cmds.add(String.format("movq %s, %%rax", right));
+            IRBinOp b = (IRBinOp) m.src;
+
+            switch(b.type) {
+                case ADD:
+                    cmds.add(String.format("addq %%rax, %s", dest_and_left));
+                    return dest_and_left;
+                case SUB:
+                    cmds.add(String.format("subq %%rax, %s", dest_and_left));
+                    return dest_and_left;
+                case MUL:
+                    break;
+                case HMUL:
+                    break;
+                case DIV:
+                    break;
+                case MOD:
+                    break;
+                case AND:
+                    cmds.add(String.format("andq %%rax, %s", dest_and_left));   //TODO check if it should be quadword
+                    return dest_and_left;
+                case OR:
+                    cmds.add(String.format("orq %%rax, %s", dest_and_left));    //TODO check if it should be quadword
+                    return dest_and_left;
+                case XOR:
+                    cmds.add(String.format("xorq %%rax, %s", dest_and_left));   //TODO check if it should be quadword
+                    return dest_and_left;
+                case LSHIFT:
+                    cmds.add(String.format("shlq %%rax, %s", dest_and_left));   //TODO need to guarantee right is an immediate or cl
+                    return dest_and_left;
+                case RSHIFT:
+                    cmds.add(String.format("shrq %%rax, %s", dest_and_left));   //TODO need to guarantee right is an immediate or cl
+                    return dest_and_left;
+                case ARSHIFT:
+                    cmds.add(String.format("sarq %%rax, %s", dest_and_left));   //TODO need to guarantee right is an immediate or cl
+                    return dest_and_left;
+                case EQ:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("sete %al");  //set lower bits of %rax to 1 if equal
+                    return "%rax";
+                case NEQ:
+                    cmds.add(String.format("cmpq %%rax, %S", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("setne %al");
+                    return "%rax";
+                case LT:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");
+                    cmds.add("setl %al");                               //TODO this is hack
+                    return "%rax";
+                case GT:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("setg %al");
+                    return "%rax";
+                case LEQ:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("setle %al");
+                    return "%rax";
+                case GEQ:
+                    cmds.add(String.format("cmpq %%rax, %s", dest_and_left));
+                    cmds.add("movq $0, %rax");                          //TODO this is hack
+                    cmds.add("setge %al");
+                    return "%rax";
+            }
+        }
+
         String r12 = String.format("-%d(%%rbp)",genTemp());
         cmds.add(String.format("movq %%r12, %s",r12));
         String src = m.src.accept(this);
