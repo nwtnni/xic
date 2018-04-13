@@ -149,63 +149,59 @@ public class TrivialAllocator {
     private Operand allocate(Instr ins) {
         if (ins instanceof BinOp) {
             BinOp op = (BinOp) ins;
-            op.dest = allocate(op.destTemp);
-            
+            Operand dest = allocate(op.destTemp);
+            op.dest = Operand.RAX;
+
             Operand left = allocate(op.leftTemp);
+            op.left = left;
+
             Operand right = allocate(op.rightTemp);
-            instrs.add(new Mov(Operand.RAX, left));
-            op.left = Operand.RAX;
             op.right = right;
+
+            instrs.add(new Mov(dest, Operand.RAX));
+
         } else if (ins instanceof BinMul) {
             BinMul op = (BinMul) ins;
             op.dest = allocate(op.destTemp);
-            op.left = allocate(op.leftTemp);
+
+            Operand left = allocate(op.leftTemp);
+            op.left = left;
+
             Operand right = allocate(op.rightTemp);
-            if (right.isImm()) {
-                Operand tmp = pushTemp();
-                instrs.add(new Mov(tmp, right));
-                op.right = tmp;
-            } else {
-                op.right = right;
-            }
+            instrs.add(new Mov(Operand.RDX, right));
+            op.right = Operand.RDX;
+
         } else if (ins instanceof BinCmp) {
             BinCmp op = (BinCmp) ins;
             op.dest = allocate(op.destTemp);
-            op.left = allocate(op.leftTemp);
+
+            Operand left = allocate(op.leftTemp);
+            instrs.add(new Mov(Operand.RAX, left));
+            op.left = Operand.RAX;
+
             Operand right = allocate(op.rightTemp);
-            if (right.isImm()) {
-                Operand tmp = pushTemp();
-                instrs.add(new Mov(tmp, right));
-                op.right = tmp;
-            } else {
-                op.right = right;
-            }
+            instrs.add(new Mov(Operand.RDX, right));
+            op.right = Operand.RDX;
+
         } else if (ins instanceof Call) {
             Call call = (Call) ins;
             
-            // Hoist args out of call
+            // Hoist args out of call into list of arguments
             for (Instr arg : call.args) {
                 allocate(arg);
             }
             call.args = new ArrayList<>();
+
         } else if (ins instanceof Cmp) {
             Cmp cmp = (Cmp) ins;
             Operand left = allocate(cmp.leftTemp);
-            Operand right = allocate(cmp.rightTemp);
+            instrs.add(new Mov(Operand.RAX, left));
+            cmp.left = Operand.RAX;
 
-            if (left.isImm() && !within(32, left.value())) {
-                instrs.add(new Mov(Operand.RAX, left));
-                cmp.right = right;
-                cmp.left = Operand.RAX;
-            } else if (right.isImm() && !within(32, right.value())) {
-                instrs.add(new Mov(Operand.RAX, right));
-                cmp.right = left;
-                cmp.left = Operand.RAX; 
-            } else {
-                instrs.add(new Mov(Operand.RAX, left));
-                cmp.right = right;
-                cmp.left = Operand.RAX;
-            }
+            Operand right = allocate(cmp.rightTemp);
+            instrs.add(new Mov(Operand.R10, right));
+            cmp.right = Operand.R10;
+
         } else if (ins instanceof Jcc) {
 
         } else if (ins instanceof Jmp) {
@@ -219,20 +215,17 @@ public class TrivialAllocator {
             Operand addr = allocate(lea.srcTemp);
             instrs.add(new Mov(Operand.RAX, addr));
             lea.src = Operand.RAX;
+
         } else if (ins instanceof Mov) {
             Mov mov = (Mov) ins;
             if (mov.dest == null) {
-                Operand dest = allocate(mov.destTemp);
-                Operand src = allocate(mov.srcTemp);
+                mov.dest = allocate(mov.destTemp);
 
-                mov.dest = dest;
-                if (dest.isMem() && src.isImm() && !within(32, src.value())) {
-                    instrs.add(new Mov(Operand.RAX, src));
-                    mov.src = Operand.RAX;
-                } else {
-                    mov.src = src;
-                }
+                Operand src = allocate(mov.srcTemp);
+                instrs.add(new Mov(Operand.RAX, src));
+                mov.src = Operand.RAX;
             }
+
         } else if (ins instanceof Pop) {
 
         } else if (ins instanceof Push) {

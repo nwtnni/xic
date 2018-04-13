@@ -46,8 +46,8 @@ public class BinOp extends Instr {
     @Override
     public List<String> toAbstractAssembly() {
         if (this.leftTemp != null) {
-            String mov = String.format("movq %s, %s", leftTemp.toString(), destTemp.toString());
-            String op = String.format("%s %s, %s", kind.opcode, rightTemp.toString(), destTemp.toString());
+            String mov = String.format("movq %s, %s", leftTemp, destTemp);
+            String op = String.format("%s %s, %s", kind.opcode, rightTemp, destTemp);
             return Arrays.asList(mov, op);
         }
         return toAssembly();
@@ -55,8 +55,8 @@ public class BinOp extends Instr {
 
     @Override
     public List<String> toAssembly() {
-        String mov = String.format("movq %s, %s", left.toString(), dest.toString());
-        String op = String.format("%s %s, %s", kind.opcode, right.toString(), dest.toString());
+        String mov = String.format("movq %s, %s", left, dest);
+        String op = String.format("%s %s, %s", kind.opcode, right, dest);
         return Arrays.asList(mov, op);
     }
 }
