@@ -1,5 +1,7 @@
 package assemble;
 
+import interpret.Configuration;
+
 /**
  * A wrapper class for all the possible operands for assembly
  * instructionsd.
@@ -7,11 +9,11 @@ package assemble;
 public class Temp {
 
     protected static Temp arg(int i, boolean callee) {
-        return new Temp(Kind.ARG, null, i, callee);
+        return new Temp(Kind.ARG, Configuration.ABSTRACT_ARG_PREFIX, i, callee);
     }
 
     protected static Temp ret(int i, boolean callee) {
-        return new Temp(Kind.RET, null, i, callee);
+        return new Temp(Kind.RET, Configuration.ABSTRACT_RET_PREFIX, i, callee);
     }
 
     protected static Temp temp(String name) {
@@ -22,10 +24,14 @@ public class Temp {
         return new Temp(Kind.IMM, null, value, false);
     }
 
-    public final static Temp MULT_RET_ADDR = new Temp(Kind.MULT_RET, null, 0, false);
+    public static Temp mem(String name) {
+        return new Temp(Kind.MEM, name, 0, false);
+    }
+
+    public final static Temp MULT_RET_ADDR = new Temp(Kind.MULT_RET, "RET_ADDR", 0, false);
 
     public enum Kind {
-        ARG, RET, TEMP, IMM, MULT_RET;
+        ARG, RET, TEMP, IMM, MEM, MULT_RET;
     }
 
     public Kind kind;
@@ -42,10 +48,20 @@ public class Temp {
 
     @Override
     public String toString() {
-        if (kind == Kind.TEMP) {
-            return name;
-        } else {
-            return "$" + Long.toString(value);
+        switch(kind) {
+            case TEMP:
+                return name;
+            case IMM:
+                return "$" + Long.toString(value);
+            case MEM:
+                return "(" + name + ")";
+            case ARG:
+            case RET:
+                return name + value;
+            case MULT_RET:
+                return name;
         }
+        assert false;
+        return null;
     }
 }

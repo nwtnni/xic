@@ -228,9 +228,9 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRMem m) {
-        Temp t = TempFactory.generate(m.toString());
+        Temp t = TempFactory.generate();
         instrs.add(new Mov(t, m.expr.accept(this)));
-        return t;
+        return Temp.mem(t.name);
     }
 
     public Temp visit(IRMove m) {

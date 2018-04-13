@@ -11,6 +11,7 @@ import assemble.*;
 import assemble.instructions.*;
 import assemble.instructions.BinOp.Kind;
 import ir.IRBinOp;
+import ir.IRMove;
 import xic.XicInternalException;
 
 public class TrivialAllocator {
@@ -291,6 +292,12 @@ public class TrivialAllocator {
                     return pushTemp(name);
                 }
                 return getTemp(name);
+            case MEM:
+                if(!tempStack.containsKey(name)) {
+                    throw XicInternalException.internal("Can't have mem without calcuating it");
+                }
+                instrs.add(new Mov(Operand.R11, getTemp(name)));
+                return Operand.mem(Operand.R11);
             case ARG:
                 i = (int) t.value + isMultiple;
                 if (i < 6) {

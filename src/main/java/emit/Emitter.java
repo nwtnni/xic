@@ -332,8 +332,8 @@ public class Emitter extends Visitor<IRNode> {
     public IRNode visit(Program p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
 
-        program.appendFunc(xiArrayConcat());
-        program.appendFunc(xiDynamicAlloc());
+        // program.appendFunc(xiArrayConcat());
+        // program.appendFunc(xiDynamicAlloc());
 
         for (Node n : p.fns) {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
