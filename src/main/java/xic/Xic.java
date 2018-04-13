@@ -153,7 +153,11 @@ public class Xic {
      * @param unit The path to the input file, relative to source
      * @throws XicException if lexing, parsing, or typechecking failed
      */
-    public void printAssembly(String unit, boolean opt) throws XicException {
-        assemble.Printer.print(source, sink, lib, unit, opt);
+    public void printAssembly(String unit, boolean opt, boolean assemblyFlag, String assemblySink) throws XicException {
+        if (assemblyFlag) {
+            assemble.Printer.print(source, assemblySink, lib, unit, opt);
+        } else {
+            assemble.Printer.print(source, sink, lib, unit, opt);
+        }
     }
 }

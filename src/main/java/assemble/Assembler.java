@@ -253,6 +253,47 @@ public class Assembler extends IRVisitor<String> {
     public String visit(IRCJump c) {
         // TODO do we want to fold comparison operators into tile? Or assume it's always a temp?
         // TODO Potentially add more tiles here
+        if (c.cond instanceof IRBinOp) {
+            IRBinOp bo = (IRBinOp) c.cond;
+            // String l = bo.left.accept(this);
+            // String r = bo.right.accept(this);
+
+            String right = bo.right.accept(this);
+            cmds.add(String.format("movq %s, %%rax", right));
+            right = String.format("-%d(%%rbp)", genTemp());
+            cmds.add(String.format("movq %%rax, %s", right));
+            
+            String left = bo.left.accept(this);
+            cmds.add(String.format("movq %s, %%rax", left));
+
+            cmds.add(String.format("cmpq %s, %%rax", right));
+            switch (bo.type) {
+                case EQ:
+                    cmds.add("je " + c.trueLabel);
+                    return null;
+                case NEQ:
+                    cmds.add("jne " + c.trueLabel);
+                    return null;
+                case LT:
+                    cmds.add("jl " + c.trueLabel);
+                    return null;
+                case GT:
+                    cmds.add("jg " + c.trueLabel);
+                    return null;
+                case LEQ:
+                    cmds.add("jle " + c.trueLabel);
+                    return null;
+                case GEQ:
+                    cmds.add("jge " + c.trueLabel);
+                    return null;
+                case XOR:
+                    cmds.add("jne " + c.trueLabel);
+                    return null;
+                default:
+                    throw new RuntimeException("How did this BinOp get here?");
+            }
+            
+        }
         String condTemp = c.cond.accept(this);
         cmds.add(String.format("movq %s, %%rax", condTemp)); // TODO only needed if condTemp is an immediate
         cmds.add("cmpq $1, %rax");
