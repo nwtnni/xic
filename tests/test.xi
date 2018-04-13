@@ -24,9 +24,9 @@ main (args:int[][]) {
 //     }
 // }
 
-// printInt(x:int) {
-//     print(unparseInt(x))
-// }
+printInt(x:int) {
+    println(unparseInt(x))
+}
 
 // printBool(x:bool) {
 //     if x 

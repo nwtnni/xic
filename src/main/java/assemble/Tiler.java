@@ -234,8 +234,8 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRMove m) {
-        Temp dest = m.target.accept(this);
         Temp src = m.src.accept(this);
+        Temp dest = m.target.accept(this);
         instrs.add(new Mov(dest, src));
         return null;
     }

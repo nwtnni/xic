@@ -207,6 +207,8 @@ public class TrivialAllocator {
 
             callerReturnAddr = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
 
+            instrs.add(new Push(Operand.R11));
+
             // Hoist args out of call into list of arguments
             for (Instr arg : call.args) {
                 allocate(arg);
@@ -217,6 +219,8 @@ public class TrivialAllocator {
             isMultiple = saved;
 
             instrs.add(ins);
+
+            instrs.add(new Pop(Operand.R11));
 
         } else if (ins instanceof Cmp) {
             Cmp cmp = (Cmp) ins;
