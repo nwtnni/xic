@@ -2,7 +2,21 @@ use io
 use conv
 
 main(args:int[][]) {
-    print(unparseInt(9223372036854775807*>>9223372036854775807)) //Two Max Ints
+    // x:int = 10
+
+    // a:int[x]
+
+    // x = x - 1
+    // while (x >= 0) {
+    //     a[x] = x
+    //     print(unparseInt(a[x]))
+    //     x = x - 1
+    // }
+
+    x:int[] = "H" + "ii"
+    println(x)
+
+    // print(unparseInt(x) + " + " + unparseInt(y) + " = " + unparseInt(x+y))
 }
 
 // main (args:int[][]) {
@@ -28,9 +42,9 @@ main(args:int[][]) {
 //     }
 // }
 
-// printInt(x:int) {
-//     println(unparseInt(x))
-// }
+printInt(x:int) {
+    println(unparseInt(x))
+}
 
 // printBool(x:bool) {
 //     if x 

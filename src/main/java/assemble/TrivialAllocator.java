@@ -179,10 +179,6 @@ public class TrivialAllocator {
 
             callerReturnAddr = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
 
-            // instrs.add(new Push(Operand.R11));
-            // instrs.add(new Push(Operand.R10));
-            // instrs.add(new Push(Operand.RAX));
-
             // Hoist args out of call into list of arguments
             for (Instr arg : call.args) {
                 allocate(arg);
@@ -194,14 +190,12 @@ public class TrivialAllocator {
 
             instrs.add(ins);
 
-            // instrs.add(new Pop(Operand.RAX));
-            // instrs.add(new Pop(Operand.R10));
-            // instrs.add(new Pop(Operand.R11));
-
             return;
 
         } else if (ins instanceof Cmp) {
             Cmp cmp = (Cmp) ins;
+
+            // TODO: optimize when to spill left and right
             Operand left = allocate(cmp.leftTemp);
             instrs.add(new Mov(Operand.RAX, left));
             cmp.left = Operand.RAX;
@@ -230,19 +224,19 @@ public class TrivialAllocator {
         } else if (ins instanceof Mov) {
             Mov mov = (Mov) ins;
 
-            if (mov.dest == null) {
-                mov.dest = allocate(mov.destTemp);
-            }
-            
             if (mov.src == null) {
                 Operand src = allocate(mov.srcTemp);
-                if (!mov.dest.isReg() && (src.isMem() || (src.isImm() && !within(32, src.value())))) {
+                if (src.isMem() || (src.isImm() && !within(32, src.value()))) {
                     instrs.add(new Mov(Operand.RAX, src));
                     src = Operand.RAX;
                 }
                 mov.src = src;
             }
 
+            if (mov.dest == null) {
+                mov.dest = allocate(mov.destTemp);
+            }
+            
         }
 
         instrs.add(ins);
