@@ -23,7 +23,7 @@ public class FuncDecl {
 
         // Function prelude
         prelude = new ArrayList<>();
-        prelude.add(Text.comment("################################################################################"));
+        prelude.add(Text.text("################################################################################"));
         prelude.add(Text.text(".globl " + name));
         prelude.add(Text.text(".align 4"));
         prelude.add(Label.label(name));
@@ -40,6 +40,7 @@ public class FuncDecl {
             prelude.add(Text.comment("~~~Replace move from arg0 to calleeReturnAddr temp"));
             // TODO: in reg alloc handle multiple return addr at prelude[8]
         }
+        prelude.add(Text.text(""));
 
         // Function epilogue
         epilogue = new ArrayList<>();
@@ -49,7 +50,7 @@ public class FuncDecl {
         // TODO: in reg alloc insert addq n, %rsp at epiloque[2]
         epilogue.add(new Pop(Operand.RBP));
         epilogue.add(new Ret());
-        epilogue.add(Text.comment(""));
+        epilogue.add(Text.text(""));
     }
     
     public FuncDecl(String name, List<Instr> prelude, List<Instr> stmts, List<Instr> epilogue) {

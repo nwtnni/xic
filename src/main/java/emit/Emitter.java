@@ -347,6 +347,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Fn f) throws XicException {
+        IRTempFactory.reset();
         IRSeq body = (IRSeq) f.block.accept(this);
 
         // Bind arguments to temps

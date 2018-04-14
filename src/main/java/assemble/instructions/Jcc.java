@@ -8,7 +8,13 @@ import assemble.*;
 public class Jcc extends Instr {
 
     public enum Kind {
-        Z ("z");
+        E   ("e"),
+        NE  ("ne"),
+        L   ("l"),
+        G   ("g"),
+        LE  ("le"),
+        GE  ("ge"),
+        Z   ("z");
 
         String cond;
 

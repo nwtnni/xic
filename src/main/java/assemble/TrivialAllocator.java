@@ -4,14 +4,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import assemble.*;
 import assemble.instructions.*;
 import assemble.instructions.BinOp.Kind;
-import ir.IRBinOp;
-import ir.IRMove;
 import xic.XicInternalException;
 
 public class TrivialAllocator {
@@ -99,9 +94,10 @@ public class TrivialAllocator {
 
     /**
      * Check if value is representable with n-bits in 2's complement notation
+     * Loses MIN_INT for each n bits for simplicity
      */
     private boolean within(int bits, long value) {
-        return Math.abs(value) > Math.pow(2, bits - 1) - 1;
+        return Math.abs(value) < Math.pow(2, bits - 1) - 1;
     }
 
     /* Recursive descent visitors */
@@ -144,57 +140,33 @@ public class TrivialAllocator {
         Operand shift = Operand.imm(normalize(rsp));
 
         // Insert stack setup 
-        Sub sub = new Sub(Operand.RSP, shift);
+        BinOp sub = new BinOp(Kind.SUB, Operand.RSP, shift);
         fn.prelude.set(7, sub);
 
         // Insert stack teardown
-        Add add = new Add(Operand.RSP, shift);
+        BinOp add = new BinOp(Kind.ADD, Operand.RSP, shift);
         fn.epilogue.set(2, add);
 
     }
 
-    private Operand allocate(Instr ins) {
+    private void allocate(Instr ins) {
         if (ins instanceof BinOp) {
             BinOp op = (BinOp) ins;
-            Operand dest = allocate(op.destTemp);
-            op.dest = Operand.RAX;
+            if (op.dest == null) {
+                Operand dest = allocate(op.destTemp);
+                op.dest = dest;
 
-            Operand left = allocate(op.leftTemp);
-            op.left = left;
-
-            Operand right = allocate(op.rightTemp);
-            op.right = right;
+                // Can't add mem to mem or imm64
+                // TODO: add reg alloc for shift instructions
+                // Shift instructions only use imm8 or CL
+                Operand src = allocate(op.srcTemp);
+                if (src.isMem() || (src.isImm() && !within(32, src.value()))) {
+                    instrs.add(new Mov(Operand.RAX, src));
+                    src = Operand.RAX;
+                }
+                op.src = src;
+            }
             
-            instrs.add(ins);
-            instrs.add(new Mov(dest, Operand.RAX));
-
-        } else if (ins instanceof BinMul) {
-            BinMul op = (BinMul) ins;
-            op.dest = allocate(op.destTemp);
-
-            Operand left = allocate(op.leftTemp);
-            op.left = left;
-
-            Operand right = allocate(op.rightTemp);
-            instrs.add(new Mov(Operand.RDX, right));
-            op.right = Operand.RDX;
-
-            instrs.add(ins);
-
-        } else if (ins instanceof BinCmp) {
-            BinCmp op = (BinCmp) ins;
-            op.dest = allocate(op.destTemp);
-
-            Operand left = allocate(op.leftTemp);
-            instrs.add(new Mov(Operand.RAX, left));
-            op.left = Operand.RAX;
-
-            Operand right = allocate(op.rightTemp);
-            instrs.add(new Mov(Operand.RDX, right));
-            op.right = Operand.RDX;
-
-            instrs.add(ins);
-
         } else if (ins instanceof Call) {
             Call call = (Call) ins;
 
@@ -207,7 +179,9 @@ public class TrivialAllocator {
 
             callerReturnAddr = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
 
-            instrs.add(new Push(Operand.R11));
+            // instrs.add(new Push(Operand.R11));
+            // instrs.add(new Push(Operand.R10));
+            // instrs.add(new Push(Operand.RAX));
 
             // Hoist args out of call into list of arguments
             for (Instr arg : call.args) {
@@ -220,7 +194,11 @@ public class TrivialAllocator {
 
             instrs.add(ins);
 
-            instrs.add(new Pop(Operand.R11));
+            // instrs.add(new Pop(Operand.RAX));
+            // instrs.add(new Pop(Operand.R10));
+            // instrs.add(new Pop(Operand.R11));
+
+            return;
 
         } else if (ins instanceof Cmp) {
             Cmp cmp = (Cmp) ins;
@@ -232,16 +210,15 @@ public class TrivialAllocator {
             instrs.add(new Mov(Operand.R10, right));
             cmp.right = Operand.R10;
             
-            instrs.add(ins);
+        } else if (ins instanceof DivMul) { 
+            DivMul op = (DivMul) ins;
 
-        } else if (ins instanceof Jcc) {
-            instrs.add(ins);
-
-        } else if (ins instanceof Jmp) {
-            instrs.add(ins);
-
-        } else if (ins instanceof Label) {
-            instrs.add(ins);
+            Operand src = allocate(op.srcTemp);
+            if (src.isImm()) {
+                instrs.add(new Mov(Operand.R10, src));
+                src = Operand.R10;
+            }
+            op.src = src;
 
         } else if (ins instanceof Lea) {
             Lea lea = (Lea) ins;
@@ -250,33 +227,25 @@ public class TrivialAllocator {
             Operand addr = allocate(lea.srcTemp);
             lea.src = addr;
 
-            instrs.add(ins);
-
         } else if (ins instanceof Mov) {
             Mov mov = (Mov) ins;
+
             if (mov.dest == null) {
                 mov.dest = allocate(mov.destTemp);
-
-                Operand src = allocate(mov.srcTemp);
-                instrs.add(new Mov(Operand.RAX, src));
-                mov.src = Operand.RAX;
             }
-            instrs.add(ins);
+            
+            if (mov.src == null) {
+                Operand src = allocate(mov.srcTemp);
+                if (!mov.dest.isReg() && (src.isMem() || (src.isImm() && !within(32, src.value())))) {
+                    instrs.add(new Mov(Operand.RAX, src));
+                    src = Operand.RAX;
+                }
+                mov.src = src;
+            }
 
-        } else if (ins instanceof Pop) {
-            instrs.add(ins);
-
-        } else if (ins instanceof Push) {
-            instrs.add(ins);
-
-        } else if (ins instanceof Ret) {
-            instrs.add(ins);
-
-        } else if (ins instanceof Text) {
-            instrs.add(ins);
         }
 
-        return null;
+        instrs.add(ins);
     }
 
     private Operand allocate(Temp t) {

@@ -211,7 +211,7 @@ else
   if)
       test_ir_fails
       ;;
-  a|ssemble)
+  a|assemble)
       test_assemble
       ;;
   as)

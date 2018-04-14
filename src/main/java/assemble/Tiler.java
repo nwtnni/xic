@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 import static assemble.instructions.BinOp.Kind.*;
-import static assemble.instructions.BinMul.Kind.*;
-import static assemble.instructions.BinCmp.Kind.*;
+import static assemble.instructions.DivMul.Kind.*;
+import static assemble.instructions.Set.Kind.*;
 
 import assemble.instructions.*;
 import assemble.Config;
@@ -96,9 +96,11 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRFuncDecl f) {
         // Reset instance variables for each function
         funcName = f.name();
+        TempFactory.reset();
 
         int args = numArgs(funcName);
         int returns = numReturns(funcName);
+
         // Argument movement is handled in the body
         f.body.accept(this);
 
@@ -115,66 +117,94 @@ public class Tiler extends IRVisitor<Temp> {
         Temp left = b.left.accept(this);
         Temp right = b.right.accept(this);
         
+        BinOp.Kind bop = null;
         switch (b.type) {
             case ADD:
-                instrs.add(new BinOp(ADD, dest, left, right));
-                return dest;
+                bop = ADD;
+                break;
             case SUB:
-                instrs.add(new BinOp(SUB, dest, left, right));
-                return dest;
+                bop = SUB;
+                break;
             case AND:
-                instrs.add(new BinOp(SUB, dest, left, right));
-                return dest;
+                bop = AND;
+                break;
             case OR:
-                instrs.add(new BinOp(OR, dest, left, right));
-                return dest;
+                bop = OR;
+                break;
             case XOR:
-                instrs.add(new BinOp(XOR, dest, left, right));
-                return dest;
+                bop = XOR;
+                break;
             case LSHIFT:
-                instrs.add(new BinOp(LSHIFT, dest, left, right));
-                return dest;
+                bop = LSHIFT;
+                break;
             case RSHIFT:
-                instrs.add(new BinOp(RSHIFT, dest, left, right));
-                return dest;
+                bop = RSHIFT;
+                break;
             case ARSHIFT:
-                instrs.add(new BinOp(ARSHIFT, dest, left, right));
-                return dest;
-            case MUL:
-                instrs.add(new BinMul(MUL, dest, left, right));
-                return dest;
-            case HMUL:
-                instrs.add(new BinMul(HMUL, dest, left, right));
-                return dest;
-            case DIV:
-                instrs.add(new BinMul(DIV, dest, left, right));
-                return dest;
-            case MOD:
-                instrs.add(new BinMul(MOD, dest, left, right));
-                return dest;
-            case EQ:
-                instrs.add(new BinCmp(EQ, dest, left, right));
-                return dest;
-            case NEQ:
-                instrs.add(new BinCmp(NEQ, dest, left, right));
-                return dest;
-            case LT:
-                instrs.add(new BinCmp(LT, dest, left, right));
-                return dest;
-            case GT:
-                instrs.add(new BinCmp(GT, dest, left, right));
-                return dest;
-            case LEQ:
-                instrs.add(new BinCmp(LEQ, dest, left, right));
-                return dest;
-            case GEQ:
-                instrs.add(new BinCmp(GEQ, dest, left, right));
-                return dest;
+                bop = ARSHIFT;
+                break;
+            default:
+        }
+        if (bop != null) {
+            instrs.add(new Mov(dest, left));
+            instrs.add(new BinOp(bop, dest, right));
+            return dest;
         }
 
-        // These cases should be exhaustive
-        assert false;
-        return null;
+        DivMul.Kind uop = null;
+        switch (b.type) {
+            case MUL:
+                uop = MUL;
+                break;
+            case HMUL:
+                uop = HMUL;
+                break;
+            case DIV:
+                uop = DIV;
+                break;
+            case MOD:
+                uop = MOD;
+                break;
+            default:
+        }
+        if (uop != null) {
+            instrs.add(new Mov(Operand.RAX, left));
+            if (uop == DIV || uop == MOD) {
+                instrs.add(new Cqo());
+            }
+            DivMul op = new DivMul(uop, right);
+            instrs.add(op);
+            instrs.add(new Mov(dest, op.dest));
+            return dest;
+        }
+            
+        Set.Kind flag = null;
+        switch (b.type) {
+            case EQ:
+                flag = EQ;
+                break;
+            case NEQ:
+                flag = NEQ;
+                break;
+            case LT:
+                flag = LT;
+                break;
+            case GT:
+                flag = GT;
+                break;
+            case LEQ:
+                flag = LEQ;
+                break;
+            case GEQ:
+                flag = GEQ;
+                break;
+            default:
+        }
+        instrs.add(new Cmp(right, left));
+        instrs.add(new Mov(Operand.RAX, Operand.imm(0)));
+        instrs.add(new Set(flag));
+        instrs.add(new Mov(dest, Operand.RAX));
+        return dest;
     }
     
     public Temp visit(IRCall c) {
@@ -258,6 +288,7 @@ public class Tiler extends IRVisitor<Temp> {
         for(IRNode stmt : s.stmts) {
             instrs.add(Text.comment("stmt: " + i));
             stmt.accept(this);
+            instrs.add(Text.text(""));
             i++;
         }
         return null;

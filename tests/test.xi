@@ -1,32 +1,36 @@
 use io
 use conv
 
-main (args:int[][]) {
-    // x:int = 1;
-    // y:int = 1 + x;
-
-    arr:int[] = {1}
-    i:int = arr[0];
-    // while (i < 3) {
-    //     printInt(arr[i])
-    //     i = i + 1
-    // }
-
-    // printInt((foo(0) + 1) * 10)
-
+main(args:int[][]) {
+    print(unparseInt(9223372036854775807*>>9223372036854775807)) //Two Max Ints
 }
+
+// main (args:int[][]) {
+//     // x:int = 1;
+//     // y:int = 1 + x;
+
+//     arr:int[] = {1, 2, 3}
+//     i:int = 0;
+//     while (i < 3) {
+//         printInt(arr[i])
+//         i = i + 1
+//     }
+
+//     printInt(foo(5))
+
+// }
 
 // foo (n:int) : int {
 //     if n <= 0 {
 //         return 1;
 //     } else {
-//         return 0;
+//         return foo (n - 1) * n;
 //     }
 // }
 
-printInt(x:int) {
-    println(unparseInt(x))
-}
+// printInt(x:int) {
+//     println(unparseInt(x))
+// }
 
 // printBool(x:bool) {
 //     if x 

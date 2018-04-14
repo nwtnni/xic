@@ -50,6 +50,11 @@ public class Printer {
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
                 String cmds = Assembler.assemble(comp, mangled);
+
+                FileWriter ref = new FileWriter(output + ".ref.s");
+                ref.write(cmds);
+                ref.close();
+
                 // Generate .s file
                 // writer.write(cmds);
                 // writer.close();
