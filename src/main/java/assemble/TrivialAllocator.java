@@ -134,7 +134,7 @@ public class TrivialAllocator {
         fn.stmts = instrs;
 
         // Calculate words to shift rsp, +1 to offset tempCounter
-        int rsp = tempCounter + maxArgs + maxRets + 16;
+        int rsp = tempCounter + maxArgs + maxRets + 1;
         // 16 byte alignment
         rsp = rsp % 2 == 1 ? rsp + 1 : rsp;
         Operand shift = Operand.imm(normalize(rsp));
