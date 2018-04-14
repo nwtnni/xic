@@ -229,6 +229,40 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRCJump c) {
+        if (c.cond instanceof IRBinOp) {
+            IRBinOp bop = (IRBinOp) c.cond;
+            Temp left = bop.left.accept(this);
+            Temp right = bop.right.accept(this);
+            instrs.add(new Cmp(right, left));
+            Jcc.Kind flag = null;
+            switch (bop.type) {
+                case EQ:
+                    flag = Jcc.Kind.E;
+                    break;
+                case NEQ:
+                    flag = Jcc.Kind.NE;
+                    break;
+                case LT:
+                    flag = Jcc.Kind.L;
+                    break;
+                case GT:
+                    flag = Jcc.Kind.G;
+                    break;
+                case LEQ:
+                    flag = Jcc.Kind.LE;
+                    break;
+                case GEQ:
+                    flag = Jcc.Kind.GE;
+                    break;
+                case XOR:
+                    flag = Jcc.Kind.NE;
+                    break;
+                default:
+                    throw XicInternalException.internal("Invalid binop for CJUMP");
+            }
+            instrs.add(new Jcc(flag, c.trueLabel));
+        }
+
         Temp cond = c.cond.accept(this);
         instrs.add(new Cmp(Temp.imm(1), cond));
         instrs.add(new Jcc(Jcc.Kind.Z, c.trueLabel));

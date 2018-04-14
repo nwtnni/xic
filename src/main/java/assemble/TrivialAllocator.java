@@ -156,11 +156,11 @@ public class TrivialAllocator {
                 Operand dest = allocate(op.destTemp);
                 op.dest = dest;
 
-                // Can't add mem to mem or imm64
+                Operand src = allocate(op.srcTemp);
+                // Insert mov when performing mem to mem or when imm > 32 bits
                 // TODO: add reg alloc for shift instructions
                 // Shift instructions only use imm8 or CL
-                Operand src = allocate(op.srcTemp);
-                if (src.isMem() || (src.isImm() && !within(32, src.value()))) {
+                if (src.isMem() && dest.isMem() || (src.isImm() && !within(32, src.value()))) {
                     instrs.add(new Mov(Operand.RAX, src));
                     src = Operand.RAX;
                 }
@@ -195,14 +195,20 @@ public class TrivialAllocator {
         } else if (ins instanceof Cmp) {
             Cmp cmp = (Cmp) ins;
 
-            // TODO: optimize when to spill left and right
             Operand left = allocate(cmp.leftTemp);
-            instrs.add(new Mov(Operand.RAX, left));
-            cmp.left = Operand.RAX;
-
             Operand right = allocate(cmp.rightTemp);
+
+            if (left.isMem() && right.isMem() || (left.isImm() && !within(32, left.value()))) {
+            instrs.add(new Mov(Operand.RAX, left));
+                left = Operand.RAX;
+            }
+            cmp.left = left;
+
+            if (right.isImm()) {
             instrs.add(new Mov(Operand.R10, right));
-            cmp.right = Operand.R10;
+                right = Operand.R10;
+            }
+            cmp.right = right;
             
         } else if (ins instanceof DivMul) { 
             DivMul op = (DivMul) ins;
