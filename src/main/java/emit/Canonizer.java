@@ -57,11 +57,17 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by checking for commuting.
      */
     public IRNode visit(IRBinOp b) {
-        IRTemp temp = IRTempFactory.generate();
-        IRNode leftExpr = b.left.accept(this);
-        stmts.add(new IRMove(temp, leftExpr));
+        IRExpr leftExpr = (IRExpr) b.left.accept(this);
+        if (!leftExpr.isCanonical) {
+            IRTemp temp = IRTempFactory.generate("H");
+            stmts.add(new IRMove(temp, leftExpr));
+            leftExpr = temp; 
+        }
+
         IRNode rightExpr = b.right.accept(this);
-        return new IRBinOp(b.type, temp, rightExpr);
+        IRBinOp bop = new IRBinOp(b.type, leftExpr, rightExpr);
+        bop.isCanonical = true;
+        return bop;
     }
     
     /**
@@ -119,6 +125,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Trivially lowers an IRConst node, which is an expression leaf.
      */
     public IRNode visit(IRConst c) {
+        c.isCanonical = true;
         return c;
     }
 
@@ -194,6 +201,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Trivially lowers an IRName node, which is an expression leaf.
      */
     public IRNode visit(IRName n) {
+        n.isCanonical = true;
         return n;
     }
 
@@ -229,6 +237,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Trivially lowers an IRTemp node, which is an expression leaf.
      */
     public IRNode visit(IRTemp t) {
+        t.isCanonical = true;
         return t;
     }
 }

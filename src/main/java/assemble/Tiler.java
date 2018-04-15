@@ -112,7 +112,6 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRBinOp b) {
-        // Uses %rax to operate on things. Returns %rax (sometimes %rdx)
         Temp dest = TempFactory.generate();
         Temp left = b.left.accept(this);
         Temp right = b.right.accept(this);

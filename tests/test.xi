@@ -14,9 +14,13 @@ main(args:int[][]) {
     // }
 
     x:int = 1
-    x = x + 1
+    y:int = 2
+    z:int = 3
+    x = x + y + 1 * z / (2 + x + 3)
 
-    printInt(x)
+    // printInt(x)
+
+    // y:int[] = {1,2,3,4,5}
 
     // x:int[] = "H" + "ii"
     // println(x)
