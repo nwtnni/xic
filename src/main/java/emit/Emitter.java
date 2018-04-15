@@ -1,13 +1,13 @@
 package emit;
 
 import java.util.List;
-
 import java.util.ArrayList;
 
 import ast.*;
 import type.FnContext;
 import ir.*;
 import ir.IRBinOp.OpType;
+import ir.IRMem.MemType;
 import interpret.Configuration;
 import xic.XicException;
 import util.Pair;
@@ -25,6 +25,7 @@ public class Emitter extends Visitor<IRNode> {
      * @throws XicException if a semantic error was found
      */
     public static Pair<IRCompUnit, ABIContext> emitIR(Program ast, FnContext context) throws XicException {
+        IRTempFactory.reset();
         Emitter e = new Emitter(context);
         return new Pair<>((IRCompUnit) ast.accept(e), e.context);
     }
@@ -158,21 +159,25 @@ public class Emitter extends Visitor<IRNode> {
         // Generate pointers and allocate memory
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
         IRTemp pointer = IRTempFactory.generate("array");
-        IRTemp workPointer = IRTempFactory.generate("work_ptr");
         stmts.add(new IRMove(pointer, addr));
-        stmts.add(new IRMove(workPointer, pointer));
-        // Shift pointer to head of array
-        stmts.add(incrPointer(pointer));
 
         //Store length of array
-        stmts.add(new IRMove(new IRMem(workPointer), new IRConst(length)));
+        stmts.add(new IRMove(new IRMem(pointer), new IRConst(length)));
 
         // Storing values of array into memory
         for(int i = 0; i < length; i++) {
             IRNode n = array.get(i);
-            stmts.add(incrPointer(workPointer));
-            stmts.add(new IRMove(new IRMem(workPointer), n));
+
+            // index = j(workpointer)
+            IRConst j = new IRConst((i + 1) * WORD_SIZE.value); 
+            IRExpr index = new IRBinOp(OpType.ADD, pointer, j);
+            IRMem elem = new IRMem(index, MemType.IMMUTABLE);
+            
+            stmts.add(new IRMove(elem, n));
         }
+
+        // Shift pointer to head of array
+        stmts.add(incrPointer(pointer));
 
         return new IRESeq(
             new IRSeq(stmts), 
@@ -208,19 +213,20 @@ public class Emitter extends Visitor<IRNode> {
 
         // Generate pointers and allocate memory
         IRTemp pointer = IRTempFactory.generate("populate_array");
-        IRTemp workPointer = IRTempFactory.generate("work_ptr");
         stmts.add(new IRMove(pointer, alloc(size)));
-        stmts.add(new IRMove(workPointer, pointer));
 
         // Create copies of the child (so no checking if child is an alloc)
+        // addr = (workPointer,i,8)
         IRTemp i = IRTempFactory.generate("i");
+        IRExpr index = new IRBinOp(OpType.MUL, i, new IRConst(8));
+        IRMem addr = new IRMem(new IRBinOp(OpType.ADD, pointer, index), MemType.IMMUTABLE);
+        
         stmts.add(new IRMove(i, ZERO));
         stmts.add(generateLoop(
             "make_array_loop",
             new IRBinOp(OpType.LT, i, size),
             new IRSeq(
-                new IRMove(new IRMem(workPointer), child),
-                incrPointer(workPointer),
+                new IRMove(addr, child),
                 increment(i)
             )
         ));
@@ -261,7 +267,7 @@ public class Emitter extends Visitor<IRNode> {
         IRTemp size = IRTempFactory.generate("d_size");
         stmts.add(new IRMove(size, byteSize));
 
-        // Generate pointers and llocate memoryG
+        // Generate pointers and llocate memory
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
         IRTemp pointer = IRTempFactory.generate("d_array");
         stmts.add(new IRMove(pointer, addr));
@@ -298,31 +304,35 @@ public class Emitter extends Visitor<IRNode> {
 
         // Generate pointers and allocate memory
         IRTemp pointer = IRTempFactory.generate("concat_array");
-        IRTemp workPointer = IRTempFactory.generate("work_ptr");
         body.add(new IRMove(pointer, alloc(size)));
-        body.add(new IRMove(workPointer, pointer));
 
         IRTemp i = IRTempFactory.generate("i");
+        IRExpr index = new IRBinOp(OpType.MUL, i, new IRConst(8));
+        IRMem addr = new IRMem(new IRBinOp(OpType.ADD, pointer, index), MemType.IMMUTABLE);
+        IRMem aElem = new IRMem(new IRBinOp(OpType.ADD, ap, index), MemType.IMMUTABLE);
+        
         body.add(new IRMove(i, ZERO));
         body.add(generateLoop(
             "copy_a_loop",
             new IRBinOp(OpType.LT, i, aLen), 
             new IRSeq(
-                new IRMove(new IRMem(workPointer), new IRMem(ap)),
-                increment(i),
-                incrPointer(workPointer),
-                incrPointer(ap)
+                new IRMove(addr, aElem),
+                increment(i)
             )
         ));
-        body.add(new IRMove(i, ZERO));
+
+        IRTemp j = IRTempFactory.generate("j");
+        IRExpr indexb = new IRBinOp(OpType.MUL, j, new IRConst(8));
+        IRMem bElem = new IRMem(new IRBinOp(OpType.ADD, bp, indexb), MemType.IMMUTABLE);
+
+        body.add(new IRMove(j, ZERO));
         body.add(generateLoop(
-            "copy_b_looop",
-            new IRBinOp(OpType.LT, i, bLen), 
+            "copy_b_loop",
+            new IRBinOp(OpType.LT, j, bLen), 
             new IRSeq(
-                new IRMove(new IRMem(workPointer), new IRMem(bp)),
+                new IRMove(addr, bElem),
                 increment(i),
-                incrPointer(workPointer),
-                incrPointer(bp)
+                increment(j)
             )
         ));
 
@@ -368,7 +378,6 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Fn f) throws XicException {
-        IRTempFactory.reset();
         IRSeq body = (IRSeq) f.block.accept(this);
 
         // Bind arguments to temps

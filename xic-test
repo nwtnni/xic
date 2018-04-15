@@ -151,7 +151,7 @@ test_course() {
 }
 
 if [[ -f $1 ]] ; then
-  xic -target linux --irrun -libpath tests/libs $1
+  ./xic -target linux -libpath tests/libs $1
 else
   cmd=$1
   if [ "$cmd" = "--nb" ] ; then
@@ -162,7 +162,9 @@ else
   fi
 
   case $cmd in
-    m)kkk    ;;
+  run)
+      ./xic -target linux --irrun -libpath tests/libs $2
+      ;;
   all)
       test_all
       ;;

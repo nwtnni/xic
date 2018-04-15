@@ -1,17 +1,34 @@
 package assemble.instructions;
 
 import java.util.List;
+
+import ir.IRFuncDecl;
+import ir.IRLabel;
+
 import java.util.Arrays;
 
 public class Label extends Instr {
     protected String name;
 
-    public static Label label(String l) {
-        return new Label(l + ":");
+    /**
+     * Generate a label from an IRLabel
+     */
+    public static Label label(IRLabel l) {
+        return new Label(l.name + ":");
     }
 
-    public static Label retLabel(String l) {
-        return new Label("ret__" + l + ":");
+    /**
+     * Generate a label from an IRLabel
+     */
+    public static Label label(IRFuncDecl fn) {
+        return new Label(fn.name + ":");
+    }
+
+    /**
+     * Generate a label from an IRFuncDecl 
+     */
+    public static Label retLabel(IRFuncDecl f) {
+        return new Label("_RET_" + f.name + ":");
     }
 
     private Label(String name) {

@@ -4,20 +4,23 @@ import java.util.List;
 import java.util.ArrayList;
 
 import assemble.*;
+import ir.IRFuncDecl;
 
 public class FuncDecl {
     public String name;
     public int args;
     public int rets;
+    public Label returnLabel;
 
     public List<Instr> prelude;
     public List<Instr> stmts;
     public List<Instr> epilogue;
 
-    public FuncDecl(String name, int args, int rets, List<Instr> stmts) {
-        this.name = name;
+    public FuncDecl(IRFuncDecl fn, int args, int rets, List<Instr> stmts) {
+        this.name = fn.name;
         this.args = args;
         this.rets = rets;
+        this.returnLabel = Label.retLabel(fn);
         this.stmts = stmts;
 
         // Function prelude
@@ -25,7 +28,7 @@ public class FuncDecl {
         prelude.add(Text.text("################################################################################"));
         prelude.add(Text.text(".globl " + name));
         prelude.add(Text.text(".align 4"));
-        prelude.add(Label.label(name));
+        prelude.add(Label.label(fn));
         
         prelude.add(Text.comment("Stack Setup"));
         prelude.add(new Push(Operand.RBP));
@@ -44,7 +47,7 @@ public class FuncDecl {
         // Function epilogue
         epilogue = new ArrayList<>();
         epilogue.add(Text.comment("Stack Teardown"));
-        epilogue.add(Label.retLabel(name));
+        epilogue.add(returnLabel);
         epilogue.add(Text.comment("~~~Replace with add to %rsp here:"));
         // In reg alloc insert addq n, %rsp at epiloque[2]
         epilogue.add(new Pop(Operand.RBP));

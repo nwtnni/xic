@@ -45,8 +45,9 @@ public class TrivialAllocator {
     // multiple returns > 2 are accessed by caller.
     private int callerReturnAddr;
 
-    private Operand r10;
-    private Operand r11;
+    // Caller saved registers - not required for trivial allocation
+    // private Operand r10;
+    // private Operand r11;
 
     private TrivialAllocator(CompUnit unit) {
         this.unit = unit;
@@ -85,7 +86,7 @@ public class TrivialAllocator {
         if (tempStack.containsKey(name)) {
             return Operand.mem(Operand.RBP, -normalize(tempStack.get(name) + 1));
         }
-        throw XicInternalException.internal("Non-existent temp. Check assembly gen.");
+        throw XicInternalException.internal("Non-existent temp. Check tiler.");
     }
 
     /**
@@ -93,14 +94,6 @@ public class TrivialAllocator {
      */
     private int normalize(int i) {
         return i * Config.WORD_SIZE;
-    }
-
-    /**
-     * Check if value is representable with n-bits in 2's complement notation
-     * Loses MIN_INT for each n bits for simplicity
-     */
-    private boolean within(int bits, long value) {
-        return Math.abs(value) < Math.pow(2, bits - 1) - 1;
     }
 
     /* Recursive descent visitors */
@@ -122,8 +115,8 @@ public class TrivialAllocator {
         calleeReturnAddr = null;
 
         // Caller saved registers
-        r10 = pushTemp();
-        r11 = pushTemp();
+        // r10 = pushTemp();
+        // r11 = pushTemp();
 
         // Store address to put multiple returns from arg0 to stack
         if (fn.rets > 2) {
@@ -167,7 +160,7 @@ public class TrivialAllocator {
                 // Insert mov when performing mem to mem or when imm > 32 bits
                 // TODO: add reg alloc for shift instructions
                 // Shift instructions only use imm8 or CL
-                if (src.isMem() && dest.isMem() || (src.isImm() && !within(32, src.value()))) {
+                if (src.isMem() && dest.isMem() || (src.isImm() && !Config.within(32, src.value()))) {
                     instrs.add(new Mov(Operand.RAX, src));
                     src = Operand.RAX;
                 }
@@ -182,8 +175,8 @@ public class TrivialAllocator {
             isMultiple = 0;
 
             // Push caller saved registers
-            instrs.add(new Mov(r10, Operand.R10));
-            instrs.add(new Mov(r11, Operand.R11));
+            // instrs.add(new Mov(r10, Operand.R10));
+            // instrs.add(new Mov(r11, Operand.R11));
 
             maxArgs = Math.max(maxArgs, call.numArgs);
             maxRets = Math.max(maxRets, call.numRet);
@@ -202,8 +195,8 @@ public class TrivialAllocator {
             instrs.add(ins);
 
             // Pop caller saved registers
-            instrs.add(new Mov(Operand.R10, r10));
-            instrs.add(new Mov(Operand.R11, r11));
+            // instrs.add(new Mov(Operand.R10, r10));
+            // instrs.add(new Mov(Operand.R11, r11));
 
             return;
 
@@ -213,15 +206,15 @@ public class TrivialAllocator {
             Operand left = allocate(cmp.leftTemp);
             Operand right = allocate(cmp.rightTemp);
 
-            if (left.isMem() && right.isMem() || (left.isImm() && !within(32, left.value()))) {
+            if (left.isMem() && right.isMem() || (left.isImm() && !Config.within(32, left.value()))) {
             instrs.add(new Mov(Operand.RAX, left));
                 left = Operand.RAX;
             }
             cmp.left = left;
 
             if (right.isImm()) {
-            instrs.add(new Mov(Operand.R10, right));
-                right = Operand.R10;
+            instrs.add(new Mov(Operand.R11, right));
+                right = Operand.R11;
             }
             cmp.right = right;
             
@@ -230,8 +223,8 @@ public class TrivialAllocator {
 
             Operand src = allocate(op.srcTemp);
             if (src.isImm()) {
-                instrs.add(new Mov(Operand.R10, src));
-                src = Operand.R10;
+                instrs.add(new Mov(Operand.R11, src));
+                src = Operand.R11;
             }
             op.src = src;
 
@@ -245,9 +238,16 @@ public class TrivialAllocator {
         } else if (ins instanceof Mov) {
             Mov mov = (Mov) ins;
 
+            boolean destIsMem;
+            if (mov.destTemp != null) {
+                destIsMem = mov.destTemp.isMem();
+            } else {
+                destIsMem = mov.dest.isMem();
+            }
+
             if (mov.src == null) {
                 Operand src = allocate(mov.srcTemp);
-                if (src.isMem() || (src.isImm() && !within(32, src.value()))) {
+                if ((src.isMem() && destIsMem) || (src.isImm() && !Config.within(32, src.value()))) {
                     instrs.add(new Mov(Operand.RAX, src));
                     src = Operand.RAX;
                 }
@@ -276,11 +276,24 @@ public class TrivialAllocator {
                 }
                 return getTemp(name);
             case MEM:
-                if(!tempStack.containsKey(name)) {
-                    throw XicInternalException.internal("Can't have mem without calcuating it");
-                }
-                instrs.add(new Mov(Operand.R11, getTemp(name)));
+                Temp base = t.base;
+                assert base != null;
+                instrs.add(new Mov(Operand.R11, getTemp(base.name)));
                 return Operand.mem(Operand.R11);
+                // TODO: fix mems
+            case MEMBR:
+                base = t.base;
+                assert base != null;
+                instrs.add(new Mov(Operand.R11, getTemp(base.name)));
+                return Operand.mem(Operand.R11, t.offset);
+            case MEMSBR:
+                base = t.base;
+                assert base != null;
+                Temp reg = t.reg;
+                assert reg != null;
+                instrs.add(new Mov(Operand.R11, getTemp(base.name)));
+                instrs.add(new Mov(Operand.R10, getTemp(reg.name)));
+                return Operand.mem(Operand.R11, Operand.R10, t.offset, t.scale);
             case ARG:
                 i = (int) t.value + isMultiple;
                 if (i < 6) {
@@ -305,8 +318,8 @@ public class TrivialAllocator {
                 // -2 for regs
                 if (t.callee) {
                     int offset = -normalize(i - 2);
-                    instrs.add(new Mov(Operand.R10, calleeReturnAddr));
-                    return Operand.mem(Operand.R10, offset);
+                    instrs.add(new Mov(Operand.R11, calleeReturnAddr));
+                    return Operand.mem(Operand.R11, offset);
                 } else {
                     int offset = normalize(callerReturnAddr - (i - 2));
                     return Operand.mem(Operand.RSP, offset);

@@ -1,6 +1,7 @@
 package emit;
 
 import ir.*;
+import ir.IRMem.MemType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -169,6 +170,14 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRMem node by hoisting its inner expression.
      */
     public IRNode visit(IRMem m) {
+        /* Immutable is set during translation for:
+            - array constants
+            - dynamic allocation
+            - array concatenation
+        */
+        if (m.memType == MemType.IMMUTABLE) {
+            return m;
+        }
         return new IRMem(m.expr.accept(this));
     }
 
@@ -184,12 +193,19 @@ public class Canonizer extends IRVisitor<IRNode> {
      */
     public IRNode visit(IRMove m) {
         if (m.isMem()) {
-            IRTemp temp = IRTempFactory.generate();
             IRMem mem = m.getMem();
-            IRNode memExpr = mem.expr.accept(this);
-            stmts.add(new IRMove(temp, memExpr));
+            IRNode dest = mem;
+
+            // Only hoist when mem is not immutable
+            if (mem.memType != MemType.IMMUTABLE) {
+                IRTemp temp = IRTempFactory.generate();
+                IRNode memExpr = mem.expr.accept(this);
+                stmts.add(new IRMove(temp, memExpr));
+                dest = new IRMem(temp);
+            }
+
             IRNode srcExpr = m.src.accept(this);
-            stmts.add(new IRMove(new IRMem(temp), srcExpr));
+            stmts.add(new IRMove(dest, srcExpr));
         } else {
             IRNode srcExpr = m.src.accept(this);
             stmts.add(new IRMove(m.target, srcExpr));

@@ -54,4 +54,12 @@ public class Config {
         assert false;
         return null;
     }
+
+    /**
+     * Check if value is representable with n-bits in 2's complement notation
+     * Loses MIN_INT for each n bits for simplicity
+     */
+    public static boolean within(int bits, long value) {
+        return Math.abs(value) < Math.pow(2, bits - 1) - 1;
+    }
 }

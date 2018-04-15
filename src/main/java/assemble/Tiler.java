@@ -1,6 +1,7 @@
 package assemble;
 
 import java.util.List;
+
 import java.util.ArrayList;
 
 import static assemble.instructions.BinOp.Kind.*;
@@ -12,6 +13,8 @@ import assemble.Config;
 import emit.ABIContext;
 import interpret.Configuration;
 import ir.*;
+import ir.IRBinOp.OpType;
+import ir.IRMem.MemType;
 import xic.XicInternalException;
 
 public class Tiler extends IRVisitor<Temp> {
@@ -20,6 +23,7 @@ public class Tiler extends IRVisitor<Temp> {
      * Returns the list of abstract assembly code given an canonical IR tree
      */
     public static CompUnit tile(IRNode t, ABIContext c) {
+        TempFactory.reset();
         Tiler tiler = new Tiler(c);
         t.accept(tiler);
         return tiler.unit;
@@ -34,15 +38,15 @@ public class Tiler extends IRVisitor<Temp> {
     // Current list of instructions
     List<Instr> instrs;
 
-    // Current function visited
-    String funcName;
+    // Return label of current function visited
+    Label returnLabel;
 
     private Tiler(ABIContext c) {
         this.context = c;
         this.unit = new CompUnit();
 
         this.instrs = new ArrayList<>();
-        this.funcName = null;
+        this.returnLabel = null;
     }
 
     /**
@@ -83,7 +87,7 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     /*
-     * Visitor methods
+     * Visitor methods ---------------------------------------------------------------------
      */
     
     public Temp visit(IRCompUnit c) {
@@ -95,19 +99,20 @@ public class Tiler extends IRVisitor<Temp> {
 
     public Temp visit(IRFuncDecl f) {
         // Reset instance variables for each function
-        funcName = f.name();
+        instrs = new ArrayList<>();
         TempFactory.reset();
 
-        int args = numArgs(funcName);
-        int returns = numReturns(funcName);
-
-        // Argument movement is handled in the body
+        // Set return label and accept the function body
+        returnLabel = Label.retLabel(f);
         f.body.accept(this);
 
-        unit.fns.add(new FuncDecl(funcName, args, returns, instrs));
-
-        // Reset shared variables
-        instrs = new ArrayList<>();
+        // Set up prologue and epilogue
+        String funcName = f.name();
+        int args = numArgs(funcName);
+        int returns = numReturns(funcName);
+        FuncDecl fn = new FuncDecl(f, args, returns, instrs);
+        unit.fns.add(fn);
+        
         return null;
     }
 
@@ -286,14 +291,47 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRLabel l) {
-        instrs.add(Label.label(l.name()));
+        instrs.add(Label.label(l));
         return null;
     }
 
     public Temp visit(IRMem m) {
+        // Use set temporaries to make allocator use addressing modes 
+        // for immutable memory accesses
+        if (m.memType == MemType.IMMUTABLE && m.expr instanceof IRBinOp) {
+            IRBinOp bop = (IRBinOp) m.expr;
+            assert bop.type == OpType.ADD;
+            if (bop.left instanceof IRTemp) { 
+                // B + off
+                if (bop.right instanceof IRConst) {
+                    Temp base = bop.left.accept(this);
+                    Temp offset = bop.right.accept(this);
+
+                    // off must be within 32 bits
+                    assert Config.within(32, offset.value);
+
+                    return Temp.mem(base, (int) offset.value);
+
+                // B + R * scale
+                } else if (bop.right instanceof IRBinOp) {
+                    Temp base = bop.left.accept(this);
+    
+                    IRBinOp index = (IRBinOp) bop.right;
+                    assert index.type == OpType.MUL &&
+                        index.left instanceof IRTemp &&
+                        index.right instanceof IRConst;
+                        
+                    Temp reg = index.left.accept(this);
+                    Temp scale = index.right.accept(this);
+                    
+                    return Temp.mem(base, reg, 0, (int) scale.value);
+                }
+            }
+        }
+
         Temp t = TempFactory.generate();
         instrs.add(new Mov(t, m.expr.accept(this)));
-        return Temp.mem(t.name);
+        return Temp.mem(t);
     }
 
     public Temp visit(IRMove m) {
@@ -312,7 +350,7 @@ public class Tiler extends IRVisitor<Temp> {
             Temp val = r.rets.get(i).accept(this);
             instrs.add(new Mov(Temp.ret(i, true), val));
         }
-        instrs.add(new Jmp(Label.retLabel(funcName).name()));
+        instrs.add(new Jmp(returnLabel.name()));
         return null;
     }
 

@@ -1,5 +1,7 @@
 package assemble;
 
+import static assemble.Operand.Kind.*;
+
 /**
  * A wrapper class for all the possible operands for assembly
  * instructionsd.
@@ -55,26 +57,26 @@ public class Operand {
      * One of the 64-bit registers.
      */
     private static Operand reg(Kind kind) {
-        assert (kind != Kind.IMM && kind != Kind.MEM);
+        assert (kind != IMM && kind != MEM);
         return new Operand(kind, null, 0);
     }
 
     /**
-     * An arbitrary string that is a memory access.
+     * An arbitrary string that from an immediate:
      * mem must be a valid memory access
      */
-    public static Operand mem(String mem) {
-        return new Operand(Kind.MEM, mem, 0);
+    public static Operand mem(int imm) {
+        return new Operand(MEM, String.format("(%d)", imm), 0);
     }
 
     /**
-     * A memory access computed base-relative:
+     * A memory access computed from a register:
      * In the form: (base)
      */
     public static Operand mem(Operand base) {
-        assert (base.kind != Kind.IMM && base.kind != Kind.MEM);
-        String mem = String.format("(%s)", base.toString());
-        return new Operand(Kind.MEM, mem, 0);
+        assert (base.kind != IMM && base.kind != MEM);
+        String mem = String.format("(%s)", base);
+        return new Operand(MEM, mem, 0);
     }
 
     /**
@@ -82,9 +84,22 @@ public class Operand {
      * In the form: offset(base)
      */
     public static Operand mem(Operand base, int offset) {
-        assert (base.kind != Kind.IMM && base.kind != Kind.MEM);
-        String mem = String.format("%d(%s)", offset, base.toString());
-        return new Operand(Kind.MEM, mem, 0);
+        assert (base.kind != IMM && base.kind != MEM);
+        String mem = String.format("%d(%s)", offset, base);
+        return new Operand(MEM, mem, 0);
+    }
+
+    /**
+     * A memory access computed scaled-base-relative
+     * In the form offset(base,scale)
+     * 
+     * scale must be 1, 2, 4 or 8
+     */
+    public static Operand mem(Operand base, int offset, int scale) {
+        assert (base.kind != IMM && base.kind != MEM);
+        assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
+        String mem = String.format("%d(,%s,%d)", offset, base, scale);
+        return new Operand(MEM, mem, 0);
     }
 
     /**
@@ -93,14 +108,15 @@ public class Operand {
      * 
      * scale must be 1, 2, 4 or 8
      */
-    public static Operand mem(Operand base, int offset, int scale) {
-        assert (base.kind != Kind.IMM && base.kind != Kind.MEM);
-        String mem = String.format("%d(%s,%d)", offset, base.toString(), scale);
-        return new Operand(Kind.MEM, mem, 0);
+    public static Operand mem(Operand base, Operand reg, int offset, int scale) {
+        assert (base.kind != IMM && base.kind != MEM);
+        assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
+        String mem = String.format("%d(%s,%s,%d)", offset, base, reg, scale);
+        return new Operand(MEM, mem, 0);
     }
 
     public static Operand imm(long value) {
-        return new Operand(Kind.IMM, null, value);
+        return new Operand(IMM, null, value);
     }
 
     public Kind kind;
@@ -114,15 +130,15 @@ public class Operand {
     }
 
     public boolean isReg() {
-        return kind != Kind.IMM && kind != Kind.MEM;
+        return kind != IMM && kind != MEM;
     }
 
     public boolean isImm() {
-        return kind == Kind.IMM;
+        return kind == IMM;
     }
 
     public boolean isMem() {
-        return kind == Kind.MEM;
+        return kind == MEM;
     }
 
     public long value() {
@@ -131,9 +147,9 @@ public class Operand {
 
     @Override
     public String toString() {
-        if (kind == Kind.MEM) {
+        if (kind == MEM) {
             return mem;
-        } else if (kind == Kind.IMM) {
+        } else if (kind == IMM) {
             return "$" + Long.toString(value);
         }
         return kind.name;
