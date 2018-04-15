@@ -45,6 +45,9 @@ public class TrivialAllocator {
     // multiple returns > 2 are accessed by caller.
     private int callerReturnAddr;
 
+    private Operand r10;
+    private Operand r11;
+
     private TrivialAllocator(CompUnit unit) {
         this.unit = unit;
         
@@ -118,6 +121,10 @@ public class TrivialAllocator {
         isMultiple = 0;
         calleeReturnAddr = null;
 
+        // Caller saved registers
+        r10 = pushTemp();
+        r11 = pushTemp();
+
         // Store address to put multiple returns from arg0 to stack
         if (fn.rets > 2) {
             isMultiple = 1;
@@ -174,6 +181,10 @@ public class TrivialAllocator {
             int saved = isMultiple;
             isMultiple = 0;
 
+            // Push caller saved registers
+            instrs.add(new Mov(r10, Operand.R10));
+            instrs.add(new Mov(r11, Operand.R11));
+
             maxArgs = Math.max(maxArgs, call.numArgs);
             maxRets = Math.max(maxRets, call.numRet);
 
@@ -189,6 +200,10 @@ public class TrivialAllocator {
             isMultiple = saved;
 
             instrs.add(ins);
+
+            // Pop caller saved registers
+            instrs.add(new Mov(Operand.R10, r10));
+            instrs.add(new Mov(Operand.R11, r11));
 
             return;
 

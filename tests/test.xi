@@ -13,8 +13,13 @@ main(args:int[][]) {
     //     x = x - 1
     // }
 
-    x:int[] = "H" + "ii"
-    println(x)
+    x:int = 1
+    x = x + 1
+
+    printInt(x)
+
+    // x:int[] = "H" + "ii"
+    // println(x)
 
     // print(unparseInt(x) + " + " + unparseInt(y) + " = " + unparseInt(x+y))
 }
