@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import assemble.*;
-import static assemble.Operand.Kind.*;
 
 public class FuncDecl {
     public String name;
@@ -32,13 +31,13 @@ public class FuncDecl {
         prelude.add(new Push(Operand.RBP));
         prelude.add(new Mov(Operand.RBP, Operand.RSP));
         prelude.add(Text.comment("~~~Replace with subtract from %rsp here"));
-        // TODO: in reg alloc insert subq n, %rsp at prelude[7]
+        // In reg alloc insert subq n, %rsp at prelude[7]
 
         // If function has multiple returns, save return address from arg 0 to a temp
         if (rets > 2) {
             args++;
             prelude.add(Text.comment("~~~Replace move from arg0 to calleeReturnAddr temp"));
-            // TODO: in reg alloc handle multiple return addr at prelude[8]
+            // In reg alloc handle multiple return addr at prelude[8]
         }
         prelude.add(Text.text(""));
 
@@ -47,7 +46,7 @@ public class FuncDecl {
         epilogue.add(Text.comment("Stack Teardown"));
         epilogue.add(Label.retLabel(name));
         epilogue.add(Text.comment("~~~Replace with add to %rsp here:"));
-        // TODO: in reg alloc insert addq n, %rsp at epiloque[2]
+        // In reg alloc insert addq n, %rsp at epiloque[2]
         epilogue.add(new Pop(Operand.RBP));
         epilogue.add(new Ret());
         epilogue.add(Text.text(""));

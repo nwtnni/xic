@@ -3,8 +3,6 @@ package assemble.instructions;
 import java.util.List;
 import java.util.Arrays;
 
-import assemble.*;
-
 public class Jcc extends Instr {
 
     public enum Kind {

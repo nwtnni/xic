@@ -269,11 +269,6 @@ public class TrivialAllocator {
         int i = 0;
         switch (t.kind) {
             case IMM:
-                // TODO: add checks for imms based on parent instruction
-                // ADD, SUB, CMP don't allow imm64
-                // IDIV and IMUL don't use imms
-                // MOV only imm64 -> reg
-                // SHIFT only imm8
                 return Operand.imm(t.value);
             case TEMP:
                 if (!tempStack.containsKey(name)) {

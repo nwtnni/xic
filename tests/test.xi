@@ -13,10 +13,16 @@ main(args:int[][]) {
     //     x = x - 1
     // }
 
-    x:int = 1
-    y:int = 2
-    z:int = 3
-    x = x + y + 1 * z / (2 + x + 3)
+    // x:int = 1
+    // y:int = 2
+    // z:int = 3
+    // x = x + y + 1 * z / (2 + x + 3)
+
+    if (true) {
+        println("cool" + " " + "beans")
+    } else {
+        println("bad " + "sheep")
+    }
 
     // printInt(x)
 

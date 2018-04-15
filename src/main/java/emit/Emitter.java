@@ -1,6 +1,7 @@
 package emit;
 
 import java.util.List;
+
 import java.util.ArrayList;
 
 import ast.*;
@@ -52,44 +53,71 @@ public class Emitter extends Visitor<IRNode> {
      */
 
     /**
-     * Generate a conditional jump where true falls through.
+     * Make a jump to a label.
      */
-    private IRNode generateBranch(IRNode cond, IRNode t, IRLabel tL, IRLabel fL) {
-       return new IRSeq(
-           new IRCJump(cond, tL.name),
-           new IRJump(new IRName(fL.name)),
-           tL,
-           t,
-           fL
-       );
-
-         // return new IRSeq(
-         //     new IRCJump(cond, tL.name, fL.name),
-         //     tL,
-         //     t,
-         //     fL
-         // );
+    private IRJump jump(IRLabel l) {
+        return new IRJump(new IRName(l.name));
     }
 
     /**
-     * Generate a loop in IR code.
+     * Generate a conditional jump using C translations.
      */
-    private IRNode generateLoop(String name, IRNode guard, IRNode block, IRLabel tL, IRLabel fL) {
-        IRLabel hL = IRLabelFactory.generate(name);
+    private IRNode makeControlFlow(Node n, IRLabel trueL, IRLabel falseL) throws XicException {
+        if (n instanceof XiBool) {
+            XiBool b = (XiBool) n;
+            if (b.value) {
+                return jump(trueL);
+            } else {
+                return jump(falseL);
+            }
+        } else if (n instanceof Binary) {
+            Binary b = (Binary) n;
+            switch (b.kind) {
+                case AND:
+                    IRLabel andL = IRLabelFactory.generate("and");
+                    return new IRSeq(
+                        makeControlFlow(b.lhs, andL, falseL),
+                        andL,
+                        makeControlFlow(b.rhs, trueL, falseL)
+                    );
+                case OR:
+                    IRLabel orL = IRLabelFactory.generate("and");
+                    return new IRSeq(
+                        makeControlFlow(b.lhs, trueL, orL),
+                        orL,
+                        makeControlFlow(b.rhs, trueL, falseL)
+                    );
+                default:
+            }
+        } else if (n instanceof Unary) {
+            Unary u = (Unary) n;
+            if (u.isLogical()) {
+                makeControlFlow(u.child, falseL, trueL);
+            }
+        }
+        return new IRSeq(
+            new IRCJump(n.accept(this), trueL.name),
+            jump(falseL)
+        );
+    }
 
-       return new IRSeq(
-           hL,
-           generateBranch(guard, new IRSeq(block, new IRJump(new IRName(hL.name))), tL, fL)
-       );
+    /**
+     * Generate a loop in IR code given a IR node guard and body.
+     */
+    private IRNode generateLoop(String name, IRNode guard, IRNode block) {
+        IRLabel headL = IRLabelFactory.generate(name);
+        IRLabel trueL = IRLabelFactory.generate("true");
+        IRLabel falseL = IRLabelFactory.generate("false");
 
-         // return new IRSeq(
-         //     hL,
-         //     new IRCJump(guard, tL.name, fL.name),
-         //     tL,
-         //     block,
-         //     new IRJump(new IRName(hL.name)),
-         //     fL
-         // );
+        return new IRSeq(
+            headL,
+            new IRCJump(guard, trueL.name),
+            jump(falseL),
+            trueL,
+            block,
+            jump(headL),
+            falseL
+        );
     }
 
     /**
@@ -188,15 +216,13 @@ public class Emitter extends Visitor<IRNode> {
         IRTemp i = IRTempFactory.generate("i");
         stmts.add(new IRMove(i, ZERO));
         stmts.add(generateLoop(
-            "make_array",
+            "make_array_loop",
             new IRBinOp(OpType.LT, i, size),
             new IRSeq(
                 new IRMove(new IRMem(workPointer), child),
                 incrPointer(workPointer),
                 increment(i)
-            ),
-            IRLabelFactory.generate("true"),
-            IRLabelFactory.generate("false")
+            )
         ));
 
         return new IRESeq(
@@ -279,29 +305,25 @@ public class Emitter extends Visitor<IRNode> {
         IRTemp i = IRTempFactory.generate("i");
         body.add(new IRMove(i, ZERO));
         body.add(generateLoop(
-            "copy_a",
+            "copy_a_loop",
             new IRBinOp(OpType.LT, i, aLen), 
             new IRSeq(
                 new IRMove(new IRMem(workPointer), new IRMem(ap)),
                 increment(i),
                 incrPointer(workPointer),
                 incrPointer(ap)
-            ),
-            IRLabelFactory.generate("true"),
-            IRLabelFactory.generate("false")
+            )
         ));
         body.add(new IRMove(i, ZERO));
         body.add(generateLoop(
-            "copy_b",
+            "copy_b_looop",
             new IRBinOp(OpType.LT, i, bLen), 
             new IRSeq(
                 new IRMove(new IRMem(workPointer), new IRMem(bp)),
                 increment(i),
                 incrPointer(workPointer),
                 incrPointer(bp)
-            ),
-            IRLabelFactory.generate("true"),
-            IRLabelFactory.generate("false")
+            )
         ));
 
         body.add(new IRReturn(pointer));
@@ -439,37 +461,38 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(If i) throws XicException {
-        // TODO: improve quard to use control flow translations
-        IRNode cond = i.guard.accept(this);
-        IRNode t = i.block.accept(this);
+        List<IRNode> nodes = new ArrayList<>();
+        IRLabel trueL = IRLabelFactory.generate("true");
+        IRLabel falseL = IRLabelFactory.generate("false");
+
+        nodes.add(makeControlFlow(i.guard, trueL, falseL));
+        nodes.add(trueL);
+        nodes.add(i.block.accept(this));
+        nodes.add(falseL);
         if (i.hasElse()) {
-            IRNode f = i.elseBlock.accept(this);
-            IRLabel done = IRLabelFactory.generate("done");
-            return new IRSeq(
-                generateBranch(
-                    cond, 
-                    new IRSeq(t, new IRJump(new IRName(done.name))),
-                    IRLabelFactory.generate("true"),
-                    IRLabelFactory.generate("false")
-                ),
-                f,
-                done
-            );
+            IRLabel doneL = IRLabelFactory.generate("done");
+            nodes.add(nodes.size() - 1, jump(doneL));
+            nodes.add(i.elseBlock.accept(this));
+            nodes.add(doneL);
         }
-        return generateBranch(cond, t, IRLabelFactory.generate("true"), IRLabelFactory.generate("false"));
+        return new IRSeq(nodes);
     }
 
     public IRNode visit(While w) throws XicException {
-        // TODO: improve quard to use control flow translations
-        IRNode guard = w.guard.accept(this);
-        IRNode block = w.block.accept(this);
-        return generateLoop(
-            "while", 
-            guard,
-            block,
-            IRLabelFactory.generate("true"),
-            IRLabelFactory.generate("false")
-        );
+        List<IRNode> nodes = new ArrayList<>();
+        IRLabel headL = IRLabelFactory.generate("while");
+        IRLabel trueL = IRLabelFactory.generate("true");
+        IRLabel falseL = IRLabelFactory.generate("false");
+
+        nodes.add(headL);
+        nodes.add(makeControlFlow(w.guard, trueL, falseL));
+        nodes.add(trueL);
+        nodes.add(w.block.accept(this));
+        nodes.add(jump(headL));
+        nodes.add(falseL);
+        
+        return new IRSeq(nodes);
+
     }
 
     /*
@@ -522,35 +545,32 @@ public class Emitter extends Visitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
             case AND:
                 IRTemp andFlag = IRTempFactory.generate("and");
-                IRESeq and = new IRESeq(
+                IRLabel trueL = IRLabelFactory.generate("true");
+                IRLabel falseL = IRLabelFactory.generate("false");
+                return new IRESeq(
                     new IRSeq(
                         new IRMove(andFlag, new IRConst(0)),
-                        generateBranch(
-                            left, 
-                            new IRMove(andFlag, right),
-                            IRLabelFactory.generate("true"),
-                            IRLabelFactory.generate("false")
-                        )
+                        makeControlFlow(b, trueL, falseL),
+                        trueL,
+                        new IRMove(andFlag, new IRConst(1)),
+                        falseL
                     ), 
                     andFlag
                 );
-                return and;
             case OR:
-                IRExpr cond = new IRBinOp(IRBinOp.OpType.XOR, left, new IRConst(1));
                 IRTemp orFlag = IRTempFactory.generate("or");
-                IRESeq or = new IRESeq(
+                trueL = IRLabelFactory.generate("true");
+                falseL = IRLabelFactory.generate("false");
+                return new IRESeq(
                     new IRSeq(
                         new IRMove(orFlag, new IRConst(1)),
-                        generateBranch(
-                            left, 
-                            new IRMove(orFlag, right),
-                            IRLabelFactory.generate("true"),
-                            IRLabelFactory.generate("false")
-                        )
+                        makeControlFlow(b, trueL, falseL),
+                        falseL,
+                        new IRMove(orFlag, new IRConst(0)),
+                        trueL
                     ), 
                     orFlag
                 );
-                return or;
         }
         // Unreachable
         assert false;
@@ -577,7 +597,7 @@ public class Emitter extends Visitor<IRNode> {
      */ 
     public IRNode visit(Index i) throws XicException {
         List<IRNode> stmts = new ArrayList<>();
-        IRLabel done = IRLabelFactory.generate("done");
+        IRLabel doneL = IRLabelFactory.generate("done");
         IRExpr result = IRTempFactory.generate("result");
 
         // Store array reference
@@ -593,10 +613,10 @@ public class Emitter extends Visitor<IRNode> {
         stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, ZERO), outOfBounds.name));
         stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, length(pointer)), outOfBounds.name));
         stmts.add(new IRMove(result, shiftAddr(pointer, index)));
-        stmts.add(new IRJump(new IRName(done.name)));
+        stmts.add(jump(doneL));
         stmts.add(outOfBounds);
         stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
-        stmts.add(done);
+        stmts.add(doneL);
 
         return new IRMem(new IRESeq(new IRSeq(stmts), result));
     }
@@ -651,4 +671,5 @@ public class Emitter extends Visitor<IRNode> {
             return null;
         }
     }
+
 }   
