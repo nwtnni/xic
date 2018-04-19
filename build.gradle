@@ -60,6 +60,7 @@ task zip(type: Zip) {
         include 'gradle/'
         include 'libs/'
         include 'resources/'
+        include 'runtime/'
         include 'src/'
         include 'tests/'
         include 'build.gradle'

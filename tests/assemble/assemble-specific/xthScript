@@ -9,4 +9,8 @@ xic ("Test assemble [assemble_specific") "-target linux -O" {
     large_mod1.xi;
     large_mult1.xi;
     large_sub1.xi;
+
+    fib.xi;
+    copy_array.xi;
+    copy_array_2.xi;
 }

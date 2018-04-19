@@ -7,6 +7,7 @@ import ast.*;
 import type.FnContext;
 import ir.*;
 import ir.IRBinOp.OpType;
+import ir.IRMem.MemType;
 import interpret.Configuration;
 import xic.XicException;
 import util.Pair;
@@ -24,6 +25,7 @@ public class Emitter extends Visitor<IRNode> {
      * @throws XicException if a semantic error was found
      */
     public static Pair<IRCompUnit, ABIContext> emitIR(Program ast, FnContext context) throws XicException {
+        IRTempFactory.reset();
         Emitter e = new Emitter(context);
         return new Pair<>((IRCompUnit) ast.accept(e), e.context);
     }
@@ -41,6 +43,7 @@ public class Emitter extends Visitor<IRNode> {
     protected static final IRConst ZERO = new IRConst(0);
     protected static final IRConst ONE = new IRConst(1);
 
+    // TODO: move shared configuration into config classes
     // ABI names for array library functions ignore the types of arrays
     // and treat each argument as a 64-bit pointer (equivalent to an integer)
     protected static final String ARRAY_ALLOC = "_xi_d_alloc";
@@ -51,54 +54,71 @@ public class Emitter extends Visitor<IRNode> {
      */
 
     /**
-     * Generate a conditional jump where true falls through.
+     * Make a jump to a label.
      */
-    private IRNode generateBranch(IRNode cond, IRNode t) {
-        IRLabel tL = IRLabelFactory.generate("true");
-        IRLabel fL = IRLabelFactory.generate("false");
-        
-       return new IRSeq(
-           new IRCJump(cond, tL.name),
-           new IRJump(new IRName(fL.name)),
-           tL,
-           t,
-           fL
-       );
-
-         // return new IRSeq(
-         //     new IRCJump(cond, tL.name, fL.name),
-         //     tL,
-         //     t,
-         //     fL
-         // );
+    private IRJump jump(IRLabel l) {
+        return new IRJump(new IRName(l.name));
     }
 
     /**
-     * Generate a loop in IR code.
+     * Generate a conditional jump using C translations.
      */
-    private IRNode generateLoop(IRNode guard, IRNode block) {
-        IRLabel hL = IRLabelFactory.generate("while");
-        IRLabel tL = IRLabelFactory.generate("true");
-        IRLabel fL = IRLabelFactory.generate("false");
+    private IRNode makeControlFlow(Node n, IRLabel trueL, IRLabel falseL) throws XicException {
+        if (n instanceof XiBool) {
+            XiBool b = (XiBool) n;
+            if (b.value) {
+                return jump(trueL);
+            } else {
+                return jump(falseL);
+            }
+        } else if (n instanceof Binary) {
+            Binary b = (Binary) n;
+            switch (b.kind) {
+                case AND:
+                    IRLabel andL = IRLabelFactory.generate("and");
+                    return new IRSeq(
+                        makeControlFlow(b.lhs, andL, falseL),
+                        andL,
+                        makeControlFlow(b.rhs, trueL, falseL)
+                    );
+                case OR:
+                    IRLabel orL = IRLabelFactory.generate("and");
+                    return new IRSeq(
+                        makeControlFlow(b.lhs, trueL, orL),
+                        orL,
+                        makeControlFlow(b.rhs, trueL, falseL)
+                    );
+                default:
+            }
+        } else if (n instanceof Unary) {
+            Unary u = (Unary) n;
+            if (u.isLogical()) {
+                makeControlFlow(u.child, falseL, trueL);
+            }
+        }
+        return new IRSeq(
+            new IRCJump(n.accept(this), trueL.name),
+            jump(falseL)
+        );
+    }
 
-       return new IRSeq(
-           hL,
-           new IRCJump(guard, tL.name),
-           new IRJump(new IRName(fL.name)),
-           tL,
-           block,
-           new IRJump(new IRName(hL.name)),
-           fL
-       );
+    /**
+     * Generate a loop in IR code given a IR node guard and body.
+     */
+    private IRNode generateLoop(String name, IRNode guard, IRNode block) {
+        IRLabel headL = IRLabelFactory.generate(name);
+        IRLabel trueL = IRLabelFactory.generate("true");
+        IRLabel falseL = IRLabelFactory.generate("false");
 
-         // return new IRSeq(
-         //     hL,
-         //     new IRCJump(guard, tL.name, fL.name),
-         //     tL,
-         //     block,
-         //     new IRJump(new IRName(hL.name)),
-         //     fL
-         // );
+        return new IRSeq(
+            headL,
+            new IRCJump(guard, trueL.name),
+            jump(falseL),
+            trueL,
+            block,
+            jump(headL),
+            falseL
+        );
     }
 
     /**
@@ -139,21 +159,25 @@ public class Emitter extends Visitor<IRNode> {
         // Generate pointers and allocate memory
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
         IRTemp pointer = IRTempFactory.generate("array");
-        IRTemp workPointer = IRTempFactory.generate("work_ptr");
         stmts.add(new IRMove(pointer, addr));
-        stmts.add(new IRMove(workPointer, pointer));
-        // Shift pointer to head of array
-        stmts.add(incrPointer(pointer));
 
         //Store length of array
-        stmts.add(new IRMove(new IRMem(workPointer), new IRConst(length)));
+        stmts.add(new IRMove(new IRMem(pointer), new IRConst(length)));
 
         // Storing values of array into memory
         for(int i = 0; i < length; i++) {
             IRNode n = array.get(i);
-            stmts.add(incrPointer(workPointer));
-            stmts.add(new IRMove(new IRMem(workPointer), n));
+
+            // index = j(workpointer)
+            IRConst j = new IRConst((i + 1) * WORD_SIZE.value); 
+            IRExpr index = new IRBinOp(OpType.ADD, pointer, j);
+            IRMem elem = new IRMem(index, MemType.IMMUTABLE);
+            
+            stmts.add(new IRMove(elem, n));
         }
+
+        // Shift pointer to head of array
+        stmts.add(incrPointer(pointer));
 
         return new IRESeq(
             new IRSeq(stmts), 
@@ -189,18 +213,20 @@ public class Emitter extends Visitor<IRNode> {
 
         // Generate pointers and allocate memory
         IRTemp pointer = IRTempFactory.generate("populate_array");
-        IRTemp workPointer = IRTempFactory.generate("work_ptr");
         stmts.add(new IRMove(pointer, alloc(size)));
-        stmts.add(new IRMove(workPointer, pointer));
 
         // Create copies of the child (so no checking if child is an alloc)
+        // addr = (workPointer,i,8)
         IRTemp i = IRTempFactory.generate("i");
+        IRExpr index = new IRBinOp(OpType.MUL, i, new IRConst(8));
+        IRMem addr = new IRMem(new IRBinOp(OpType.ADD, pointer, index), MemType.IMMUTABLE);
+        
         stmts.add(new IRMove(i, ZERO));
         stmts.add(generateLoop(
+            "make_array_loop",
             new IRBinOp(OpType.LT, i, size),
             new IRSeq(
-                new IRMove(new IRMem(workPointer), child),
-                incrPointer(workPointer),
+                new IRMove(addr, child),
                 increment(i)
             )
         ));
@@ -241,7 +267,7 @@ public class Emitter extends Visitor<IRNode> {
         IRTemp size = IRTempFactory.generate("d_size");
         stmts.add(new IRMove(size, byteSize));
 
-        // Generate pointers and llocate memoryG
+        // Generate pointers and llocate memory
         IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
         IRTemp pointer = IRTempFactory.generate("d_array");
         stmts.add(new IRMove(pointer, addr));
@@ -278,29 +304,35 @@ public class Emitter extends Visitor<IRNode> {
 
         // Generate pointers and allocate memory
         IRTemp pointer = IRTempFactory.generate("concat_array");
-        IRTemp workPointer = IRTempFactory.generate("work_ptr");
         body.add(new IRMove(pointer, alloc(size)));
-        body.add(new IRMove(workPointer, pointer));
 
         IRTemp i = IRTempFactory.generate("i");
+        IRExpr index = new IRBinOp(OpType.MUL, i, new IRConst(8));
+        IRMem addr = new IRMem(new IRBinOp(OpType.ADD, pointer, index), MemType.IMMUTABLE);
+        IRMem aElem = new IRMem(new IRBinOp(OpType.ADD, ap, index), MemType.IMMUTABLE);
+        
         body.add(new IRMove(i, ZERO));
         body.add(generateLoop(
+            "copy_a_loop",
             new IRBinOp(OpType.LT, i, aLen), 
             new IRSeq(
-                new IRMove(new IRMem(workPointer), new IRMem(ap)),
-                increment(i),
-                incrPointer(workPointer),
-                incrPointer(ap)
+                new IRMove(addr, aElem),
+                increment(i)
             )
         ));
-        body.add(new IRMove(i, ZERO));
+
+        IRTemp j = IRTempFactory.generate("j");
+        IRExpr indexb = new IRBinOp(OpType.MUL, j, new IRConst(8));
+        IRMem bElem = new IRMem(new IRBinOp(OpType.ADD, bp, indexb), MemType.IMMUTABLE);
+
+        body.add(new IRMove(j, ZERO));
         body.add(generateLoop(
-            new IRBinOp(OpType.LT, i, bLen), 
+            "copy_b_loop",
+            new IRBinOp(OpType.LT, j, bLen), 
             new IRSeq(
-                new IRMove(new IRMem(workPointer), new IRMem(bp)),
+                new IRMove(addr, bElem),
                 increment(i),
-                incrPointer(workPointer),
-                incrPointer(bp)
+                increment(j)
             )
         ));
 
@@ -310,7 +342,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /*
-     * Visitor methods
+     * Visitor methods ---------------------------------------------------------------------
      */
 
     /**
@@ -438,28 +470,38 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(If i) throws XicException {
-        // TODO: fix guard to use control flow
-        IRNode cond = i.guard.accept(this);
-        IRNode t = i.block.accept(this);
+        List<IRNode> nodes = new ArrayList<>();
+        IRLabel trueL = IRLabelFactory.generate("true");
+        IRLabel falseL = IRLabelFactory.generate("false");
+
+        nodes.add(makeControlFlow(i.guard, trueL, falseL));
+        nodes.add(trueL);
+        nodes.add(i.block.accept(this));
+        nodes.add(falseL);
         if (i.hasElse()) {
-            IRNode f = i.elseBlock.accept(this);
-            IRLabel done = IRLabelFactory.generate("done");
-            return new IRSeq(
-                generateBranch(cond, 
-                    new IRSeq(t, new IRJump(new IRName(done.name)))
-                ),
-                f,
-                done
-            );
+            IRLabel doneL = IRLabelFactory.generate("done");
+            nodes.add(nodes.size() - 1, jump(doneL));
+            nodes.add(i.elseBlock.accept(this));
+            nodes.add(doneL);
         }
-        return generateBranch(cond, t);
+        return new IRSeq(nodes);
     }
 
     public IRNode visit(While w) throws XicException {
-        // TODO: fix quard to use control flow
-        IRNode guard = w.guard.accept(this);
-        IRNode block = w.block.accept(this);
-        return generateLoop(guard, block);
+        List<IRNode> nodes = new ArrayList<>();
+        IRLabel headL = IRLabelFactory.generate("while");
+        IRLabel trueL = IRLabelFactory.generate("true");
+        IRLabel falseL = IRLabelFactory.generate("false");
+
+        nodes.add(headL);
+        nodes.add(makeControlFlow(w.guard, trueL, falseL));
+        nodes.add(trueL);
+        nodes.add(w.block.accept(this));
+        nodes.add(jump(headL));
+        nodes.add(falseL);
+        
+        return new IRSeq(nodes);
+
     }
 
     /*
@@ -511,26 +553,33 @@ public class Emitter extends Visitor<IRNode> {
             case NE:
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
             case AND:
-                IRTemp b1 = IRTempFactory.generate();
-                IRESeq and = new IRESeq(
+                IRTemp andFlag = IRTempFactory.generate("and");
+                IRLabel trueL = IRLabelFactory.generate("true");
+                IRLabel falseL = IRLabelFactory.generate("false");
+                return new IRESeq(
                     new IRSeq(
-                        new IRMove(b1, new IRConst(0)),
-                        generateBranch(left, new IRMove(b1, right))
+                        new IRMove(andFlag, new IRConst(0)),
+                        makeControlFlow(b, trueL, falseL),
+                        trueL,
+                        new IRMove(andFlag, new IRConst(1)),
+                        falseL
                     ), 
-                    b1
+                    andFlag
                 );
-                return and;
             case OR:
-                IRExpr cond = new IRBinOp(IRBinOp.OpType.XOR, left, new IRConst(1));
-                IRTemp b2 = IRTempFactory.generate();
-                IRESeq or = new IRESeq(
+                IRTemp orFlag = IRTempFactory.generate("or");
+                trueL = IRLabelFactory.generate("true");
+                falseL = IRLabelFactory.generate("false");
+                return new IRESeq(
                     new IRSeq(
-                        new IRMove(b2, new IRConst(1)),
-                        generateBranch(cond, new IRMove(b2, right))
+                        new IRMove(orFlag, new IRConst(1)),
+                        makeControlFlow(b, trueL, falseL),
+                        falseL,
+                        new IRMove(orFlag, new IRConst(0)),
+                        trueL
                     ), 
-                    b2
+                    orFlag
                 );
-                return or;
         }
         // Unreachable
         assert false;
@@ -557,7 +606,7 @@ public class Emitter extends Visitor<IRNode> {
      */ 
     public IRNode visit(Index i) throws XicException {
         List<IRNode> stmts = new ArrayList<>();
-        IRLabel done = IRLabelFactory.generate("done");
+        IRLabel doneL = IRLabelFactory.generate("done");
         IRExpr result = IRTempFactory.generate("result");
 
         // Store array reference
@@ -569,20 +618,14 @@ public class Emitter extends Visitor<IRNode> {
         stmts.add(new IRMove(index, i.index.accept(this)));
 
         // Check bounds
-        stmts.add(
-            generateBranch(
-                new IRBinOp(OpType.GEQ, index, ZERO), 
-                generateBranch(
-                    new IRBinOp(OpType.LT, index, length(pointer)),
-                    new IRSeq(
-                        new IRMove(result, shiftAddr(pointer, index)),
-                        new IRJump(new IRName(done.name))
-                    )
-                )
-            )
-        );
+        IRLabel outOfBounds = IRLabelFactory.generate("out_of_bounds");
+        stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, ZERO), outOfBounds.name));
+        stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, length(pointer)), outOfBounds.name));
+        stmts.add(new IRMove(result, shiftAddr(pointer, index)));
+        stmts.add(jump(doneL));
+        stmts.add(outOfBounds);
         stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
-        stmts.add(done);
+        stmts.add(doneL);
 
         return new IRMem(new IRESeq(new IRSeq(stmts), result));
     }
@@ -637,4 +680,5 @@ public class Emitter extends Visitor<IRNode> {
             return null;
         }
     }
+
 }   

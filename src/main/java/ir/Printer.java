@@ -196,7 +196,7 @@ public class Printer extends IRVisitor<Void> {
 
     public Void visit(IRMem m) {
         printer.startList();
-        printer.printAtom(m.memType.toString());
+        printer.printAtom("MEM");
         m.expr.accept(this);
         printer.endList();
         return null;
