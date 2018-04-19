@@ -1,5 +1,7 @@
 package type;
 
+import util.Context;
+
 /**
  * Symbol table mapping {@link Type} to supertype.
  * 
@@ -9,9 +11,9 @@ package type;
  */
 public class TypeContext extends Context<Type,Type> {
 
-	/**
-	 * Default constructor initializes the context with primitive types.
-	 */
+    /**
+     * Default constructor initializes the context with primitive types.
+     */
     public TypeContext() {
         super();
         add(Type.BOOL, Type.UNIT);

@@ -8,13 +8,13 @@ build/
 doc/
 
 # JFlex and CUP generated files
-src/main/java/lexer/XiLexer.java
-src/main/java/lexer/IXiLexer.java
-src/main/java/parser/XiParser.java
-src/main/java/parser/XiSymbol.java
-src/main/java/lexer/IXiLexer.java
-src/main/java/parser/IXiParser.java
-src/main/java/parser/IXiSymbol.java
+src/main/java/lex/XiLexer.java
+src/main/java/lex/IXiLexer.java
+src/main/java/parse/XiParser.java
+src/main/java/parse/XiSymbol.java
+src/main/java/lex/IXiLexer.java
+src/main/java/parse/IXiParser.java
+src/main/java/parse/IXiSymbol.java
 
 # Binary and zip files
 /xic
@@ -30,6 +30,8 @@ xth.tar.gz
 *.iparsed
 *.typed
 *.ir
+*.S
+*.s
 *.results
 
 # VS Code generated nonsense
@@ -38,6 +40,7 @@ xth.tar.gz
 .settings/
 bin/
 .vscode/
+.metadata/
 
 # Mac
 .DS_Store

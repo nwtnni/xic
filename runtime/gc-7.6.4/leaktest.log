@@ -1,0 +1,12 @@
+Found 1 leaked objects:
+0x1074ef0 (tests/leak_test.c:19, sz=8, NORMAL)
+Found 8 leaked objects:
+0x1075ee0 (tests/leak_test.c:19, sz=9, NORMAL)
+0x1075f60 (tests/leak_test.c:19, sz=11, NORMAL)
+0x1075fa0 (tests/leak_test.c:19, sz=12, NORMAL)
+0x1074f20 (tests/leak_test.c:19, sz=4, NORMAL)
+0x1074f50 (tests/leak_test.c:19, sz=5, NORMAL)
+0x1074f80 (tests/leak_test.c:19, sz=6, NORMAL)
+0x1074fb0 (tests/leak_test.c:19, sz=7, NORMAL)
+0x1074fe0 (tests/leak_test.c:12, sz=4, NORMAL)
+PASS leaktest (exit status: 0)

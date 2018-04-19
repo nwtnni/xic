@@ -1,4 +1,4 @@
-package lexer;
+package lex;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -6,10 +6,10 @@ import java.io.IOException;
 import java_cup.runtime.*;
 import java_cup.runtime.ComplexSymbolFactory.*;
 
-import xic.FilenameUtils;
-import static parser.IXiSymbol.*;
+import util.Filename;
+import static parse.IXiSymbol.*;
 import xic.XicException;
-import lexer.LexException.Kind;
+import lex.LexException.Kind;
 
 %%
 
@@ -29,7 +29,7 @@ import lexer.LexException.Kind;
     /* Exposed Interface */
 
     public static IXiLexer from(String source, String unit) throws XicException {
-        String input = FilenameUtils.concat(source, unit);
+        String input = Filename.concat(source, unit);
         try {
             IXiLexer lexer = new IXiLexer(new FileReader(input));
             lexer.init(unit, new ComplexSymbolFactory());

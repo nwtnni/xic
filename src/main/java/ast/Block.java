@@ -14,12 +14,12 @@ public class Block extends Node {
 
     public Block(Location location, List<Node> statements) {
         this.location = location;
-    	this.statements = statements;
+        this.statements = statements;
     }
 
     public Block(Location location, Node... statements) {
         this.location = location;
-    	this.statements = Arrays.asList(statements);
+        this.statements = Arrays.asList(statements);
     }
     
     public Block(List<Node> statements) {

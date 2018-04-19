@@ -192,9 +192,9 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
         return OptionalLong.empty();
     }
 
-	public OptionalLong visit(IRFuncDecl f) {
+    public OptionalLong visit(IRFuncDecl f) {
         // The body is statements, will never return constants
-        OptionalLong bol = f.body.accept(this);
+        f.body.accept(this);
 
         return OptionalLong.empty();
     }

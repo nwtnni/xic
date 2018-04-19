@@ -3,6 +3,7 @@ package type;
 import java.util.List;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import ast.XiType;
 
@@ -17,9 +18,9 @@ import ast.XiType;
  */
 public class Type {
 
-	/**
-	 * Primitive int.
-	 */
+    /**
+     * Primitive int.
+     */
     public static final Type INT = new Type("int");
     
     /**
@@ -79,6 +80,10 @@ public class Type {
         return fromList(children, true);
     }
 
+    public static Type listFromTypes(Type... t) {
+        return fromList(Arrays.asList(t), true);
+    }
+
     /**
      * Factory method for making a tuple type from a list of types.
      * Returns a class type if the length of the list is one.
@@ -89,14 +94,18 @@ public class Type {
         return fromList(children, false);
     }
 
+    public static Type tupleFromTypes(Type... t) {
+        return fromList(Arrays.asList(t), false);
+    }
+
     /**
      * Denotes the possible categories of Types.
      */
     public enum Kind {
-    	
-    	/**
-    	 * Represents an array type constructor
-    	 */
+        
+        /**
+         * Represents an array type constructor
+         */
         ARRAY, 
         
         /**
@@ -216,15 +225,15 @@ public class Type {
             return t.children.get(0).equals(children.get(0)) || this == POLY || t == POLY;
         } else if (kind == Kind.TUPLE && t.kind == Kind.TUPLE ||
                    kind == Kind.LIST && t.kind == Kind.LIST) {
-        	if (children.size() != t.children.size()) { return false; }
-        	for (int i = 0; i < children.size(); i++) {
-        		if (!children.get(i).equals(t.children.get(i))) {
-        			return false;
-        		}
-        	}
+            if (children.size() != t.children.size()) { return false; }
+            for (int i = 0; i < children.size(); i++) {
+                if (!children.get(i).equals(t.children.get(i))) {
+                    return false;
+                }
+            }
             return true;
         } else {
-        	return false;
+            return false;
         }
     }
 
@@ -235,13 +244,13 @@ public class Type {
         if (kind == Kind.CLASS) {
             return id.hashCode();
         } else if (kind == Kind.ARRAY) {
-        	return 100;
+            return 100;
         } else {
-        	int hash = 1;
-        	for (Type child : children) {
-        		hash += 10 * child.hashCode();
-        	}
-        	return hash;
+            int hash = 1;
+            for (Type child : children) {
+                hash += 10 * child.hashCode();
+            }
+            return hash;
         }
     }
 
@@ -274,6 +283,26 @@ public class Type {
         return kind.equals(Kind.ARRAY);
     }
 
+    /**
+     * Returns the size of the type where size is defined as:
+     * 0 for a unit
+     * 1 for any non-tuple type
+     * n for a tuple type where n is the number of children in the tuple
+     */
+    public int size() {
+        if (this.equals(UNIT)) {
+            return 0;
+        } else if (kind.equals(Kind.TUPLE)) {
+            return children.size();
+        } else {
+            return 1;
+        }
+    }
+
+    /**
+     * Converts the type to a string representation that conforms to 
+     * the ABI convention.
+     */
     @Override
     public String toString() {
         switch (kind) {

@@ -10,9 +10,9 @@ import java.util.ArrayList;
  */
 public class Main {
 
-	/**
-	 * Main compiler interface. Usage information can be printed with the --help flag.
-	 */
+    /**
+     * Main compiler interface. Usage information can be printed with the --help flag.
+     */
     public static void main(String[] args) {
         boolean lexFlag = false;
         boolean parseFlag = false;
@@ -23,7 +23,11 @@ public class Main {
         String source = "";
         String sink = "";
         String lib = "";
+        String assemblySink = "";
+        boolean assemblyFlag = false;
         boolean optFlag = true;
+        boolean targetFlag = false;
+        String targetOS;
 
         ArrayList<String> sourceFiles = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
@@ -43,17 +47,24 @@ public class Main {
                 source = args[++i];
             } else if (args[i].equals("-D") && i + 1 < args.length) {
                 sink = args[++i];
+            } else if (args[i].equals("-d") && i + 1 < args.length) {
+                assemblyFlag = true;
+                assemblySink = args[++i];
+                assemblyFlag = true;
             } else if (args[i].equals("-libpath") && i + 1 < args.length){
                 lib = args[++i];
             } else if (args[i].equals("-O")) {
                 optFlag = false;
+            } else if (args[i].equals("-target")) {
+                targetFlag = true;
+                targetOS = args[++i];
             } else {
                 sourceFiles.add(args[i]);
             }
         }
 
         // Help flag given
-        if (helpFlag || !(lexFlag || parseFlag || typeFlag || irGenFlag || irRunFlag)) { 
+        if (helpFlag || !(lexFlag || parseFlag || typeFlag || irGenFlag || irRunFlag || targetFlag)) { 
             displayHelp(); 
             return;
         }
@@ -66,6 +77,8 @@ public class Main {
                 if (parseFlag) { xic.printParsed(unit); }
                 if (typeFlag) { xic.printTyped(unit); }
                 if (irGenFlag || irRunFlag) { xic.printIR(unit, irRunFlag, optFlag); }
+                //TODO ADD targetOSFlag CASE
+                xic.printAssembly(unit, optFlag, assemblyFlag, assemblySink);
             }
         } catch (XicException e) {
             System.out.println(e.toPrint());
@@ -82,8 +95,10 @@ public class Main {
         System.out.println("Where <OPTION> is zero or more of:                                                   ");
         System.out.println("  --help                  : Print synopsis of options                                ");
         System.out.println("  -D          <DIRECTORY> : Output diagnostic files to <DIRECTORY>                   ");
+        System.out.println("  -d          <DIRECTORY> : Output assembly files to <DIRECTORY>                     ");
         System.out.println("  -libpath    <DIRECTORY> : Search for interface files in <DIRECTORY>                ");
         System.out.println("  -sourcepath <DIRECTORY> : Search for source files in <DIRECTORY>                   ");
+        System.out.println("  -target     <OS>        : Specify the OS for which to generate code                ");
         System.out.println("  -O                      : Disable optimizations                                    ");
         System.out.println("-------------------------------------------------------------------------------------");
         System.out.println("Where <OPERATION> is one or more of:                                                 ");

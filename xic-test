@@ -7,8 +7,6 @@ build() {
 
 test_all() {
   test_reg
-  test_lex_fails
-  test_parse_fails
   test_course
 }
 
@@ -19,6 +17,13 @@ test_reg() {
     test_parse_fails
     test_type
     test_ir
+    test_ir_fails
+}
+
+test_fails() {
+    test_lex_fails
+    test_parse_fails
+    test_ir_fails
 }
 
 test_lex_fails() {
@@ -88,6 +93,11 @@ test_ir_other() {
     printf "\n========================================\n\n"
 }
 
+test_ir_fails() {
+    xth/xth -compilerpath . -workpath tests/ir/failed_tests -testpath tests/ir/failed_tests tests/ir/failed_tests/xthScript
+    printf "\n========================================\n\n"
+}
+
 test_ir() {
     test_ir_basic
     test_ir_const_fold
@@ -96,73 +106,144 @@ test_ir() {
     test_ir_arrays
 }
 
+test_assemble_simple() {
+    xth/xth -compilerpath . -workpath tests/assemble/simple -testpath tests/assemble/simple tests/assemble/simple/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_assemble_arrays() {
+    xth/xth -compilerpath . -workpath tests/assemble/arrays -testpath tests/assemble/arrays tests/assemble/arrays/xthScript   
+    printf "\n========================================\n\n"
+}
+
+test_assemble_basic() {
+    xth/xth -compilerpath . -workpath tests/assemble/basic -testpath tests/assemble/basic tests/assemble/basic/xthScript   
+    printf "\n========================================\n\n"
+}
+
+test_assemble_ir_fails() {
+    xth/xth -compilerpath . -workpath tests/assemble/ir_failed_tests -testpath tests/assemble/ir_failed_tests tests/assemble/ir_failed_tests/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_assemble_other() {
+    xth/xth -compilerpath . -workpath tests/assemble/other -testpath tests/assemble/other tests/assemble/other/xthScript   
+    printf "\n========================================\n\n"
+}
+
+test_assemble_assemble_specific() {
+    xth/xth -compilerpath . -workpath tests/assemble/assemble-specific -testpath tests/assemble/assemble-specific tests/assemble/assemble-specific/xthScript     
+    printf "\n========================================\n\n"
+}
+
+test_assemble() {
+    test_assemble_simple
+    test_assemble_arrays
+    test_assemble_basic
+    test_assemble_ir_fails
+    test_assemble_other
+    test_assemble_assemble_specific
+}
+
 test_course() {
-    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa4 xth/tests/pa4/xthScript
+    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
     printf "\n========================================\n\n" 
 }
 
-cmd=$1
-if [ "$cmd" = "--nb" ] ; then
-    echo "skipping build"
-    cmd=$2
-elif [ -n "$cmd" ] ; then
-    build
-fi
+if [[ -f $1 ]] ; then
+  ./xic -target linux -libpath tests/libs $1
+else
+  cmd=$1
+  if [ "$cmd" = "--nb" ] ; then
+      echo "skipping build"
+      cmd=$2
+  elif [ -n "$cmd" ] ; then
+      build
+  fi
 
-case $cmd in
-a|all)
-    test_all
-    ;;
-r|regression)
-    test_reg
-    ;;
-f|fails)
-    test_lex_fails
-    test_parse_fails
-    ;;
-l|lexer)
-    test_lex
-    ;;
-p|parser)
-    test_parse
-    ;;
-t|type)
-    test_type
-    ;;
-te)
-    test_type_err
-    ;;
-tv)
-    test_type_valid
-    ;;
-tm)
-    test_type_man
-    ;;
-i|ir)
-    test_ir
-    ;;
-ib)
-    test_ir_basic
-    ;;
-ic)
-    test_ir_const_fold
-    ;;
-is)
-    test_ir_simple
-    ;;
-io)
-    test_ir_other
-    ;;
-ia)
-    test_ir_arrays
-    ;;
-c|course)
-    test_course
-    ;;
-*)
-    echo "Usage: xic-test [options] <command>"
-    echo "  --nb:   Skips running xic-build"
-    echo "  Possible commands: a[ll] r[egression] f[ails] c[ourse]"
-    echo "  l[exer] p[arser] t[ype] te tv tm i[r]"
-    ;;
-esac
+  case $cmd in
+  run)
+      ./xic -target linux --irrun -libpath tests/libs $2
+      ;;
+  all)
+      test_all
+      ;;
+  r|regression)
+      test_reg
+      ;;
+  f|fails)
+      test_fails
+      ;;
+  l|lexer)
+      test_lex
+      ;;
+  p|parser)
+      test_parse
+      ;;
+  t|type)
+      test_type
+      ;;
+  te)
+      test_type_err
+      ;;
+  tv)
+      test_type_valid
+      ;;
+  tm)
+      test_type_man
+      ;;
+  i|ir)
+      test_ir
+      ;;
+  ib)
+      test_ir_basic
+      ;;
+  ic)
+      test_ir_const_fold
+      ;;
+  is)
+      test_ir_simple
+      ;;
+  io)
+      test_ir_other
+      ;;
+  ia)
+      test_ir_arrays
+      ;;
+  if)
+      test_ir_fails
+      ;;
+  a|assemble)
+      test_assemble
+      ;;
+  as)
+      test_assemble_simple
+      ;;
+  aa)
+      test_assemble_arrays
+      ;;
+  ab)
+      test_assemble_basic
+      ;;
+  airf)
+      test_assemble_ir_fails
+      ;;
+  ao)
+      test_assemble_other
+      ;;
+  aas)
+      test_assemble_assemble_specific
+      ;;
+  c|course)
+      test_course
+      ;;
+  *)
+      echo "Usage: xic-test [options] <command>"
+      echo "  --nb:   Skips running xic-build"
+      echo "  Possible commands: all r[egression] f[ails] c[ourse]"
+      echo "  l[exer] p[arser] t[ype] te tv tm"
+      echo "  i[r, b, c, s, o, a, f]"
+      echo "  a[ssemble] as aa ab airf ao aas"
+      ;;
+  esac
+fi

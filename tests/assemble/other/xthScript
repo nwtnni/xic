@@ -1,0 +1,42 @@
+xic ("Test assemble [other]") "-target linux" {
+    add1.xi;
+    
+    assign1.xi;
+    
+    div1.xi;
+    div2.xi;
+    
+    greaterthan1.xi;
+    greaterthan2.xi;
+    
+    greaterthanequals1.xi;
+    greaterthanequals2.xi;
+    
+    hello1.xi;
+    hello2.xi;
+    hello3.xi;
+    
+    if1.xi;
+
+    length0.xi;
+    length1.xi;
+    length2.xi;
+    length3.xi;
+    length4.xi;
+    length5.xi;
+    
+    lessthan1.xi;
+    lessthan2.xi;
+    
+    lessthanequals1.xi;
+    lessthanequals2.xi;
+    
+    mult1.xi;
+
+    thanks_piazza.xi;
+    
+    while1.xi;
+
+    bad_divide_by_zero1.xi;
+}
+

@@ -19,10 +19,11 @@ public abstract class IRExpr extends IRNode {
     // }
 
     public List<IRNode> values;
-
+    public boolean isCanonical;
 
     public IRExpr() {
         values = null;
+        isCanonical = false;
     }
 
     public boolean hasValues() {
