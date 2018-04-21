@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 
+/** Deprecated in favor of JGraphT */
+@Deprecated
 public class Graph<V, E> {
 	
 	/** 

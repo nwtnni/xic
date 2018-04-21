@@ -9,6 +9,7 @@ public class IRGraph extends Graph<IRNode, Object> {
 
     // We will need a way to number nodes to use as keys 
     // Perhaps a wrapper class?
+    // Add metadata value to each node
 
     // toIRFuncDecl()
 	
