@@ -106,7 +106,7 @@ public class ControlFlow {
 	}
 	
 	public List<Block> neighbors(Block block) {
-		return graph.neighbors(block.label)
+		return graph.successors(block.label)
 			.stream()
 			.map(edge -> blocks.get(edge.first))
 			.collect(Collectors.toCollection(ArrayList::new));
