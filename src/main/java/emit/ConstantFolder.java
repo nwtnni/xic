@@ -247,7 +247,7 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
     }
 
     public OptionalLong visit(IRSeq s) {
-        for (IRNode n : s.stmts) {
+        for (IRNode n : s.stmts()) {
             n.accept(this);
         }
         

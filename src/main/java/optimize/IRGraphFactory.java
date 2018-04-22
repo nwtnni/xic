@@ -39,13 +39,13 @@ public class IRGraphFactory<E> extends IRVisitor<IRNode> {
         prev = null;
 
         IRSeq body = (IRSeq) f.body.accept(this);
-        cfg = new IRGraph<>(body.stmts.get(0), edgeFactory);
+        cfg = new IRGraph<>(f.name, body.get(0), edgeFactory);
 
         return null;
     }
 
     public IRNode visit(IRSeq s) {
-        for (IRNode n : s.stmts) {
+        for (IRNode n : s.stmts()) {
             cfg.addVertex(n);
             if (prev != null) {
                 cfg.addEdge(prev, n);

@@ -244,7 +244,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRSeq node by flattening it into a list of statements.
      */
     public IRNode visit(IRSeq s) {
-        for (IRNode stmt : s.stmts) {
+        for (IRNode stmt : s.stmts()) {
             stmt.accept(this);
         }
         return null;

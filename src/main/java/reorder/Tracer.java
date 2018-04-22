@@ -55,7 +55,7 @@ public class Tracer extends IRVisitor<Void> {
     }
     
     public Void visit(IRSeq s) {
-        body = new IRSeq(reorder(s.stmts));
+        body = new IRSeq(reorder(s.stmts()));
         return null;
     }
 

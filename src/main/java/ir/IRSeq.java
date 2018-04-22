@@ -8,7 +8,7 @@ import java.util.List;
  * SEQ(s1,...,sn)
  */
 public class IRSeq extends IRStmt {
-    public List<IRNode> stmts;
+    private List<IRNode> stmts;
 
     /**
      * @param stmts the statements
@@ -30,45 +30,32 @@ public class IRSeq extends IRStmt {
         return stmts;
     }
 
+    /* Public interface for sequence. */
+
+    public boolean add(IRNode s) {
+        return stmts.add(s);
+    }
+
+    public void add(int index, IRNode s) {
+        stmts.add(index, s);
+    }
+
+    public IRNode set(int index, IRNode s) {
+        return stmts.set(index, s);
+    }
+
+    public IRNode get(int index) {
+        return stmts.get(index);
+    }
+
+    public int size() {
+        return stmts.size();
+    }
+
     @Override
     public String label() {
         return "SEQ";
     }
-
-    // @Override
-    // public IRNode visitChildren(IRVisitor v) {
-    //     boolean modified = false;
-
-    //     List<IRStmt> results = new ArrayList<>(stmts.size());
-    //     for (IRStmt stmt : stmts) {
-    //         IRStmt newStmt = (IRStmt) v.visit(this, stmt);
-    //         if (newStmt != stmt) modified = true;
-    //         results.add(newStmt);
-    //     }
-
-    //     if (modified) return v.nodeFactory().IRSeq(results);
-
-    //     return this;
-    // }
-
-    // @Override
-    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
-    //     T result = v.unit();
-    //     for (IRStmt stmt : stmts)
-    //         result = v.bind(result, v.visit(stmt));
-    //     return result;
-    // }
-
-    // @Override
-    // public CheckCanonicalIRVisitor checkCanonicalEnter(
-    //         CheckCanonicalIRVisitor v) {
-    //     return v.enterSeq();
-    // }
-
-    // @Override
-    // public boolean isCanonical(CheckCanonicalIRVisitor v) {
-    //     return !v.inSeq();
-    // }
 
     @Override
     public <T> T accept(IRVisitor<T> v) {

@@ -379,12 +379,12 @@ public class Emitter extends Visitor<IRNode> {
         // Bind arguments to temps
         List<IRNode> args = visit(f.args);
         for (int i = 0; i < args.size(); i++) {
-            body.stmts.add(i, new IRMove(args.get(i), IRTempFactory.getArgument(i)));
+            body.add(i, new IRMove(args.get(i), IRTempFactory.getArgument(i)));
         }
 
         // Insert empty return if needed
-        if (body.stmts.size() == 0 || !(body.stmts.get(body.stmts.size() - 1) instanceof IRReturn)) {
-            body.stmts.add(new IRReturn());
+        if (body.size() == 0 || !(body.get(body.size() - 1) instanceof IRReturn)) {
+            body.add(new IRReturn());
         }
 
         return new IRFuncDecl(context.lookup(f.id), body);
@@ -671,7 +671,7 @@ public class Emitter extends Visitor<IRNode> {
             } else {
                 IRSeq sizes = (IRSeq) children.stmt;
                 IRExpr alloc = (IRExpr) children.expr;
-                sizes.stmts.add(0, new IRMove(size, sizeExpr));
+                sizes.add(0, new IRMove(size, sizeExpr));
                 children.expr = populate(size, alloc);
                 return children;
             }

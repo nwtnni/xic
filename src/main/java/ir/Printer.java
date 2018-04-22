@@ -230,7 +230,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRSeq s) {
         printer.startUnifiedList();
         printer.printAtom("SEQ");
-        visit(s.stmts);
+        visit(s.stmts());
         printer.endList();
         return null;
     }
