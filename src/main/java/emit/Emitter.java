@@ -22,7 +22,7 @@ public class Emitter extends Visitor<IRNode> {
      * @param context function context corresponding to the AST
      * @throws XicException if a semantic error was found
      */
-    public static IRCompUnit emitIR(Program ast, FnContext context) throws XicException {
+    public static IRCompUnit emitIR(Node ast, FnContext context) throws XicException {
         return (IRCompUnit) ast.accept(new Emitter(context));
     }
 

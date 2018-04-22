@@ -1,11 +1,25 @@
 package xic;
 
+import assemble.Assembler;
 import ast.Invariant;
 import ast.Node;
+import ast.Program;
+import emit.ABIContext;
+import emit.Canonizer;
+import emit.ConstantFolder;
+import emit.Emitter;
+import interpret.IRSimulator;
+import interpret.IRSimulator.Trap;
+import ir.IRCompUnit;
+import ir.IRNode;
+import lex.LexException;
 import lex.XiLexer;
 import parse.IXiParser;
+import parse.ParseException;
 import parse.XiParser;
+import type.FnContext;
 import type.TypeChecker;
+import type.TypeException;
 import util.Filename;
 
 /**
@@ -14,36 +28,14 @@ import util.Filename;
  */
 public class Xic {
     
-    /**
-     * The source path associated with this compiler, i.e. where it will
-     * look for source files.
-     */
-    private String source;
-    
-    /**
-     * The sink path associated with this compiler, i.e. where it will
-     * output diagnostic files.
-     */
-    private String sink;
-    
-    /**
-     * The lib path associated with this compiler, i.e. where it will
-     * look for interface files.
-     */
-    private String lib;
-    
+	private XicConfig config;
+	
     /**
      * Creates a new compiler instance which will read from the given
      * file paths.
-     * 
-     * @param source Where to look for source files
-     * @param sink Where to output diagnostic files
-     * @param lib Where to look for interface files
      */
-    public Xic(String source, String sink, String lib) {
-        this.source = source;
-        this.sink = sink;
-        this.lib = lib;
+    public Xic(XicConfig config) {
+    	this.config = config;
     }
 
     /**
@@ -57,7 +49,7 @@ public class Xic {
         switch (Filename.getExtension(unit)) {
             case "xi":
             case "ixi":
-                return XiLexer.from(source, unit);
+                return XiLexer.from(config.source, unit);
             default:
                 throw XicException.unsupported(unit);
         }
@@ -75,10 +67,10 @@ public class Xic {
         
         switch (Filename.getExtension(unit)) {
             case "xi":
-                ast = XiParser.from(source, unit);
+                ast = XiParser.from(config.source, unit);
                 break;
             case "ixi":
-                ast = IXiParser.from(source, unit);
+                ast = IXiParser.from(config.source, unit);
                 break;
             default:
                 throw XicException.unsupported(unit);
@@ -89,71 +81,57 @@ public class Xic {
     }
     
     /**
-     * Returns the decorated AST (i.e. with type annotations) 
-     * associated with the input file.
+     * Decorates the provided AST with type annotations. Mutates the given AST.
      * 
-     * @param unit The path to the input file, relative to source
-     * @return The decorated AST of the input file
-     * @throws XicException if lexing, parsing, or typechecking failed
+     * @param ast The undecorated AST
+     * @return The function context associated with the provided AST
+     * @throws XicException if typechecking failed
      */
-    public Node typeCheck(String unit) throws XicException {
-        Node ast = parse(unit);
-        TypeChecker.check(lib, ast);
-        return ast;
+    public FnContext type(Node ast) throws XicException {
+        return TypeChecker.check(config.lib, ast);
     }
     
-    /**
-     * Prints and writes diagnostics for the lexed input file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @throws XicException if lexing failed
-     */
-    public void printLexed(String unit) throws XicException {
-        lex.Printer.print(source, sink, unit);
+    public IRNode emit(FnContext context, Node ast) throws XicException {
+    	IRNode comp = Emitter.emitIR(ast, context);
+    	if (config.optimize) ConstantFolder.constantFold(comp);
+    	return Canonizer.canonize(comp);
     }
     
-    /**
-     * Prints and writes diagnostics for the lexed and parsed input file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @throws XicException if lexing or parsing failed
-     */
-    public void printParsed(String unit) throws XicException {
-        parse.Printer.print(source, sink, unit);
+    public void interpret(IRNode ast) {
+        try {
+            IRSimulator sim = new IRSimulator((IRCompUnit) ast);
+            sim.call("_Imain_paai", 0);
+        } catch (Trap e) {
+            System.out.println(e.getMessage());
+        }
     }
-
-    /**
-     * Prints and writes diagnostics for the lexed, parsed, and typechecked input
-     * file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @throws XicException if lexing, parsing, or typechecking failed
-     */
-    public void printTyped(String unit) throws XicException {
-        type.Printer.print(source, sink, lib, unit);
+    
+    public String assemble(FnContext context, IRNode program) throws XicException {
+    	return Assembler.assemble(program, new ABIContext(context));
     }
-
-    /**
-     * Prints and writes diagnostics for the lexed, parsed, and typechecked input
-     * file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @param run Run IR interpreter on generated IR code
-     * @param opt enable optimizations if true 
-     * @throws XicException if lexing, parsing, or typechecking failed
-     */
-    public void printIR(String unit, boolean run, boolean opt) throws XicException {
-        ir.Printer.print(source, sink, lib, unit, run, opt);
-    }
-
-    /**
-     * Prints and writes diagnostics for the lexed, parsed, and typechecked input
-     * file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @throws XicException if lexing, parsing, or typechecking failed
-     */
-    public void printAssembly(String unit, boolean opt) throws XicException {
-        assemble.Printer.print(source, sink, lib, unit, opt);
+    
+    public void execute() throws XicException {
+    	
+    	for (String unit : config.files) {
+    		
+    		try {
+    			XiLexer lexer = lex(unit);
+    			
+    			
+    			Node ast = parse(unit);
+    			FnContext context = type(ast);
+    			IRNode program = emit(context, ast);
+    			if (config.interpret) interpret(program);
+    			String assembly = assemble(context, program);
+    		} catch (LexException le) {
+    			
+    			
+    		} catch (ParseException pe) {
+    			
+    			
+    		} catch (TypeException te) {
+    			
+    		}
+    	}
     }
 }
