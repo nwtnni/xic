@@ -96,7 +96,7 @@ public class Tracer extends IRVisitor<Void> {
         	// Flip condition and fall through on false
             if (cjump.trueName().equals(label.name)) {
                 IRConst one = new IRConst(1);
-                IRBinOp lneg = new IRBinOp(IRBinOp.OpType.XOR, one, cjump.cond);
+                IRBinOp lneg = new IRBinOp(IRBinOp.OpType.XOR, one, (IRExpr) cjump.cond);
                 
                 merged.set(merged.size() - 1, new IRCJump(lneg, cjump.falseName()));
                 next.remove(0);

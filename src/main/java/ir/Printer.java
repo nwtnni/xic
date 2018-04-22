@@ -104,9 +104,9 @@ public class Printer extends IRVisitor<Void> {
 
     public Void visit(IRBinOp b) {
         printer.startList();
-        printer.printAtom(b.type.toString());
-        b.left.accept(this);
-        b.right.accept(this);
+        printer.printAtom(b.type().toString());
+        b.left().accept(this);
+        b.right().accept(this);
         printer.endList();
         return null;
     }

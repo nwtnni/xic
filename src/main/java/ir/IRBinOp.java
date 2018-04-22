@@ -59,25 +59,37 @@ public class IRBinOp extends IRExpr {
         }
     };
 
-    public OpType type;
-    public IRNode left, right;
+    private OpType type;
+    private IRExpr left, right;
 
-    public IRBinOp(OpType type, IRNode left, IRNode right) {
+    public IRBinOp(OpType type, IRExpr left, IRExpr right) {
         this.type = type;
         this.left = left;
         this.right = right;
     }
 
-    public OpType opType() {
+    public OpType type() {
         return type;
     }
 
-    public IRNode left() {
+    public IRExpr left() {
         return left;
     }
 
-    public IRNode right() {
+    public IRExpr right() {
         return right;
+    }
+
+    public IRExpr setLeft(IRExpr l) {
+        IRExpr old = left;
+        left = l;
+        return old;
+    }
+
+    public IRExpr setRight(IRExpr r) {
+        IRExpr old = right;
+        right = r;
+        return old;
     }
 
     @Override

@@ -617,7 +617,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Unary u) throws XicException {
-        IRNode child = u.child.accept(this);
+        IRExpr child = (IRExpr) u.child.accept(this);
         if (u.isLogical()) {
             return new IRBinOp(IRBinOp.OpType.XOR, new IRConst(1), child);
         } else {

@@ -26,11 +26,11 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
     public OptionalLong visit(IRBinOp b) {
 
         // Array literal equality checks
-        if (b.left instanceof IRESeq && b.right instanceof IRESeq) {
-            IRESeq l = (IRESeq) b.left;
-            IRESeq r = (IRESeq) b.right;
+        if (b.left() instanceof IRESeq && b.right() instanceof IRESeq) {
+            IRESeq l = (IRESeq) b.left();
+            IRESeq r = (IRESeq) b.right();
             if (l.hasValues() && r.hasValues()) {
-                switch (b.type) {
+                switch (b.type()) {
                     case NEQ:
                         return OptionalLong.of(1);
                     case EQ:
@@ -41,15 +41,15 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
             }
         }
 
-        OptionalLong ltol = b.left.accept(this);
-        OptionalLong rtol = b.right.accept(this);
+        OptionalLong ltol = b.left().accept(this);
+        OptionalLong rtol = b.right().accept(this);
 
         // Check boolean and arithmetic
         if (ltol.isPresent() && rtol.isPresent()) {
             long c;
             long lt = ltol.getAsLong();
             long rt = rtol.getAsLong();
-            switch (b.type) {
+            switch (b.type()) {
             case ADD: 
                 c = lt + rt;
                 break;
@@ -120,9 +120,9 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
         // Constant fold one side of array
         if (ltol.isPresent()) {
-            b.left = new IRConst(ltol.getAsLong());
+            b.setLeft(new IRConst(ltol.getAsLong()));
         } else if (rtol.isPresent()) {
-            b.right = new IRConst(rtol.getAsLong());
+            b.setRight(new IRConst(rtol.getAsLong()));
         }
 
         return OptionalLong.empty();

@@ -62,7 +62,7 @@ public class CanonizerTest {
 
 		// Should hoist expression with potential side effect
 		IRCall f1 = new IRCall(new IRName("foo"));
-		b.left = f1;
+		b.setLeft(f1);
 		result = Canonizer.canonize(b);
 		statements = Canonizer.debug(b);
 
@@ -73,8 +73,8 @@ public class CanonizerTest {
 		assertEquals(true, move.src instanceof IRCall);
 		
 		IRBinOp bop = (IRBinOp) result;
-		assertEquals(true, bop.left instanceof IRTemp);
-		assertEquals(true, bop.right instanceof IRConst);
+		assertEquals(true, bop.left() instanceof IRTemp);
+		assertEquals(true, bop.right() instanceof IRConst);
 	}
 	
 	@Test
