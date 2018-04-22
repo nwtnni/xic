@@ -15,6 +15,7 @@ import emit.ABIContext;
 // TODO Currently hardcoded all ARG1() and _ARG1 calls
 
 // Strings that the visits return correspond to inputs into the tile above
+@Deprecated
 public class Assembler extends IRVisitor<String> {
     
     /**

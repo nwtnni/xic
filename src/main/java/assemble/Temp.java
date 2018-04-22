@@ -5,8 +5,7 @@ import static assemble.Temp.Kind.*;
 import interpret.Configuration;
 
 /**
- * A wrapper class for all the possible operands for assembly
- * instructionsd.
+ * A wrapper class for all the possible operands for assembly instructions.
  */
 public class Temp {
 

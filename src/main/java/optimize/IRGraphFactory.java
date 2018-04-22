@@ -55,11 +55,6 @@ public class IRGraphFactory<E> extends IRVisitor<IRNode> {
         return s;
     }
 
-    public IRNode visit(IRReturn r) {
-        prev = r;
-        return r;
-    }
-
     public IRNode visit(IRCJump c) {
         cfg.addVertex(c.trueLabel);
         cfg.addEdge(c, c.trueLabel);
@@ -70,6 +65,7 @@ public class IRGraphFactory<E> extends IRVisitor<IRNode> {
     public IRNode visit(IRJump j) {
         cfg.addVertex(j.label);
         cfg.addEdge(j, j.label);
+        prev = null;
         return j;
     }
 
@@ -82,5 +78,9 @@ public class IRGraphFactory<E> extends IRVisitor<IRNode> {
         prev = m;
         return m;
     }
-    
+
+    public IRNode visit(IRReturn r) {
+        prev = null;
+        return r;
+    }
 }

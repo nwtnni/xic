@@ -120,7 +120,7 @@ public class CanonizerTest {
 		IRTemp temp = IRTempFactory.generate();
 		IRConst cond = new IRConst(1);
 		IRESeq c = new IRESeq(new IRMove(temp, cond), temp);
-		IRCJump j = new IRCJump(c, "true", "false");
+		IRCJump j = new IRCJump(c, "true");
 		IRNode result = Canonizer.canonize(j);
 		List<IRNode> statements = Canonizer.debug(j);
 		
@@ -139,7 +139,6 @@ public class CanonizerTest {
 		IRCJump jump = (IRCJump) s2;
 		assertEquals(true, jump.cond instanceof IRTemp);
 		assertEquals(true, jump.trueName().equals("true"));
-		assertEquals(true, jump.falseName().equals("false"));
 	}
 	
 	@Test

@@ -280,7 +280,6 @@ public class TrivialAllocator {
                 assert base != null;
                 instrs.add(new Mov(Operand.R11, getTemp(base.name)));
                 return Operand.mem(Operand.R11);
-                // TODO: fix mems
             case MEMBR:
                 base = t.base;
                 assert base != null;

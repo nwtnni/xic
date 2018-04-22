@@ -273,13 +273,13 @@ public class Tiler extends IRVisitor<Temp> {
         return null;
     }
 
+    public Temp visit(IRConst c) {
+        return Temp.imm(c.value);
+    }
+
     public Temp visit(IRJump j) {
         instrs.add(new Jmp(((IRName) j.target).name()));
         return null;
-    }
-
-    public Temp visit(IRConst c) {
-        return Temp.imm(c.value);
     }
 
     public Temp visit(IRESeq e) {
