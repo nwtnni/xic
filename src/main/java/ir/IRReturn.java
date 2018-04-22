@@ -1,49 +1,50 @@
 package ir;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /** RETURN statement */
 public class IRReturn extends IRStmt {
-    private List<IRNode> rets;
+    private List<IRExpr> rets;
 
     /**
      * @param rets values to return
      */
-    public IRReturn(IRNode... rets) {
-        this(Arrays.asList(rets));
+    public IRReturn(IRExpr... rets) {
+        this(new ArrayList<>(Arrays.asList(rets)));
     }
 
     /**
      * @param rets values to return
      */
-    public IRReturn(List<IRNode> rets) {
+    public IRReturn(List<IRExpr> rets) {
         this.rets = rets;
     }
 
-    public List<IRNode> rets() {
+    public List<IRExpr> rets() {
         return rets;
     }
 
-    public List<IRNode> setRets(List<IRNode> rets) {
-        List<IRNode> old = this.rets;
+    public List<IRExpr> setRets(List<IRExpr> rets) {
+        List<IRExpr> old = this.rets;
         this.rets = rets;
         return old;
     }
 
-    public boolean add(IRNode s) {
+    public boolean add(IRExpr s) {
         return rets.add(s);
     }
 
-    public void add(int index, IRNode s) {
+    public void add(int index, IRExpr s) {
         rets.add(index, s);
     }
 
-    public IRNode set(int index, IRNode s) {
+    public IRExpr set(int index, IRExpr s) {
         return rets.set(index, s);
     }
 
-    public IRNode get(int index) {
+    public IRExpr get(int index) {
         return rets.get(index);
     }
 

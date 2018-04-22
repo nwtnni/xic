@@ -1,23 +1,31 @@
 package ir;
 
-import java.io.*;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
+import ast.Node;
+import ast.Program;
 import edu.cornell.cs.cs4120.util.CodeWriterSExpPrinter;
 import edu.cornell.cs.cs4120.util.SExpPrinter;
-import polyglot.util.OptimalCodeWriter;
-import reorder.Tracer;
-import xic.XicException;
 import emit.Canonizer;
 import emit.ConstantFolder;
 import emit.Emitter;
 import interpret.IRSimulator;
 import interpret.IRSimulator.Trap;
 import parse.XiParser;
+import polyglot.util.OptimalCodeWriter;
+import type.FnContext;
 import type.TypeChecker;
 import util.Filename;
-import type.FnContext;
-import ast.Node;
-import ast.Program;
+import xic.XicException;
+
+// for tests
+import java.util.List;
+import java.util.ArrayList;
+import optimize.*;
 
 public class Printer extends IRVisitor<Void> {
 
@@ -67,6 +75,37 @@ public class Printer extends IRVisitor<Void> {
                     }
                 }
 
+                // Begin graph test
+                // IREdgeFactory<Void> ef = new IREdgeFactory<>();
+
+                // IRGraphFactory<Void> gf = new IRGraphFactory<>(comp, ef);
+
+                // List<IRGraph<Void>> cfgs = gf.getCfgs();
+
+                // IRCompUnit after = new IRCompUnit("after");
+                // for (IRGraph<Void> c : cfgs) {
+                //     after.appendFunc(c.toIR());
+                // }
+
+
+                // output = Filename.removeExtension(output) + "-after.ir";
+                // stream = new FileOutputStream(output);
+                // p = new Printer(stream);
+                // after.accept(p);
+
+                // if (run) {
+                //     try {
+                //         IRSimulator sim = new IRSimulator(after);
+                //         sim.call("_Imain_paai", 0);
+                //     } catch (Trap e) {
+                //         System.out.println(e.getMessage());
+                //     }
+                // }
+
+                // End graph test
+
+
+
             } catch (XicException xic) {
                 throw xic;
             }
@@ -115,7 +154,9 @@ public class Printer extends IRVisitor<Void> {
         printer.startList();
         printer.printAtom("CALL");
         c.target().accept(this);
-        visit(c.args());
+        for (IRExpr e: c.args()) {
+            e.accept(this);
+        }
         printer.endList();
         return null;
     }
@@ -222,7 +263,9 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRReturn r) {
         printer.startList();
         printer.printAtom("RETURN");
-        visit(r.rets());
+        for (IRExpr e: r.rets()) {
+            e.accept(this);
+        }
         printer.endList();
         return null;
     }
@@ -230,7 +273,9 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRSeq s) {
         printer.startUnifiedList();
         printer.printAtom("SEQ");
-        visit(s.stmts());
+        for (IRStmt st : s.stmts()) {
+            st.accept(this);
+        }
         printer.endList();
         return null;
     }

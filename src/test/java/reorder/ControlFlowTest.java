@@ -12,7 +12,7 @@ public class ControlFlowTest {
 	
 	@Test
 	public void testLinear() {
-		List<IRNode> program = new ArrayList<>();
+		List<IRStmt> program = new ArrayList<>();
 		program.add(new IRMove(new IRMem(new IRTemp("test1")), new IRConst(1)));
 		program.add(new IRMove(new IRMem(new IRTemp("test2")), new IRConst(2)));
 		program.add(new IRMove(new IRMem(new IRTemp("test3")), new IRConst(3)));
@@ -26,7 +26,7 @@ public class ControlFlowTest {
 	
 	@Test
 	public void testJump() {
-		List<IRNode> program = new ArrayList<>();
+		List<IRStmt> program = new ArrayList<>();
 		
 		program.add(new IRJump(new IRName("test")));
 		program.add(new IRLabel("test"));
@@ -42,7 +42,7 @@ public class ControlFlowTest {
 	
 	@Test
 	public void testConditional() {
-		List<IRNode> program = new ArrayList<>();
+		List<IRStmt> program = new ArrayList<>();
 		program.add(new IRCJump(new IRConst(1), "true", "false"));
 		program.add(new IRLabel("true"));
 		program.add(new IRMove(new IRMem(new IRTemp("test1")), new IRConst(1)));
@@ -70,7 +70,7 @@ public class ControlFlowTest {
 	
 	@Test
 	public void testReturn() {
-		List<IRNode> program = new ArrayList<>();
+		List<IRStmt> program = new ArrayList<>();
 		program.add(new IRCJump(new IRConst(1), "true", "false"));
 		program.add(new IRLabel("true"));
 		program.add(new IRMove(new IRMem(new IRTemp("test1")), new IRConst(1)));

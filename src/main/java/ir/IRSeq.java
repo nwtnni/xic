@@ -1,5 +1,6 @@
 package ir;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,13 +9,13 @@ import java.util.List;
  * SEQ(s1,...,sn)
  */
 public class IRSeq extends IRStmt {
-    private List<IRNode> stmts;
+    private List<IRStmt> stmts;
 
     /**
      * @param stmts the statements
      */
-    public IRSeq(IRNode... stmts) {
-        this(Arrays.asList(stmts));
+    public IRSeq(IRStmt... stmts) {
+        this(new ArrayList<>(Arrays.asList(stmts)));
     }
 
     /**
@@ -22,35 +23,35 @@ public class IRSeq extends IRStmt {
      * The list should not be modified subsequently.
      * @param stmts the sequence of statements
      */
-    public IRSeq(List<IRNode> stmts) {
+    public IRSeq(List<IRStmt> stmts) {
         this.stmts = stmts;
     }
 
     /* Public interface for sequence. */
 
-    public List<IRNode> stmts() {
+    public List<IRStmt> stmts() {
         return stmts;
     }
 
-    public List<IRNode> setStmts(List<IRNode> s) {
-        List<IRNode> old = stmts;
+    public List<IRStmt> setStmts(List<IRStmt> s) {
+        List<IRStmt> old = stmts;
         stmts = s;
         return old;
     }
 
-    public boolean add(IRNode s) {
+    public boolean add(IRStmt s) {
         return stmts.add(s);
     }
 
-    public void add(int index, IRNode s) {
+    public void add(int index, IRStmt s) {
         stmts.add(index, s);
     }
 
-    public IRNode set(int index, IRNode s) {
+    public IRStmt set(int index, IRStmt s) {
         return stmts.set(index, s);
     }
 
-    public IRNode get(int index) {
+    public IRStmt get(int index) {
         return stmts.get(index);
     }
 

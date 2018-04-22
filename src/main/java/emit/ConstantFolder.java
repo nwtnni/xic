@@ -130,8 +130,8 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
     }
     
     public OptionalLong visit(IRCall c) {
-        List<IRNode> children = new ArrayList<IRNode>();
-        for (IRNode n : c.args()) {
+        List<IRExpr> children = new ArrayList<>();
+        for (IRExpr n : c.args()) {
             OptionalLong ol = n.accept(this);
             if (ol.isPresent()) {
                 children.add(new IRConst(ol.getAsLong()));
@@ -233,8 +233,8 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
     }
 
     public OptionalLong visit(IRReturn r) {
-        List<IRNode> children = new ArrayList<IRNode>();
-        for (IRNode n : r.rets()) {
+        List<IRExpr> children = new ArrayList<>();
+        for (IRExpr n : r.rets()) {
             OptionalLong ol = n.accept(this);
             if (ol.isPresent()) {
                 children.add(new IRConst(ol.getAsLong()));

@@ -28,22 +28,22 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Returns the current list of statements for the
      * canonical version of the provided IR AST.
      */
-    public static List<IRNode> debug(IRNode ast) {
+    public static List<IRStmt> debug(IRNode ast) {
         Canonizer canonizer = new Canonizer();
         ast.accept(canonizer);
-        return canonizer.stmts; 
+        return canonizer.stmts.stmts(); 
     }
 
     /**
      * The running list of statements in the current context.
      */
-    private List<IRNode> stmts;
+    private IRSeq stmts;
 
     /**
      * Constructor initializes @param stmts for debugging purposes.
      */
     private Canonizer() {
-        stmts = new ArrayList<>();
+        stmts = new IRSeq();
     }
     
     /*
@@ -77,9 +77,9 @@ public class Canonizer extends IRVisitor<IRNode> {
      * the function with all temps.
      */
     public IRNode visit(IRCall c) {
-        List<IRNode> temps = new ArrayList<>();
+        List<IRExpr> temps = new ArrayList<>();
         
-        for (IRNode arg : c.args()) {
+        for (IRExpr arg : c.args()) {
             IRExpr argExpr = (IRExpr) arg.accept(this);
             IRTemp temp = IRTempFactory.generate();
             temps.add(temp);
@@ -153,9 +153,9 @@ public class Canonizer extends IRVisitor<IRNode> {
      * single IRSeq.
      */
     public IRNode visit(IRFuncDecl f) {
-        stmts = new ArrayList<>();
+        stmts = new IRSeq();
         f.body().accept(this);
-        return new IRFuncDecl(f.name(), new IRSeq(stmts));
+        return new IRFuncDecl(f.name(), stmts);
     }
 
     /**
@@ -227,9 +227,9 @@ public class Canonizer extends IRVisitor<IRNode> {
      * storing intermediate values in temps.
      */
     public IRNode visit(IRReturn r) {
-        List<IRNode> temps = new ArrayList<>();
+        List<IRExpr> temps = new ArrayList<>();
         
-        for (IRNode ret : r.rets()) {
+        for (IRExpr ret : r.rets()) {
             IRExpr retExpr = (IRExpr) ret.accept(this);
             IRTemp temp = IRTempFactory.generate();
             temps.add(temp);

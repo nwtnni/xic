@@ -16,7 +16,7 @@ import ir.IRCJump;
 import ir.IRJump;
 import ir.IRLabel;
 import ir.IRName;
-import ir.IRNode;
+import ir.IRStmt;
 import ir.IRReturn;
 
 import util.Pair;
@@ -51,9 +51,9 @@ public class ControlFlow {
 		AFTER_JUMP,
 	}
 	
-	public static ControlFlow from(List<IRNode> program) {
+	public static ControlFlow from(List<IRStmt> program) {
 		
-		List<IRNode> statements = new ArrayList<>(program);
+		List<IRStmt> statements = new ArrayList<>(program);
 		IRLabel end = IRLabelFactory.generate("_END");
 		statements.add(new IRJump(new IRName(end)));
 		statements.add(end);
@@ -64,7 +64,7 @@ public class ControlFlow {
 		cfg.start = block;
 		cfg.graph.addVertex(cfg.start.label);
 		
-		for (IRNode s : statements) {
+		for (IRStmt s : statements) {
 			
 			if (s instanceof IRLabel) {
 				IRLabel label = (IRLabel) s;

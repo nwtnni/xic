@@ -34,7 +34,7 @@ public class IRJump extends IRStmt {
         targetLabel = l;
     }
 
-    public IRNode targetLabel() {
+    public IRLabel targetLabel() {
         return targetLabel;
     }
 

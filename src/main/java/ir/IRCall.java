@@ -1,5 +1,6 @@
 package ir;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,15 +14,15 @@ public class IRCall extends IRExpr {
     * target and args were IRExpr in release code
     */
     private IRName target;
-    private List<IRNode> args;
+    private List<IRExpr> args;
 
     /**
      *
      * @param target address of the code for this function call
      * @param args arguments of this function call
      */
-    public IRCall(IRName target, IRNode... args) {
-        this(target, Arrays.asList(args));
+    public IRCall(IRName target, IRExpr... args) {
+        this(target, new ArrayList<>(Arrays.asList(args)));
     }
 
     /**
@@ -29,7 +30,7 @@ public class IRCall extends IRExpr {
      * @param target address of the code for this function call
      * @param args arguments of this function call
      */
-    public IRCall(IRName target, List<IRNode> args) {
+    public IRCall(IRName target, List<IRExpr> args) {
         this.target = target;
         this.args = args;
     }
@@ -40,29 +41,29 @@ public class IRCall extends IRExpr {
         return target;
     }
 
-    public List<IRNode> args() {
+    public List<IRExpr> args() {
         return args;
     }
 
-    public List<IRNode> setArgs(List<IRNode> args) {
-        List<IRNode> old = this.args;
+    public List<IRExpr> setArgs(List<IRExpr> args) {
+        List<IRExpr> old = this.args;
         this.args = args;
         return old;
     }
 
-    public boolean add(IRNode s) {
+    public boolean add(IRExpr s) {
         return args.add(s);
     }
 
-    public void add(int index, IRNode s) {
+    public void add(int index, IRExpr s) {
         args.add(index, s);
     }
 
-    public IRNode set(int index, IRNode s) {
+    public IRExpr set(int index, IRExpr s) {
         return args.set(index, s);
     }
 
-    public IRNode get(int index) {
+    public IRExpr get(int index) {
         return args.get(index);
     }
 

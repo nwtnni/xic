@@ -13,7 +13,7 @@ public class CanonizerTest {
 	public void testIRTemp() {
 		IRTemp temp = new IRTemp("test");
 		IRNode result = Canonizer.canonize(temp);
-		List<IRNode> statements = Canonizer.debug(temp);
+		List<IRStmt> statements = Canonizer.debug(temp);
 		assertEquals(true, result instanceof IRTemp);
 		assertEquals(0, statements.size());
 	}
@@ -22,7 +22,7 @@ public class CanonizerTest {
 	public void testIRName() {
 		IRName name = new IRName("test");;
 		IRNode result = Canonizer.canonize(name);
-		List<IRNode> statements = Canonizer.debug(name);
+		List<IRStmt> statements = Canonizer.debug(name);
 		assertEquals(true, result instanceof IRName);
 		assertEquals(0, statements.size());
 	}
@@ -31,7 +31,7 @@ public class CanonizerTest {
 	public void testIRConst() {
 		IRConst c = new IRConst(5);
 		IRNode result = Canonizer.canonize(c);
-		List<IRNode> statements = Canonizer.debug(c);
+		List<IRStmt> statements = Canonizer.debug(c);
 		assertEquals(true, result instanceof IRConst);
 		assertEquals(0, statements.size());
 	}
@@ -40,7 +40,7 @@ public class CanonizerTest {
 	public void testIRLabel() {
 		IRLabel l = new IRLabel("test");
 		IRNode result = Canonizer.canonize(l);
-		List<IRNode> statements = Canonizer.debug(l);
+		List<IRStmt> statements = Canonizer.debug(l);
 		
 		// IRLabel is a statement
 		assertEquals(null, result);
@@ -55,7 +55,7 @@ public class CanonizerTest {
 		IRBinOp b = new IRBinOp(IRBinOp.OpType.ADD, c1, c2);
 		
 		IRNode result = Canonizer.canonize(b);
-		List<IRNode> statements = Canonizer.debug(b);
+		List<IRStmt> statements = Canonizer.debug(b);
 		
 		assertEquals(true, result instanceof IRBinOp);
 		assertEquals(0, statements.size());
@@ -87,7 +87,7 @@ public class CanonizerTest {
 		IRCall c = new IRCall(new IRName("test"), a1, a2);
 		
 		IRNode result = Canonizer.canonize(c);
-		List<IRNode> statements = Canonizer.debug(c);
+		List<IRStmt> statements = Canonizer.debug(c);
 
 		// Moved IRCall result into temp
 		assertEquals(true, result instanceof IRTemp);
@@ -95,19 +95,19 @@ public class CanonizerTest {
 		assertEquals(4, statements.size());
 		
 		// Hoisted IRESeq
-		IRNode s1 = statements.get(0);
+		IRStmt s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		
 		// Move lowered IRESeq into temp
-		IRNode s2 = statements.get(1);
+		IRStmt s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRMove);
 		
 		// Move IRConst into temp
-		IRNode s3 = statements.get(2);
+		IRStmt s3 = statements.get(2);
 		assertEquals(true, s3 instanceof IRMove);
 		
 		// Move IRCall into temp
-		IRNode s4 = statements.get(3);
+		IRStmt s4 = statements.get(3);
 		assertEquals(true, s4 instanceof IRMove);
 		
 		IRMove move = (IRMove) s4;
@@ -122,18 +122,18 @@ public class CanonizerTest {
 		IRESeq c = new IRESeq(new IRMove(temp, cond), temp);
 		IRCJump j = new IRCJump(c, "true");
 		IRNode result = Canonizer.canonize(j);
-		List<IRNode> statements = Canonizer.debug(j);
+		List<IRStmt> statements = Canonizer.debug(j);
 		
 		// IRCJump is a statement
 		assertEquals(null, result);
 		assertEquals(2, statements.size());
 		
 		// Hoisted IRESeq
-		IRNode s1 = statements.get(0);
+		IRStmt s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		
 		// IRCJump with lowered IRESeq
-		IRNode s2 = statements.get(1);
+		IRStmt s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRCJump);
 		
 		IRCJump jump = (IRCJump) s2;
@@ -149,17 +149,17 @@ public class CanonizerTest {
 		IRJump j = new IRJump(e);
 		
 		IRNode result = Canonizer.canonize(j);
-		List<IRNode> statements = Canonizer.debug(j);
+		List<IRStmt> statements = Canonizer.debug(j);
 		
 		// IRJump is a statement
 		assertEquals(null, result);
 		assertEquals(2, statements.size());
 		
 		// Hoisted IRESeq
-		IRNode s1 = statements.get(0);
+		IRStmt s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		
-		IRNode s2 = statements.get(1);
+		IRStmt s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRJump);
 		
 		IRJump jump = (IRJump) s2;
@@ -175,20 +175,20 @@ public class CanonizerTest {
 		IRESeq e2 = new IRESeq(new IRMove(t2, e1), t2);
 
 		IRNode result = Canonizer.canonize(e2);
-		List<IRNode> statements = Canonizer.debug(e2);
+		List<IRStmt> statements = Canonizer.debug(e2);
 		
 		assertEquals(true, result instanceof IRTemp);
 		assertEquals(2, statements.size());
 		
 		// Hoisted e1
-		IRNode s1 = statements.get(0);
+		IRStmt s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		IRMove m1 = (IRMove) s1;
 		assertEquals(true, m1.target() == t1);
 		assertEquals(true, m1.src() == c);
 		
 		// Hoisted e2
-		IRNode s2 = statements.get(1);
+		IRStmt s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRMove);
 		IRMove m2 = (IRMove) s2;
 		assertEquals(true, m2.target() == t2);
@@ -203,7 +203,7 @@ public class CanonizerTest {
 		IRExp e = new IRExp(c);
 		
 		IRNode result = Canonizer.canonize(e);
-		List<IRNode> statements = Canonizer.debug(e);
+		List<IRStmt> statements = Canonizer.debug(e);
 
 		// IRExp discards result
 		assertEquals(result, null);
@@ -211,15 +211,15 @@ public class CanonizerTest {
 		assertEquals(3, statements.size());
 		
 		// Move IRConst into temp
-		IRNode s1 = statements.get(0);
+		IRStmt s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 
 		// Move IRConst into temp
-		IRNode s2 = statements.get(1);
+		IRStmt s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRMove);
 		
 		// Move result of IRCall into temp
-		IRNode s3 = statements.get(2);
+		IRStmt s3 = statements.get(2);
 		assertEquals(true, s3 instanceof IRMove);
 	}
 	
@@ -230,14 +230,14 @@ public class CanonizerTest {
 		IRMove m = new IRMove(t, c);
 		
 		IRNode result = Canonizer.canonize(m);
-		List<IRNode> statements = Canonizer.debug(m);
+		List<IRStmt> statements = Canonizer.debug(m);
 		
 		// IRMove is a statement
 		assertEquals(null, result);
 		assertEquals(1, statements.size());
 		
 		// Move src into target
-		IRNode s1 = statements.get(0);
+		IRStmt s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		
 		IRMove move = (IRMove) s1;
@@ -253,21 +253,21 @@ public class CanonizerTest {
 		IRMove m = new IRMove(mem, t);
 
 		IRNode result = Canonizer.canonize(m);
-		List<IRNode> statements = Canonizer.debug(m);
+		List<IRStmt> statements = Canonizer.debug(m);
 		
 		// IRMove is a statement
 		assertEquals(null, result);
 		assertEquals(3, statements.size());
 		
 		// Hoist IRESeq inside IRMem expr
-		IRNode s1 = statements.get(0);
+		IRStmt s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		IRMove m1 = (IRMove) s1;
 		assertEquals(true, m1.target() == t);
 		assertEquals(true, m1.src() == c);
 		
 		// Hoist IRMem expr and store in unique temp
-		IRNode s2 = statements.get(1);
+		IRStmt s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRMove);
 		IRMove m2 = (IRMove) s2;
 		assertEquals(true, m2.target() instanceof IRTemp);
@@ -277,7 +277,7 @@ public class CanonizerTest {
 		assertEquals(true, m2.src() == t);
 		
 		// Hoist move
-		IRNode s3 = statements.get(2);
+		IRStmt s3 = statements.get(2);
 		assertEquals(true, s3 instanceof IRMove);
 		IRMove m3 = (IRMove) s3;
 		assertEquals(true, m3.target() instanceof IRMem);
@@ -297,28 +297,28 @@ public class CanonizerTest {
 		IRReturn r = new IRReturn(a1, a2);
 		
 		IRNode result = Canonizer.canonize(r);
-		List<IRNode> statements = Canonizer.debug(r);
+		List<IRStmt> statements = Canonizer.debug(r);
 		
 		// IRReturn is a statement
 		assertEquals(null, result);
 		assertEquals(4, statements.size());
 		
 		// Store IRConst in unique IRTemp
-		IRNode s1 = statements.get(0);
+		IRStmt s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		IRMove m1 = (IRMove) s1;
 		assertEquals(true, m1.target() != temp);
 		assertEquals(true, m1.src() == a1);
 		
 		// Hoist IRESeq inside a2
-		IRNode s2 = statements.get(1);
+		IRStmt s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRMove);
 		IRMove m2 = (IRMove) s2;
 		assertEquals(true, m2.target() == temp);
 		assertEquals(true, m2.src() == val);
 		
 		// Store IRESeq result in unique IRTemp
-		IRNode s3 = statements.get(2);
+		IRStmt s3 = statements.get(2);
 		assertEquals(true, s3 instanceof IRMove);
 		IRMove m3 = (IRMove) s3;
 		
@@ -330,7 +330,7 @@ public class CanonizerTest {
 		);
 		
 		// Final IRReturn
-		IRNode s4 = statements.get(3);
+		IRStmt s4 = statements.get(3);
 		assertEquals(true, s4 instanceof IRReturn);
 		IRReturn ret = (IRReturn) s4;
 		

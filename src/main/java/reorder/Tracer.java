@@ -37,7 +37,7 @@ public class Tracer extends IRVisitor<Void> {
     /**
      * Reordered function body.
      */
-    private IRNode body;
+    private IRSeq body;
     
     public Void visit(IRCompUnit c) {
         functions = new HashMap<>();
@@ -63,7 +63,7 @@ public class Tracer extends IRVisitor<Void> {
      * Merges two blocks together. Removes unnecessary IRJump or IRCJump nodes when
      * possible.
      */
-    public List<IRNode> merge(List<IRNode> previous, List<IRNode> next) {
+    public List<IRStmt> merge(List<IRStmt> previous, List<IRStmt> next) {
     	
         if (previous.isEmpty()) {
             return next;
@@ -78,7 +78,7 @@ public class Tracer extends IRVisitor<Void> {
         assert next.get(0) instanceof IRLabel;
         IRLabel label = (IRLabel) next.get(0);
         
-        ArrayList<IRNode> merged = new ArrayList<>();
+        ArrayList<IRStmt> merged = new ArrayList<>();
         merged.addAll(previous);
 
         if (jump instanceof IRJump) {
@@ -116,12 +116,12 @@ public class Tracer extends IRVisitor<Void> {
     /**
      * Reorders the list of statements by repeatedly finding traces.
      */
-    public List<IRNode> reorder(List<IRNode> statements) {
+    public List<IRStmt> reorder(List<IRStmt> statements) {
     	
     	ControlFlow cfg = ControlFlow.from(statements);
     	
     	Set<Block> unmarked = cfg.blocks();
-    	List<List<IRNode>> traces = new ArrayList<>();
+    	List<List<IRStmt>> traces = new ArrayList<>();
     	
     	while (!unmarked.isEmpty()) {
     		

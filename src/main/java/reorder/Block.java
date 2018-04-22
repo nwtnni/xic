@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ir.IRLabel;
-import ir.IRNode;
+import ir.IRStmt;
 
 public class Block {
 
 	public String label;
-	public List<IRNode> statements;
+	public List<IRStmt> statements;
 
 	public Block(IRLabel label) {
 		this.statements = new ArrayList<>();
@@ -17,7 +17,7 @@ public class Block {
 		this.label = label.name();
 	}
 	
-	public void add(IRNode statement) {
+	public void add(IRStmt statement) {
 		statements.add(statement);
 	}
 	
