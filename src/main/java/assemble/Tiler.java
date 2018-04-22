@@ -118,11 +118,11 @@ public class Tiler extends IRVisitor<Temp> {
 
     public Temp visit(IRBinOp b) {
         Temp dest = TempFactory.generate();
-        Temp left = b.left().accept(this);
-        Temp right = b.right().accept(this);
+        Temp left = b.left.accept(this);
+        Temp right = b.right.accept(this);
         
         BinOp.Kind bop = null;
-        switch (b.type()) {
+        switch (b.type) {
             case ADD:
                 bop = ADD;
                 break;
@@ -156,7 +156,7 @@ public class Tiler extends IRVisitor<Temp> {
         }
 
         DivMul.Kind uop = null;
-        switch (b.type()) {
+        switch (b.type) {
             case MUL:
                 uop = MUL;
                 break;
@@ -183,7 +183,7 @@ public class Tiler extends IRVisitor<Temp> {
         }
             
         Set.Kind flag = null;
-        switch (b.type()) {
+        switch (b.type) {
             case EQ:
                 flag = EQ;
                 break;
@@ -235,11 +235,11 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRCJump c) {
         if (c.cond instanceof IRBinOp) {
             IRBinOp bop = (IRBinOp) c.cond;
-            Temp left = bop.left().accept(this);
-            Temp right = bop.right().accept(this);
+            Temp left = bop.left.accept(this);
+            Temp right = bop.right.accept(this);
             instrs.add(new Cmp(right, left));
             Jcc.Kind flag = null;
-            switch (bop.type()) {
+            switch (bop.type) {
                 case EQ:
                     flag = Jcc.Kind.E;
                     break;
@@ -300,12 +300,12 @@ public class Tiler extends IRVisitor<Temp> {
         // for immutable memory accesses
         if (m.memType == MemType.IMMUTABLE && m.expr instanceof IRBinOp) {
             IRBinOp bop = (IRBinOp) m.expr;
-            assert bop.type() == OpType.ADD;
-            if (bop.left() instanceof IRTemp) { 
+            assert bop.type == OpType.ADD;
+            if (bop.left instanceof IRTemp) { 
                 // B + off
-                if (bop.right() instanceof IRConst) {
-                    Temp base = bop.left().accept(this);
-                    Temp offset = bop.right().accept(this);
+                if (bop.right instanceof IRConst) {
+                    Temp base = bop.left.accept(this);
+                    Temp offset = bop.right.accept(this);
 
                     // off must be within 32 bits
                     assert Config.within(32, offset.value);
@@ -313,16 +313,16 @@ public class Tiler extends IRVisitor<Temp> {
                     return Temp.mem(base, (int) offset.value);
 
                 // B + R * scale
-                } else if (bop.right() instanceof IRBinOp) {
-                    Temp base = bop.left().accept(this);
+                } else if (bop.right instanceof IRBinOp) {
+                    Temp base = bop.left.accept(this);
     
-                    IRBinOp index = (IRBinOp) bop.right();
-                    assert index.type() == OpType.MUL &&
-                        index.left() instanceof IRTemp &&
-                        index.right() instanceof IRConst;
+                    IRBinOp index = (IRBinOp) bop.right;
+                    assert index.type == OpType.MUL &&
+                        index.left instanceof IRTemp &&
+                        index.right instanceof IRConst;
                         
-                    Temp reg = index.left().accept(this);
-                    Temp scale = index.right().accept(this);
+                    Temp reg = index.left.accept(this);
+                    Temp scale = index.right.accept(this);
                     
                     return Temp.mem(base, reg, 0, (int) scale.value);
                 }

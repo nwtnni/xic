@@ -58,15 +58,15 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by checking for commuting.
      */
     public IRNode visit(IRBinOp b) {
-        IRExpr leftExpr = (IRExpr) b.left().accept(this);
+        IRExpr leftExpr = (IRExpr) b.left.accept(this);
         if (!leftExpr.isCanonical) {
             IRTemp temp = IRTempFactory.generate("H");
             stmts.add(new IRMove(temp, leftExpr));
             leftExpr = temp; 
         }
 
-        IRExpr rightExpr = (IRExpr) b.right().accept(this);
-        IRBinOp bop = new IRBinOp(b.type(), leftExpr, rightExpr);
+        IRNode rightExpr = b.right.accept(this);
+        IRBinOp bop = new IRBinOp(b.type, leftExpr, rightExpr);
         bop.isCanonical = true;
         return bop;
     }

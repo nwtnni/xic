@@ -147,8 +147,8 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRBinOp b) {
-        b.left().accept(this);
-        b.right().accept(this);
+        b.left.accept(this);
+        b.right.accept(this);
         addInsn(b);
         return b;
     }
