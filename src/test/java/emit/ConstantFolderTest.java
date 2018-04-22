@@ -26,10 +26,10 @@ public class ConstantFolderTest {
     }
     @Test
     public void call1() {
-    		IRCall c = new IRCall(b1, b1);
+    		IRCall c = new IRCall(new IRName("foo"), b1);
     		cf.visit(c);
     		Printer.debug(c);
-    		assertEquals(((IRConst)c.args.get(0)).value, 3);
+    		assertEquals(((IRConst) c.get(0)).value, 3);
     }
     @Test
     public void jump1() {

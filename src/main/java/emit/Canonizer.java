@@ -79,7 +79,7 @@ public class Canonizer extends IRVisitor<IRNode> {
     public IRNode visit(IRCall c) {
         List<IRNode> temps = new ArrayList<>();
         
-        for (IRNode arg : c.args) {
+        for (IRNode arg : c.args()) {
             IRNode argExpr = arg.accept(this);
             IRTemp temp = IRTempFactory.generate();
             temps.add(temp);
@@ -87,7 +87,7 @@ public class Canonizer extends IRVisitor<IRNode> {
         }
         
         IRTemp result = IRTempFactory.generate();
-        stmts.add(new IRMove(result, new IRCall(c.target, temps)));
+        stmts.add(new IRMove(result, new IRCall(c.target(), temps)));
         return result;
     }
 

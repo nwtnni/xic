@@ -214,7 +214,7 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRCall c) {
         List<Instr> args = new ArrayList<>();
 
-        String target = ((IRName) c.target).name();
+        String target = c.target().name();
 
         int callIsMultiple = 0;
         int ret = numReturns(target);
@@ -223,8 +223,8 @@ public class Tiler extends IRVisitor<Temp> {
             args.add(new Lea(Temp.arg(0, false), Temp.MULT_RET_ADDR));
         }
 
-        for (int i = 0; i < c.args.size(); i++) {
-            Temp val = c.args.get(i).accept(this);
+        for (int i = 0; i < c.size(); i++) {
+            Temp val = c.get(i).accept(this);
             args.add(new Mov(Temp.arg(i + callIsMultiple, false), val));
         }
 

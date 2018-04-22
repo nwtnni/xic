@@ -114,8 +114,8 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRCall c) {
         printer.startList();
         printer.printAtom("CALL");
-        c.target.accept(this);
-        visit(c.args);
+        c.target().accept(this);
+        visit(c.args());
         printer.endList();
         return null;
     }

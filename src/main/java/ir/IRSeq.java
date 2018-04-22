@@ -26,11 +26,11 @@ public class IRSeq extends IRStmt {
         this.stmts = stmts;
     }
 
+    /* Public interface for sequence. */
+
     public List<IRNode> stmts() {
         return stmts;
     }
-
-    /* Public interface for sequence. */
 
     public boolean add(IRNode s) {
         return stmts.add(s);

@@ -89,8 +89,8 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRCall c) {
-        c.target.accept(this);
-        for (IRNode n : c.args) {
+        c.target().accept(this);
+        for (IRNode n : c.args()) {
             n.accept(this);
         }
         addInsn(c);
