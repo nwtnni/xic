@@ -163,8 +163,8 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRESeq e) {
         printer.startList();
         printer.printAtom("ESEQ");
-        e.stmt.accept(this);
-        e.expr.accept(this);
+        e.stmt().accept(this);
+        e.expr().accept(this);
         printer.endList();
         return null;
     }

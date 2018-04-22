@@ -136,8 +136,8 @@ public class Canonizer extends IRVisitor<IRNode> {
      * hoisting its expression.
      */
     public IRNode visit(IRESeq e) {
-        e.stmt.accept(this); 
-        return e.expr.accept(this);
+        e.stmt().accept(this); 
+        return e.expr().accept(this);
     }
 
     /**

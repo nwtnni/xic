@@ -76,8 +76,8 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRESeq e) {
-        e.stmt.accept(this);
-        e.expr.accept(this);
+        e.stmt().accept(this);
+        e.expr().accept(this);
         addInsn(e);
         return e;
     }

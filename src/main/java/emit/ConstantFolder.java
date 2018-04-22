@@ -172,11 +172,11 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
     public OptionalLong visit(IRESeq e) {
         /* e.stmt cannot be constant, do not need to check */
-        e.stmt.accept(this);
-        OptionalLong eol = e.expr.accept(this);
+        e.stmt().accept(this);
+        OptionalLong eol = e.expr().accept(this);
 
         if (eol.isPresent()) {
-            e.expr = new IRConst(eol.getAsLong());
+            e.setExpr(new IRConst(eol.getAsLong()));
         }
 
         return OptionalLong.empty();

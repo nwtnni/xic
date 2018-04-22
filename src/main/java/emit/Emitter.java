@@ -669,10 +669,10 @@ public class Emitter extends Visitor<IRNode> {
                     alloc(size));
                 return tuple;
             } else {
-                IRSeq sizes = (IRSeq) children.stmt;
-                IRExpr alloc = (IRExpr) children.expr;
+                IRSeq sizes = (IRSeq) children.stmt();
+                IRExpr alloc = (IRExpr) children.expr();
                 sizes.add(0, new IRMove(size, sizeExpr));
-                children.expr = populate(size, alloc);
+                children.setExpr(populate(size, alloc));
                 return children;
             }
         } else {
