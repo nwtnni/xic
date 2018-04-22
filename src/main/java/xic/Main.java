@@ -23,11 +23,10 @@ public class Main {
         String source = "";
         String sink = "";
         String lib = "";
-        String assemblySink = "";
-        boolean assemblyFlag = false;
+        String asm = "";
         boolean optFlag = true;
         boolean targetFlag = false;
-        String targetOS;
+        String targetOS = "linux";
 
         ArrayList<String> sourceFiles = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
@@ -48,9 +47,7 @@ public class Main {
             } else if (args[i].equals("-D") && i + 1 < args.length) {
                 sink = args[++i];
             } else if (args[i].equals("-d") && i + 1 < args.length) {
-                assemblyFlag = true;
-                assemblySink = args[++i];
-                assemblyFlag = true;
+                asm = args[++i];
             } else if (args[i].equals("-libpath") && i + 1 < args.length){
                 lib = args[++i];
             } else if (args[i].equals("-O")) {
@@ -69,20 +66,24 @@ public class Main {
             return;
         }
         
-        Xic xic = new Xic(source, sink, lib);
-        
-        try {
-            for (String unit : sourceFiles) {
-                if (lexFlag) { xic.printLexed(unit); }
-                if (parseFlag) { xic.printParsed(unit); }
-                if (typeFlag) { xic.printTyped(unit); }
-                if (irGenFlag || irRunFlag) { xic.printIR(unit, irRunFlag, optFlag); }
-                //TODO ADD targetOSFlag CASE
-                xic.printAssembly(unit, optFlag, assemblyFlag, assemblySink);
-            }
-        } catch (XicException e) {
-            System.out.println(e.toPrint());
+        if (targetFlag && !targetOS.equals("linux")) {
+        	System.out.println("Unsupported target OS. Must be linux.");
+        	return;
         }
+        
+        // Xic xic = new Xic(source, sink, asm, lib);
+        
+        // try {
+        //     for (String unit : sourceFiles) {
+        //         if (lexFlag) { xic.printLexed(unit); }
+        //         if (parseFlag) { xic.printParsed(unit); }
+        //         if (typeFlag) { xic.printTyped(unit); }
+        //         if (irGenFlag || irRunFlag) { xic.printIR(unit, irRunFlag, optFlag); }
+        //         xic.printAssembly(unit, optFlag);
+        //     }
+        // } catch (XicException e) {
+        //     System.out.println(e.toPrint());
+        // }
     }
 
     /**
