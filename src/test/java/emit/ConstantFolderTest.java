@@ -29,19 +29,19 @@ public class ConstantFolderTest {
     		IRCall c = new IRCall(new IRName("foo"), b1);
     		cf.visit(c);
     		Printer.debug(c);
-    		assertEquals(((IRConst) c.get(0)).value, 3);
+    		assertEquals(((IRConst) c.get(0)).value(), 3);
     }
     @Test
     public void jump1() {
     		IRJump j = new IRJump(new IRBinOp(IRBinOp.OpType.DIV, new IRConst(300), new IRConst(3)));
     		cf.visit(j);
-    		assertEquals(((IRConst)j.target).value, 100);
+    		assertEquals(((IRConst) j.target()).value(), 100);
     }
     @Test
     public void cjump1() {
     		IRBinOp b3 = new IRBinOp(IRBinOp.OpType.NEQ, b2, b2);
     		IRCJump cj = new IRCJump(b3, "hi", "hello");
     		cf.visit(cj);
-    		assertEquals(((IRConst)cj.cond).value, 0);
+    		assertEquals(((IRConst) cj.cond).value(), 0);
     }
 }	

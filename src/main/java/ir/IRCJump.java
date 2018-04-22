@@ -8,9 +8,9 @@ public class IRCJump extends IRStmt {
     /**
     * cond is IRExpr in release code
     */
-    public IRNode cond;
+    public IRExpr cond;
     private String trueName, falseName;
-    public IRLabel trueLabel, falseLabel;
+    private IRLabel trueLabel, falseLabel;
 
     /**
      * Construct a CJUMP instruction with fall-through on false.
@@ -18,7 +18,7 @@ public class IRCJump extends IRStmt {
      * @param trueName the destination of the jump if {@code expr} evaluates
      *          to true
      */
-    public IRCJump(IRNode cond, String trueName) {
+    public IRCJump(IRExpr cond, String trueName) {
         this(cond, trueName, null);
     }
 
@@ -30,7 +30,7 @@ public class IRCJump extends IRStmt {
      * @param falseName the destination of the jump if {@code expr} evaluates
      *          to false
      */
-    public IRCJump(IRNode cond, String trueName, String falseName) {
+    public IRCJump(IRExpr cond, String trueName, String falseName) {
         this.cond = cond;
         this.trueName = trueName;
         this.falseName = falseName;
@@ -42,7 +42,7 @@ public class IRCJump extends IRStmt {
      * @param trueLabel the destination of the jump if {@code expr} evaluates
      *          to true
      */
-    public IRCJump(IRNode cond, IRLabel trueLabel) {
+    public IRCJump(IRExpr cond, IRLabel trueLabel) {
         this(cond, trueLabel, null);
     }
 
@@ -54,13 +54,13 @@ public class IRCJump extends IRStmt {
      * @param falseLabel the destination of the jump if {@code expr} evaluates
      *          to false
      */
-    public IRCJump(IRNode cond, IRLabel trueLabel, IRLabel falseLabel) {
+    public IRCJump(IRExpr cond, IRLabel trueLabel, IRLabel falseLabel) {
         this.cond = cond;
         this.trueLabel = trueLabel;
         this.falseLabel = falseLabel;
     }
     
-    public IRNode cond() {
+    public IRExpr cond() {
         return cond;
     }
 
@@ -70,6 +70,14 @@ public class IRCJump extends IRStmt {
 
     public String falseName() {
         return (falseLabel != null) ? falseLabel.name() : falseName;
+    }
+
+    public IRLabel trueLabel() {
+        return trueLabel;
+    }
+
+    public IRLabel falseLabel() {
+        return falseLabel;
     }
 
     public boolean hasFalseLabel() {

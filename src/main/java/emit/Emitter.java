@@ -97,7 +97,7 @@ public class Emitter extends Visitor<IRNode> {
             }
         }
         return new IRSeq(
-            new IRCJump(n.accept(this), trueL.name),
+            new IRCJump((IRExpr) n.accept(this), trueL.name()),
             jump(falseL)
         );
     }
@@ -105,14 +105,14 @@ public class Emitter extends Visitor<IRNode> {
     /**
      * Generate a loop in IR code given a IR node guard and body.
      */
-    private IRNode generateLoop(String name, IRNode guard, IRNode block) {
+    private IRNode generateLoop(String name, IRExpr guard, IRStmt block) {
         IRLabel headL = IRLabelFactory.generate(name);
         IRLabel trueL = IRLabelFactory.generate("true");
         IRLabel falseL = IRLabelFactory.generate("false");
 
         return new IRSeq(
             headL,
-            new IRCJump(guard, trueL.name),
+            new IRCJump(guard, trueL.name()),
             jump(falseL),
             trueL,
             block,
@@ -166,10 +166,10 @@ public class Emitter extends Visitor<IRNode> {
 
         // Storing values of array into memory
         for(int i = 0; i < length; i++) {
-            IRNode n = array.get(i);
+            IRExpr n = (IRExpr) array.get(i);
 
             // index = j(workpointer)
-            IRConst j = new IRConst((i + 1) * WORD_SIZE.value); 
+            IRConst j = new IRConst((i + 1) * WORD_SIZE.value()); 
             IRExpr index = new IRBinOp(OpType.ADD, pointer, j);
             IRMem elem = new IRMem(index, MemType.IMMUTABLE);
             
@@ -379,7 +379,7 @@ public class Emitter extends Visitor<IRNode> {
         // Bind arguments to temps
         List<IRNode> args = visit(f.args);
         for (int i = 0; i < args.size(); i++) {
-            body.add(i, new IRMove(args.get(i), IRTempFactory.getArgument(i)));
+            body.add(i, new IRMove((IRExpr) args.get(i), IRTempFactory.getArgument(i)));
         }
 
         // Insert empty return if needed
@@ -396,7 +396,7 @@ public class Emitter extends Visitor<IRNode> {
 
     public IRNode visit(Assign a) throws XicException {
         List<IRNode> lhs = visit(a.lhs);
-        IRNode rhs = a.rhs.accept(this);
+        IRExpr rhs = (IRExpr) a.rhs.accept(this);
 
         if (lhs.size() == 1) {
             // If not an underscore
@@ -412,13 +412,13 @@ public class Emitter extends Visitor<IRNode> {
         if (lhs.get(0) == null) {
             stmts.add(new IRExp(rhs));
         } else {
-            stmts.add(new IRMove(lhs.get(0), rhs));
+            stmts.add(new IRMove((IRExpr) lhs.get(0), rhs));
         }
 
         for (int i = 1; i < lhs.size(); i++) {
             IRNode n = lhs.get(i);
             if (n != null) {
-                stmts.add(new IRMove(n, IRTempFactory.getReturn(i)));
+                stmts.add(new IRMove((IRExpr) n, IRTempFactory.getReturn(i)));
             }
         }
 
@@ -431,7 +431,7 @@ public class Emitter extends Visitor<IRNode> {
             IRNode stmt = n.accept(this);
             // For procedures
             if (stmt instanceof IRExpr) {
-                stmts.add(new IRExp(stmt));
+                stmts.add(new IRExp((IRExpr) stmt));
             } else {
                 stmts.add(stmt);
             }
@@ -597,16 +597,16 @@ public class Emitter extends Visitor<IRNode> {
 
         // Store array reference
         IRTemp pointer = IRTempFactory.generate("array_ref");
-        stmts.add(new IRMove(pointer, i.array.accept(this)));
+        stmts.add(new IRMove(pointer, (IRExpr) i.array.accept(this)));
 
         // Store index
         IRTemp index = IRTempFactory.generate("index");
-        stmts.add(new IRMove(index, i.index.accept(this)));
+        stmts.add(new IRMove(index, (IRExpr) i.index.accept(this)));
 
         // Check bounds
         IRLabel outOfBounds = IRLabelFactory.generate("out_of_bounds");
-        stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, ZERO), outOfBounds.name));
-        stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, length(pointer)), outOfBounds.name));
+        stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, ZERO), outOfBounds.name()));
+        stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, length(pointer)), outOfBounds.name()));
         stmts.add(new IRMove(result, shiftAddr(pointer, index)));
         stmts.add(jump(doneL));
         stmts.add(outOfBounds);
@@ -617,7 +617,7 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     public IRNode visit(Unary u) throws XicException {
-        IRNode child = u.child.accept(this);
+        IRExpr child = (IRExpr) u.child.accept(this);
         if (u.isLogical()) {
             return new IRBinOp(IRBinOp.OpType.XOR, new IRConst(1), child);
         } else {
@@ -672,7 +672,7 @@ public class Emitter extends Visitor<IRNode> {
                 IRSeq sizes = (IRSeq) children.stmt();
                 IRExpr alloc = (IRExpr) children.expr();
                 sizes.add(0, new IRMove(size, sizeExpr));
-                children.setExpr(populate(size, alloc));
+                children.expr = populate(size, alloc);
                 return children;
             }
         } else {

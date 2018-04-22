@@ -28,7 +28,7 @@ public class IRGraphFactory<E> extends IRVisitor<IRNode> {
     /** Returns the list of CFGs for the compilation unit. */
     public List<IRGraph<E>> getCfgs() {
         List<IRGraph<E>> fns = new ArrayList<>();
-        for (IRFuncDecl fn : compUnit.functions.values()) {
+        for (IRFuncDecl fn : compUnit.functions().values()) {
             visit(fn);
             fns.add(cfg);
         }
@@ -38,8 +38,8 @@ public class IRGraphFactory<E> extends IRVisitor<IRNode> {
     public IRNode visit(IRFuncDecl f) {
         prev = null;
 
-        IRSeq body = (IRSeq) f.body.accept(this);
-        cfg = new IRGraph<>(f.name, body.get(0), edgeFactory);
+        IRSeq body = (IRSeq) f.body().accept(this);
+        cfg = new IRGraph<>(f.name(), body.get(0), edgeFactory);
 
         return null;
     }
@@ -56,15 +56,15 @@ public class IRGraphFactory<E> extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRCJump c) {
-        cfg.addVertex(c.trueLabel);
-        cfg.addEdge(c, c.trueLabel);
+        cfg.addVertex(c.trueLabel());
+        cfg.addEdge(c, c.trueLabel());
         prev = c;
         return c;
     }
 
     public IRNode visit(IRJump j) {
-        cfg.addVertex(j.label);
-        cfg.addEdge(j, j.label);
+        cfg.addVertex(j.targetLabel());
+        cfg.addEdge(j, j.targetLabel());
         prev = null;
         return j;
     }

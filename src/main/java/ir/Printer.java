@@ -104,9 +104,9 @@ public class Printer extends IRVisitor<Void> {
 
     public Void visit(IRBinOp b) {
         printer.startList();
-        printer.printAtom(b.type.toString());
-        b.left.accept(this);
-        b.right.accept(this);
+        printer.printAtom(b.type().toString());
+        b.left().accept(this);
+        b.right().accept(this);
         printer.endList();
         return null;
     }
@@ -135,7 +135,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRJump j) {
         printer.startList();
         printer.printAtom("JUMP");
-        j.target.accept(this);
+        j.target().accept(this);
         printer.endList();
         return null;
     }
@@ -143,8 +143,8 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRCompUnit c) {
         printer.startUnifiedList();
         printer.printAtom("COMPUNIT");
-        printer.printAtom(c.name);
-        for (IRFuncDecl fn : c.functions.values()) {
+        printer.printAtom(c.name());
+        for (IRFuncDecl fn : c.functions().values()) {
             fn.accept(this);
         }
         printer.endList();
@@ -155,7 +155,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRConst c) {
         printer.startList();
         printer.printAtom("CONST");
-        printer.printAtom(String.valueOf(c.value));
+        printer.printAtom(String.valueOf(c.value()));
         printer.endList();
         return null;
     }
@@ -172,7 +172,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRExp e) {
         printer.startList();
         printer.printAtom("EXP");
-        e.expr.accept(this);
+        e.expr().accept(this);
         printer.endList();
         return null;
     }
@@ -180,8 +180,8 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRFuncDecl f) {
         printer.startList();
         printer.printAtom("FUNC");
-        printer.printAtom(f.name);
-        f.body.accept(this);
+        printer.printAtom(f.name());
+        f.body().accept(this);
         printer.endList();
         return null;
     }
@@ -189,7 +189,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRLabel l) {
         printer.startList();
         printer.printAtom("LABEL");
-        printer.printAtom(l.name);
+        printer.printAtom(l.name());
         printer.endList();
         return null;
     }
@@ -197,7 +197,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRMem m) {
         printer.startList();
         printer.printAtom("MEM");
-        m.expr.accept(this);
+        m.expr().accept(this);
         printer.endList();
         return null;
     }
@@ -205,8 +205,8 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRMove m) {
         printer.startList();
         printer.printAtom("MOVE");
-        m.target.accept(this);
-        m.src.accept(this);
+        m.target().accept(this);
+        m.src().accept(this);
         printer.endList();
         return null;
     }
@@ -214,7 +214,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRName n) {
         printer.startList();
         printer.printAtom("NAME");
-        printer.printAtom(n.name);
+        printer.printAtom(n.name());
         printer.endList();
         return null;
     }
@@ -222,7 +222,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRReturn r) {
         printer.startList();
         printer.printAtom("RETURN");
-        visit(r.rets);
+        visit(r.rets());
         printer.endList();
         return null;
     }
@@ -238,7 +238,7 @@ public class Printer extends IRVisitor<Void> {
     public Void visit(IRTemp t) {
         printer.startList();
         printer.printAtom("TEMP");
-        printer.printAtom(t.name);
+        printer.printAtom(t.name());
         printer.endList();
         return null;
     }

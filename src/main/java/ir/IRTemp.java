@@ -5,7 +5,7 @@ package ir;
  * TEMP(name)
  */
 public class IRTemp extends IRExpr {
-    public String name;
+    private String name;
 
     /**
      *

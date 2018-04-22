@@ -7,8 +7,8 @@ import java.util.List;
  * ESEQ(stmt, expr)
  */
 public class IRESeq extends IRExpr {
-    private IRStmt stmt;
-    private IRExpr expr;
+    public IRStmt stmt;
+    public IRExpr expr;
 
     /**
      *
@@ -40,18 +40,6 @@ public class IRESeq extends IRExpr {
 
     public IRExpr expr() {
         return expr;
-    }
-
-    public IRStmt setStmt(IRStmt s) {
-        IRStmt old = stmt;
-        stmt = s;
-        return old;
-    }
-
-    public IRExpr setExpr(IRExpr e) {
-        IRExpr old = expr;
-        expr = e;
-        return old;
     }
 
     @Override

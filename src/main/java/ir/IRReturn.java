@@ -5,7 +5,7 @@ import java.util.List;
 
 /** RETURN statement */
 public class IRReturn extends IRStmt {
-    public List<IRNode> rets;
+    private List<IRNode> rets;
 
     /**
      * @param rets values to return
@@ -23,6 +23,32 @@ public class IRReturn extends IRStmt {
 
     public List<IRNode> rets() {
         return rets;
+    }
+
+    public List<IRNode> setRets(List<IRNode> rets) {
+        List<IRNode> old = this.rets;
+        this.rets = rets;
+        return old;
+    }
+
+    public boolean add(IRNode s) {
+        return rets.add(s);
+    }
+
+    public void add(int index, IRNode s) {
+        rets.add(index, s);
+    }
+
+    public IRNode set(int index, IRNode s) {
+        return rets.set(index, s);
+    }
+
+    public IRNode get(int index) {
+        return rets.get(index);
+    }
+
+    public int size() {
+        return rets.size();
     }
 
     @Override

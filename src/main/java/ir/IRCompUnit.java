@@ -7,8 +7,8 @@ import java.util.Map;
  * An intermediate representation for a compilation unit
  */
 public class IRCompUnit extends IRNode {
-    public String name;
-    public Map<String, IRFuncDecl> functions;
+    private String name;
+    private Map<String, IRFuncDecl> functions;
 
     public IRCompUnit(String name) {
         this.name = name;

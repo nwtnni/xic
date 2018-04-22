@@ -4,7 +4,7 @@ package ir;
  * An intermediate representation for naming a memory address
  */
 public class IRLabel extends IRStmt {
-    public String name;
+    private String name;
 
     /**
      *

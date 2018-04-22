@@ -17,7 +17,7 @@ public class FuncDecl {
     public List<Instr> epilogue;
 
     public FuncDecl(IRFuncDecl fn, int args, int rets, List<Instr> stmts) {
-        this.name = fn.name;
+        this.name = fn.name();
         this.args = args;
         this.rets = rets;
         this.returnLabel = Label.retLabel(fn);

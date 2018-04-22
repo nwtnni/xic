@@ -32,6 +32,12 @@ public class IRSeq extends IRStmt {
         return stmts;
     }
 
+    public List<IRNode> setStmts(List<IRNode> s) {
+        List<IRNode> old = stmts;
+        stmts = s;
+        return old;
+    }
+
     public boolean add(IRNode s) {
         return stmts.add(s);
     }

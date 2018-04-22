@@ -55,7 +55,7 @@ public class ControlFlow {
 		
 		List<IRNode> statements = new ArrayList<>(program);
 		IRLabel end = IRLabelFactory.generate("_END");
-		statements.add(new IRJump(new IRName(end.name)));
+		statements.add(new IRJump(new IRName(end)));
 		statements.add(end);
 		
 		ControlFlow cfg = new ControlFlow();
@@ -70,11 +70,11 @@ public class ControlFlow {
 				IRLabel label = (IRLabel) s;
 				switch (state) {
 				case WITHIN_BLOCK:
-					block.add(new IRJump(new IRName(label.name)));
+					block.add(new IRJump(new IRName(label)));
 					cfg.blocks.put(block.label, block);
 					cfg.graph.addVertex(block.label);
-					cfg.graph.addVertex(label.name);
-					cfg.graph.addEdge(block.label, label.name);
+					cfg.graph.addVertex(label.name());
+					cfg.graph.addEdge(block.label, label.name());
 					break;
 				case AFTER_JUMP:
 					state = State.WITHIN_BLOCK;
@@ -102,8 +102,8 @@ public class ControlFlow {
 					cfg.graph.addVertex(block.label);
 				} else if (s instanceof IRJump) {
 					IRJump jump = (IRJump) s;
-					IRName target = (IRName) jump.target;
-					cfg.graph.addEdge(block.label, target.name);
+					IRName target = (IRName) jump.target();
+					cfg.graph.addEdge(block.label, target.name());
 				} else {
 					IRCJump cjump = (IRCJump) s;
 					cfg.graph.addEdge(block.label, cjump.trueName());

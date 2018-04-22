@@ -309,7 +309,7 @@ public class IRSimulator {
             long r = exprStack.popValue();
             long l = exprStack.popValue();
             long result;
-            switch (((IRBinOp) insn).opType()) {
+            switch (((IRBinOp) insn).type()) {
             case ADD:
                 result = l + r;
                 break;

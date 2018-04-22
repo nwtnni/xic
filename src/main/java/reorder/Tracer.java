@@ -41,16 +41,16 @@ public class Tracer extends IRVisitor<Void> {
     
     public Void visit(IRCompUnit c) {
         functions = new HashMap<>();
-        for (IRFuncDecl fn : c.functions.values()) {
+        for (IRFuncDecl fn : c.functions().values()) {
             fn.accept(this);
         }
-        this.compUnit = new IRCompUnit(c.name, functions);
+        this.compUnit = new IRCompUnit(c.name(), functions);
         return null;
     }
     
     public Void visit(IRFuncDecl fn) {
-        fn.body.accept(this);
-        functions.put(fn.name, new IRFuncDecl(fn.name, body));
+        fn.body().accept(this);
+        functions.put(fn.name(), new IRFuncDecl(fn.name(), body));
         return null;
     }
     
@@ -82,10 +82,10 @@ public class Tracer extends IRVisitor<Void> {
         merged.addAll(previous);
 
         if (jump instanceof IRJump) {
-        	IRName target = (IRName) ((IRJump) jump).target;
+        	IRName target = (IRName) ((IRJump) jump).target();
 
         	// Remove extra jump and label
-            if (target.name.equals(label.name)) {
+            if (target.name().equals(label.name())) {
                 merged.remove(merged.size() - 1);
             }
             
@@ -94,7 +94,7 @@ public class Tracer extends IRVisitor<Void> {
         	IRCJump cjump = (IRCJump) jump;
             
         	// Flip condition and fall through on false
-            if (cjump.trueName().equals(label.name)) {
+            if (cjump.trueName().equals(label.name())) {
                 IRConst one = new IRConst(1);
                 IRBinOp lneg = new IRBinOp(IRBinOp.OpType.XOR, one, cjump.cond);
                 
@@ -103,7 +103,7 @@ public class Tracer extends IRVisitor<Void> {
             }
             
             // Fall through on false
-            else if (cjump.falseName().equals(label.name)) {
+            else if (cjump.falseName().equals(label.name())) {
                 merged.set(merged.size() - 1, new IRCJump(cjump.cond, cjump.trueName()));
                 next.remove(0);
             }

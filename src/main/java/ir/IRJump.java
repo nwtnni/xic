@@ -4,25 +4,42 @@ package ir;
  * An intermediate representation for a transfer of control
  */
 public class IRJump extends IRStmt {
-    public IRNode target;
-    public IRLabel label;
+    private IRExpr target;
+    private IRLabel targetLabel;
 
     /**
      *
      * @param expr the destination of the jump
      */
 
-    public IRJump(IRNode n) {
+    public IRJump(IRExpr n) {
         target = n;
     }
 
-    public IRJump(IRLabel label) {
-        this.target = new IRName(label.name);
-        this.label = label;
+    public IRJump(IRLabel l) {
+        this.target = new IRName(l.name());
+        this.targetLabel = l;
     }
 
     public IRNode target() {
         return target;
+    }
+
+    public void setTarget(IRExpr n) {
+        target = n;
+    }
+
+    public void setTarget(IRLabel l) {
+        target = new IRName(l.name());
+        targetLabel = l;
+    }
+
+    public IRNode targetLabel() {
+        return targetLabel;
+    }
+
+    public boolean hasLabel() {
+        return targetLabel != null;
     }
 
     @Override

@@ -2,8 +2,8 @@ package ir;
 
 /** An IR function declaration */
 public class IRFuncDecl extends IRNode {
-    public String name;
-    public IRNode body;
+    private String name;
+    private IRNode body;
 
     public IRFuncDecl(String name, IRNode body) {
         this.name = name;
@@ -23,33 +23,6 @@ public class IRFuncDecl extends IRNode {
         return "FUNC " + name;
     }
 
-    // @Override
-    // public IRNode visitChildren(IRVisitor v) {
-    //     IRStmt stmt = (IRStmt) v.visit(this, body);
-
-    //     if (stmt != body) return v.nodeFactory().IRFuncDecl(name, stmt);
-
-    //     return this;
-    // }
-
-    // @Override
-    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
-    //     T result = v.unit();
-    //     result = v.bind(result, v.visit(body));
-    //     return result;
-    // }
-
-    // @Override
-    // public InsnMapsBuilder buildInsnMapsEnter(InsnMapsBuilder v) {
-    //     v.addNameToCurrentIndex(name);
-    //     v.addInsn(this);
-    //     return v;
-    // }
-
-    // @Override
-    // public IRNode buildInsnMaps(InsnMapsBuilder v) {
-    //     return this;
-    // }
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);

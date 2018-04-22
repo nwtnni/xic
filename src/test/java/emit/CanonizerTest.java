@@ -69,12 +69,12 @@ public class CanonizerTest {
 		assertEquals(true, statements.get(0) instanceof IRMove);
 
 		IRMove move = (IRMove) statements.get(0);
-		assertEquals(true, move.target instanceof IRTemp);
-		assertEquals(true, move.src instanceof IRCall);
+		assertEquals(true, move.target() instanceof IRTemp);
+		assertEquals(true, move.src() instanceof IRCall);
 		
 		IRBinOp bop = (IRBinOp) result;
-		assertEquals(true, bop.left instanceof IRTemp);
-		assertEquals(true, bop.right instanceof IRConst);
+		assertEquals(true, bop.left() instanceof IRTemp);
+		assertEquals(true, bop.right() instanceof IRConst);
 	}
 	
 	@Test
@@ -111,8 +111,8 @@ public class CanonizerTest {
 		assertEquals(true, s4 instanceof IRMove);
 		
 		IRMove move = (IRMove) s4;
-		assertEquals(true, move.target instanceof IRTemp);
-		assertEquals(true, move.src instanceof IRCall);
+		assertEquals(true, move.target() instanceof IRTemp);
+		assertEquals(true, move.src() instanceof IRCall);
 	}
 	
 	@Test
@@ -163,7 +163,7 @@ public class CanonizerTest {
 		assertEquals(true, s2 instanceof IRJump);
 		
 		IRJump jump = (IRJump) s2;
-		assertEquals(true, jump.target instanceof IRTemp);
+		assertEquals(true, jump.target() instanceof IRTemp);
 	}
 	
 	@Test
@@ -184,15 +184,15 @@ public class CanonizerTest {
 		IRNode s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		IRMove m1 = (IRMove) s1;
-		assertEquals(true, m1.target == t1);
-		assertEquals(true, m1.src == c);
+		assertEquals(true, m1.target() == t1);
+		assertEquals(true, m1.src() == c);
 		
 		// Hoisted e2
 		IRNode s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRMove);
 		IRMove m2 = (IRMove) s2;
-		assertEquals(true, m2.target == t2);
-		assertEquals(true, m2.src == t1);
+		assertEquals(true, m2.target() == t2);
+		assertEquals(true, m2.src() == t1);
 	}
 
 	@Test
@@ -241,8 +241,8 @@ public class CanonizerTest {
 		assertEquals(true, s1 instanceof IRMove);
 		
 		IRMove move = (IRMove) s1;
-		assertEquals(true, move.target == t);
-		assertEquals(true, move.src == c);
+		assertEquals(true, move.target() == t);
+		assertEquals(true, move.src() == c);
 	}
 	
 	@Test
@@ -263,29 +263,29 @@ public class CanonizerTest {
 		IRNode s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		IRMove m1 = (IRMove) s1;
-		assertEquals(true, m1.target == t);
-		assertEquals(true, m1.src == c);
+		assertEquals(true, m1.target() == t);
+		assertEquals(true, m1.src() == c);
 		
 		// Hoist IRMem expr and store in unique temp
 		IRNode s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRMove);
 		IRMove m2 = (IRMove) s2;
-		assertEquals(true, m2.target instanceof IRTemp);
+		assertEquals(true, m2.target() instanceof IRTemp);
 		
 		// Unique!
-		assertEquals(true, m2.target != t);
-		assertEquals(true, m2.src == t);
+		assertEquals(true, m2.target() != t);
+		assertEquals(true, m2.src() == t);
 		
 		// Hoist move
 		IRNode s3 = statements.get(2);
 		assertEquals(true, s3 instanceof IRMove);
 		IRMove m3 = (IRMove) s3;
-		assertEquals(true, m3.target instanceof IRMem);
-		assertEquals(true, m3.src == t);
+		assertEquals(true, m3.target() instanceof IRMem);
+		assertEquals(true, m3.src() == t);
 		
 		// Unique!		
-		IRMem m4 = (IRMem) m3.target;
-		assertEquals(true, m4.expr != t);
+		IRMem m4 = (IRMem) m3.target();
+		assertEquals(true, m4.expr() != t);
 	}
 	
 	@Test
@@ -307,15 +307,15 @@ public class CanonizerTest {
 		IRNode s1 = statements.get(0);
 		assertEquals(true, s1 instanceof IRMove);
 		IRMove m1 = (IRMove) s1;
-		assertEquals(true, m1.target != temp);
-		assertEquals(true, m1.src == a1);
+		assertEquals(true, m1.target() != temp);
+		assertEquals(true, m1.src() == a1);
 		
 		// Hoist IRESeq inside a2
 		IRNode s2 = statements.get(1);
 		assertEquals(true, s2 instanceof IRMove);
 		IRMove m2 = (IRMove) s2;
-		assertEquals(true, m2.target == temp);
-		assertEquals(true, m2.src == val);
+		assertEquals(true, m2.target() == temp);
+		assertEquals(true, m2.src() == val);
 		
 		// Store IRESeq result in unique IRTemp
 		IRNode s3 = statements.get(2);
@@ -323,9 +323,9 @@ public class CanonizerTest {
 		IRMove m3 = (IRMove) s3;
 		
 		assertEquals(true, 
-			!( m3.target == temp 
-			|| m3.target == m2.target
-			|| m3.target == m1.target
+			!( m3.target() == temp 
+			|| m3.target() == m2.target()
+			|| m3.target() == m1.target()
 			)
 		);
 		
@@ -335,11 +335,11 @@ public class CanonizerTest {
 		IRReturn ret = (IRReturn) s4;
 		
 		// Should both be IRTemps corresponding to previous IRMoves
-		assertEquals(2, ret.rets.size());
+		assertEquals(2, ret.size());
 		
-		IRNode e1 = ret.rets.get(0);
-		assertEquals(true, e1 == m1.target);
-		IRNode e2 = ret.rets.get(1);
-		assertEquals(true, e2 == m3.target);
+		IRNode e1 = ret.get(0);
+		assertEquals(true, e1 == m1.target());
+		IRNode e2 = ret.get(1);
+		assertEquals(true, e2 == m3.target());
 	}
 }

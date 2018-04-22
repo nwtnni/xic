@@ -14,7 +14,7 @@ public class Block {
 	public Block(IRLabel label) {
 		this.statements = new ArrayList<>();
 		this.statements.add(label);
-		this.label = label.name;
+		this.label = label.name();
 	}
 	
 	public void add(IRNode statement) {
