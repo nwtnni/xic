@@ -174,7 +174,7 @@ public class IRSimulator {
         } else {
             IRFuncDecl fDecl = compUnit.getFunction(name);
             if (fDecl == null) {
-                throw XicInternalException.internal("Tried to call an unknown function: '"
+                throw XicInternalException.runtime("Tried to call an unknown function: '"
                         + name + "'");
             }
 
@@ -286,14 +286,14 @@ public class IRSimulator {
                 break;
             }
             default:
-                throw XicInternalException.internal("Unsupported library function: "
+                throw XicInternalException.runtime("Unsupported library function: "
                         + name);
             }
 
             return ret;
         }
         catch (IOException e) {
-            throw XicInternalException.internal("I/O Exception in simulator");
+            throw XicInternalException.runtime("I/O Exception in simulator");
         }
     }
 
@@ -370,7 +370,7 @@ public class IRSimulator {
                 result = l >= r ? 1 : 0;
                 break;
             default:
-                throw XicInternalException.internal("Invalid binary operation");
+                throw XicInternalException.runtime("Invalid binary operation");
             }
             exprStack.pushValue(result);
         }
@@ -392,10 +392,10 @@ public class IRSimulator {
                 if (node instanceof IRFuncDecl) {
                     targetName = ((IRFuncDecl) node).name();
                 } else {
-                    throw XicInternalException.internal("Call to a non-function instruction!");
+                    throw XicInternalException.runtime("Call to a non-function instruction!");
                 }
             } else {
-                throw XicInternalException.internal("Invalid function call '"
+                throw XicInternalException.runtime("Invalid function call '"
                         + insn + "' (target '" + target.value + "' is unknown)!");
             }
 
@@ -422,7 +422,7 @@ public class IRSimulator {
                 frame.put(stackItem.temp, r);
                 break;
             default:
-                throw XicInternalException.internal("Invalid MOVE!");
+                throw XicInternalException.runtime("Invalid MOVE!");
             }
         }
         else if (insn instanceof IRExp) {
@@ -440,7 +440,7 @@ public class IRSimulator {
             else if (top == 1)
                 label = irCJump.trueName();
             else {
-                throw XicInternalException.internal("Invalid value in CJUMP - expected 0/1, got "
+                throw XicInternalException.runtime("Invalid value in CJUMP - expected 0/1, got "
                         + top);
             }
             if (label != null) frame.setIP(findLabel(label));

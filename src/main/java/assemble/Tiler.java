@@ -262,7 +262,7 @@ public class Tiler extends IRVisitor<Temp> {
                     flag = Jcc.Kind.NE;
                     break;
                 default:
-                    throw XicInternalException.internal("Invalid binop for CJUMP");
+                    throw XicInternalException.runtime("Invalid binop for CJUMP");
             }
             instrs.add(new Jcc(flag, c.trueName()));
         }
@@ -283,11 +283,11 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRESeq e) {
-        throw XicInternalException.internal("IRESeq is not canonical");
+        throw XicInternalException.runtime("IRESeq is not canonical");
     }
 
     public Temp visit(IRExp e) {
-        throw XicInternalException.internal("IRExp is not canoncial");        
+        throw XicInternalException.runtime("IRExp is not canoncial");        
     }
 
     public Temp visit(IRLabel l) {
@@ -342,7 +342,7 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRName n) {
-        throw XicInternalException.internal("IRName not visited");
+        throw XicInternalException.runtime("IRName not visited");
     }
 
     public Temp visit(IRReturn r) {

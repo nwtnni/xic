@@ -41,7 +41,7 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
 
     public void addNameToCurrentIndex(String name) {
         if (nameToIndex.containsKey(name)) {
-            throw XicInternalException.internal("Error - encountered "
+            throw XicInternalException.runtime("Error - encountered "
                     + "duplicate name " + name
                     + " in the IR tree -- go fix the generator.");
         }

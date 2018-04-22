@@ -72,7 +72,7 @@ public abstract class Context<S,T> {
      * @throws XicInternalException if Symbol s is already bound in this context
      */
     public void add(S s, T t) {
-        if (contains(s)) { throw XicInternalException.internal("Shadowing key in context"); }
+        if (contains(s)) { throw XicInternalException.runtime("Shadowing key in context"); }
         PMap<S, T> map = context.get(0);
         context = context.minus(0);
         map = map.plus(s, t);
@@ -94,7 +94,7 @@ public abstract class Context<S,T> {
             context = context.minus(0);
             return;
         }
-        throw XicInternalException.internal("Cannot remove global context.");
+        throw XicInternalException.runtime("Cannot remove global context.");
     }
 
     /**

@@ -25,16 +25,9 @@ public class IRGraph<E> extends PairEdgeGraph<IRNode, E> {
      * visited nodes and the sequence of nodes. 
      * Requires: edges contains a single edge.
      * */
-    private IRNode addNode(Set<PairEdge<IRNode, E>> edges, Set<IRNode> visited, IRSeq body) {
+    private IRNode getSuccessor(Set<PairEdge<IRNode, E>> edges) {
         assert edges.size() == 1;
-        PairEdge<IRNode, E> edge = edges.iterator().next();
-
-        if (visited.contains(edge.tail)) {
-            throw XicInternalException.internal("Trying to add an IR node twice!");
-        }
-        visited.add(edge.tail);
-        body.add(edge.tail);
-        return edge.tail;
+        return edges.iterator().next().tail;
     }
 
     public IRFuncDecl toIR() {
@@ -44,34 +37,37 @@ public class IRGraph<E> extends PairEdgeGraph<IRNode, E> {
         Set<IRNode> visited = new HashSet<>();
         Set<IRNode> remaining = vertexSet();
 
-        visited.add(start);
-        body.add(start);
-
         IRNode current = start;
         while (current != null) {
+            if (visited.contains(current)) {
+                throw XicInternalException.runtime("Trying to add IR node twice from CFG!");
+            }
+            visited.add(current);
+            body.add(current);
+
             Set<PairEdge<IRNode, E>> edges = outgoingEdgesOf(current);
             if (current instanceof IRCJump) {
-                IRCJump cjump = (IRCJump) current;
-
-                // Follow fall through edge
-                PairEdge<IRNode, E> e = getEdge(cjump, cjump.trueLabel());
-                edges.remove(e);
-                current = addNode(edges, visited, body);
+                // Follow the fall-through edge
+                edges.remove(getEdge(current, ((IRCJump) current).trueLabel()));
+                current = getSuccessor(edges);
             } else if (current instanceof IRJump) {
+                // Trace ends with jump
                 current = null;
             } else if (current instanceof IRLabel) {
-                current = addNode(edges, visited, body);
+                current = getSuccessor(edges);
             } else if (current instanceof IRMove) {
-                current = addNode(edges, visited, body);
+                current = getSuccessor(edges);
             } else if (current instanceof IRReturn) {
+                // Trace ends with return
                 current = null;
             }
+
+            // Start a new trace if nodes remain
             remaining.removeAll(visited);
             if (current == null && remaining.size() > 0) {
                 current = remaining.iterator().next();
             }
         }
-
 
         return fn;
     }

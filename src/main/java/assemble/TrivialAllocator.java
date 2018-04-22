@@ -86,7 +86,7 @@ public class TrivialAllocator {
         if (tempStack.containsKey(name)) {
             return Operand.mem(Operand.RBP, -normalize(tempStack.get(name) + 1));
         }
-        throw XicInternalException.internal("Non-existent temp. Check tiler.");
+        throw XicInternalException.runtime("Non-existent temp. Check tiler.");
     }
 
     /**
