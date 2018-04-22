@@ -1,5 +1,8 @@
 package reorder;
 
+import org.jgrapht.*;
+import org.jgrapht.graph.DefaultDirectedGraph;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,17 +18,32 @@ import ir.IRLabel;
 import ir.IRName;
 import ir.IRNode;
 import ir.IRReturn;
-import util.Graph;
+
+import util.Pair;
+import util.PairEdge;
 
 public class ControlFlow {
 
+	private class LabelPair extends Pair<String, String> {
+		public LabelPair(String a, String b) {
+			super(a, b);
+		}
+	}
+
+	private class LabelPairFactory implements EdgeFactory<String, LabelPair> {
+		@Override
+		public LabelPair createEdge(String a, String b) {
+			return new LabelPair(a, b);
+		}
+	}
+
 	private ControlFlow() {
-		graph = new Graph<>();
+		graph = new DefaultDirectedGraph<>(new LabelPairFactory());
 		blocks = new HashMap<>();
 	}
 	
 	private Block start;
-	private Graph<String, Void> graph;
+	private Graph<String, LabelPair> graph;
 	private Map<String, Block> blocks;
 	
 	private enum State {
@@ -44,6 +62,7 @@ public class ControlFlow {
 		State state = State.WITHIN_BLOCK;
 		Block block = new Block(IRLabelFactory.generate("_START"));
 		cfg.start = block;
+		cfg.graph.addVertex(cfg.start.label);
 		
 		for (IRNode s : statements) {
 			
@@ -53,7 +72,9 @@ public class ControlFlow {
 				case WITHIN_BLOCK:
 					block.add(new IRJump(new IRName(label.name)));
 					cfg.blocks.put(block.label, block);
-					cfg.graph.put(block.label, label.name, null);
+					cfg.graph.addVertex(block.label);
+					cfg.graph.addVertex(label.name);
+					cfg.graph.addEdge(block.label, label.name);
 					break;
 				case AFTER_JUMP:
 					state = State.WITHIN_BLOCK;
@@ -73,18 +94,20 @@ public class ControlFlow {
 			// Jump statements terminate basic blocks
 			if (s instanceof IRReturn || s instanceof IRJump || s instanceof IRCJump) {
 				cfg.blocks.put(block.label, block);
+				cfg.graph.addVertex(block.label);
+
 				state = State.AFTER_JUMP;
 				
 				if (s instanceof IRReturn) {
-					cfg.graph.insert(block.label);
+					cfg.graph.addVertex(block.label);
 				} else if (s instanceof IRJump) {
 					IRJump jump = (IRJump) s;
 					IRName target = (IRName) jump.target;
-					cfg.graph.put(block.label, target.name, null);
+					cfg.graph.addEdge(block.label, target.name);
 				} else {
 					IRCJump cjump = (IRCJump) s;
-					cfg.graph.put(block.label, cjump.trueLabel, null);
-					cfg.graph.put(block.label, cjump.falseLabel, null);
+					cfg.graph.addEdge(block.label, cjump.trueLabel);
+					cfg.graph.addEdge(block.label, cjump.falseLabel);
 				}
 			}
 		}
@@ -106,7 +129,7 @@ public class ControlFlow {
 	}
 	
 	public List<Block> neighbors(Block block) {
-		return graph.successors(block.label)
+		return graph.outgoingEdgesOf(block.label)
 			.stream()
 			.map(edge -> blocks.get(edge.first))
 			.collect(Collectors.toCollection(ArrayList::new));
