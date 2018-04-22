@@ -1,12 +1,11 @@
 package optimize;
 
-import org.jgrapht.*;
-
-import ir.*;
+import ir.IRNode;
 import util.PairEdge;
+import util.PairEdgeFactory;
 
 /** Superclass for all IR control flow graph edges. */
-abstract class IREdgeFactory<E> implements EdgeFactory<IRNode, PairEdge<IRNode, E>> {
+abstract class IREdgeFactory<E> implements PairEdgeFactory<IRNode, E> {
     @Override
     public PairEdge<IRNode, E> createEdge(IRNode a, IRNode b) {
         return new PairEdge<>(a, b, null);
