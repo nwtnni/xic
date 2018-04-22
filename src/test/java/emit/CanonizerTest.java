@@ -138,8 +138,8 @@ public class CanonizerTest {
 		
 		IRCJump jump = (IRCJump) s2;
 		assertEquals(true, jump.cond instanceof IRTemp);
-		assertEquals(true, jump.trueLabel.equals("true"));
-		assertEquals(true, jump.falseLabel.equals("false"));
+		assertEquals(true, jump.trueName().equals("true"));
+		assertEquals(true, jump.falseName().equals("false"));
 	}
 	
 	@Test

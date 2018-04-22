@@ -5,6 +5,7 @@ package ir;
  */
 public class IRJump extends IRStmt {
     public IRNode target;
+    public IRLabel label;
 
     /**
      *
@@ -13,6 +14,11 @@ public class IRJump extends IRStmt {
 
     public IRJump(IRNode n) {
         target = n;
+    }
+
+    public IRJump(IRLabel label) {
+        this.target = new IRName(label.name);
+        this.label = label;
     }
 
     public IRNode target() {

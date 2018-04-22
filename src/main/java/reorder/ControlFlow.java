@@ -106,8 +106,8 @@ public class ControlFlow {
 					cfg.graph.addEdge(block.label, target.name);
 				} else {
 					IRCJump cjump = (IRCJump) s;
-					cfg.graph.addEdge(block.label, cjump.trueLabel);
-					cfg.graph.addEdge(block.label, cjump.falseLabel);
+					cfg.graph.addEdge(block.label, cjump.trueName());
+					cfg.graph.addEdge(block.label, cjump.falseName());
 				}
 			}
 		}

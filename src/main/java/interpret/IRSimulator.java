@@ -436,9 +436,9 @@ public class IRSimulator {
             long top = exprStack.popValue();
             String label;
             if (top == 0)
-                label = irCJump.falseLabel();
+                label = irCJump.falseName();
             else if (top == 1)
-                label = irCJump.trueLabel();
+                label = irCJump.trueName();
             else {
                 throw XicInternalException.internal("Invalid value in CJUMP - expected 0/1, got "
                         + top);

@@ -57,7 +57,7 @@ public class Emitter extends Visitor<IRNode> {
      * Make a jump to a label.
      */
     private IRJump jump(IRLabel l) {
-        return new IRJump(new IRName(l.name));
+        return new IRJump(l);
     }
 
     /**
@@ -362,7 +362,6 @@ public class Emitter extends Visitor<IRNode> {
 
     public IRNode visit(Program p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
-
         program.appendFunc(xiArrayConcat());
         program.appendFunc(xiDynamicAlloc());
 
@@ -370,11 +369,8 @@ public class Emitter extends Visitor<IRNode> {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
             program.appendFunc(f);
         }
-        return program;
-    }
 
-    public IRNode visit(Use u) throws XicException {
-        return null;
+        return program;
     }
 
     public IRNode visit(Fn f) throws XicException {
@@ -398,22 +394,6 @@ public class Emitter extends Visitor<IRNode> {
      * Statement nodes
      */
 
-    public IRNode visit(Declare d) throws XicException {
-        if (d.isUnderscore()) {
-            return null;
-        }
-        IRTemp var = new IRTemp(d.id);
-        if (!d.type.isPrimitive()) {
-
-            // Case for array declaration with dimensions
-            IRESeq arr = (IRESeq) d.xiType.accept(this);
-            if (arr != null) {
-                return new IRMove(var, arr);
-            }
-        }
-        return var;
-    }
-
     public IRNode visit(Assign a) throws XicException {
         List<IRNode> lhs = visit(a.lhs);
         IRNode rhs = a.rhs.accept(this);
@@ -434,6 +414,7 @@ public class Emitter extends Visitor<IRNode> {
         } else {
             stmts.add(new IRMove(lhs.get(0), rhs));
         }
+
         for (int i = 1; i < lhs.size(); i++) {
             IRNode n = lhs.get(i);
             if (n != null) {
@@ -442,17 +423,6 @@ public class Emitter extends Visitor<IRNode> {
         }
 
         return new IRSeq(stmts);
-    }
-
-    public IRNode visit(Return r) throws XicException {
-        if (r.hasValues()) {
-            List<IRNode> values = new ArrayList<>();
-            for (Node n : r.values) {
-                values.add(n.accept(this));
-            }
-            return new IRReturn(values);
-        }
-        return new IRReturn();
     }
 
     public IRNode visit(Block b) throws XicException {
@@ -466,7 +436,26 @@ public class Emitter extends Visitor<IRNode> {
                 stmts.add(stmt);
             }
         }
+
         return new IRSeq(stmts);
+    }
+
+    public IRNode visit(Declare d) throws XicException {
+        if (d.isUnderscore()) {
+            return null;
+        }
+
+        IRTemp var = new IRTemp(d.id);
+        if (!d.type.isPrimitive()) {
+
+            // Case for array declaration with dimensions
+            IRESeq arr = (IRESeq) d.xiType.accept(this);
+            if (arr != null) {
+                return new IRMove(var, arr);
+            }
+        }
+
+        return var;
     }
 
     public IRNode visit(If i) throws XicException {
@@ -487,6 +476,17 @@ public class Emitter extends Visitor<IRNode> {
         return new IRSeq(nodes);
     }
 
+    public IRNode visit(Return r) throws XicException {
+        if (r.hasValues()) {
+            List<IRNode> values = new ArrayList<>();
+            for (Node n : r.values) {
+                values.add(n.accept(this));
+            }
+            return new IRReturn(values);
+        }
+        return new IRReturn();
+    }
+
     public IRNode visit(While w) throws XicException {
         List<IRNode> nodes = new ArrayList<>();
         IRLabel headL = IRLabelFactory.generate("while");
@@ -501,25 +501,11 @@ public class Emitter extends Visitor<IRNode> {
         nodes.add(falseL);
         
         return new IRSeq(nodes);
-
     }
 
     /*
      * Expression nodes
      */
-
-    public IRNode visit(Call c) throws XicException {
-        if (c.id.equals("length")) {
-            return length((IRExpr) c.args.get(0).accept(this));
-        }
-
-        IRName target = new IRName(context.lookup(c.id));
-        List<IRNode> argList = new ArrayList<>();
-        for (Node n : c.getArgs()) {
-            argList.add(n.accept(this));
-        }
-        return new IRCall(target, argList);
-    }
 
     public IRNode visit(Binary b) throws XicException {
         IRExpr left = (IRExpr) b.lhs.accept(this);
@@ -586,17 +572,17 @@ public class Emitter extends Visitor<IRNode> {
         return null;
     }
 
-    public IRNode visit(Unary u) throws XicException {
-        IRNode child = u.child.accept(this);
-        if (u.isLogical()) {
-            return new IRBinOp(IRBinOp.OpType.XOR, new IRConst(1), child);
-        } else {
-            return new IRBinOp(IRBinOp.OpType.SUB, new IRConst(0), child);
+    public IRNode visit(Call c) throws XicException {
+        if (c.id.equals("length")) {
+            return length((IRExpr) c.args.get(0).accept(this));
         }
-    }
 
-    public IRNode visit(Var v) throws XicException {
-        return new IRTemp(v.id);
+        IRName target = new IRName(context.lookup(c.id));
+        List<IRNode> argList = new ArrayList<>();
+        for (Node n : c.getArgs()) {
+            argList.add(n.accept(this));
+        }
+        return new IRCall(target, argList);
     }
 
     /**
@@ -630,8 +616,25 @@ public class Emitter extends Visitor<IRNode> {
         return new IRMem(new IRESeq(new IRSeq(stmts), result));
     }
 
-    public IRNode visit(XiInt i) throws XicException {
-        return new IRConst(i.value);
+    public IRNode visit(Unary u) throws XicException {
+        IRNode child = u.child.accept(this);
+        if (u.isLogical()) {
+            return new IRBinOp(IRBinOp.OpType.XOR, new IRConst(1), child);
+        } else {
+            return new IRBinOp(IRBinOp.OpType.SUB, new IRConst(0), child);
+        }
+    }
+
+    public IRNode visit(Var v) throws XicException {
+        return new IRTemp(v.id);
+    }
+
+    /*
+     * Constant nodes
+     */
+
+    public IRNode visit(XiArray a) throws XicException {
+        return alloc(visit(a.values));
     }
 
     public IRNode visit(XiBool b) throws XicException {
@@ -643,17 +646,13 @@ public class Emitter extends Visitor<IRNode> {
         return new IRConst(c.value);
     }
 
+    public IRNode visit(XiInt i) throws XicException {
+        return new IRConst(i.value);
+    }
+
     public IRNode visit(XiString s) throws XicException {
         return alloc(s);
     }
-
-    public IRNode visit(XiArray a) throws XicException {
-        return alloc(visit(a.values));
-    }
-
-    /*
-     * Other nodes
-     */
 
     public IRNode visit(XiType t) throws XicException {
         // Only allocate memory for special case of syntactic sugar

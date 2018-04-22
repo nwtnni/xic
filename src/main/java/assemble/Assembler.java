@@ -269,25 +269,25 @@ public class Assembler extends IRVisitor<String> {
             cmds.add(String.format("cmpq %s, %%rax", right));
             switch (bo.type) {
                 case EQ:
-                    cmds.add("je " + c.trueLabel);
+                    cmds.add("je " + c.trueName());
                     return null;
                 case NEQ:
-                    cmds.add("jne " + c.trueLabel);
+                    cmds.add("jne " + c.trueName());
                     return null;
                 case LT:
-                    cmds.add("jl " + c.trueLabel);
+                    cmds.add("jl " + c.trueName());
                     return null;
                 case GT:
-                    cmds.add("jg " + c.trueLabel);
+                    cmds.add("jg " + c.trueName());
                     return null;
                 case LEQ:
-                    cmds.add("jle " + c.trueLabel);
+                    cmds.add("jle " + c.trueName());
                     return null;
                 case GEQ:
-                    cmds.add("jge " + c.trueLabel);
+                    cmds.add("jge " + c.trueName());
                     return null;
                 case XOR:
-                    cmds.add("jne " + c.trueLabel);
+                    cmds.add("jne " + c.trueName());
                     return null;
                 default:
                     throw new RuntimeException("How did this BinOp get here?");
@@ -297,7 +297,7 @@ public class Assembler extends IRVisitor<String> {
         String condTemp = c.cond.accept(this);
         cmds.add(String.format("movq %s, %%rax", condTemp)); // TODO only needed if condTemp is an immediate
         cmds.add("cmpq $1, %rax");
-        cmds.add("jz "+c.trueLabel);
+        cmds.add("jz "+c.trueName());
 
         return null;
     }

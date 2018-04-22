@@ -124,9 +124,9 @@ public class Printer extends IRVisitor<Void> {
         printer.startList();
         printer.printAtom("CJUMP");
         c.cond.accept(this);
-        printer.printAtom(c.trueLabel);
+        printer.printAtom(c.trueName());
         if (c.hasFalseLabel()) {
-            printer.printAtom(c.falseLabel);
+            printer.printAtom(c.falseName());
         }
         printer.endList();
         return null;

@@ -93,10 +93,11 @@ public class Canonizer extends IRVisitor<IRNode> {
 
     /**
      * Lowers an IRCJump node by hoisting its expression.
+     * Requires: IRCJump only has a true label.
      */
     public IRNode visit(IRCJump c) {
         IRNode condExpr = c.cond.accept(this);
-        stmts.add(new IRCJump(condExpr, c.trueLabel, c.falseLabel));
+        stmts.add(new IRCJump(condExpr, c.trueName()));
         return null;
     }
 

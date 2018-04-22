@@ -264,12 +264,12 @@ public class Tiler extends IRVisitor<Temp> {
                 default:
                     throw XicInternalException.internal("Invalid binop for CJUMP");
             }
-            instrs.add(new Jcc(flag, c.trueLabel));
+            instrs.add(new Jcc(flag, c.trueName()));
         }
 
         Temp cond = c.cond.accept(this);
         instrs.add(new Cmp(Temp.imm(1), cond));
-        instrs.add(new Jcc(Jcc.Kind.Z, c.trueLabel));
+        instrs.add(new Jcc(Jcc.Kind.Z, c.trueName()));
         return null;
     }
 
