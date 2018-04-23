@@ -61,10 +61,11 @@ public class Printer extends IRVisitor<Void> {
                 comp = (IRCompUnit) Canonizer.canonize(comp);
                 // comp = Tracer.trace(comp);
 
-                // Generate .ir file
-                OutputStream stream = new FileOutputStream(output);
-                Printer p = new Printer(stream);
-                comp.accept(p);
+                // Generate -before.ir file for debug
+                String debug = Filename.removeExtension(output) + "-before.ir";
+                OutputStream debugStream = new FileOutputStream(debug);
+                Printer debugP = new Printer(debugStream);
+                comp.accept(debugP);
 
                 if (run) {
                     try {
@@ -73,34 +74,35 @@ public class Printer extends IRVisitor<Void> {
                     } catch (Trap e) {
                         System.out.println(e.getMessage());
                     }
+                    System.out.println();
                 }
 
                 // Begin graph test
-                // IREdgeFactory<Void> ef = new IREdgeFactory<>();
+                IREdgeFactory<Void> ef = new IREdgeFactory<>();
 
-                // IRGraphFactory<Void> gf = new IRGraphFactory<>(comp, ef);
+                IRGraphFactory<Void> gf = new IRGraphFactory<>(comp, ef);
 
-                // List<IRGraph<Void>> cfgs = gf.getCfgs();
+                List<IRGraph<Void>> cfgs = gf.getCfgs();
 
-                // IRCompUnit after = new IRCompUnit("after");
-                // for (IRGraph<Void> c : cfgs) {
-                //     after.appendFunc(c.toIR());
-                // }
+                IRCompUnit after = new IRCompUnit("after");
+                for (IRGraph<Void> c : cfgs) {
+                    after.appendFunc(c.toIR());
+                }
 
 
-                // output = Filename.removeExtension(output) + "-after.ir";
-                // stream = new FileOutputStream(output);
-                // p = new Printer(stream);
-                // after.accept(p);
+                OutputStream stream = new FileOutputStream(output);
+                Printer p = new Printer(stream);
+                after.accept(p);
 
-                // if (run) {
-                //     try {
-                //         IRSimulator sim = new IRSimulator(after);
-                //         sim.call("_Imain_paai", 0);
-                //     } catch (Trap e) {
-                //         System.out.println(e.getMessage());
-                //     }
-                // }
+                if (run) {
+                    try {
+                        IRSimulator sim = new IRSimulator(after);
+                        sim.call("_Imain_paai", 0);
+                    } catch (Trap e) {
+                        System.out.println(e.getMessage());
+                    }
+                    System.out.println();
+                }
 
                 // End graph test
 
@@ -123,6 +125,7 @@ public class Printer extends IRVisitor<Void> {
         StringWriter sw = new StringWriter();
         Printer p = new Printer(new PrintWriter(sw));
         ast.accept(p);
+        p.printer.flush();
         return sw.toString();
     }
 

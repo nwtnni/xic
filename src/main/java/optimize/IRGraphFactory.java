@@ -46,10 +46,8 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
 
     public IRStmt visit(IRSeq s) {
         for (IRStmt n : s.stmts()) {
-            System.out.println("adding " + n.label());
             cfg.addVertex(n);
            
-            System.out.println("added node " + n.label()); 
             if (prev != null) {
                 cfg.addEdge(prev, n);
             }

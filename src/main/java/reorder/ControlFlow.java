@@ -55,7 +55,7 @@ public class ControlFlow {
 		
 		List<IRStmt> statements = new ArrayList<>(program);
 		IRLabel end = IRLabelFactory.generate("_END");
-		statements.add(new IRJump(new IRName(end)));
+		statements.add(new IRJump(end));
 		statements.add(end);
 		
 		ControlFlow cfg = new ControlFlow();
@@ -70,7 +70,7 @@ public class ControlFlow {
 				IRLabel label = (IRLabel) s;
 				switch (state) {
 				case WITHIN_BLOCK:
-					block.add(new IRJump(new IRName(label)));
+					block.add(new IRJump(label));
 					cfg.blocks.put(block.label, block);
 					cfg.graph.addVertex(block.label);
 					cfg.graph.addVertex(label.name());

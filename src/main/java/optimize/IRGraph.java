@@ -1,7 +1,9 @@
 package optimize;
 
-import java.util.Set;
+import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.Deque;
+import java.util.Set;
 
 import ir.*;
 import util.PairEdge;
@@ -35,37 +37,45 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
         IRFuncDecl fn = new IRFuncDecl(name, body);
 
         Set<IRStmt> visited = new HashSet<>();
-        Set<IRStmt> remaining = vertexSet();
+        Deque<IRStmt> traces = new ArrayDeque<>();
+        traces.push(start);
 
-        IRStmt current = start;
-        while (current != null) {
+        while (traces.size() > 0) {
+            IRStmt current = traces.poll();
+
             if (visited.contains(current)) {
-                throw XicInternalException.runtime("Trying to add IR node twice from CFG!");
+                if (current instanceof IRLabel) {
+                    continue;
+                } else {
+                    throw XicInternalException.runtime("Trying to add IR node twice from IR CFG!");
+                }
             }
             visited.add(current);
             body.add(current);
 
-            Set<PairEdge<IRStmt, E>> edges = outgoingEdgesOf(current);
+            Set<PairEdge<IRStmt, E>> edges = new HashSet<>(outgoingEdgesOf(current));
             if (current instanceof IRCJump) {
-                // Follow the fall-through edge
-                edges.remove(getEdge(current, ((IRCJump) current).trueLabel()));
-                current = getSuccessor(edges);
+                // Remove the edge to the label if it is different from the fall-through
+                if (edges.size() > 1) {
+                    PairEdge<IRStmt, E> toLabel = getEdge(current, ((IRCJump) current).trueLabel());
+                    edges.remove(toLabel);
+                    traces.push(toLabel.tail);
+                }
+                traces.push(getSuccessor(edges));
             } else if (current instanceof IRJump) {
                 // Trace ends with jump
-                current = null;
+                IRJump j = (IRJump) current;
+                if (j.hasLabel()) {
+                    traces.push(j.targetLabel());
+                } else {
+                    // Handle arbitrary jumps
+                }
             } else if (current instanceof IRLabel) {
-                current = getSuccessor(edges);
+                traces.push(getSuccessor(edges));
             } else if (current instanceof IRMove) {
-                current = getSuccessor(edges);
+                traces.push(getSuccessor(edges));
             } else if (current instanceof IRReturn) {
                 // Trace ends with return
-                current = null;
-            }
-
-            // Start a new trace if nodes remain
-            remaining.removeAll(visited);
-            if (current == null && remaining.size() > 0) {
-                current = remaining.iterator().next();
             }
         }
 

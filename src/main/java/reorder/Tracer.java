@@ -98,13 +98,13 @@ public class Tracer extends IRVisitor<Void> {
                 IRConst one = new IRConst(1);
                 IRBinOp lneg = new IRBinOp(IRBinOp.OpType.XOR, one, cjump.cond);
                 
-                merged.set(merged.size() - 1, new IRCJump(lneg, cjump.falseName()));
+                merged.set(merged.size() - 1, new IRCJump(lneg, cjump.falseLabel()));
                 next.remove(0);
             }
             
             // Fall through on false
             else if (cjump.falseName().equals(label.name())) {
-                merged.set(merged.size() - 1, new IRCJump(cjump.cond, cjump.trueName()));
+                merged.set(merged.size() - 1, new IRCJump(cjump.cond, cjump.trueLabel()));
                 next.remove(0);
             }
         }

@@ -28,8 +28,9 @@ public class ControlFlowTest {
 	public void testJump() {
 		List<IRStmt> program = new ArrayList<>();
 		
-		program.add(new IRJump(new IRName("test")));
-		program.add(new IRLabel("test"));
+		IRLabel exit = new IRLabel("test");
+		program.add(new IRJump(exit));
+		program.add(exit);
 		
 		ControlFlow cfg = ControlFlow.from(program);
 		assertEquals(cfg.size(), 3);
@@ -43,55 +44,63 @@ public class ControlFlowTest {
 	@Test
 	public void testConditional() {
 		List<IRStmt> program = new ArrayList<>();
-		program.add(new IRCJump(new IRConst(1), "true", "false"));
-		program.add(new IRLabel("true"));
+		IRLabel t = new IRLabel("true");
+		IRLabel f = new IRLabel("false");
+		IRLabel e = new IRLabel("exit");
+
+		program.add(new IRCJump(new IRConst(1), t, f));
+		program.add(t);
 		program.add(new IRMove(new IRMem(new IRTemp("test1")), new IRConst(1)));
-		program.add(new IRJump(new IRName("exit")));
-		program.add(new IRLabel("false"));
+		program.add(new IRJump(e));
+		program.add(f);
 		program.add(new IRMove(new IRMem(new IRTemp("test2")), new IRConst(2)));
-		program.add(new IRLabel("exit"));
+		program.add(e);
 		
 		ControlFlow cfg = ControlFlow.from(program);
 		assertEquals(cfg.size(), 5);
 		
 		Block start = cfg.start();
 		assertEquals(cfg.neighbors(start).size(), 2);
-		Block t = cfg.neighbors(start).get(0);
-		Block f = cfg.neighbors(start).get(1);
-		assertEquals(t.label, "true");
-		assertEquals(f.label, "false");
+		Block tb = cfg.neighbors(start).get(0);
+		Block fb = cfg.neighbors(start).get(1);
+		assertEquals(tb.label, "true");
+		assertEquals(fb.label, "false");
 		
-		assertEquals(cfg.neighbors(t).size(), 1);
-		assertEquals(cfg.neighbors(t).get(0).label, "exit");
+		assertEquals(cfg.neighbors(tb).size(), 1);
+		assertEquals(cfg.neighbors(tb).get(0).label, "exit");
 		
-		assertEquals(cfg.neighbors(f).size(), 1);
-		assertEquals(cfg.neighbors(f).get(0).label, "exit");
+		assertEquals(cfg.neighbors(fb).size(), 1);
+		assertEquals(cfg.neighbors(fb).get(0).label, "exit");
 	}
 	
 	@Test
 	public void testReturn() {
 		List<IRStmt> program = new ArrayList<>();
-		program.add(new IRCJump(new IRConst(1), "true", "false"));
-		program.add(new IRLabel("true"));
+		IRLabel t = new IRLabel("true");
+		IRLabel f = new IRLabel("false");
+		IRLabel e = new IRLabel("exit");
+
+		program.add(new IRCJump(new IRConst(1), t, f));
+		program.add(t);
 		program.add(new IRMove(new IRMem(new IRTemp("test1")), new IRConst(1)));
-		program.add(new IRJump(new IRName("exit")));
-		program.add(new IRLabel("false"));
+		program.add(new IRJump(e));
+		program.add(f);
 		program.add(new IRReturn());
-		program.add(new IRLabel("exit"));
+		program.add(e);
 
 		ControlFlow cfg = ControlFlow.from(program);
 		assertEquals(cfg.size(), 5);
 		
 		Block start = cfg.start();
 		assertEquals(cfg.neighbors(start).size(), 2);
-		Block t = cfg.neighbors(start).get(0);
-		Block f = cfg.neighbors(start).get(1);
-		assertEquals(t.label, "true");
-		assertEquals(f.label, "false");
+		Block tb = cfg.neighbors(start).get(0);
+		Block fb = cfg.neighbors(start).get(1);
+		assertEquals(tb.label, "true");
+		assertEquals(fb.label, "false");
 		
-		assertEquals(cfg.neighbors(t).size(), 1);
-		assertEquals(cfg.neighbors(t).get(0).label, "exit");
+		assertEquals(cfg.neighbors(tb).size(), 1);
+		assertEquals(cfg.neighbors(tb).get(0).label, "exit");
 		
-		assertEquals(cfg.neighbors(f).size(), 0);
+		assertEquals(cfg.neighbors(fb).size(), 0);
 	}
 }

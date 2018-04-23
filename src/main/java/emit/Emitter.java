@@ -50,7 +50,7 @@ public class Emitter extends Visitor<IRNode> {
     protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
     // Toggle inserting library functions
-    private static final boolean DEBUG = false;
+    private static final boolean INCLUDE_LIB = false;
 
     /* 
      * Utility methods for code generation
@@ -100,7 +100,7 @@ public class Emitter extends Visitor<IRNode> {
             }
         }
         return new IRSeq(
-            new IRCJump((IRExpr) n.accept(this), trueL.name()),
+            new IRCJump((IRExpr) n.accept(this), trueL),
             jump(falseL)
         );
     }
@@ -115,7 +115,7 @@ public class Emitter extends Visitor<IRNode> {
 
         return new IRSeq(
             headL,
-            new IRCJump(guard, trueL.name()),
+            new IRCJump(guard, trueL),
             jump(falseL),
             trueL,
             block,
@@ -165,7 +165,7 @@ public class Emitter extends Visitor<IRNode> {
         stmts.add(new IRMove(pointer, addr));
 
         //Store length of array
-        stmts.add(new IRMove(new IRMem(pointer), new IRConst(length)));
+        stmts.add(new IRMove(new IRMem(pointer, MemType.IMMUTABLE), new IRConst(length)));
 
         // Storing values of array into memory
         for(int i = 0; i < length; i++) {
@@ -276,7 +276,7 @@ public class Emitter extends Visitor<IRNode> {
         fn.add(new IRMove(pointer, addr));
 
         // Store length then shift pointer
-        fn.add(new IRMove(new IRMem(pointer), length));
+        fn.add(new IRMove(new IRMem(pointer, MemType.IMMUTABLE), length));
         fn.add(incrPointer(pointer));
 
         fn.add(new IRReturn(pointer));
@@ -366,7 +366,7 @@ public class Emitter extends Visitor<IRNode> {
     public IRNode visit(Program p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
 
-        if (!DEBUG) {
+        if (!INCLUDE_LIB) {
             program.appendFunc(xiArrayConcat());
             program.appendFunc(xiDynamicAlloc());
         }
@@ -611,8 +611,8 @@ public class Emitter extends Visitor<IRNode> {
 
         // Check bounds
         IRLabel outOfBounds = IRLabelFactory.generate("out_of_bounds");
-        stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, ZERO), outOfBounds.name()));
-        stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, length(pointer)), outOfBounds.name()));
+        stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, ZERO), outOfBounds));
+        stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, length(pointer)), outOfBounds));
         stmts.add(new IRMove(result, shiftAddr(pointer, index)));
         stmts.add(jump(doneL));
         stmts.add(outOfBounds);

@@ -97,7 +97,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      */
     public IRNode visit(IRCJump c) {
         IRExpr condExpr = (IRExpr) c.cond.accept(this);
-        stmts.add(new IRCJump(condExpr, c.trueName()));
+        stmts.add(new IRCJump(condExpr, c.trueLabel()));
         return null;
     }
 
@@ -105,8 +105,12 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRJump node by hoisting its expression.
      */
     public IRNode visit(IRJump j) {
-        IRExpr targetExpr = (IRExpr) j.target().accept(this);
-        stmts.add(new IRJump(targetExpr));
+        if (j.hasLabel()) {
+            stmts.add(j);
+        } else {
+            IRExpr targetExpr = (IRExpr) j.target().accept(this);
+            stmts.add(new IRJump(targetExpr));
+        }
         return null;
     }
     

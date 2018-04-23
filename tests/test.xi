@@ -1,30 +1,26 @@
 use io
 use conv
 
-main(args:int[][]) {
-    x:int = 0
-    println(unparseInt(x))
-    // a:int[foo()]
+main (args:int[][]) {
+    n:int = 3
+    m:int = 5
+    arr:int[n][m]
 
-    // x:int = 0
-    // while (x < length(a)) {
-    //     a[x] = fib(x)
-    //     printInt(a[x])
-    //     x = x + 1
-    // }
+    println("populated")
+
+    i:int = 0
+    while (i < length(arr)) {
+        println("row " + unparseInt(i))
+        j:int = 0
+        while (j < length(arr[i])) {
+            // println(unparseInt(i) + ", " + unparseInt(j))
+            arr[i][j] = (i + 1) * (j + 1)
+            // println("contains:")
+            print(unparseInt(arr[i][j]))
+            if (j != m - 1) print(", ")
+            j = j + 1
+        }
+        println("")
+        i = i + 1
+    }
 }
-
-// foo() : int {
-//     return 40
-// }
-
-// fib(n:int) : int {
-//     if (n <= 2) {
-//         return 1
-//     }
-//     return fib(n-1) + fib(n-2)
-// }
-
-// printInt(x:int) {
-//     println(unparseInt(x))
-// }
