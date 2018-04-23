@@ -1,7 +1,7 @@
 package optimize;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import ir.*;
 
@@ -26,11 +26,11 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
     private IRStmt prev;
 
     /** Returns the list of CFGs for the compilation unit. */
-    public List<IRGraph<E>> getCfgs() {
-        List<IRGraph<E>> fns = new ArrayList<>();
+    public Map<String, IRGraph<E>> getCfgs() {
+        Map<String, IRGraph<E>> fns = new HashMap<>();
         for (IRFuncDecl fn : compUnit.functions().values()) {
             visit(fn);
-            fns.add(cfg);
+            fns.put(fn.name(), cfg);
         }
         return fns;
     }

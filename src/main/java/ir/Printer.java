@@ -23,7 +23,7 @@ import util.Filename;
 import xic.XicException;
 
 // for tests
-import java.util.List;
+import java.util.Map;
 import optimize.*;
 
 public class Printer extends IRVisitor<Void> {
@@ -81,10 +81,10 @@ public class Printer extends IRVisitor<Void> {
 
                 IRGraphFactory<Void> gf = new IRGraphFactory<>(comp, ef);
 
-                List<IRGraph<Void>> cfgs = gf.getCfgs();
+                Map<String, IRGraph<Void>> cfgs = gf.getCfgs();
 
                 IRCompUnit after = new IRCompUnit("after");
-                for (IRGraph<Void> c : cfgs) {
+                for (IRGraph<Void> c : cfgs.values()) {
                     after.appendFunc(c.toIR());
                 }
 
