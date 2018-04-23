@@ -478,6 +478,8 @@ public class Emitter extends Visitor<IRNode> {
             stmts.add(stmts.size() - 1, jump(doneL));
             stmts.add((IRStmt) i.elseBlock.accept(this));
             stmts.add(doneL);
+        } else {
+            stmts.add(stmts.size() - 1, jump(falseL));
         }
         return stmts;
     }

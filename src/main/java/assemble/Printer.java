@@ -11,6 +11,13 @@ import parse.*;
 import xic.XicException;
 import util.Filename;
 import util.Pair;
+
+
+// for tests
+import java.util.List;
+import java.util.ArrayList;
+import optimize.*;
+
 /**
  * Convenience class to write the result of a lexing run to file.
  */
@@ -49,6 +56,22 @@ public class Printer {
                 }
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
+
+                // Begin graph test
+                IREdgeFactory<Void> ef = new IREdgeFactory<>();
+
+                IRGraphFactory<Void> gf = new IRGraphFactory<>(comp, ef);
+
+                List<IRGraph<Void>> cfgs = gf.getCfgs();
+
+                IRCompUnit after = new IRCompUnit("after");
+                for (IRGraph<Void> c : cfgs) {
+                    after.appendFunc(c.toIR());
+                }
+
+                comp = after;
+
+                // end graph test
 
                 CompUnit u = Tiler.tile(comp, mangled);
 
