@@ -15,7 +15,6 @@ import util.Pair;
 
 // for tests
 import java.util.List;
-import java.util.ArrayList;
 import optimize.*;
 
 /**
