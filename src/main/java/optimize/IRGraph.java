@@ -38,6 +38,9 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
         return edges.iterator().next().tail;
     }
 
+    /**
+     * Converts CFG back to IR tree.
+     */
     public IRFuncDecl toIR() {
         IRSeq body = new IRSeq();
         IRFuncDecl fn = new IRFuncDecl(sourceName, name, body);
@@ -49,16 +52,18 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
         while (traces.size() > 0) {
             IRStmt current = traces.poll();
 
+            // Add node to IR
             if (visited.contains(current)) {
                 if (current instanceof IRLabel) {
                     continue;
                 } else {
-                    throw XicInternalException.runtime("Trying to add IR node twice from IR CFG!");
+                    throw XicInternalException.runtime("Trying to add label twice from IR CFG!");
                 }
             }
             visited.add(current);
             body.add(current);
 
+            // Get next node and update traces
             Set<PairEdge<IRStmt, E>> edges = new HashSet<>(outgoingEdgesOf(current));
             if (current instanceof IRCJump) {
                 // Remove the edge to the label if it is different from the fall-through

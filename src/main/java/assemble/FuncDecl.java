@@ -1,12 +1,13 @@
-package assemble.instructions;
+package assemble;
 
 import java.util.List;
 import java.util.ArrayList;
 
-import assemble.*;
+import assemble.instructions.*;
 import ir.IRFuncDecl;
 
 public class FuncDecl {
+    public String sourceName;
     public String name;
     public int args;
     public int rets;
@@ -17,6 +18,7 @@ public class FuncDecl {
     public List<Instr> epilogue;
 
     public FuncDecl(IRFuncDecl fn, int args, int rets, List<Instr> stmts) {
+        this.sourceName = fn.sourceName();
         this.name = fn.name();
         this.args = args;
         this.rets = rets;

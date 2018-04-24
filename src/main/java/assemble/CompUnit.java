@@ -1,4 +1,4 @@
-package assemble.instructions;
+package assemble;
 
 import java.util.List;
 import java.util.ArrayList;

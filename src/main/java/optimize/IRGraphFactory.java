@@ -10,7 +10,6 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
     public IRGraphFactory(IRCompUnit compUnit, IREdgeFactory<E> edgeFactory) {
         this.compUnit = compUnit;
         this.edgeFactory = edgeFactory;
-        this.prev = null;
     }
 
     /** The compilation unit to generate CFGs from. */
