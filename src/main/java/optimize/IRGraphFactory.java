@@ -38,7 +38,7 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
     public IRStmt visit(IRFuncDecl f) {
         prev = null;
 
-        cfg = new IRGraph<>(f.name(), f.get(0), edgeFactory);
+        cfg = new IRGraph<>(f.sourceName(), f.name(), f.get(0), edgeFactory);
         f.body().accept(this);
 
         return null;

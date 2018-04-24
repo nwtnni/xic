@@ -16,10 +16,14 @@ import xic.XicInternalException;
 @SuppressWarnings("serial")
 public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
     
-    public IRGraph(String name, IRStmt start, IREdgeFactory<E> edgeFactory) {
+    public IRGraph(String sourceName, String name, IRStmt start, IREdgeFactory<E> edgeFactory) {
         super(start, edgeFactory);
+        this.sourceName = sourceName;
         this.name = name;
     }
+
+    /** The original function name from source. */
+    private String sourceName;
 
     /** The name of the function associated with this CFG. */
     private String name;
@@ -36,7 +40,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
 
     public IRFuncDecl toIR() {
         IRSeq body = new IRSeq();
-        IRFuncDecl fn = new IRFuncDecl(name, body);
+        IRFuncDecl fn = new IRFuncDecl(sourceName, name, body);
 
         Set<IRStmt> visited = new HashSet<>();
         Deque<IRStmt> traces = new ArrayDeque<>();
@@ -85,7 +89,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
     }
 
     public void exportCfg(String basename, String phase) throws XicException {
-        String filename = String.format("%s_%s_%s.dot", basename, name, phase);
+        String filename = String.format("%s_%s_%s.dot", basename, sourceName, phase);
         super.exportCfg(filename);
     }
 

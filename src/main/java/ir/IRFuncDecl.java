@@ -4,17 +4,29 @@ import java.util.List;
 
 /** An IR function declaration */
 public class IRFuncDecl extends IRNode {
+    /** The original function name from source. */
+    private String sourceName;
+
+    /** The mangled function name. */
     private String name;
+
+    /** The function body. */
     private IRSeq body;
 
-    public IRFuncDecl(String name) {
+    public IRFuncDecl(String sourceName, String name) {
+        this.sourceName = sourceName;
         this.name = name;
         this.body = new IRSeq();
     }
 
-    public IRFuncDecl(String name, IRSeq body) {
+    public IRFuncDecl(String sourceName, String name, IRSeq body) {
+        this.sourceName = sourceName;
         this.name = name;
         this.body = body;
+    }
+
+    public String sourceName() {
+        return sourceName;
     }
 
     public String name() {

@@ -159,7 +159,7 @@ public class Canonizer extends IRVisitor<IRNode> {
     public IRNode visit(IRFuncDecl f) {
         stmts = new IRSeq();
         f.body().accept(this);
-        return new IRFuncDecl(f.name(), stmts);
+        return new IRFuncDecl(f.sourceName(), f.name(), stmts);
     }
 
     /**

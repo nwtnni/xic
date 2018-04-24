@@ -255,7 +255,7 @@ public class Emitter extends Visitor<IRNode> {
      * Generates library function for allocating memory for an dynamic array.
      */
     private IRFuncDecl xiDynamicAlloc() {
-        IRFuncDecl fn = new IRFuncDecl(ARRAY_ALLOC);
+        IRFuncDecl fn = new IRFuncDecl(ARRAY_ALLOC, ARRAY_ALLOC);
 
         IRTemp length = IRTempFactory.generate("d_length");
         fn.add(new IRMove(length, IRTempFactory.getArgument(0)));
@@ -289,7 +289,7 @@ public class Emitter extends Visitor<IRNode> {
      * _xi_array_concat(a, b)
      */
     private IRFuncDecl xiArrayConcat() {
-        IRFuncDecl fn = new IRFuncDecl(ARRAY_CONCAT);
+        IRFuncDecl fn = new IRFuncDecl(ARRAY_CONCAT, ARRAY_CONCAT);
 
         // Make copies of pointers
         IRTemp ap = IRTempFactory.generate("a_ptr_copy");
@@ -393,7 +393,7 @@ public class Emitter extends Visitor<IRNode> {
             body.add(new IRReturn());
         }
 
-        return new IRFuncDecl(context.lookup(f.id), body);
+        return new IRFuncDecl(f.id, context.lookup(f.id), body);
     }
 
     /*
