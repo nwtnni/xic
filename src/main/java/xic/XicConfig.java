@@ -10,7 +10,7 @@ public class XicConfig {
 
     //
     // Compiler Information
-    // 
+    //
 
     /**
      * Print help information.
@@ -30,17 +30,17 @@ public class XicConfig {
 	 * Directory to search for source files.
 	 */
 	public String source = "";
-	
+
 	/**
 	 * Directory to generate diagnostic files.
 	 */
 	public String sink = "";
-	
+
 	/**
 	 * Directory to generate assembly files.
 	 */
 	public String asm = "";
-	
+
 	/**
 	 * Directory to search for library files.
 	 */
@@ -49,42 +49,43 @@ public class XicConfig {
     //
     // Diagnostic Options
     //
-	
-	/**
-	 * Generate lexical diagnostic files.
-	 */
-	public boolean lex = false;
-	
-	/**
-	 * Generate syntactic diagnostic files.
-	 */
-	public boolean parse = false;
-	
-	/**
-	 * Generate semantic diagnostic files.
-	 */
-	public boolean type = false;
-	
-	/**
-	 * Generate IR diagnostic files.
-	 */
-	public boolean emit = false;
-	
-	/**
-	 * Simulate the generated IR.
-	 */
-	public boolean interpret = false;
-	
-	/**
-	 * Constant fold the generated IR.
-	 */
-	public boolean optimize = true;
-	
+    
+    /**
+     * Lexing phase of compilation.
+     */
+    public LexPhase lex = new LexPhase(false);
+
+    /**
+     * Parsing phase of compilation.
+     */
+    public ParsePhase parse = new ParsePhase(false);
+
+    /**
+     * Typechecking phase of compilation.
+     */
+    public TypePhase type = new TypePhase(false);
+
+    /**
+     * IR emitting phase of compilation.
+     */
+    public EmitPhase emit = new EmitPhase(false);
+
+    /**
+     * (Optional) IR interpreting phase of compilation.
+     */
+    public List<InterpretPhase> interpet = new ArrayList<>();
+
+    public List<OptimizePhase> optimize = new ArrayList<>();
+
+    //
+    // Compilation Options
+    //
+
 	/**
 	 * Target the given OS.
 	 */
 	public String os = "linux";
-	
+
 	/**
 	 * Compile the given files.
 	 */
