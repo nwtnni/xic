@@ -89,7 +89,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
         return fn;
     }
 
-    public void exportCfg(String basename, String phase) {
+    public void exportCfg(String basename, String phase) throws XicException {
         IntegerComponentNameProvider<IRStmt> idProvider = new IntegerComponentNameProvider<>();
         StringComponentNameProvider<IRStmt> nameProvider = new StringComponentNameProvider<>();
         PairEdgeDotExporter<IRStmt, E> export = new PairEdgeDotExporter<>(idProvider, nameProvider);
