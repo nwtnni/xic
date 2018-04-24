@@ -80,7 +80,7 @@ public class Operand {
     }
 
     /**
-     * A memory access computed base-relative:
+     * A memory access computed base-relative.
      * In the form: offset(base)
      */
     public static Operand mem(Operand base, int offset) {
@@ -90,7 +90,7 @@ public class Operand {
     }
 
     /**
-     * A memory access computed scaled-base-relative
+     * A memory access computed scaled-base-relative.
      * In the form offset(base,scale)
      * 
      * scale must be 1, 2, 4 or 8
@@ -103,7 +103,7 @@ public class Operand {
     }
 
     /**
-     * A memory access computed offset-scaled-base-relative
+     * A memory access computed offset-scaled-base-relative.
      * In the form offset(base,scale)
      * 
      * scale must be 1, 2, 4 or 8
@@ -115,6 +115,9 @@ public class Operand {
         return new Operand(MEM, mem, 0);
     }
 
+    /**
+     * A immediate operand.
+     */
     public static Operand imm(long value) {
         return new Operand(IMM, null, value);
     }

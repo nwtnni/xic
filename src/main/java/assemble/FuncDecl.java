@@ -23,7 +23,6 @@ public class FuncDecl {
         this.args = args;
         this.rets = rets;
         this.returnLabel = Label.retLabel(fn);
-        this.stmts = stmts;
 
         // Function prelude
         prelude = new ArrayList<>();
@@ -37,14 +36,9 @@ public class FuncDecl {
         prelude.add(new Mov(Operand.RBP, Operand.RSP));
         prelude.add(Text.comment("~~~Replace with subtract from %rsp here"));
         // In reg alloc insert subq n, %rsp at prelude[7]
-
-        // If function has multiple returns, save return address from arg 0 to a temp
-        if (rets > 2) {
-            args++;
-            prelude.add(Text.comment("~~~Replace move from arg0 to calleeReturnAddr temp"));
-            // In reg alloc handle multiple return addr at prelude[8]
-        }
         prelude.add(Text.text(""));
+
+        this.stmts = stmts;
 
         // Function epilogue
         epilogue = new ArrayList<>();

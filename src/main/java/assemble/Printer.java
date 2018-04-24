@@ -75,9 +75,11 @@ public class Printer {
                 CompUnit u = Tiler.tile(comp, mangled);
 
                 // For debug:
+                // FileWriter debug = new FileWriter(Filename.removeExtension(output) + ".asa.s");
                 // for (String i : u.toAbstractAssembly()) {
-                //     System.out.println(i);
+                //     debug.append(i + "\n");
                 // }
+                // debug.close();
 
                 u = TrivialAllocator.allocate(u);
                 

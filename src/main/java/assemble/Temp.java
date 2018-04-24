@@ -9,6 +9,12 @@ import interpret.Configuration;
  */
 public class Temp {
 
+    // Special temps for multiple return address
+    public final static Temp CALLEE_RET_ADDR = new Temp(MULT_RET, "CALLEE_RET_ADDR", 0, true);
+    public final static Temp CALLER_RET_ADDR = new Temp(MULT_RET, "CALLER_RET_ADDR", 0, false);
+
+    /* Temp factory methods. ------------------------------------------ */
+
     // Special temp for arguments
     protected static Temp arg(int i, boolean callee) {
         return new Temp(ARG, Configuration.ABSTRACT_ARG_PREFIX, i, callee);
@@ -20,7 +26,7 @@ public class Temp {
     }
 
     protected static Temp temp(String name) {
-        return new Temp(TEMP, name, 0, false);
+        return new Temp(TEMP, name, -1, false);
     }
 
     public static Temp imm(long value) {
@@ -30,37 +36,61 @@ public class Temp {
     // 3 kinds of memory addressing modes
 
     public static Temp mem(Temp b) {
+        assert b != null && b.isTemp();
         return new Temp(MEM, b, null, 0, 1);
     }
 
     public static Temp mem(Temp b, int off) {
+        assert b != null && b.isTemp();
         return new Temp(MEMBR, b, null, off, 1);
     }
 
     public static Temp mem(Temp b, Temp r, int off, int scale) {
+        assert b != null && b.isTemp();
+        assert r != null && r.isTemp();
         return new Temp(MEMSBR, b, r, off, scale);
     }
 
-    // Specicial temp for multiple return address
-    public final static Temp MULT_RET_ADDR = new Temp(MULT_RET, "RET_ADDR", 0, false);
+    // Constructor for temp of a fixed register
+    public static Temp fixed(Operand reg) {
+        assert reg.isReg();
+        return new Temp(reg);
+    }
+
+    /* Temp implementation -------------------------------------------- */
 
     public enum Kind {
-        ARG, RET, TEMP, IMM, MEM, MEMBR, MEMSBR, MULT_RET;
+        ARG, RET, TEMP, IMM, MEM, MEMBR, MEMSBR, MULT_RET, FIXED;
     }
 
     public Kind kind;
+
+    /** The name of a TEMP */
     public String name;
+
+    /** Value for IMM */
+    public long value;
+
+    /** Values for MEM, MEMBR and MEMSBR. */
     public Temp base;
     public Temp reg;
-    public long value;
     public int scale;
     public int offset;
+
+    /** Number for ARG and RET */
+    public int number;
+
+    /** Flag for ARG and RET temps for if it is used by the callee or caller. */
     public boolean callee;
 
-    private Temp(Kind kind, String name, long value, boolean callee) {
+    /** Register for fixed temp. */
+    Operand register;
+
+    /**  */
+    private Temp(Kind kind, String name, int number, boolean callee) {
         this.kind = kind;
         this.name = name;
-        this.value = value;
+        this.number = number;
         this.callee = callee;
     }
 
@@ -74,8 +104,13 @@ public class Temp {
         this.base = base;
         this.reg = reg;
         this.offset = offset;
-        this.scale = scale;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
+        this.scale = scale;
+    }
+
+    private Temp(Operand reg) {
+        this.kind = FIXED;
+        this.register = reg;
     }
 
     public boolean isImm() {
@@ -83,11 +118,22 @@ public class Temp {
     }
 
     public boolean isTemp() {
-        return (kind == ARG && value < 6) || (kind == RET && value < 2);
+        return kind == TEMP || 
+            (kind == ARG && number < 6) || 
+            (kind == RET && number < 2) || 
+            kind == FIXED;
     }
 
     public boolean isMem() {
         return !(isImm() || isTemp());
+    }
+
+    // All temps are memory addresses for trivial allocation
+    public boolean trivialIsMem() {
+        return !(isImm() || 
+            (kind == ARG && number < 6) || 
+            (kind == RET && number < 2) || 
+            kind == FIXED);
     }
 
     @Override
@@ -105,9 +151,11 @@ public class Temp {
                 return String.format("%d(%s, %s, %d)", offset, base, reg, scale);
             case ARG:
             case RET:
-                return name + value;
+                return name + number;
             case MULT_RET:
                 return name;
+            case FIXED:
+                return register.toString();
         }
         assert false;
         return null;

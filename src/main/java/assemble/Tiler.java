@@ -38,6 +38,9 @@ public class Tiler extends IRVisitor<Temp> {
     // Current list of instructions
     List<Instr> instrs;
 
+    // 1 if current function has multiple returns else 0
+    private int isMultiple;
+
     // Return label of current function visited
     Label returnLabel;
 
@@ -46,6 +49,7 @@ public class Tiler extends IRVisitor<Temp> {
         this.unit = new CompUnit();
 
         this.instrs = new ArrayList<>();
+        this.isMultiple = 0;
         this.returnLabel = null;
     }
 
@@ -102,14 +106,30 @@ public class Tiler extends IRVisitor<Temp> {
         instrs = new ArrayList<>();
         TempFactory.reset();
 
-        // Set return label and accept the function body
+        String funcName = f.name();
+
+        // Set the number of returns
+        int returns = numReturns(funcName);
+
+        // If function has multiple returns, save return address from arg 0 to a temp
+        if (returns > 2) {
+            isMultiple = 1;
+            instrs.add(0, new Mov(Temp.CALLEE_RET_ADDR, Temp.arg(0, true)));
+        } else {
+            isMultiple = 0;
+        }
+
+        // Set number of arguments including offset for multiple returns
+        int args = numArgs(funcName) + isMultiple;
+
+        // Set return label
         returnLabel = Label.retLabel(f);
+
+        // Tile the function body
         f.body().accept(this);
 
+
         // Set up prologue and epilogue
-        String funcName = f.name();
-        int args = numArgs(funcName);
-        int returns = numReturns(funcName);
         FuncDecl fn = new FuncDecl(f, args, returns, instrs);
         unit.fns.add(fn);
         
@@ -172,13 +192,13 @@ public class Tiler extends IRVisitor<Temp> {
             default:
         }
         if (uop != null) {
-            instrs.add(new Mov(Operand.RAX, left));
+            instrs.add(new Mov(Temp.fixed(Operand.RAX), left));
             if (uop == DIV || uop == MOD) {
                 instrs.add(new Cqo());
             }
             DivMul op = new DivMul(uop, right);
             instrs.add(op);
-            instrs.add(new Mov(dest, op.dest));
+            instrs.add(new Mov(dest, op.destTemp));
             return dest;
         }
             
@@ -205,9 +225,9 @@ public class Tiler extends IRVisitor<Temp> {
             default:
         }
         instrs.add(new Cmp(right, left));
-        instrs.add(new Mov(Operand.RAX, Operand.imm(0)));
+        instrs.add(new Mov(Temp.fixed(Operand.RAX), Temp.imm(0)));
         instrs.add(new Set(flag));
-        instrs.add(new Mov(dest, Operand.RAX));
+        instrs.add(new Mov(dest, Temp.fixed(Operand.RAX)));
         return dest;
     }
     
@@ -220,7 +240,7 @@ public class Tiler extends IRVisitor<Temp> {
         int ret = numReturns(target);
         if (ret > 2) {
             callIsMultiple = 1;
-            args.add(new Lea(Temp.arg(0, false), Temp.MULT_RET_ADDR));
+            args.add(new Lea(Temp.arg(0, false), Temp.CALLER_RET_ADDR));
         }
 
         for (int i = 0; i < c.size(); i++) {
@@ -370,7 +390,8 @@ public class Tiler extends IRVisitor<Temp> {
 
         // Argument read by callee
         if (name.matches(Configuration.ABSTRACT_ARG_PREFIX + "\\d+")) {
-            return Temp.arg(Integer.parseInt(name.substring(4)), true);
+            // Offset by 1 when inserting an argument for multiple returns
+            return Temp.arg(Integer.parseInt(name.substring(4)) + isMultiple, true);
             
         } 
         

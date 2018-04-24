@@ -34,9 +34,6 @@ public class TrivialAllocator {
     // Maximum number of returns from a call in current function
     private int maxRets;
 
-    // 1 if current function has multiple returns else 0
-    private int isMultiple;
-
     // Number of words to subtract from base pointer to get location
     // in stack where multiple returns > 2 must be written by callee.
     private Operand calleeReturnAddr;
@@ -57,7 +54,7 @@ public class TrivialAllocator {
         this.tempCounter = 0;
         this.maxArgs = 0;
         this.maxRets = 0;
-        this.isMultiple = 0;
+        // this.isMultiple = 0;
         this.calleeReturnAddr = null;
         this.callerReturnAddr = -1;
     }
@@ -111,21 +108,11 @@ public class TrivialAllocator {
         tempCounter = 0;
         maxArgs = 0;
         maxRets = 0;
-        isMultiple = 0;
         calleeReturnAddr = null;
-
-        // Caller saved registers
-        // r10 = pushTemp();
-        // r11 = pushTemp();
 
         // Store address to put multiple returns from arg0 to stack
         if (fn.rets > 2) {
-            isMultiple = 1;
             calleeReturnAddr = pushTemp();
-            Operand dest = calleeReturnAddr;
-            Operand src = Config.getArg(0);
-            Mov mov = new Mov(dest, src);
-            fn.prelude.set(8, mov);
         }
 
         for (Instr i : fn.stmts) {
@@ -152,31 +139,24 @@ public class TrivialAllocator {
     private void allocate(Instr ins) {
         if (ins instanceof BinOp) {
             BinOp op = (BinOp) ins;
-            if (op.dest == null) {
-                Operand dest = allocate(op.destTemp);
-                op.dest = dest;
 
-                Operand src = allocate(op.srcTemp);
-                // Insert mov when performing mem to mem or when imm > 32 bits
-                // TODO: add reg alloc for shift instructions
-                // Shift instructions only use imm8 or CL
-                if (src.isMem() && dest.isMem() || (src.isImm() && !Config.within(32, src.value()))) {
-                    instrs.add(new Mov(Operand.RAX, src));
-                    src = Operand.RAX;
-                }
-                op.src = src;
+            assert op.dest == null && op.src == null;
+
+            Operand dest = allocate(op.destTemp);
+            op.dest = dest;
+
+            Operand src = allocate(op.srcTemp);
+            // Insert mov when performing mem to mem or when imm > 32 bits
+            // TODO: add reg alloc for shift instructions
+            // Shift instructions only use imm8 or CL
+            if (src.isMem() && dest.isMem() || (src.isImm() && !Config.within(32, src.value()))) {
+                instrs.add(new Mov(Operand.RAX, src));
+                src = Operand.RAX;
             }
+            op.src = src;
             
         } else if (ins instanceof Call) {
             Call call = (Call) ins;
-
-            // Undo offset for multiple return when making a call
-            int saved = isMultiple;
-            isMultiple = 0;
-
-            // Push caller saved registers
-            // instrs.add(new Mov(r10, Operand.R10));
-            // instrs.add(new Mov(r11, Operand.R11));
 
             maxArgs = Math.max(maxArgs, call.numArgs);
             maxRets = Math.max(maxRets, call.numRet);
@@ -189,14 +169,7 @@ public class TrivialAllocator {
             }
             call.args = new ArrayList<>();
 
-            // Reset offset for multiple return
-            isMultiple = saved;
-
             instrs.add(ins);
-
-            // Pop caller saved registers
-            // instrs.add(new Mov(Operand.R10, r10));
-            // instrs.add(new Mov(Operand.R11, r11));
 
             return;
 
@@ -228,35 +201,26 @@ public class TrivialAllocator {
             }
             op.src = src;
 
+            op.dest = allocate(op.destTemp);
+
         } else if (ins instanceof Lea) {
             Lea lea = (Lea) ins;
             lea.dest = allocate(lea.destTemp);
-
-            Operand addr = allocate(lea.srcTemp);
-            lea.src = addr;
+            lea.src = allocate(lea.srcTemp);
 
         } else if (ins instanceof Mov) {
             Mov mov = (Mov) ins;
 
-            boolean destIsMem;
-            if (mov.destTemp != null) {
-                destIsMem = mov.destTemp.isMem();
-            } else {
-                destIsMem = mov.dest.isMem();
-            }
+            boolean destIsMem = mov.destTemp.trivialIsMem();
 
-            if (mov.src == null) {
-                Operand src = allocate(mov.srcTemp);
-                if ((src.isMem() && destIsMem) || (src.isImm() && !Config.within(32, src.value()))) {
-                    instrs.add(new Mov(Operand.RAX, src));
-                    src = Operand.RAX;
-                }
-                mov.src = src;
+            Operand src = allocate(mov.srcTemp);
+            if ((src.isMem() && destIsMem) || (src.isImm() && !Config.within(32, src.value()))) {
+                instrs.add(new Mov(Operand.RAX, src));
+                src = Operand.RAX;
             }
+            mov.src = src;
 
-            if (mov.dest == null) {
-                mov.dest = allocate(mov.destTemp);
-            }
+            mov.dest = allocate(mov.destTemp);
             
         }
 
@@ -265,26 +229,45 @@ public class TrivialAllocator {
 
     private Operand allocate(Temp t) {
 
+        if (t.equals(Temp.CALLEE_RET_ADDR)) {
+            // Return the memory address to write multiple returns to
+            // as the callee
+            return calleeReturnAddr;
+        } else if (t.equals(Temp.CALLER_RET_ADDR)) {
+            // Return the memory address calcuated by the caller before
+            // making a call
+            return Operand.mem(Operand.RSP, normalize(callerReturnAddr));
+        }
+
         String name = t.name;
         int i = 0;
         switch (t.kind) {
+            // Allocate an immediate value
             case IMM:
                 return Operand.imm(t.value);
+
+            // Allocate an ordinary temporary
             case TEMP:
                 if (!tempStack.containsKey(name)) {
                     return pushTemp(name);
                 }
                 return getTemp(name);
+
+            // Allocate a memory access off a base register
             case MEM:
                 Temp base = t.base;
                 assert base != null;
                 instrs.add(new Mov(Operand.R11, getTemp(base.name)));
                 return Operand.mem(Operand.R11);
+            
+            // Allocate a memory access of a base register and offset
             case MEMBR:
                 base = t.base;
                 assert base != null;
                 instrs.add(new Mov(Operand.R11, getTemp(base.name)));
                 return Operand.mem(Operand.R11, t.offset);
+
+            // Allocate a memory access of a 2 registers with scale and an offset
             case MEMSBR:
                 base = t.base;
                 assert base != null;
@@ -293,39 +276,50 @@ public class TrivialAllocator {
                 instrs.add(new Mov(Operand.R11, getTemp(base.name)));
                 instrs.add(new Mov(Operand.R10, getTemp(reg.name)));
                 return Operand.mem(Operand.R11, Operand.R10, t.offset, t.scale);
+            
+            // Allocate an argument
             case ARG:
-                i = (int) t.value + isMultiple;
+                i = (int) t.number;
                 if (i < 6) {
                     return Config.getArg(i);
                 }
 
                 if (t.callee) {
+                    // If accessing arg as callee, then read from above the basepointer
                     // -6 for regs, +1 for base pointer, +1 for return addr
                     int offset = normalize(i - 6 + 1 + 1);
                     return Operand.mem(Operand.RBP, offset);
                 } else {
+                    // If writing to arg as caller, then write to above the stackpointer
+                    // -6 for regs
                     int offset = normalize(i - 6);
                     return Operand.mem(Operand.RSP, offset);
                 }
+
+            // Allocate a return
             case RET:
-                i = (int) t.value;
+                i = (int) t.number;
                 if (i == 0) {
                     return Operand.RAX;
                 } else if (i == 1) {
                     return Operand.RDX;
                 }
-                // -2 for regs
                 if (t.callee) {
+                    // If writing returns as callee, write to multiple return addr
+                    // -2 for regs
                     int offset = -normalize(i - 2);
                     instrs.add(new Mov(Operand.R11, calleeReturnAddr));
                     return Operand.mem(Operand.R11, offset);
                 } else {
+                    // If reading returns as caller, read from return address
+                    // -2 for regs
                     int offset = normalize(callerReturnAddr - (i - 2));
                     return Operand.mem(Operand.RSP, offset);
                 }
-            case MULT_RET:
-                return Operand.mem(Operand.RSP, normalize(callerReturnAddr));
 
+            // Get the fixed register
+            case FIXED:
+                return t.register;
         }
         assert false;
         return null;
