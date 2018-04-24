@@ -159,7 +159,7 @@ if [[ -f $1 ]] ; then
   platform=`uname`
   if [ "$platform" = "Linux" ]; then
     pushd "runtime"
-    ./run_test "tests/$name"
+    time ./run_test "tests/$name"
     popd
   else
     echo "Cannot run assembly on $platform"
