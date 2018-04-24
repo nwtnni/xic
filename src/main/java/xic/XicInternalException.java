@@ -29,7 +29,7 @@ public class XicInternalException extends RuntimeException {
     /**
      * Factory method for an internal error.
      */
-    public static XicInternalException internal(String msg) {
+    public static XicInternalException runtime(String msg) {
         return new XicInternalException("Internal error: " + msg);
     }
 }

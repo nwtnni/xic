@@ -19,6 +19,8 @@ xic ("Test --irgen [simple]") "--irgen" {
     simple_highmult1.xi;
     simple_highmult2.xi;
     
+    simple_if1.xi;
+
     simple_ifelse1.xi;
     simple_ifelse2.xi;
     

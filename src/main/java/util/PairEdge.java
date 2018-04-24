@@ -5,12 +5,23 @@ package util;
  * and a value.
  */
 public class PairEdge<V, E> {
-    Pair<V, V> nodes;
-    E value;
+    public V head;
+    public V tail;
+    public E value;
 
     public PairEdge(V a, V b, E v) {
-        this.nodes = new Pair<>(a, b);
+        this.head = a;
+        this.tail = b;
         this.value = v;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof PairEdge<?, ?>) {
+            PairEdge<?, ?> e = (PairEdge<?, ?>) o;
+            return head.equals(e.head) && tail.equals(e.tail) && value.equals(e.value);
+        } 
+        return false;
     }
 
 }

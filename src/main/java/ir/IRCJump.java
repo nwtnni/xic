@@ -8,33 +8,8 @@ public class IRCJump extends IRStmt {
     /**
     * cond is IRExpr in release code
     */
-    public IRNode cond;
-    private String trueName, falseName;
-    public IRLabel trueLabel, falseLabel;
-
-    /**
-     * Construct a CJUMP instruction with fall-through on false.
-     * @param cond the condition for the jump
-     * @param trueName the destination of the jump if {@code expr} evaluates
-     *          to true
-     */
-    public IRCJump(IRNode cond, String trueName) {
-        this(cond, trueName, null);
-    }
-
-    /**
-     *
-     * @param cond the condition for the jump
-     * @param trueName the destination of the jump if {@code expr} evaluates
-     *          to true
-     * @param falseName the destination of the jump if {@code expr} evaluates
-     *          to false
-     */
-    public IRCJump(IRNode cond, String trueName, String falseName) {
-        this.cond = cond;
-        this.trueName = trueName;
-        this.falseName = falseName;
-    }
+    public IRExpr cond;
+    private IRLabel trueLabel, falseLabel;
 
     /**
      * Construct a CJUMP instruction with fall-through on false.
@@ -42,7 +17,7 @@ public class IRCJump extends IRStmt {
      * @param trueLabel the destination of the jump if {@code expr} evaluates
      *          to true
      */
-    public IRCJump(IRNode cond, IRLabel trueLabel) {
+    public IRCJump(IRExpr cond, IRLabel trueLabel) {
         this(cond, trueLabel, null);
     }
 
@@ -54,26 +29,34 @@ public class IRCJump extends IRStmt {
      * @param falseLabel the destination of the jump if {@code expr} evaluates
      *          to false
      */
-    public IRCJump(IRNode cond, IRLabel trueLabel, IRLabel falseLabel) {
+    public IRCJump(IRExpr cond, IRLabel trueLabel, IRLabel falseLabel) {
         this.cond = cond;
         this.trueLabel = trueLabel;
         this.falseLabel = falseLabel;
     }
     
-    public IRNode cond() {
+    public IRExpr cond() {
         return cond;
     }
 
     public String trueName() {
-        return (trueLabel != null) ? trueLabel.name() : trueName;
+        return trueLabel.name();
     }
 
     public String falseName() {
-        return (falseLabel != null) ? falseLabel.name() : falseName;
+        return (falseLabel != null) ? falseLabel.name() : null;
+    }
+
+    public IRLabel trueLabel() {
+        return trueLabel;
+    }
+
+    public IRLabel falseLabel() {
+        return falseLabel;
     }
 
     public boolean hasFalseLabel() {
-        return falseLabel != null || falseName != null;
+        return falseLabel != null;
     }
 
     @Override

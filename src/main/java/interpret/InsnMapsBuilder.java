@@ -41,7 +41,7 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
 
     public void addNameToCurrentIndex(String name) {
         if (nameToIndex.containsKey(name)) {
-            throw XicInternalException.internal("Error - encountered "
+            throw XicInternalException.runtime("Error - encountered "
                     + "duplicate name " + name
                     + " in the IR tree -- go fix the generator.");
         }
@@ -53,7 +53,7 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
      */
 
     public IRNode visit(IRCompUnit c) {
-        for (IRNode n : c.functions.values()) {
+        for (IRNode n : c.functions().values()) {
             n.accept(this);
         }
         addInsn(c);
@@ -61,14 +61,14 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRFuncDecl f) {
-        addNameToCurrentIndex(f.name);
+        addNameToCurrentIndex(f.name());
         addInsn(f);
-        f.body.accept(this);
+        f.body().accept(this);
         return f;
     }
 
     public IRNode visit(IRSeq s) {
-        for (IRNode n : s.stmts) {
+        for (IRNode n : s.stmts()) {
             n.accept(this);
         }
         addInsn(s);
@@ -76,21 +76,21 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRESeq e) {
-        e.stmt.accept(this);
-        e.expr.accept(this);
+        e.stmt().accept(this);
+        e.expr().accept(this);
         addInsn(e);
         return e;
     }
 
     public IRNode visit(IRExp e) {
-        e.expr.accept(this);
+        e.expr().accept(this);
         addInsn(e);
         return e;
     }
 
     public IRNode visit(IRCall c) {
-        c.target.accept(this);
-        for (IRNode n : c.args) {
+        c.target().accept(this);
+        for (IRNode n : c.args()) {
             n.accept(this);
         }
         addInsn(c);
@@ -98,7 +98,7 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRReturn r) {
-        for (IRNode n : r.rets) {
+        for (IRNode n : r.rets()) {
             n.accept(this);
         }
         addInsn(r);
@@ -106,13 +106,13 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRCJump c) {
-        c.cond.accept(this);
+        c.cond().accept(this);
         addInsn(c);
         return c;
     }
 
     public IRNode visit(IRJump j) {
-        j.target.accept(this);
+        j.target().accept(this);
         addInsn(j);
         return j;
     }
@@ -123,7 +123,7 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
 
     public IRNode visit(IRLabel l) {
-        addNameToCurrentIndex(l.name);
+        addNameToCurrentIndex(l.name());
         addInsn(l);
         return l;
     }
@@ -134,21 +134,21 @@ public class InsnMapsBuilder extends IRVisitor<IRNode> {
     }
     
     public IRNode visit(IRMem m) {
-        m.expr.accept(this);
+        m.expr().accept(this);
         addInsn(m);
         return m;
     }
 
     public IRNode visit(IRMove m) {
-        m.target.accept(this);
-        m.src.accept(this);
+        m.target().accept(this);
+        m.src().accept(this);
         addInsn(m);
         return m;
     }
 
     public IRNode visit(IRBinOp b) {
-        b.left.accept(this);
-        b.right.accept(this);
+        b.left().accept(this);
+        b.right().accept(this);
         addInsn(b);
         return b;
     }

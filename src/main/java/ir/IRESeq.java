@@ -7,15 +7,15 @@ import java.util.List;
  * ESEQ(stmt, expr)
  */
 public class IRESeq extends IRExpr {
-    public IRNode stmt;
-    public IRNode expr;
+    public IRStmt stmt;
+    public IRExpr expr;
 
     /**
      *
      * @param stmt IR statement to be evaluated for side effects
      * @param expr IR expression to be evaluated after {@code stmt}
      */
-    public IRESeq(IRNode stmt, IRNode expr) {
+    public IRESeq(IRStmt stmt, IRExpr expr) {
         this.stmt = stmt;
         this.expr = expr;
     }
@@ -26,17 +26,19 @@ public class IRESeq extends IRExpr {
      * @param expr IR expression that is address of this array
      * @param values list of values in this array
      */
-    public IRESeq(IRNode stmt, IRNode expr, List<IRNode> values) {
+    public IRESeq(IRStmt stmt, IRExpr expr, List<IRNode> values) {
         this.stmt = stmt;
         this.expr = expr;
         this.values = values;
     }
 
-    public IRNode stmt() {
+    /* Public inteface for IRESeq */
+
+    public IRStmt stmt() {
         return stmt;
     }
 
-    public IRNode expr() {
+    public IRExpr expr() {
         return expr;
     }
 

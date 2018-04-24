@@ -2,7 +2,8 @@ use io
 use conv
 
 main (args:int[][]) {
-    if (false) {
+    i:int = 0
+    if (i < 1) {
         println(unparseInt(1))
     }
     println(unparseInt(2))

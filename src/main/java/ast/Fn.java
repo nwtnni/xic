@@ -48,7 +48,7 @@ public class Fn extends Node {
                 this.kind = Kind.PROC;
                 break;
             default:
-                throw XicInternalException.internal("Not a function declaration.");
+                throw XicInternalException.runtime("Not a function declaration.");
         }
 
         this.location = location;

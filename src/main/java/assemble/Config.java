@@ -1,28 +1,10 @@
 package assemble;
 
-/** Some special stack-related names that are used in the 
+/** 
+ * Some special stack-related names that are used in the 
  * IR to assembly transation 
  */
 public class Config {
-
-    /** Prefix for argument registers */
-    // public static final String ABSTRACT_ARG_PREFIX = "_ARG";
-
-    // /** Prefix for return registers */
-    // public static final String CALLER_RET_PREFIX = "_RET";
-    
-    // /** Prefix for callee return registers */
-    // public static final String CALLEE_RET_PREFIX = "_CRET";
-
-    // /** 
-    //  * Name of the callee temp for address to put multiple returns > 2
-    //  */
-    // public static final Temp CALLEE_MULT_RETURN = Temp.temp("_CALLEE_RET_ADDR");
-
-    // /** 
-    //  * Name of the caller temp for address to receive multiple returns > 2
-    //  */
-    // public static final Temp CALLER_MULT_RETURN = Temp.temp("_CALLER_RET_ADDR");
 
     /** Word size; assumes a 64-bit architecture */
     public static final int WORD_SIZE = 8;
@@ -33,9 +15,7 @@ public class Config {
     /** _xi_out_of_bounds function name */
     public static final String XI_OUT_OF_BOUNDS = "_xi_out_of_bounds";
 
-    /**
-     * Get the register for args 0-5 on System V.
-     */
+    /** Get the register for args 0-5 on System V. */
     public static Operand getArg(int i) {
         switch (i) {
             case 0:

@@ -1,13 +1,13 @@
 package optimize;
 
-import ir.IRStmt;
+import assemble.instructions.Instr;
 import util.PairEdge;
 import util.PairEdgeFactory;
 
 /** Superclass for all IR control flow graph edges. */
-public class IREdgeFactory<E> implements PairEdgeFactory<IRStmt, E> {
+public class ASAEdgeFactory<E> implements PairEdgeFactory<Instr, E> {
     @Override
-    public PairEdge<IRStmt, E> createEdge(IRStmt a, IRStmt b) {
+    public PairEdge<Instr, E> createEdge(Instr a, Instr b) {
         return new PairEdge<>(a, b, null);
     }
 }

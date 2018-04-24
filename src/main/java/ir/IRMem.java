@@ -22,18 +22,18 @@ public class IRMem extends IRExpr {
         }
     };
 
-    public IRNode expr;
-    public MemType memType;
+    private MemType memType;
+    public IRExpr expr;
 
     /**
      *
      * @param expr the address of this memory location
      */
-    public IRMem(IRNode expr) {
+    public IRMem(IRExpr expr) {
         this(expr, MemType.NORMAL);
     }
 
-    public IRMem(IRNode expr, MemType memType) {
+    public IRMem(IRExpr expr, MemType memType) {
         this.expr = expr;
         this.memType = memType;
     }
