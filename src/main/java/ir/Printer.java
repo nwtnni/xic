@@ -42,7 +42,7 @@ public class Printer extends IRVisitor<Void> {
      */
     public static void print(String source, String sink, String lib, String unit, boolean run, boolean opt) throws XicException {
         String output = Filename.concat(sink, Filename.removeExtension(unit));
-        output = Filename.setExtension(output, "ir");
+        // output = Filename.setExtension(output, "ir");
 
         IRCompUnit comp = null;
 
@@ -61,7 +61,7 @@ public class Printer extends IRVisitor<Void> {
                 // comp = Tracer.trace(comp);
 
                 // Generate -before.ir file for debug
-                String debug = Filename.removeExtension(output) + "-before.ir";
+                String debug = output + "-before.ir";
                 OutputStream debugStream = new FileOutputStream(debug);
                 Printer debugP = new Printer(debugStream);
                 comp.accept(debugP);
@@ -85,11 +85,12 @@ public class Printer extends IRVisitor<Void> {
 
                 IRCompUnit after = new IRCompUnit("after");
                 for (IRGraph<Void> c : cfgs.values()) {
+                    c.exportCfg(output, "initial");
                     after.appendFunc(c.toIR());
                 }
 
 
-                OutputStream stream = new FileOutputStream(output);
+                OutputStream stream = new FileOutputStream(output + ".ir");
                 Printer p = new Printer(stream);
                 after.accept(p);
 
