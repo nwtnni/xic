@@ -8,6 +8,24 @@ import java.util.List;
  */
 public class XicConfig {
 
+    //
+    // Compiler Information
+    // 
+
+    /**
+     * Print help information.
+     */
+    public boolean help = false;
+
+    /**
+     * Report supported optimizations.
+     */
+    public boolean report = false;
+
+    //
+    // Directory Options
+    //
+
 	/**
 	 * Directory to search for source files.
 	 */
@@ -27,6 +45,10 @@ public class XicConfig {
 	 * Directory to search for library files.
 	 */
 	public String lib = "";
+
+    //
+    // Diagnostic Options
+    //
 	
 	/**
 	 * Generate lexical diagnostic files.
