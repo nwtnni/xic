@@ -4,10 +4,17 @@ import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Deque;
 import java.util.Set;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import org.jgrapht.io.IntegerComponentNameProvider;
+import org.jgrapht.io.StringComponentNameProvider;
 
 import ir.*;
 import util.PairEdge;
+import util.PairEdgeDotExporter;
 import util.PairEdgeGraph;
+import xic.XicException;
 import xic.XicInternalException;
 
 /** A IR control flow graph. */
@@ -80,6 +87,19 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
         }
 
         return fn;
+    }
+
+    public void exportCfg(String basename, String phase) {
+        IntegerComponentNameProvider<IRStmt> idProvider = new IntegerComponentNameProvider<>();
+        StringComponentNameProvider<IRStmt> nameProvider = new StringComponentNameProvider<>();
+        PairEdgeDotExporter<IRStmt, E> export = new PairEdgeDotExporter<>(idProvider, nameProvider);
+
+        String filename = String.format("%s_%s_%s", basename, name, phase);
+        try {
+            export.exportGraph(this, new FileWriter(filename));
+        } catch (IOException e) {
+            throw XicException.write(filename);
+        }
     }
 
 }
