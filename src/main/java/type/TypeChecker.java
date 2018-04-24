@@ -76,7 +76,7 @@ public class TypeChecker extends Visitor<Type> {
 
 
     /*
-     * Vistor methods
+     * Visitor Methods ---------------------------------------------------------------------
      */
 
     /**

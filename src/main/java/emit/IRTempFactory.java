@@ -14,14 +14,16 @@ public class IRTempFactory {
      * Generate a new temporary name.
      */
     public static IRTemp generate() {
-        return new IRTemp("__temp_" + Long.toString(++tempIndex));
+        String t = String.format("_TEMP_%04d", tempIndex++);
+        return new IRTemp(t);
     }
 
     /**
      * Generate a new temporary with a descriptive name.
      */
     public static IRTemp generate(String name) {
-        return new IRTemp(name + "__temp_" + Long.toString(++tempIndex));
+        String t = String.format("_TEMP_%04d_%s", tempIndex++, name);
+        return new IRTemp(t);
     }
 
     /**
@@ -36,6 +38,13 @@ public class IRTempFactory {
      */
     public static IRTemp getReturn(int i) {
         return new IRTemp(Configuration.ABSTRACT_RET_PREFIX + i);
+    }
+
+    /*
+     * Reset the counter for generating temps.
+     */
+    public static void reset() {
+        tempIndex = 0;
     }
     
 }

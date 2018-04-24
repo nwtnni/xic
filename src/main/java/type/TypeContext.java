@@ -1,5 +1,7 @@
 package type;
 
+import util.Context;
+
 /**
  * Symbol table mapping {@link Type} to supertype.
  * 

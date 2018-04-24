@@ -40,6 +40,7 @@ xth.tar.gz
 .settings/
 bin/
 .vscode/
+.metadata/
 
 # Mac
 .DS_Store

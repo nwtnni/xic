@@ -97,16 +97,18 @@ public class Tracer extends IRVisitor<Void> {
         	IRCJump cjump = (IRCJump) jump;
             
         	// Flip condition and fall through on false
-            if (cjump.trueLabel.equals(label.name)) {
+            if (cjump.trueName().equals(label.name)) {
                 IRConst one = new IRConst(1);
                 IRBinOp lneg = new IRBinOp(IRBinOp.OpType.XOR, one, cjump.cond);
                 
-                merged.set(merged.size() - 1, new IRCJump(lneg, cjump.falseLabel));
+                merged.set(merged.size() - 1, new IRCJump(lneg, cjump.falseName()));
+                next.remove(0);
             }
             
             // Fall through on false
-            else if (cjump.falseLabel.equals(label.name)) {
-                merged.set(merged.size() - 1, new IRCJump(cjump.cond, cjump.trueLabel));
+            else if (cjump.falseName().equals(label.name)) {
+                merged.set(merged.size() - 1, new IRCJump(cjump.cond, cjump.trueName()));
+                next.remove(0);
             }
         }
 

@@ -44,7 +44,7 @@ public class Printer extends IRVisitor<Void> {
             try {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);
-                comp = Emitter.emitIR((Program) ast, context);
+                comp = Emitter.emitIR((Program) ast, context).first;
 
                 if (opt) {
                     ConstantFolder.constantFold(comp);
@@ -128,9 +128,9 @@ public class Printer extends IRVisitor<Void> {
         printer.startList();
         printer.printAtom("CJUMP");
         c.cond.accept(this);
-        printer.printAtom(c.trueLabel);
+        printer.printAtom(c.trueName());
         if (c.hasFalseLabel()) {
-            printer.printAtom(c.falseLabel);
+            printer.printAtom(c.falseName());
         }
         printer.endList();
         return null;
@@ -200,7 +200,7 @@ public class Printer extends IRVisitor<Void> {
 
     public Void visit(IRMem m) {
         printer.startList();
-        printer.printAtom(m.memType.toString());
+        printer.printAtom("MEM");
         m.expr.accept(this);
         printer.endList();
         return null;

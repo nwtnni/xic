@@ -49,6 +49,7 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRBinOp() {
+		// Should not hoist expression with constants
 		IRConst c1 = new IRConst(5);
 		IRConst c2 = new IRConst(6);
 		IRBinOp b = new IRBinOp(IRBinOp.OpType.ADD, c1, c2);
@@ -57,11 +58,19 @@ public class CanonizerTest {
 		List<IRNode> statements = Canonizer.debug(b);
 		
 		assertEquals(true, result instanceof IRBinOp);
-		assertEquals(1, statements.size());
+		assertEquals(0, statements.size());
+
+		// Should hoist expression with potential side effect
+		IRCall f1 = new IRCall(new IRName("foo"));
+		b.left = f1;
+		result = Canonizer.canonize(b);
+		statements = Canonizer.debug(b);
+
 		assertEquals(true, statements.get(0) instanceof IRMove);
 
 		IRMove move = (IRMove) statements.get(0);
 		assertEquals(true, move.target instanceof IRTemp);
+		assertEquals(true, move.src instanceof IRCall);
 		
 		IRBinOp bop = (IRBinOp) result;
 		assertEquals(true, bop.left instanceof IRTemp);
@@ -129,8 +138,8 @@ public class CanonizerTest {
 		
 		IRCJump jump = (IRCJump) s2;
 		assertEquals(true, jump.cond instanceof IRTemp);
-		assertEquals(true, jump.trueLabel.equals("true"));
-		assertEquals(true, jump.falseLabel.equals("false"));
+		assertEquals(true, jump.trueName().equals("true"));
+		assertEquals(true, jump.falseName().equals("false"));
 	}
 	
 	@Test

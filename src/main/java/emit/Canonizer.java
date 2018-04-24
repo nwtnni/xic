@@ -1,6 +1,7 @@
 package emit;
 
 import ir.*;
+import ir.IRMem.MemType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,6 +45,10 @@ public class Canonizer extends IRVisitor<IRNode> {
     private Canonizer() {
         stmts = new ArrayList<>();
     }
+    
+    /*
+     * Visitor methods ---------------------------------------------------------------------
+     */
 
     /**
      * Lowers an IRBinOp node by hoisting its first expression,
@@ -53,11 +58,17 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by checking for commuting.
      */
     public IRNode visit(IRBinOp b) {
-        IRTemp temp = IRTempFactory.generate();
-        IRNode leftExpr = b.left.accept(this);
-        stmts.add(new IRMove(temp, leftExpr));
+        IRExpr leftExpr = (IRExpr) b.left.accept(this);
+        if (!leftExpr.isCanonical) {
+            IRTemp temp = IRTempFactory.generate("H");
+            stmts.add(new IRMove(temp, leftExpr));
+            leftExpr = temp; 
+        }
+
         IRNode rightExpr = b.right.accept(this);
-        return new IRBinOp(b.type, temp, rightExpr);
+        IRBinOp bop = new IRBinOp(b.type, leftExpr, rightExpr);
+        bop.isCanonical = true;
+        return bop;
     }
     
     /**
@@ -82,10 +93,11 @@ public class Canonizer extends IRVisitor<IRNode> {
 
     /**
      * Lowers an IRCJump node by hoisting its expression.
+     * Requires: IRCJump only has a true label.
      */
     public IRNode visit(IRCJump c) {
         IRNode condExpr = c.cond.accept(this);
-        stmts.add(new IRCJump(condExpr, c.trueLabel, c.falseLabel));
+        stmts.add(new IRCJump(condExpr, c.trueName()));
         return null;
     }
 
@@ -115,6 +127,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Trivially lowers an IRConst node, which is an expression leaf.
      */
     public IRNode visit(IRConst c) {
+        c.isCanonical = true;
         return c;
     }
 
@@ -158,6 +171,14 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRMem node by hoisting its inner expression.
      */
     public IRNode visit(IRMem m) {
+        /* Immutable is set during translation for:
+            - array constants
+            - dynamic allocation
+            - array concatenation
+        */
+        if (m.memType == MemType.IMMUTABLE) {
+            return m;
+        }
         return new IRMem(m.expr.accept(this));
     }
 
@@ -173,12 +194,19 @@ public class Canonizer extends IRVisitor<IRNode> {
      */
     public IRNode visit(IRMove m) {
         if (m.isMem()) {
-            IRTemp temp = IRTempFactory.generate();
             IRMem mem = m.getMem();
-            IRNode memExpr = mem.expr.accept(this);
-            stmts.add(new IRMove(temp, memExpr));
+            IRNode dest = mem;
+
+            // Only hoist when mem is not immutable
+            if (mem.memType != MemType.IMMUTABLE) {
+                IRTemp temp = IRTempFactory.generate();
+                IRNode memExpr = mem.expr.accept(this);
+                stmts.add(new IRMove(temp, memExpr));
+                dest = new IRMem(temp);
+            }
+
             IRNode srcExpr = m.src.accept(this);
-            stmts.add(new IRMove(new IRMem(temp), srcExpr));
+            stmts.add(new IRMove(dest, srcExpr));
         } else {
             IRNode srcExpr = m.src.accept(this);
             stmts.add(new IRMove(m.target, srcExpr));
@@ -190,6 +218,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Trivially lowers an IRName node, which is an expression leaf.
      */
     public IRNode visit(IRName n) {
+        n.isCanonical = true;
         return n;
     }
 
@@ -225,6 +254,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Trivially lowers an IRTemp node, which is an expression leaf.
      */
     public IRNode visit(IRTemp t) {
+        t.isCanonical = true;
         return t;
     }
 }

@@ -2,11 +2,11 @@ package emit;
 
 import java.util.Map;
 
-import type.Context;
 import type.FnContext;
 import type.FnType;
 import type.Type;
 import xic.XicInternalException;
+import util.Context;
 
 public class ABIContext extends Context<String, String> {
 

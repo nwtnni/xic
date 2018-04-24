@@ -1,0 +1,8 @@
+xic ("Test --irgen [basic]") "-target linux" {
+    assign01.xi;
+    assign02.xi;
+    assign03.xi;
+    assign04.xi;
+    assign05.xi;
+    empty.xi;
+}

@@ -17,4 +17,5 @@ else
   echo "  --lex"
   echo "  --parse"
   echo "  --typecheck"
+  echo "  \"arbitary args to xic\""
 fi

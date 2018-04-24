@@ -2,17 +2,15 @@ package assemble;
 
 import java.io.*;
 
-import java_cup.runtime.ComplexSymbolFactory.ComplexSymbol;
-import java_cup.runtime.ComplexSymbolFactory.Location;
-import lex.*;
-import parse.*;
-import xic.XicException;
-
+import assemble.instructions.*;
 import ir.*;
 import emit.*;
 import type.*;
-import util.Filename;
 import ast.*;
+import parse.*;
+import xic.XicException;
+import util.Filename;
+import util.Pair;
 /**
  * Convenience class to write the result of a lexing run to file.
  */
@@ -41,16 +39,34 @@ public class Printer {
             try {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);
-                comp = Emitter.emitIR((Program) ast, context);
+                Pair<IRCompUnit, ABIContext> ir = Emitter.emitIR((Program) ast, context);
+
+                comp = ir.first;
+                ABIContext mangled = ir.second;
 
                 if (opt) {
                     ConstantFolder.constantFold(comp);
                 }
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
-                String cmds = Assembler.assemble(comp, new ABIContext(context));
-                // Generate .s file
-                writer.write(cmds);
+                
+                // Reference assembly from Aaron
+                // String cmds = Assembler.assemble(comp, mangled);
+                // FileWriter ref = new FileWriter(output + ".ref.s");
+                // ref.write(cmds);
+                // ref.close();
+
+                CompUnit u = Tiler.tile(comp, mangled);
+
+                // for (String i : u.toAbstractAssembly()) {
+                //     System.out.println(i);
+                // }
+
+                u = TrivialAllocator.allocate(u);
+                
+                for (String i : u.toAssembly()) {
+                    writer.append(i + "\n");
+                }
                 writer.close();
                 
             } catch (XicException xic) {
