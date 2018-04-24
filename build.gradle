@@ -18,6 +18,8 @@ dependencies {
     compile files("libs/commons-io-2.6.jar")
     compile files("libs/sexp-printer.jar")
     compile files("libs/pcollections.jar")
+    compile files("libs/jgrapht-core-1.1.0.jar")
+    compile files("libs/jgrapht-io-1.1.0-uber.jar")
 }
 
 clean.doFirst {

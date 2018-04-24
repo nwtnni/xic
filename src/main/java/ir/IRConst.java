@@ -5,7 +5,7 @@ package ir;
  * CONST(n)
  */
 public class IRConst extends IRExpr {
-    public long value;
+    private long value;
 
     /**
      *
@@ -22,16 +22,6 @@ public class IRConst extends IRExpr {
     @Override
     public String label() {
         return "CONST(" + value + ")";
-    }
-
-    @Override
-    public boolean isConstant() {
-        return true;
-    }
-
-    @Override
-    public long constant() {
-        return value;
     }
 
     @Override

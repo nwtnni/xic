@@ -37,15 +37,8 @@ public abstract class Visitor<T> {
     /*
      * Statement nodes
      */
-    public T visit(Declare d) throws XicException {
-        return null;
-    }
 
     public T visit(Assign a) throws XicException {
-        return null;
-    }
-
-    public T visit(Return r) throws XicException {
         return null;
     }
 
@@ -53,7 +46,15 @@ public abstract class Visitor<T> {
         return null;
     }
 
+    public T visit(Declare d) throws XicException {
+        return null;
+    }
+
     public T visit(If i) throws XicException {
+        return null;
+    }
+
+    public T visit(Return r) throws XicException {
         return null;
     }
 
@@ -64,11 +65,16 @@ public abstract class Visitor<T> {
     /*
      * Expression nodes
      */
+
+    public T visit(Binary b) throws XicException {
+        return null;
+    }
+
     public T visit(Call c) throws XicException {
         return null;
     }
 
-    public T visit(Binary b) throws XicException {
+    public T visit(Index i) throws XicException {
         return null;
     }
 
@@ -80,11 +86,11 @@ public abstract class Visitor<T> {
         return null;
     }
 
-    public T visit(Index i) throws XicException {
-        return null;
-    }
+    /*
+     * Constant nodes
+     */
 
-    public T visit(XiInt i) throws XicException {
+    public T visit(XiArray a) throws XicException {
         return null;
     }
 
@@ -96,17 +102,14 @@ public abstract class Visitor<T> {
         return null;
     }
 
+    public T visit(XiInt i) throws XicException {
+        return null;
+    }
+
     public T visit(XiString s) throws XicException {
         return null;
     }
 
-    public T visit(XiArray a) throws XicException {
-        return null;
-    }
-
-    /*
-     * Other nodes
-     */
     public T visit(XiType t) throws XicException {
         return null;
     }

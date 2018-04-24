@@ -1,5 +1,6 @@
 package ir;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -12,16 +13,16 @@ public class IRCall extends IRExpr {
     *
     * target and args were IRExpr in release code
     */
-    public IRNode target;
-    public List<IRNode> args;
+    private IRName target;
+    private List<IRExpr> args;
 
     /**
      *
      * @param target address of the code for this function call
      * @param args arguments of this function call
      */
-    public IRCall(IRNode target, IRNode... args) {
-        this(target, Arrays.asList(args));
+    public IRCall(IRName target, IRExpr... args) {
+        this(target, new ArrayList<>(Arrays.asList(args)));
     }
 
     /**
@@ -29,56 +30,51 @@ public class IRCall extends IRExpr {
      * @param target address of the code for this function call
      * @param args arguments of this function call
      */
-    public IRCall(IRNode target, List<IRNode> args) {
+    public IRCall(IRName target, List<IRExpr> args) {
         this.target = target;
         this.args = args;
     }
 
-    public IRNode target() {
+    /* Public interface for call. */
+
+    public IRName target() {
         return target;
     }
 
-    public List<IRNode> args() {
+    public List<IRExpr> args() {
         return args;
+    }
+
+    public List<IRExpr> setArgs(List<IRExpr> args) {
+        List<IRExpr> old = this.args;
+        this.args = args;
+        return old;
+    }
+
+    public boolean add(IRExpr s) {
+        return args.add(s);
+    }
+
+    public void add(int index, IRExpr s) {
+        args.add(index, s);
+    }
+
+    public IRExpr set(int index, IRExpr s) {
+        return args.set(index, s);
+    }
+
+    public IRExpr get(int index) {
+        return args.get(index);
+    }
+
+    public int size() {
+        return args.size();
     }
 
     @Override
     public String label() {
         return "CALL";
     }
-
-    // @Override
-    // public IRNode visitChildren(IRVisitor v) {
-    //     boolean modified = false;
-
-    //     IRExpr target = (IRExpr) v.visit(this, this.target);
-    //     if (target != this.target) modified = true;
-
-    //     List<IRExpr> results = new ArrayList<>(args.size());
-    //     for (IRExpr arg : args) {
-    //         IRExpr newExpr = (IRExpr) v.visit(this, arg);
-    //         if (newExpr != arg) modified = true;
-    //         results.add(newExpr);
-    //     }
-
-    //     if (modified) return v.nodeFactory().IRCall(target, results);
-
-    //     return this;
-    // }
-
-    // @Override
-    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
-    //     T result = v.unit();
-    //     result = v.bind(result, v.visit(target));
-    //     for (IRExpr arg : args)
-    //         result = v.bind(result, v.visit(arg));
-    //     return result;
-    // }
-
-    // @Override
-    // public boolean isCanonical(CheckCanonicalIRVisitor v) {
-    //     return !v.inExpr();
-    // }
 
     @Override
     public <T> T accept(IRVisitor<T> v) {

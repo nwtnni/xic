@@ -7,18 +7,7 @@ import java.util.List;
  */
 public abstract class IRExpr extends IRNode {
 
-    // @Override
-    // public CheckCanonicalIRVisitor checkCanonicalEnter(
-    //         CheckCanonicalIRVisitor v) {
-    //     return v.enterExpr();
-    // }
-
-    // @Override
-    // public boolean isCanonical(CheckCanonicalIRVisitor v) {
-    //     return v.inExpr() || !v.inExp();
-    // }
-
-    public List<IRNode> values;
+    protected List<IRNode> values;
     public boolean isCanonical;
 
     public IRExpr() {
@@ -29,12 +18,5 @@ public abstract class IRExpr extends IRNode {
     public boolean hasValues() {
         return values != null;
     }
-
-    public boolean isConstant() {
-        return false;
-    }
-
-    public long constant() {
-        throw new UnsupportedOperationException();
-    }
+    
 }

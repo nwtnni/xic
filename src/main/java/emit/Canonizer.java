@@ -28,22 +28,22 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Returns the current list of statements for the
      * canonical version of the provided IR AST.
      */
-    public static List<IRNode> debug(IRNode ast) {
+    public static List<IRStmt> debug(IRNode ast) {
         Canonizer canonizer = new Canonizer();
         ast.accept(canonizer);
-        return canonizer.stmts; 
+        return canonizer.stmts.stmts(); 
     }
 
     /**
      * The running list of statements in the current context.
      */
-    private List<IRNode> stmts;
+    private IRSeq stmts;
 
     /**
      * Constructor initializes @param stmts for debugging purposes.
      */
     private Canonizer() {
-        stmts = new ArrayList<>();
+        stmts = new IRSeq();
     }
     
     /*
@@ -58,15 +58,15 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by checking for commuting.
      */
     public IRNode visit(IRBinOp b) {
-        IRExpr leftExpr = (IRExpr) b.left.accept(this);
+        IRExpr leftExpr = (IRExpr) b.left().accept(this);
         if (!leftExpr.isCanonical) {
             IRTemp temp = IRTempFactory.generate("H");
             stmts.add(new IRMove(temp, leftExpr));
             leftExpr = temp; 
         }
 
-        IRNode rightExpr = b.right.accept(this);
-        IRBinOp bop = new IRBinOp(b.type, leftExpr, rightExpr);
+        IRExpr rightExpr = (IRExpr) b.right().accept(this);
+        IRBinOp bop = new IRBinOp(b.type(), leftExpr, rightExpr);
         bop.isCanonical = true;
         return bop;
     }
@@ -77,26 +77,27 @@ public class Canonizer extends IRVisitor<IRNode> {
      * the function with all temps.
      */
     public IRNode visit(IRCall c) {
-        List<IRNode> temps = new ArrayList<>();
+        List<IRExpr> temps = new ArrayList<>();
         
-        for (IRNode arg : c.args) {
-            IRNode argExpr = arg.accept(this);
+        for (IRExpr arg : c.args()) {
+            IRExpr argExpr = (IRExpr) arg.accept(this);
             IRTemp temp = IRTempFactory.generate();
             temps.add(temp);
             stmts.add(new IRMove(temp, argExpr));
         }
         
         IRTemp result = IRTempFactory.generate();
-        stmts.add(new IRMove(result, new IRCall(c.target, temps)));
+        stmts.add(new IRMove(result, new IRCall(c.target(), temps)));
         return result;
     }
 
     /**
      * Lowers an IRCJump node by hoisting its expression.
+     * Requires: IRCJump only has a true label.
      */
     public IRNode visit(IRCJump c) {
-        IRNode condExpr = c.cond.accept(this);
-        stmts.add(new IRCJump(condExpr, c.trueLabel, c.falseLabel));
+        IRExpr condExpr = (IRExpr) c.cond.accept(this);
+        stmts.add(new IRCJump(condExpr, c.trueLabel()));
         return null;
     }
 
@@ -104,8 +105,12 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRJump node by hoisting its expression.
      */
     public IRNode visit(IRJump j) {
-        IRNode targetExpr = j.target.accept(this);
-        stmts.add(new IRJump(targetExpr));
+        if (j.hasLabel()) {
+            stmts.add(j);
+        } else {
+            IRExpr targetExpr = (IRExpr) j.target().accept(this);
+            stmts.add(new IRJump(targetExpr));
+        }
         return null;
     }
     
@@ -115,11 +120,11 @@ public class Canonizer extends IRVisitor<IRNode> {
     public IRNode visit(IRCompUnit c) {
         Map<String, IRFuncDecl> lowered = new HashMap<>();
         
-        for (IRFuncDecl fn : c.functions.values()) {
-            lowered.put(fn.name, (IRFuncDecl) fn.accept(this));
+        for (IRFuncDecl fn : c.functions().values()) {
+            lowered.put(fn.name(), (IRFuncDecl) fn.accept(this));
         }
         
-        return new IRCompUnit(c.name, lowered);
+        return new IRCompUnit(c.name(), lowered);
     }
 
     /**
@@ -135,15 +140,15 @@ public class Canonizer extends IRVisitor<IRNode> {
      * hoisting its expression.
      */
     public IRNode visit(IRESeq e) {
-        e.stmt.accept(this); 
-        return e.expr.accept(this);
+        e.stmt().accept(this); 
+        return e.expr().accept(this);
     }
 
     /**
      * Lowers an IRExp node by discarding its expression.
      */
     public IRNode visit(IRExp e) {
-        e.expr.accept(this);
+        e.expr().accept(this);
         return null;
     }
 
@@ -152,9 +157,9 @@ public class Canonizer extends IRVisitor<IRNode> {
      * single IRSeq.
      */
     public IRNode visit(IRFuncDecl f) {
-        stmts = new ArrayList<>();
-        f.body.accept(this);
-        return new IRFuncDecl(f.name, new IRSeq(stmts));
+        stmts = new IRSeq();
+        f.body().accept(this);
+        return new IRFuncDecl(f.name(), stmts);
     }
 
     /**
@@ -175,10 +180,10 @@ public class Canonizer extends IRVisitor<IRNode> {
             - dynamic allocation
             - array concatenation
         */
-        if (m.memType == MemType.IMMUTABLE) {
+        if (m.memType() == MemType.IMMUTABLE) {
             return m;
         }
-        return new IRMem(m.expr.accept(this));
+        return new IRMem((IRExpr) m.expr().accept(this));
     }
 
     /**
@@ -194,21 +199,21 @@ public class Canonizer extends IRVisitor<IRNode> {
     public IRNode visit(IRMove m) {
         if (m.isMem()) {
             IRMem mem = m.getMem();
-            IRNode dest = mem;
+            IRExpr dest = mem;
 
             // Only hoist when mem is not immutable
-            if (mem.memType != MemType.IMMUTABLE) {
+            if (mem.memType() != MemType.IMMUTABLE) {
                 IRTemp temp = IRTempFactory.generate();
-                IRNode memExpr = mem.expr.accept(this);
+                IRExpr memExpr = (IRExpr) mem.expr().accept(this);
                 stmts.add(new IRMove(temp, memExpr));
                 dest = new IRMem(temp);
             }
 
-            IRNode srcExpr = m.src.accept(this);
+            IRExpr srcExpr = (IRExpr) m.src().accept(this);
             stmts.add(new IRMove(dest, srcExpr));
         } else {
-            IRNode srcExpr = m.src.accept(this);
-            stmts.add(new IRMove(m.target, srcExpr));
+            IRExpr srcExpr = (IRExpr) m.src().accept(this);
+            stmts.add(new IRMove(m.target(), srcExpr));
         }
         return null;
     }
@@ -226,10 +231,10 @@ public class Canonizer extends IRVisitor<IRNode> {
      * storing intermediate values in temps.
      */
     public IRNode visit(IRReturn r) {
-        List<IRNode> temps = new ArrayList<>();
+        List<IRExpr> temps = new ArrayList<>();
         
-        for (IRNode ret : r.rets) {
-            IRNode retExpr = ret.accept(this);
+        for (IRExpr ret : r.rets()) {
+            IRExpr retExpr = (IRExpr) ret.accept(this);
             IRTemp temp = IRTempFactory.generate();
             temps.add(temp);
             stmts.add(new IRMove(temp, retExpr));
@@ -243,7 +248,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRSeq node by flattening it into a list of statements.
      */
     public IRNode visit(IRSeq s) {
-        for (IRNode stmt : s.stmts) {
+        for (IRNode stmt : s.stmts()) {
             stmt.accept(this);
         }
         return null;

@@ -14,21 +14,21 @@ public class Label extends Instr {
      * Generate a label from an IRLabel
      */
     public static Label label(IRLabel l) {
-        return new Label(l.name + ":");
+        return new Label(l.name() + ":");
     }
 
     /**
      * Generate a label from an IRLabel
      */
     public static Label label(IRFuncDecl fn) {
-        return new Label(fn.name + ":");
+        return new Label(fn.name()+ ":");
     }
 
     /**
      * Generate a label from an IRFuncDecl 
      */
-    public static Label retLabel(IRFuncDecl f) {
-        return new Label("_RET_" + f.name + ":");
+    public static Label retLabel(IRFuncDecl fn) {
+        return new Label("_RET_" + fn.name() + ":");
     }
 
     private Label(String name) {

@@ -44,7 +44,7 @@ public class ABIContext extends Context<String, String> {
     public int getNumArgs(String name) {
         FnType t = reverseContext.lookup(name);
         if (t == null) {
-            throw XicInternalException.internal("Non-existent function in ABI.");
+            throw XicInternalException.runtime("Non-existent function in ABI.");
         }
         return t.args.size();
     }
@@ -55,7 +55,7 @@ public class ABIContext extends Context<String, String> {
     public int getNumReturns(String name) {
         FnType t = reverseContext.lookup(name);
         if (t == null) {
-            throw XicInternalException.internal("Non-existent function in ABI.");
+            throw XicInternalException.runtime("Non-existent function in ABI.");
         }
         return t.returns.size();
     }

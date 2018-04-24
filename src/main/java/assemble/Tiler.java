@@ -91,7 +91,7 @@ public class Tiler extends IRVisitor<Temp> {
      */
     
     public Temp visit(IRCompUnit c) {
-        for (IRFuncDecl fn : c.functions.values()) {
+        for (IRFuncDecl fn : c.functions().values()) {
             fn.accept(this);
         }
         return null;
@@ -104,7 +104,7 @@ public class Tiler extends IRVisitor<Temp> {
 
         // Set return label and accept the function body
         returnLabel = Label.retLabel(f);
-        f.body.accept(this);
+        f.body().accept(this);
 
         // Set up prologue and epilogue
         String funcName = f.name();
@@ -118,11 +118,11 @@ public class Tiler extends IRVisitor<Temp> {
 
     public Temp visit(IRBinOp b) {
         Temp dest = TempFactory.generate();
-        Temp left = b.left.accept(this);
-        Temp right = b.right.accept(this);
+        Temp left = b.left().accept(this);
+        Temp right = b.right().accept(this);
         
         BinOp.Kind bop = null;
-        switch (b.type) {
+        switch (b.type()) {
             case ADD:
                 bop = ADD;
                 break;
@@ -156,7 +156,7 @@ public class Tiler extends IRVisitor<Temp> {
         }
 
         DivMul.Kind uop = null;
-        switch (b.type) {
+        switch (b.type()) {
             case MUL:
                 uop = MUL;
                 break;
@@ -183,7 +183,7 @@ public class Tiler extends IRVisitor<Temp> {
         }
             
         Set.Kind flag = null;
-        switch (b.type) {
+        switch (b.type()) {
             case EQ:
                 flag = EQ;
                 break;
@@ -214,7 +214,7 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRCall c) {
         List<Instr> args = new ArrayList<>();
 
-        String target = ((IRName) c.target).name();
+        String target = c.target().name();
 
         int callIsMultiple = 0;
         int ret = numReturns(target);
@@ -223,8 +223,8 @@ public class Tiler extends IRVisitor<Temp> {
             args.add(new Lea(Temp.arg(0, false), Temp.MULT_RET_ADDR));
         }
 
-        for (int i = 0; i < c.args.size(); i++) {
-            Temp val = c.args.get(i).accept(this);
+        for (int i = 0; i < c.size(); i++) {
+            Temp val = c.get(i).accept(this);
             args.add(new Mov(Temp.arg(i + callIsMultiple, false), val));
         }
 
@@ -235,11 +235,11 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRCJump c) {
         if (c.cond instanceof IRBinOp) {
             IRBinOp bop = (IRBinOp) c.cond;
-            Temp left = bop.left.accept(this);
-            Temp right = bop.right.accept(this);
+            Temp left = bop.left().accept(this);
+            Temp right = bop.right().accept(this);
             instrs.add(new Cmp(right, left));
             Jcc.Kind flag = null;
-            switch (bop.type) {
+            switch (bop.type()) {
                 case EQ:
                     flag = Jcc.Kind.E;
                     break;
@@ -262,32 +262,32 @@ public class Tiler extends IRVisitor<Temp> {
                     flag = Jcc.Kind.NE;
                     break;
                 default:
-                    throw XicInternalException.internal("Invalid binop for CJUMP");
+                    throw XicInternalException.runtime("Invalid binop for CJUMP");
             }
-            instrs.add(new Jcc(flag, c.trueLabel));
+            instrs.add(new Jcc(flag, c.trueName()));
         }
 
         Temp cond = c.cond.accept(this);
         instrs.add(new Cmp(Temp.imm(1), cond));
-        instrs.add(new Jcc(Jcc.Kind.Z, c.trueLabel));
-        return null;
-    }
-
-    public Temp visit(IRJump j) {
-        instrs.add(new Jmp(((IRName) j.target).name()));
+        instrs.add(new Jcc(Jcc.Kind.Z, c.trueName()));
         return null;
     }
 
     public Temp visit(IRConst c) {
-        return Temp.imm(c.value);
+        return Temp.imm(c.value());
+    }
+
+    public Temp visit(IRJump j) {
+        instrs.add(new Jmp(((IRName) j.target()).name()));
+        return null;
     }
 
     public Temp visit(IRESeq e) {
-        throw XicInternalException.internal("IRESeq is not canonical");
+        throw XicInternalException.runtime("IRESeq is not canonical");
     }
 
     public Temp visit(IRExp e) {
-        throw XicInternalException.internal("IRExp is not canoncial");        
+        throw XicInternalException.runtime("IRExp is not canoncial");        
     }
 
     public Temp visit(IRLabel l) {
@@ -298,14 +298,14 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRMem m) {
         // Use set temporaries to make allocator use addressing modes 
         // for immutable memory accesses
-        if (m.memType == MemType.IMMUTABLE && m.expr instanceof IRBinOp) {
-            IRBinOp bop = (IRBinOp) m.expr;
-            assert bop.type == OpType.ADD;
-            if (bop.left instanceof IRTemp) { 
+        if (m.memType() == MemType.IMMUTABLE && m.expr() instanceof IRBinOp) {
+            IRBinOp bop = (IRBinOp) m.expr();
+            assert bop.type() == OpType.ADD;
+            if (bop.left() instanceof IRTemp) { 
                 // B + off
-                if (bop.right instanceof IRConst) {
-                    Temp base = bop.left.accept(this);
-                    Temp offset = bop.right.accept(this);
+                if (bop.right() instanceof IRConst) {
+                    Temp base = bop.left().accept(this);
+                    Temp offset = bop.right().accept(this);
 
                     // off must be within 32 bits
                     assert Config.within(32, offset.value);
@@ -313,16 +313,16 @@ public class Tiler extends IRVisitor<Temp> {
                     return Temp.mem(base, (int) offset.value);
 
                 // B + R * scale
-                } else if (bop.right instanceof IRBinOp) {
-                    Temp base = bop.left.accept(this);
+                } else if (bop.right() instanceof IRBinOp) {
+                    Temp base = bop.left().accept(this);
     
-                    IRBinOp index = (IRBinOp) bop.right;
-                    assert index.type == OpType.MUL &&
-                        index.left instanceof IRTemp &&
-                        index.right instanceof IRConst;
+                    IRBinOp index = (IRBinOp) bop.right();
+                    assert index.type() == OpType.MUL &&
+                        index.left() instanceof IRTemp &&
+                        index.right() instanceof IRConst;
                         
-                    Temp reg = index.left.accept(this);
-                    Temp scale = index.right.accept(this);
+                    Temp reg = index.left().accept(this);
+                    Temp scale = index.right().accept(this);
                     
                     return Temp.mem(base, reg, 0, (int) scale.value);
                 }
@@ -330,24 +330,24 @@ public class Tiler extends IRVisitor<Temp> {
         }
 
         Temp t = TempFactory.generate();
-        instrs.add(new Mov(t, m.expr.accept(this)));
+        instrs.add(new Mov(t, m.expr().accept(this)));
         return Temp.mem(t);
     }
 
     public Temp visit(IRMove m) {
-        Temp src = m.src.accept(this);
-        Temp dest = m.target.accept(this);
+        Temp src = m.src().accept(this);
+        Temp dest = m.target().accept(this);
         instrs.add(new Mov(dest, src));
         return null;
     }
 
     public Temp visit(IRName n) {
-        throw XicInternalException.internal("IRName not visited");
+        throw XicInternalException.runtime("IRName not visited");
     }
 
     public Temp visit(IRReturn r) {
-        for (int i = r.rets.size() - 1; i >= 0; i--) {
-            Temp val = r.rets.get(i).accept(this);
+        for (int i = r.size() - 1; i >= 0; i--) {
+            Temp val = r.get(i).accept(this);
             instrs.add(new Mov(Temp.ret(i, true), val));
         }
         instrs.add(new Jmp(returnLabel.name()));
@@ -356,7 +356,7 @@ public class Tiler extends IRVisitor<Temp> {
 
     public Temp visit(IRSeq s) { 
         int i = 0;
-        for(IRNode stmt : s.stmts) {
+        for(IRNode stmt : s.stmts()) {
             instrs.add(Text.comment("stmt: " + i));
             stmt.accept(this);
             instrs.add(Text.text(""));
