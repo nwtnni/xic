@@ -10,6 +10,7 @@ import ir.IRBinOp.OpType;
 import ir.IRMem.MemType;
 import interpret.Configuration;
 import xic.XicException;
+import xic.XicInternalException;
 import util.Pair;
 
 /**
@@ -22,12 +23,15 @@ public class Emitter extends Visitor<IRNode> {
      * Factory method to generate IR from the given AST.
      * @param ast AST to generate into IR
      * @param context function context corresponding to the AST
-     * @throws XicException if a semantic error was found
      */
-    public static Pair<IRCompUnit, ABIContext> emitIR(Program ast, FnContext context) throws XicException {
+    public static Pair<IRCompUnit, ABIContext> emitIR(Program ast, FnContext context) {
         IRTempFactory.reset();
         Emitter e = new Emitter(context);
-        return new Pair<>((IRCompUnit) ast.accept(e), e.context);
+        try {
+            return new Pair<>((IRCompUnit) ast.accept(e), e.context);
+        } catch (XicException err) {
+            throw XicInternalException.runtime("Failed to generate IR from valid AST: " + err.toPrint());
+        }
     }
 
     public Emitter(FnContext context) {
