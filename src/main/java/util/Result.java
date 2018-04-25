@@ -27,6 +27,14 @@ public class Result<T> {
         return ok;
     }
 
+    public boolean isOk() {
+        return kind == Kind.OK;
+    }
+
+    public boolean isErr() {
+        return kind == Kind.ERR;
+    }
+
     public XicException err() {
         assert kind == Kind.ERR;
         return err;

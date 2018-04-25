@@ -22,7 +22,7 @@ public class Intermediate {
     public final String sink;
     public final String asm;
     public final String lib;
-    public final String file;
+    public final String unit;
 
     private XiLexer lexer;
     private Program ast;
@@ -32,13 +32,13 @@ public class Intermediate {
     /**
      * Initial intermediate: compilation
      */
-    public Intermediate(String source, String sink, String lib, String asm, String file) {
+    public Intermediate(String source, String sink, String lib, String asm, String unit) {
         this.kind = Kind.FILE;
         this.source = source;
         this.sink = sink;
         this.lib = lib;
         this.asm = asm;
-        this.file = file;
+        this.unit = unit;
         this.lexer = null;
         this.ast = null;
         this.ir = null;
@@ -51,7 +51,7 @@ public class Intermediate {
         this.sink = previous.sink; 
         this.asm = previous.asm;
         this.lib = previous.lib;
-        this.file = previous.file;
+        this.unit = previous.unit;
         this.lexer = lexer;
         this.ast = null;
         this.ir = null;
@@ -64,7 +64,7 @@ public class Intermediate {
         this.sink = previous.sink; 
         this.asm = previous.asm;
         this.lib = previous.lib;
-        this.file = previous.file;
+        this.unit = previous.unit;
         this.lexer = null;
         this.ast = ast;
         this.ir = null;
@@ -77,7 +77,7 @@ public class Intermediate {
         this.sink = previous.sink; 
         this.asm = previous.asm;
         this.lib = previous.lib;
-        this.file = previous.file;
+        this.unit = previous.unit;
         this.lexer = null;
         this.ast = null;
         this.ir = ir;
@@ -90,7 +90,7 @@ public class Intermediate {
         this.sink = previous.sink; 
         this.asm = previous.asm;
         this.lib = previous.lib;
-        this.file = previous.file;
+        this.unit = previous.unit;
         this.lexer = null;
         this.ast = null;
         this.ir = null;
