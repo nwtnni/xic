@@ -49,7 +49,7 @@ public class Main {
                 break;
             case "--report-opts":
                 displayOpts();
-                break;
+                System.exit(0);
             case "--optir":
                 switch (args[++i]){
                 case "initial":
@@ -125,6 +125,11 @@ public class Main {
             }
         }
 
+        if (args.length == 0) {
+            displayHelp();
+            System.exit(0);
+        }
+
         if (targetFlag && !targetOS.equals("linux")) {
         	System.out.println("Unsupported target OS. Must be linux.");
         	return;
@@ -142,19 +147,25 @@ public class Main {
         System.out.println("-------------------------------------------------------------------------------------");
         System.out.println("Where <OPTION> is zero or more of:                                                   ");
         System.out.println("  --help                  : Print synopsis of options                                ");
+        System.out.println("  --report-opts           : Print synopsis of optimizations available                ");
         System.out.println("  -D          <DIRECTORY> : Output diagnostic files to <DIRECTORY>                   ");
         System.out.println("  -d          <DIRECTORY> : Output assembly files to <DIRECTORY>                     ");
         System.out.println("  -libpath    <DIRECTORY> : Search for interface files in <DIRECTORY>                ");
         System.out.println("  -sourcepath <DIRECTORY> : Search for source files in <DIRECTORY>                   ");
         System.out.println("  -target     <OS>        : Specify the OS for which to generate code                ");
         System.out.println("  -O                      : Disable optimizations                                    ");
+        System.out.println("  --optir     <PHASE>     : Generate .ir file for phase <PHASE>                      ");
+        System.out.println("  --optcfg    <PHASE>     : Generate .dot file for phase <PHASE>                     ");
+        System.out.println("  -O<opt>                 : Enable optimization <opt>                                ");
+        System.out.println("  -O                      : Disable optimizations, redundant if -O<opt> passed       ");
+        System.out.println("  -O-no-<opt>             : Disable optimization <opt>                               ");
         System.out.println("-------------------------------------------------------------------------------------");
         System.out.println("Where <OPERATION> is one or more of:                                                 ");
         System.out.println("  --lex                   : For each f.(i)xi, generate lex diagnostic file f.lexed   ");
         System.out.println("  --parse                 : For each f.(i)xi, generate parse diagnostic f.(i)parsed  ");
         System.out.println("  --typecheck             : For each f.xi, generate type check diagnostic f.typed    ");
         System.out.println("  --irgen                 : For each f.xi, generate intermediate representation f.ir ");
-        System.out.println("  --irrun                 : For each f.xi, generate interpreted intermediate f.ir.nml");
+        System.out.println("  --irrun                 : For each f.xi, generate and run IR f.ir                  ");
         System.out.println("-------------------------------------------------------------------------------------");
         System.out.println("Where <FILE> is one or more source files to operate on                               ");
         System.out.println("-------------------------------------------------------------------------------------");
@@ -162,9 +173,9 @@ public class Main {
         System.out.println("  initial : Before any optimizations                                                 ");
         System.out.println("  cf      : Constant folding                                                         ");
         System.out.println("  cp      : Constant propagation                                                     ");
+        System.out.println("  cse     : Common subexpression elimination                                         ");
         System.out.println("  reg     : Register allocation                                                      ");
         System.out.println("  mc      : Move coalescing                                                          ");
-        System.out.println("  cse     : Common subexpression elimination                                         ");
         System.out.println("  final   : After all optimizations                                                  ");
         System.out.println("-------------------------------------------------------------------------------------");
     }
@@ -175,8 +186,8 @@ public class Main {
     private static void displayOpts() {
         System.out.println("cf");
         System.out.println("cp");
+        System.out.println("cse");
         System.out.println("reg");
         System.out.println("mc");
-        System.out.println("cse");
     }
 }
