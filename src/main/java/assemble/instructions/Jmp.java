@@ -1,10 +1,6 @@
 package assemble.instructions;
 
-import java.util.List;
-
 import ir.IRJump;
-
-import java.util.Arrays;
 
 public class Jmp extends Instr {
 
@@ -28,13 +24,13 @@ public class Jmp extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
+    public String toAbstractAssembly() {
         return toAssembly();
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList("jmp " + label.name());
+    public String toAssembly() {
+        return "jmp " + label.name();
     }
 
     @Override

@@ -34,14 +34,13 @@ public class Printer {
      */
     public static void print(String source, String sink, String lib, String unit, boolean opt) throws XicException {
         String output = Filename.concat(sink, Filename.removeExtension(unit));
-        output = Filename.setExtension(output, "s");
 
         IRCompUnit comp = null;
         FileWriter writer = null;
 
         try {
             Filename.makePathTo(output);
-            writer = new FileWriter(output);
+            writer = new FileWriter(output + ".s");
             try {
                 Node ast = XiParser.from(source, unit);
                 FnContext context = TypeChecker.check(lib, ast);
@@ -56,26 +55,27 @@ public class Printer {
                 
                 comp = (IRCompUnit) Canonizer.canonize(comp);
 
-                // Begin graph test
-                IREdgeFactory<Void> ef = new IREdgeFactory<>();
-
-                IRGraphFactory<Void> gf = new IRGraphFactory<>(comp, ef);
-
-                Map<String, IRGraph<Void>> cfgs = gf.getCfgs();
-
-                IRCompUnit after = new IRCompUnit("after");
-                for (IRGraph<Void> c : cfgs.values()) {
-                    after.appendFunc(c.toIR());
-                }
-
-                comp = after;
-
-                // end graph test
-
                 CompUnit u = Tiler.tile(comp, mangled);
 
+                // Begin ASA graph test
+
+                ASAEdgeFactory<Void> aef = new ASAEdgeFactory<>();
+                ASAGraphFactory<Void> agf = new ASAGraphFactory<>(u, aef);
+
+                Map<String, ASAGraph<Void>> acfgs = agf.getCfgs();
+
+                CompUnit aAfter = new CompUnit();
+                for (ASAGraph<Void> c : acfgs.values()) {
+                    c.exportCfg(output, "initial");
+                    // aAfter.fns.add(c.toASA());
+                }
+
+                // u = aAfter;
+
+                // end test
+
                 // For debug:
-                FileWriter debug = new FileWriter(Filename.removeExtension(output) + ".asa.s");
+                FileWriter debug = new FileWriter(output + ".asa.s");
                 for (String i : u.toAbstractAssembly()) {
                     debug.append(i + "\n");
                 }

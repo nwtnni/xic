@@ -2,31 +2,57 @@ package assemble;
 
 import static assemble.Temp.Kind.*;
 
-import interpret.Configuration;
-
 /**
  * A wrapper class for all the possible operands for assembly instructions.
  */
 public class Temp {
 
     // Special temps for multiple return address
-    public final static Temp CALLEE_RET_ADDR = new Temp(MULT_RET, "CALLEE_RET_ADDR", 0, true);
-    public final static Temp CALLER_RET_ADDR = new Temp(MULT_RET, "CALLER_RET_ADDR", 0, false);
+    public final static Temp CALLEE_RET_ADDR = new Temp(MULT_RET, "CALLEE_RET_ADDR");
 
     /* Temp factory methods. ------------------------------------------ */
 
-    // Special temp for arguments
-    protected static Temp arg(int i, boolean callee) {
-        return new Temp(ARG, Configuration.ABSTRACT_ARG_PREFIX, i, callee);
+    // Temp for caller args
+    protected static Temp callerArg(int i) {
+        if (i < 6) {
+            return Temp.fixed(Config.getArg(i));
+        }
+        // Args 6+ read in reverse order from stack starting at 8(%rbp)
+        return Temp.mem(Temp.fixed(Operand.RBP), Config.WORD_SIZE * (i - 6 + 1));
     }
 
-    // Special temp for returns
-    protected static Temp ret(int i, boolean callee) {
-        return new Temp(RET, Configuration.ABSTRACT_RET_PREFIX, i, callee);
+    // Temp for callee args
+    protected static Temp calleeArg(int i) {
+        if (i < 6) {
+            return Temp.fixed(Config.getArg(i));
+        }
+        // Args 6+ pushed in reverse order to stack starting at (%rsp)
+        return Temp.mem(Temp.fixed(Operand.RSP), Config.WORD_SIZE * (i - 6));
+    }
+
+    // Temp for caller returns
+    protected static Temp callerRet(int i, int numArgs) {
+        if (i < 2) {
+            return Temp.fixed(Config.getArg(i));
+        }
+        // Rets 2+ read in reverse order from offset(%rsp)
+        int offset = Config.WORD_SIZE * (i - 2 + Math.max(numArgs - 6, 0));
+        return Temp.mem(Temp.fixed(Operand.RSP), offset);
+    }
+
+    // Temp for callee returns
+    protected static Temp calleeRet(int i, int numArgs) {
+        if (i < 2) {
+            return Temp.fixed(Config.getArg(i));
+        }
+        // Rets 2+ written in reverse order to offset(ret_addr)
+        int offset = Config.WORD_SIZE * (i - 2);
+        return Temp.mem(CALLEE_RET_ADDR, offset);
+    
     }
 
     protected static Temp temp(String name) {
-        return new Temp(TEMP, name, -1, false);
+        return new Temp(TEMP, name);
     }
 
     public static Temp imm(long value) {
@@ -42,16 +68,25 @@ public class Temp {
 
     public static Temp mem(Temp b, int off) {
         assert b != null && b.isTemp();
+        assert off % Config.WORD_SIZE == 0;
         return new Temp(MEMBR, b, null, off, 1);
     }
 
     public static Temp mem(Temp b, Temp r, int off, int scale) {
         assert b != null && b.isTemp();
         assert r != null && r.isTemp();
+        assert off % Config.WORD_SIZE == 0;
+        assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
         return new Temp(MEMSBR, b, r, off, scale);
     }
 
-    // Constructor for temp of a fixed register
+    // For caller return address
+    public static Temp retAddr(int off) {
+        assert off >= 0;
+        return Temp.mem(Temp.fixed(Operand.RSP), off);
+    }
+
+    // For temp of a fixed register
     public static Temp fixed(Operand reg) {
         assert reg.isReg();
         return new Temp(reg);
@@ -60,7 +95,7 @@ public class Temp {
     /* Temp implementation -------------------------------------------- */
 
     public enum Kind {
-        ARG, RET, TEMP, IMM, MEM, MEMBR, MEMSBR, MULT_RET, FIXED;
+        TEMP, IMM, MEM, MEMBR, MEMSBR, MULT_RET, FIXED;
     }
 
     public Kind kind;
@@ -77,21 +112,13 @@ public class Temp {
     public int scale;
     public int offset;
 
-    /** Number for ARG and RET */
-    public int number;
-
-    /** Flag for ARG and RET temps for if it is used by the callee or caller. */
-    public boolean callee;
-
     /** Register for fixed temp. */
     Operand register;
 
-    /**  */
-    private Temp(Kind kind, String name, int number, boolean callee) {
+    /** A named temp. */
+    private Temp(Kind kind, String name) {
         this.kind = kind;
         this.name = name;
-        this.number = number;
-        this.callee = callee;
     }
 
     private Temp(long value) {
@@ -104,7 +131,6 @@ public class Temp {
         this.base = base;
         this.reg = reg;
         this.offset = offset;
-        assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
         this.scale = scale;
     }
 
@@ -118,10 +144,7 @@ public class Temp {
     }
 
     public boolean isTemp() {
-        return kind == TEMP || 
-            (kind == ARG && number < 6) || 
-            (kind == RET && number < 2) || 
-            kind == FIXED;
+        return kind == TEMP || kind == FIXED;
     }
 
     public boolean isMem() {
@@ -130,10 +153,7 @@ public class Temp {
 
     // All temps are memory addresses for trivial allocation
     public boolean trivialIsMem() {
-        return !(isImm() || 
-            (kind == ARG && number < 6) || 
-            (kind == RET && number < 2) || 
-            kind == FIXED);
+        return !(isImm() || kind == FIXED);
     }
 
     @Override
@@ -149,11 +169,8 @@ public class Temp {
                 return String.format("%d(%s)", offset, base);
             case MEMSBR:
                 return String.format("%d(%s, %s, %d)", offset, base, reg, scale);
-            case ARG:
-            case RET:
-                return name + number;
             case MULT_RET:
-                return name;
+                return "(" + name + ")";
             case FIXED:
                 return register.toString();
         }

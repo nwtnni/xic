@@ -61,13 +61,13 @@ public class FuncDecl {
     public List<String> toAbstractAssembly() {
         List<String> instrs = new ArrayList<>();
         for (Instr i : prelude) {
-            instrs.addAll(i.toAbstractAssembly());
+            instrs.add(i.toAbstractAssembly());
         }
         for (Instr i : stmts) {
-            instrs.addAll(i.toAbstractAssembly());
+            instrs.add(i.toAbstractAssembly());
         }
         for (Instr i : epilogue) {
-            instrs.addAll(i.toAbstractAssembly());
+            instrs.add(i.toAbstractAssembly());
         }
         return instrs;
     }
@@ -75,13 +75,13 @@ public class FuncDecl {
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();
         for (Instr i : prelude) {
-            instrs.addAll(i.toAssembly());
+            instrs.add(i.toAssembly());
         }
         for (Instr i : stmts) {
-            instrs.addAll(i.toAssembly());
+            instrs.add(i.toAssembly());
         }
         for (Instr i : epilogue) {
-            instrs.addAll(i.toAssembly());
+            instrs.add(i.toAssembly());
         }
         return instrs;
     }

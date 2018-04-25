@@ -18,10 +18,11 @@ import xic.XicInternalException;
 @SuppressWarnings("serial")
 public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
     
-    public ASAGraph(String sourceName, String name, Instr start, ASAEdgeFactory<E> edgeFactory) {
+    public ASAGraph(FuncDecl fn, Instr start, ASAEdgeFactory<E> edgeFactory) {
         super(start, edgeFactory);
-        this.sourceName = sourceName;
-        this.name = name;
+        this.sourceName = fn.sourceName;
+        this.name = fn.name;
+        this.orignalFn = fn;
     }
 
     /** The original function name from source. */
@@ -30,13 +31,25 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
     /** The name of the function associated with this CFG. */
     private String name;
 
+    private FuncDecl orignalFn;
+
+    /** 
+     * Adds the tail node from the edge in edges to a set of 
+     * visited nodes and the sequence of nodes. 
+     * Requires: edges contains a single edge.
+     * */
+    private Instr getSuccessor(Set<PairEdge<Instr, E>> edges) {
+        assert edges.size() == 1;
+        return edges.iterator().next().tail;
+    }
+
     /**
      * Converts CFG back to abstract assembly code. 
      */
     public FuncDecl toASA() {
         // TODO: figure out dealing with prelude and epilogue
         List<Instr> body = new ArrayList<>();
-        FuncDecl fn = new FuncDecl(name, null, body, null);
+        FuncDecl fn = new FuncDecl(name, orignalFn.prelude, body, orignalFn.epilogue);
 
         Set<Instr> visited = new HashSet<>();
         Deque<Instr> traces = new ArrayDeque<>();
@@ -59,6 +72,28 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
             // Get next instruction and update traces
             Set<PairEdge<Instr, E>> edges = new HashSet<>(outgoingEdgesOf(current));
             // Do traces.push here
+            if (current instanceof Jcc) {
+                // Add trace label if it is different from the fall-through
+                if (edges.size() > 1) {
+                    Jcc jcc = (Jcc) current;
+                    PairEdge<Instr, E> toLabel = getEdge(current, jcc.target);
+                    edges.remove(toLabel);
+                    traces.push(toLabel.tail);
+                }
+                traces.push(getSuccessor(edges));
+            } else if (current instanceof Jmp) {
+                // Trace ends with jump
+                Jmp jmp = (Jmp) current;
+                if (jmp.hasLabel()) {
+                    traces.push(jmp.label);
+                } else {
+                    // TODO: handle arbitary jumps
+                }
+            } else if (current instanceof Ret) {
+                // Trace ends with return
+            } else {
+                traces.push(getSuccessor(edges));
+            }
         }
 
         return fn;

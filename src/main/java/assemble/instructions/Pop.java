@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.Arrays;
-import java.util.List;
-
 import assemble.*;
 
 public class Pop extends Instr {
@@ -14,13 +11,13 @@ public class Pop extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
+    public String toAbstractAssembly() {
         return toAssembly();
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList("popq " + operand);
+    public String toAssembly() {
+        return "popq " + operand;
     }
 
     @Override

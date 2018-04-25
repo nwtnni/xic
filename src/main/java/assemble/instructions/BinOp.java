@@ -1,10 +1,6 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
-import ir.IRVisitor;
 
 public class BinOp extends Instr {
     public enum Kind {
@@ -47,13 +43,13 @@ public class BinOp extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return Arrays.asList(String.format("%s %s, %s", kind.opcode, srcTemp, destTemp));
+    public String toAbstractAssembly() {
+        return String.format("%s %s, %s", kind.opcode, srcTemp, destTemp);
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("%s %s, %s", kind.opcode, src, dest));
+    public String toAssembly() {
+        return String.format("%s %s, %s", kind.opcode, src, dest);
     }
 
     @Override

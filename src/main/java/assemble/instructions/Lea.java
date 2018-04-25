@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
 
 public class Lea extends Instr {
@@ -18,13 +15,13 @@ public class Lea extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return Arrays.asList(String.format("leaq %s, %s", srcTemp, destTemp));
+    public String toAbstractAssembly() {
+        return String.format("leaq %s, %s", srcTemp, destTemp);
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("leaq %s, %s", src, dest));
+    public String toAssembly() {
+        return String.format("leaq %s, %s", src, dest);
     }
 
     @Override

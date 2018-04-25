@@ -40,7 +40,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
 
     // Number of words to add to rsp to get location in stack where 
     // multiple returns > 2 are accessed by caller.
-    private int callerReturnAddr;
+    private int callerReturnOffset;
 
     // Caller saved registers - not required for trivial allocation
     // private Operand r10;
@@ -56,7 +56,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
         this.maxRets = 0;
         // this.isMultiple = 0;
         this.calleeReturnAddr = null;
-        this.callerReturnAddr = -1;
+        this.callerReturnOffset = -1;
     }
 
     /**
@@ -160,13 +160,12 @@ public class TrivialAllocator extends InsVisitor<Void> {
         maxArgs = Math.max(maxArgs, call.numArgs);
         maxRets = Math.max(maxRets, call.numRet);
 
-        callerReturnAddr = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
+        callerReturnOffset = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
 
-        // Hoist args out of call into list of arguments
-        for (Instr arg : call.args) {
-            arg.accept(this);
-        }
-        call.args = new ArrayList<>();
+        System.out.println(call.name);
+        System.out.println(call.numArgs);
+        System.out.println(call.numRet);
+        System.out.println(callerReturnOffset);
 
         instrs.add(call);
         return null;
@@ -350,7 +349,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
                 } else {
                     // If reading returns as caller, read from return address
                     // -2 for regs
-                    int offset = normalize(callerReturnAddr - (i - 2));
+                    int offset = normalize(callerReturnOffset - (i - 2));
                     return Operand.mem(Operand.RSP, offset);
                 }
 
@@ -363,7 +362,9 @@ public class TrivialAllocator extends InsVisitor<Void> {
                 } else {
                     // Return the memory address calcuated by the caller before
                     // making a call
-                    return Operand.mem(Operand.RSP, normalize(callerReturnAddr));
+                    System.out.println("caller ret addr:");
+                    System.out.println(Operand.mem(Operand.RSP, normalize(callerReturnOffset)));
+                    return Operand.mem(Operand.RSP, normalize(callerReturnOffset));
                 }
 
             // Get the fixed register

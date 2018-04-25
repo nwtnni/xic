@@ -1,11 +1,7 @@
 package assemble.instructions;
 
-import java.util.List;
-
 import ir.IRFuncDecl;
 import ir.IRLabel;
-
-import java.util.Arrays;
 
 public class Label extends Instr {
     protected String name;
@@ -54,13 +50,13 @@ public class Label extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
+    public String toAbstractAssembly() {
         return toAssembly();
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(name);
+    public String toAssembly() {
+        return name;
     }
     
     @Override

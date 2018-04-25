@@ -66,9 +66,10 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
             // Get next node and update traces
             Set<PairEdge<IRStmt, E>> edges = new HashSet<>(outgoingEdgesOf(current));
             if (current instanceof IRCJump) {
-                // Remove the edge to the label if it is different from the fall-through
+                // Add trace to the label if it is different from the fall-through
                 if (edges.size() > 1) {
-                    PairEdge<IRStmt, E> toLabel = getEdge(current, ((IRCJump) current).trueLabel());
+                    IRCJump jump = (IRCJump) current;
+                    PairEdge<IRStmt, E> toLabel = getEdge(current, jump.trueLabel());
                     edges.remove(toLabel);
                     traces.push(toLabel.tail);
                 }
@@ -79,7 +80,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                 if (j.hasLabel()) {
                     traces.push(j.targetLabel());
                 } else {
-                    // Handle arbitrary jumps
+                    // TODO: Handle arbitrary jumps
                 }
             } else if (current instanceof IRLabel) {
                 traces.push(getSuccessor(edges));

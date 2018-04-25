@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
 
 public class DivMul extends Instr {
@@ -36,13 +33,13 @@ public class DivMul extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return Arrays.asList(kind.opcode + " " + srcTemp);
+    public String toAbstractAssembly() {
+        return kind.opcode + " " + srcTemp;
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(kind.opcode + " " + src);
+    public String toAssembly() {
+        return kind.opcode + " " + src;
     }
 
     @Override

@@ -39,7 +39,10 @@ public class Tiler extends IRVisitor<Temp> {
     List<Instr> instrs;
 
     // 1 if current function has multiple returns else 0
-    private int isMultiple;
+    private int calleeIsMultiple;
+
+    // Number of args passed to a called function
+    private int callerNumArgs;
 
     // Return label of current function visited
     Label returnLabel;
@@ -49,7 +52,8 @@ public class Tiler extends IRVisitor<Temp> {
         this.unit = new CompUnit();
 
         this.instrs = new ArrayList<>();
-        this.isMultiple = 0;
+        this.calleeIsMultiple = 0;
+        this.callerNumArgs = 0;
         this.returnLabel = null;
     }
 
@@ -113,14 +117,14 @@ public class Tiler extends IRVisitor<Temp> {
 
         // If function has multiple returns, save return address from arg 0 to a temp
         if (returns > 2) {
-            isMultiple = 1;
-            instrs.add(0, new Mov(Temp.CALLEE_RET_ADDR, Temp.arg(0, true)));
+            calleeIsMultiple = 1;
+            instrs.add(0, new Mov(Temp.CALLEE_RET_ADDR, Temp.calleeArg(0)));
         } else {
-            isMultiple = 0;
+            calleeIsMultiple = 0;
         }
 
         // Set number of arguments including offset for multiple returns
-        int args = numArgs(funcName) + isMultiple;
+        int args = numArgs(funcName) + calleeIsMultiple;
 
         // Set return label
         returnLabel = Label.retLabel(f);
@@ -232,24 +236,30 @@ public class Tiler extends IRVisitor<Temp> {
     }
     
     public Temp visit(IRCall c) {
-        List<Instr> args = new ArrayList<>();
-
         String target = c.target().name();
 
         int callIsMultiple = 0;
-        int ret = numReturns(target);
-        if (ret > 2) {
+        int args = numArgs(target);
+        int rets = numReturns(target);
+        if (rets > 2) {
             callIsMultiple = 1;
-            args.add(new Lea(Temp.arg(0, false), Temp.CALLER_RET_ADDR));
+            args++;
+
+            // CALLER
+            // TODO: fix this offset to has rets reversed (so no need to add num rets)
+            // 
+
+            int offset = Math.max(args - 6, 0) + rets - 2 - 1;
+            instrs.add(new Lea(Temp.callerArg(0), Temp.retAddr(offset)));
         }
 
         for (int i = 0; i < c.size(); i++) {
             Temp val = c.get(i).accept(this);
-            args.add(new Mov(Temp.arg(i + callIsMultiple, false), val));
+            instrs.add(new Mov(Temp.callerArg(i + callIsMultiple), val));
         }
 
-        instrs.add(new Call(target, args, ret));
-        return Temp.ret(0, false);
+        instrs.add(new Call(target, args + callIsMultiple, rets));
+        return Temp.callerRet(0, args);
     }
 
     public Temp visit(IRCJump c) {
@@ -366,6 +376,18 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRReturn r) {
+
+        // CALLEE (so args/rets defined by FUNCDECL)
+
+        // Writing returns is something like
+        // movq src1, %rax
+        // movq src2, %rdx
+        // movq src3, 0(%ret_tmp)
+        // movq src4, 8(%ret_tmp)
+        // movq srcn, 8*[n-3](%ret_tmp)
+
+        // ret_tmp will be decided at alloc
+
         for (int i = r.size() - 1; i >= 0; i--) {
             Temp val = r.get(i).accept(this);
             instrs.add(new Mov(Temp.ret(i, true), val));
@@ -388,12 +410,38 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRTemp t) {
         String name = t.name();
 
+        // TODO: callee args
+        // CALLEE args
+
+        // Reading args is:
+        // movq %rdi, a1
+        // movq %rsi, a2
+        // ...
+        // movq 8(%rbp), a7
+        // movq 16(%rbp), a8
+        // ...
+        // movq n
+
+        // isMultiple defined by FUNCDECL
+
         // Argument read by callee
         if (name.matches(Configuration.ABSTRACT_ARG_PREFIX + "\\d+")) {
-            // Offset by 1 when inserting an argument for multiple returns
-            return Temp.arg(Integer.parseInt(name.substring(4)) + isMultiple, true);
-            
+            // Offset by 1 added when inserting an argument for multiple returns
+            int num = Integer.parseInt(name.substring(4)) + calleeIsMultiple;
+            return Temp.arg(num, true);
         } 
+
+        // CALLER
+
+        // Fixed offset from rsp
+        // movq %rax, r1
+        // mov %rdx, r2
+        // mov off(%rsp), r3
+        // move [off+8](%rsp), r4
+
+
+        // args - 6 = # args on stack (already accounting for mult ret addr)
+        // off = max(args - 6, 0)
         
         // Return read by caller
         if (name.matches(Configuration.ABSTRACT_RET_PREFIX + "\\d+")) {

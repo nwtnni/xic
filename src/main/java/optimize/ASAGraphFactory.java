@@ -30,13 +30,15 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
         Map<String, ASAGraph<E>> fns = new HashMap<>();
         for (FuncDecl fn : compUnit.fns) {
             // Generate graph
+            toCfg(fn);
             fns.put(fn.name, cfg);
         }
         return fns;
     }
 
     public void toCfg(FuncDecl fn) {
-        cfg = new ASAGraph<>(fn.sourceName, fn.name, fn.stmts.get(0), edgeFactory);
+        prev = null;
+        cfg = new ASAGraph<>(fn, fn.stmts.get(0), edgeFactory);
         for (Instr ins : fn.stmts) {
             cfg.addVertex(ins);
 

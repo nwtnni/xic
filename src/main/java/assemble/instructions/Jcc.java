@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import ir.IRLabel;
 
 public class Jcc extends Instr {
@@ -31,13 +28,13 @@ public class Jcc extends Instr {
 
 
     @Override
-    public List<String> toAbstractAssembly() {
+    public String toAbstractAssembly() {
         return toAssembly();
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("j%s %s", kind.cond, target.name()));
+    public String toAssembly() {
+        return String.format("j%s %s", kind.cond, target.name());
     }
 
     @Override

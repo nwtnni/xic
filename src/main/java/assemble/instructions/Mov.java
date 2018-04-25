@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
 
 public class Mov extends Instr {
@@ -23,17 +20,17 @@ public class Mov extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
+    public String toAbstractAssembly() {
         if (srcTemp == null && destTemp == null) {
             return toAssembly();
         } else {
-            return Arrays.asList(String.format("movq %s, %s", srcTemp, destTemp));
+            return String.format("movq %s, %s", srcTemp, destTemp);
         }
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("movq %s, %s", src, dest));
+    public String toAssembly() {
+        return String.format("movq %s, %s", src, dest);
     }
 
     @Override
