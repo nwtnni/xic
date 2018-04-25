@@ -391,9 +391,11 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRSeq s) { 
         int i = 0;
         for(IRNode stmt : s.stmts()) {
-            instrs.add(Text.comment("stmt: " + i));
+            String ir = "\nStmt " + i + ": " + stmt;
+            ir = ir.replaceAll("\n\\s*", "\n# ");
+            ir = ir.substring(0, ir.length() - 3);
+            instrs.add(Text.comment(ir));
             stmt.accept(this);
-            instrs.add(Text.text(""));
             i++;
         }
         return null;
