@@ -10,9 +10,12 @@ import java.util.HashSet;
  */
 public class WorklistVisitor extends IRVisitor<Void> {
 
+    
     public static void annotateNodes(IRNode start) {
         start.accept(new WorklistVisitor());
     }
+
+
 
     /*
      * Top level nodes
@@ -37,33 +40,32 @@ public class WorklistVisitor extends IRVisitor<Void> {
     public Void visit(IRExp e) {
         e.expr().accept(this);
         e.exprs = e.expr().exprs;
-        e.hasMem = e.expr().hasMem;
+        e.delMem = e.expr().delMem;
         return null;
     }
 
+    // TODO: check if calls - shouldn't be in lowered IR
     public Void visit(IRCall c) {
 
         for (IRNode a : c.args()) {
             a.accept(this);
             c.exprs.addAll(a.exprs);
-            if (a.hasMem) {
-                c.hasMem = true;
-            }
         }
+        c.delMem = true;
         return null;
     }
 
     public Void visit(IRCJump c) {
         c.cond.accept(this);
         c.exprs = c.cond.exprs;
-        c.hasMem = c.cond.hasMem;
+        c.delMem = c.cond.delMem;
         return null;
     }
 
     public Void visit(IRJump j) {
         j.target().accept(this);
         j.exprs = j.target().exprs;
-        j.hasMem = j.target().hasMem;
+        j.delMem = j.target().delMem;
         return null;
     }
 
@@ -78,8 +80,8 @@ public class WorklistVisitor extends IRVisitor<Void> {
         m.exprs.addAll(m.src.exprs);
         m.kill.add(m.target());
 
-        if (m.target.hasMem || m.src.hasMem) {
-            m.hasMem = true;
+        if (m.target.delMem || m.src.delMem) {
+            m.delMem = true;
         }
         return null;
     }
@@ -88,8 +90,8 @@ public class WorklistVisitor extends IRVisitor<Void> {
         for (IRExpr n : r.rets()) {
             n.accept(this);
             r.exprs.addAll(n.exprs);
-            if (n.hasMem) {
-                r.hasMem = true;
+            if (n.delMem) {
+                r.delMem = true;
             }
         }
         return null;
@@ -99,8 +101,8 @@ public class WorklistVisitor extends IRVisitor<Void> {
         for (IRStmt n : s.stmts()) {
             n.accept(this);
             s.exprs.addAll(n.exprs);
-            if (n.hasMem) {
-                s.hasMem = true;
+            if (n.delMem) {
+                s.delMem = true;
             }
         }
         return null;
@@ -117,15 +119,14 @@ public class WorklistVisitor extends IRVisitor<Void> {
         b.exprs.addAll(b.left.exprs);
         b.exprs.addAll(b.right.exprs);
         b.exprs.add(b);
-        if (b.left.hasMem || b.right.hasMem) {
-            b.hasMem = true;
+        if (b.left.delMem || b.right.delMem) {
+            b.delMem = true;
         }
 
         return null;
     }
     
     public Void visit(IRConst c) {
-        c.exprs.add(c);
         return null;
     }
     
@@ -133,13 +134,12 @@ public class WorklistVisitor extends IRVisitor<Void> {
         m.expr.accept(this);
         m.exprs.addAll(m.expr.exprs);
         m.exprs.add(m);
-        m.hasMem = true;
+        m.delMem = true;
 
         return null;
     }
 
     public Void visit(IRName n) {
-        n.exprs.add(n);
         return null;
     }
 

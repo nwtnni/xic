@@ -30,6 +30,11 @@ public class IRTemp extends IRExpr {
     }
 
     @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof IRTemp && name.equals(((IRTemp) obj).name);
     }

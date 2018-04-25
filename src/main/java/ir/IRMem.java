@@ -72,6 +72,11 @@ public class IRMem extends IRExpr {
     }
 
     @Override
+    public int hashCode() {
+        return 1013 * (expr.hashCode()) ^ 1009 * (memType.hashCode()); 
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof IRMem && 
             memType.equals(((IRMem) obj).memType) &&

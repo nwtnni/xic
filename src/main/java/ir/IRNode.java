@@ -2,6 +2,7 @@ package ir;
 
 import java.util.UUID;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -10,10 +11,10 @@ import java.util.HashSet;
 public abstract class IRNode {
     public IRNode() {
         this.id = UUID.randomUUID();
-        this.CSEin = new HashSet<>();
+        this.CSEin = new HashMap<>();
         this.kill = new HashSet<>();
-        this.exprs = new HashSet<>();
-        this.hasMem = false;
+        this.exprs = new HashSet<IRExpr>();
+        this.delMem = false;
     }
 
     public abstract <T> T accept(IRVisitor<T> v);
@@ -22,13 +23,13 @@ public abstract class IRNode {
 
     public UUID id;
 
-    public Set<IRExpr> CSEin;
+    public HashMap<IRExpr, IRStmt> CSEin;
 
     public Set<IRExpr> kill;
 
     public Set<IRExpr> exprs;
 
-    public boolean hasMem; 
+    public boolean delMem; 
 
     @Override
     public String toString() {

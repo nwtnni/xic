@@ -91,6 +91,11 @@ public class IRBinOp extends IRExpr {
     }
 
     @Override
+    public int hashCode() {
+        return 1013 * (left.hashCode()) ^ 1009 * (right.hashCode()) ^ 47 * (type.hashCode());
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof IRBinOp && 
             type.equals(((IRBinOp) obj).type) &&
