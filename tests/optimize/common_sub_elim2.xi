@@ -14,6 +14,7 @@ main (args:int[][]) {
             y = x+1
         }
         y = x+1
+        y = 2*(x+1)
         i = i+1
     }
     print(unparseInt(y))
