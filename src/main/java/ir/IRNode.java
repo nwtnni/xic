@@ -1,6 +1,8 @@
 package ir;
 
 import java.util.UUID;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * A node in an intermediate-representation abstract syntax tree.
@@ -8,6 +10,10 @@ import java.util.UUID;
 public abstract class IRNode {
     public IRNode() {
         this.id = UUID.randomUUID();
+        this.CSEin = new HashSet<>();
+        this.kill = new HashSet<>();
+        this.exprs = new HashSet<>();
+        this.hasMem = false;
     }
 
     public abstract <T> T accept(IRVisitor<T> v);
@@ -15,6 +21,14 @@ public abstract class IRNode {
     public abstract String label();
 
     public UUID id;
+
+    public Set<IRExpr> CSEin;
+
+    public Set<IRExpr> kill;
+
+    public Set<IRExpr> exprs;
+
+    public boolean hasMem; 
 
     @Override
     public String toString() {
