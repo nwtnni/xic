@@ -12,13 +12,14 @@ public abstract class Phase implements Comparable<Phase> {
     public static SortedSet<Phase> minimal() {
         return new TreeSet<>(
             List.of(
-                new Lex(),
-                new Parse(),
                 new Type(),
-                new Emit(),
                 new Canonize(),
+                new Parse(),
                 new Tile(),
-                new Allocate()
+                new Allocate(),
+                new Lex(),
+                new Fold(),
+                new Emit()
             )
         );
     }
@@ -42,7 +43,7 @@ public abstract class Phase implements Comparable<Phase> {
 
     public void setOutput() { output = true; }
 
-    public boolean matches(Kind kind) { return this.kind == kind; }
+    public boolean matches(Kind kind) { return this.kind == kind;}
 
     public abstract Result<Product> process(Config config, Result<Product> previous);
 

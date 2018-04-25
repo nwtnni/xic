@@ -56,12 +56,14 @@ public class Parse extends Phase {
                 return new Result<>(Product.parsed(ast));
 
             } catch (XicException e) {
+
                 if (output) {
                     Filename.makePathTo(out);
                     BufferedWriter w = new BufferedWriter(new FileWriter(out));
                     w.write(e.toWrite());
                     w.close();
                 }
+
                 return new Result<>(e);
             }
 

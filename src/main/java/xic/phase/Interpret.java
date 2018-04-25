@@ -11,7 +11,10 @@ import util.Result;
 
 public class Interpret extends Phase {
 
-    public Interpret() { kind = Phase.Kind.INTERPRET; }
+    public Interpret() {
+        kind = Phase.Kind.INTERPRET;
+        output = true;
+    }
 
     @Override
     public Result<Product> process(Config config, Result<Product> previous) {

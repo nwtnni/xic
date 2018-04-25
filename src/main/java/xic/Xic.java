@@ -37,7 +37,7 @@ public class Xic {
         asm = "";
         lib = "";
         units = new ArrayList<>();
-        phases = new TreeSet<>();
+        phases = Phase.minimal();
     }
 
     public void setSource(String source) { this.source = source; }
@@ -69,6 +69,10 @@ public class Xic {
 
             for (Phase phase : phases) {
                 product = phase.process(config, product);
+            }
+
+            if (product.isErr()) {
+                System.out.println(product.err().toPrint());
             }
         }
     }

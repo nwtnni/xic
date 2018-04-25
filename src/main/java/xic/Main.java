@@ -2,6 +2,9 @@ package xic;
 
 import java.util.ArrayList;
 
+import xic.phase.*;
+import static xic.phase.Phase.Kind;
+
 /**
  * Command line interface for Xic.
  * 
@@ -28,42 +31,39 @@ public class Main {
         boolean targetFlag = false;
         String targetOS = "linux";
 
+        Xic xic = new Xic();
+
         ArrayList<String> sourceFiles = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--lex")) {
-                lexFlag = true;
+                xic.setOutput(Kind.LEX);
             } else if (args[i].equals("--parse")) {
-                parseFlag = true;
+                xic.setOutput(Kind.PARSE);
             } else if (args[i].equals("--typecheck")) {
-                typeFlag = true;
+                xic.setOutput(Kind.TYPE);
             } else if (args[i].equals("--irgen")) {
-                irGenFlag = true;
+                xic.setOutput(Kind.CANONIZE);
             } else if (args[i].equals("--irrun")) {
-                irRunFlag = true;
+                xic.addPhase(new Interpret());
             } else if (args[i].equals("--help")) {
-                helpFlag = true;
+                displayHelp();
+                return;
             } else if (args[i].equals("-sourcepath") && i + 1 < args.length) {
-                source = args[++i];
+                xic.setSource(args[++i]);
             } else if (args[i].equals("-D") && i + 1 < args.length) {
-                sink = args[++i];
+                xic.setSink(args[++i]);
             } else if (args[i].equals("-d") && i + 1 < args.length) {
-                asm = args[++i];
+                xic.setAsm(args[++i]);
             } else if (args[i].equals("-libpath") && i + 1 < args.length){
-                lib = args[++i];
+                xic.setLib(args[++i]);
             } else if (args[i].equals("-O")) {
                 optFlag = false;
             } else if (args[i].equals("-target")) {
                 targetFlag = true;
                 targetOS = args[++i];
             } else {
-                sourceFiles.add(args[i]);
+                xic.addUnit(args[i]);
             }
-        }
-
-        // Help flag given
-        if (helpFlag || !(lexFlag || parseFlag || typeFlag || irGenFlag || irRunFlag || targetFlag)) { 
-            displayHelp(); 
-            return;
         }
         
         if (targetFlag && !targetOS.equals("linux")) {
@@ -71,19 +71,7 @@ public class Main {
         	return;
         }
         
-        // Xic xic = new Xic(source, sink, asm, lib);
-        
-        // try {
-        //     for (String unit : sourceFiles) {
-        //         if (lexFlag) { xic.printLexed(unit); }
-        //         if (parseFlag) { xic.printParsed(unit); }
-        //         if (typeFlag) { xic.printTyped(unit); }
-        //         if (irGenFlag || irRunFlag) { xic.printIR(unit, irRunFlag, optFlag); }
-        //         xic.printAssembly(unit, optFlag);
-        //     }
-        // } catch (XicException e) {
-        //     System.out.println(e.toPrint());
-        // }
+        xic.run();
     }
 
     /**
