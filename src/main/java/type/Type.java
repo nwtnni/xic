@@ -286,13 +286,14 @@ public class Type {
     /**
      * Returns the size of the type where size is defined as:
      * 0 for a unit
-     * 1 for any non-tuple type
+     * 1 for any non-tuple and non-list type
      * n for a tuple type where n is the number of children in the tuple
+     * n for a list type where n is the number of elements in the list
      */
     public int size() {
         if (this.equals(UNIT)) {
             return 0;
-        } else if (kind.equals(Kind.TUPLE)) {
+        } else if (kind.equals(Kind.TUPLE) || kind.equals(Kind.LIST)) {
             return children.size();
         } else {
             return 1;

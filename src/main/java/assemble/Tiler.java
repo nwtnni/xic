@@ -239,27 +239,30 @@ public class Tiler extends IRVisitor<Temp> {
         String target = c.target().name();
 
         int callIsMultiple = 0;
-        int args = numArgs(target);
-        int rets = numReturns(target);
-        if (rets > 2) {
+        
+        int numRets = numReturns(target);
+
+        callerNumArgs = numArgs(target);
+
+        // Set up for multiple returns from call
+        if (numRets > 2) {
             callIsMultiple = 1;
-            args++;
+            callerNumArgs++;
 
-            // CALLER
-            // TODO: fix this offset to has rets reversed (so no need to add num rets)
-            // 
-
-            int offset = Math.max(args - 6, 0) + rets - 2 - 1;
-            instrs.add(new Lea(Temp.callerArg(0), Temp.retAddr(offset)));
+            // CALLER defines address that is passed as CALLER_RET_ADDR
+            // Address passed is the same as address to write ret2 to
+            instrs.add(new Lea(Temp.callerArg(0), Temp.callerRet(2, callerNumArgs)));
         }
 
+        // CALLER args
+        // callIsMultiple deined by this CALL
         for (int i = 0; i < c.size(); i++) {
             Temp val = c.get(i).accept(this);
             instrs.add(new Mov(Temp.callerArg(i + callIsMultiple), val));
         }
 
-        instrs.add(new Call(target, args + callIsMultiple, rets));
-        return Temp.callerRet(0, args);
+        instrs.add(new Call(target, callerNumArgs, numRets));
+        return Temp.callerRet(0, callerNumArgs);
     }
 
     public Temp visit(IRCJump c) {
@@ -376,21 +379,10 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRReturn r) {
-
-        // CALLEE (so args/rets defined by FUNCDECL)
-
-        // Writing returns is something like
-        // movq src1, %rax
-        // movq src2, %rdx
-        // movq src3, 0(%ret_tmp)
-        // movq src4, 8(%ret_tmp)
-        // movq srcn, 8*[n-3](%ret_tmp)
-
-        // ret_tmp will be decided at alloc
-
+        // CALLEE returns (write by callee)
         for (int i = r.size() - 1; i >= 0; i--) {
             Temp val = r.get(i).accept(this);
-            instrs.add(new Mov(Temp.ret(i, true), val));
+            instrs.add(new Mov(Temp.calleeRet(i), val));
         }
         instrs.add(Jmp.toLabel(returnLabel));
         return null;
@@ -410,42 +402,19 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRTemp t) {
         String name = t.name();
 
-        // TODO: callee args
-        // CALLEE args
-
-        // Reading args is:
-        // movq %rdi, a1
-        // movq %rsi, a2
-        // ...
-        // movq 8(%rbp), a7
-        // movq 16(%rbp), a8
-        // ...
-        // movq n
-
-        // isMultiple defined by FUNCDECL
-
-        // Argument read by callee
+        // CALLEE args (read by callee)
         if (name.matches(Configuration.ABSTRACT_ARG_PREFIX + "\\d+")) {
-            // Offset by 1 added when inserting an argument for multiple returns
+            // isMultiple defined by FUNCDECL to offset for multiple 
+            // return address passed as arg0
             int num = Integer.parseInt(name.substring(4)) + calleeIsMultiple;
-            return Temp.arg(num, true);
+            return Temp.calleeArg(num);
         } 
 
-        // CALLER
-
-        // Fixed offset from rsp
-        // movq %rax, r1
-        // mov %rdx, r2
-        // mov off(%rsp), r3
-        // move [off+8](%rsp), r4
-
-
-        // args - 6 = # args on stack (already accounting for mult ret addr)
-        // off = max(args - 6, 0)
-        
-        // Return read by caller
+        // CALLER returns (read by caller)
         if (name.matches(Configuration.ABSTRACT_RET_PREFIX + "\\d+")) {
-            return Temp.ret(Integer.parseInt(name.substring(4)), false);
+            // callerNumArgs defined by CALL
+            int num = Integer.parseInt(name.substring(4));
+            return Temp.callerRet(num, callerNumArgs);
         }
 
         // Default temp

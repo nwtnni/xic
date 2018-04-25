@@ -7,22 +7,43 @@ import static assemble.Temp.Kind.*;
  */
 public class Temp {
 
-    // Special temps for multiple return address
+    // Special temp to be replaced with
     public final static Temp CALLEE_RET_ADDR = new Temp(MULT_RET, "CALLEE_RET_ADDR");
 
     /* Temp factory methods. ------------------------------------------ */
 
-    // Temp for caller args
-    protected static Temp callerArg(int i) {
+    /** 
+     * Temp for callee args (reading args)
+     * Fixed offset from %rbp:
+     *      movq %rdi, a0
+     *      movq %rsi, a1
+     *      ...
+     *      movq 8(%rbp), a6
+     *      movq 16(%rbp), a7
+     *      ...
+     *      movq [8*(n-5)], an
+     */
+    protected static Temp calleeArg(int i) {
         if (i < 6) {
             return Temp.fixed(Config.getArg(i));
         }
-        // Args 6+ read in reverse order from stack starting at 8(%rbp)
-        return Temp.mem(Temp.fixed(Operand.RBP), Config.WORD_SIZE * (i - 6 + 1));
+        // Args 6+ read in reverse order from stack starting at 16(%rbp)
+        // +1 for stored BP, +1 for stored PC
+        return Temp.mem(Temp.fixed(Operand.RBP), Config.WORD_SIZE * (i - 6 + 2));
     }
 
-    // Temp for callee args
-    protected static Temp calleeArg(int i) {
+    /** 
+     * Temp for caller args (writing args)
+     * Fixed offset from %rsp:
+     *      movq a0, %rdi
+     *      movq a1, %rsi
+     *      ...
+     *      movq a6, 0(%rsp)
+     *      movq a7, 8(%rsp)
+     *      ...
+     *      movq an, [8*(n-6)](%rsp)
+     */
+    protected static Temp callerArg(int i) {
         if (i < 6) {
             return Temp.fixed(Config.getArg(i));
         }
@@ -30,60 +51,89 @@ public class Temp {
         return Temp.mem(Temp.fixed(Operand.RSP), Config.WORD_SIZE * (i - 6));
     }
 
-    // Temp for caller returns
+    /** 
+     * Temp for callee returns (writing returns)
+     * Writing returns is something like
+     *      movq r0, %rax
+     *      movq r1, %rdx
+     *      movq r2, 0(%RET_ADDR)
+     *      movq r3, 8(%RET_ADDR)
+     *      ...
+     *      movq rn, [8*(n-2)](%RET_ADDR)
+     * 
+     * RET_ADDR is passed in as arg0 and will be decided at alloc
+     */
+    protected static Temp calleeRet(int i) {
+        if (i < 2) {
+            return Temp.fixed(Config.getRet(i));
+        }
+        // Rets 2+ written in reverse order to offset(ret_addr)
+        int offset = Config.WORD_SIZE * (i - 2);
+        return Temp.mem(CALLEE_RET_ADDR, offset);
+    }
+
+    /**
+     * Temp for caller returns (read returns)
+     * Fixed offset from %rsp based on number of args:
+     * movq %rax, r0
+     * movq %rdx, r1
+     * movq off(%rsp), r2
+     * move [off + 8](%rsp), r3
+     * ...
+     * mov [off + 8*(n-2)](%rsp), rn
+     */
     protected static Temp callerRet(int i, int numArgs) {
         if (i < 2) {
-            return Temp.fixed(Config.getArg(i));
+            return Temp.fixed(Config.getRet(i));
         }
         // Rets 2+ read in reverse order from offset(%rsp)
         int offset = Config.WORD_SIZE * (i - 2 + Math.max(numArgs - 6, 0));
         return Temp.mem(Temp.fixed(Operand.RSP), offset);
     }
 
-    // Temp for callee returns
-    protected static Temp calleeRet(int i, int numArgs) {
-        if (i < 2) {
-            return Temp.fixed(Config.getArg(i));
-        }
-        // Rets 2+ written in reverse order to offset(ret_addr)
-        int offset = Config.WORD_SIZE * (i - 2);
-        return Temp.mem(CALLEE_RET_ADDR, offset);
-    
-    }
-
+    /** Factory method for named temp. */
     protected static Temp temp(String name) {
         return new Temp(TEMP, name);
     }
 
+    /** Factory method for a immediate temp. */
     public static Temp imm(long value) {
         return new Temp(value);
     }
 
-    // 3 kinds of memory addressing modes
-
+    // Factory methods for 3 kinds of memory addressing modes
+    
+    /**
+     * A memory access [b]
+     * In the form: (base)
+     */
     public static Temp mem(Temp b) {
         assert b != null && b.isTemp();
         return new Temp(MEM, b, null, 0, 1);
     }
 
+    /**
+     * A memory access [b + off]
+     * In the form: offset(base)
+     */
     public static Temp mem(Temp b, int off) {
-        assert b != null && b.isTemp();
+        assert b != null && b.isTemp() || b.equals(CALLEE_RET_ADDR);
         assert off % Config.WORD_SIZE == 0;
         return new Temp(MEMBR, b, null, off, 1);
     }
 
+    /**
+     * A memory access [b + scale * r + off]
+     * In the form offset(base,scale)
+     * 
+     * scale must be 1, 2, 4 or 8
+     */
     public static Temp mem(Temp b, Temp r, int off, int scale) {
         assert b != null && b.isTemp();
         assert r != null && r.isTemp();
         assert off % Config.WORD_SIZE == 0;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
         return new Temp(MEMSBR, b, r, off, scale);
-    }
-
-    // For caller return address
-    public static Temp retAddr(int off) {
-        assert off >= 0;
-        return Temp.mem(Temp.fixed(Operand.RSP), off);
     }
 
     // For temp of a fixed register
@@ -153,7 +203,11 @@ public class Temp {
 
     // All temps are memory addresses for trivial allocation
     public boolean trivialIsMem() {
-        return !(isImm() || kind == FIXED);
+        return kind == TEMP || 
+            kind == MEM || 
+            kind == MEMBR || 
+            kind == MEMSBR || 
+            kind == MULT_RET;
     }
 
     @Override

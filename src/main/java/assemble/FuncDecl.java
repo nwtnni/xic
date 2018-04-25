@@ -34,6 +34,7 @@ public class FuncDecl {
         prelude.add(Text.comment("Stack Setup"));
         prelude.add(new Push(Operand.RBP));
         prelude.add(new Mov(Operand.RBP, Operand.RSP));
+
         prelude.add(Text.comment("~~~Replace with subtract from %rsp here"));
         // In reg alloc insert subq n, %rsp at prelude[7]
         prelude.add(Text.text(""));
@@ -56,6 +57,18 @@ public class FuncDecl {
         this.prelude = prelude;
         this.stmts = stmts;
         this.epilogue = epilogue;
+    }
+
+    public void setStackSize(int i) {
+        Operand shift = Operand.imm(Config.WORD_SIZE * i);
+
+        // Insert stack setup 
+        BinOp sub = new BinOp(BinOp.Kind.SUB, Operand.RSP, shift);
+        prelude.set(7, sub);
+
+        // Insert stack teardown
+        BinOp add = new BinOp(BinOp.Kind.ADD, Operand.RSP, shift);
+        epilogue.set(2, add);
     }
     
     public List<String> toAbstractAssembly() {

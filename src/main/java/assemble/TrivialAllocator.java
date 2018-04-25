@@ -110,7 +110,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
         maxRets = 0;
         calleeReturnAddr = null;
 
-        // Store address to put multiple returns from arg0 to stack
+        // Set CALLEE_RET_ADDR to a temp on stack
         if (fn.rets > 2) {
             calleeReturnAddr = pushTemp();
         }
@@ -159,14 +159,6 @@ public class TrivialAllocator extends InsVisitor<Void> {
     public Void visit(Call call) {
         maxArgs = Math.max(maxArgs, call.numArgs);
         maxRets = Math.max(maxRets, call.numRet);
-
-        callerReturnOffset = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
-
-        System.out.println(call.name);
-        System.out.println(call.numArgs);
-        System.out.println(call.numRet);
-        System.out.println(callerReturnOffset);
-
         instrs.add(call);
         return null;
     }
@@ -276,7 +268,6 @@ public class TrivialAllocator extends InsVisitor<Void> {
 
     private Operand allocate(Temp t) {
         String name = t.name;
-        int i = 0;
         switch (t.kind) {
             // Allocate an immediate value
             case IMM:
@@ -291,81 +282,39 @@ public class TrivialAllocator extends InsVisitor<Void> {
 
             // Allocate a memory access off a base register
             case MEM:
-                Temp base = t.base;
-                assert base != null;
-                instrs.add(new Mov(Operand.R11, getTemp(base.name)));
-                return Operand.mem(Operand.R11);
+                Operand base = allocate(t.base);
+                if (base.isMem()) {
+                    instrs.add(new Mov(Operand.R11, allocate(t.base)));
+                    base = Operand.R11;
+                }
+                return Operand.mem(base);
             
             // Allocate a memory access of a base register and offset
             case MEMBR:
-                base = t.base;
-                assert base != null;
-                instrs.add(new Mov(Operand.R11, getTemp(base.name)));
-                return Operand.mem(Operand.R11, t.offset);
+                base = allocate(t.base);
+                if (base.isMem()) {
+                    instrs.add(new Mov(Operand.R11, allocate(t.base)));
+                    base = Operand.R11;
+                }
+                return Operand.mem(base, t.offset);
 
             // Allocate a memory access of a 2 registers with scale and an offset
             case MEMSBR:
-                base = t.base;
-                assert base != null;
-                Temp reg = t.reg;
-                assert reg != null;
-                instrs.add(new Mov(Operand.R11, getTemp(base.name)));
-                instrs.add(new Mov(Operand.R10, getTemp(reg.name)));
-                return Operand.mem(Operand.R11, Operand.R10, t.offset, t.scale);
-            
-            // Allocate an argument
-            case ARG:
-                i = (int) t.number;
-                if (i < 6) {
-                    return Config.getArg(i);
+                base = allocate(t.base);
+                if (base.isMem()) {
+                    instrs.add(new Mov(Operand.R11, allocate(t.base)));
+                    base = Operand.R11;
                 }
-
-                if (t.callee) {
-                    // If accessing arg as callee, then read from above the basepointer
-                    // -6 for regs, +1 for base pointer, +1 for return addr
-                    int offset = normalize(i - 6 + 1 + 1);
-                    return Operand.mem(Operand.RBP, offset);
-                } else {
-                    // If writing to arg as caller, then write to above the stackpointer
-                    // -6 for regs
-                    int offset = normalize(i - 6);
-                    return Operand.mem(Operand.RSP, offset);
+                Operand reg = allocate(t.reg);
+                if (reg.isMem()) {
+                    instrs.add(new Mov(Operand.R10, allocate(t.reg)));
+                    reg = Operand.R10;
                 }
-
-            // Allocate a return
-            case RET:
-                i = (int) t.number;
-                if (i == 0) {
-                    return Operand.RAX;
-                } else if (i == 1) {
-                    return Operand.RDX;
-                }
-                if (t.callee) {
-                    // If writing returns as callee, write to multiple return addr
-                    // -2 for regs
-                    int offset = -normalize(i - 2);
-                    instrs.add(new Mov(Operand.R11, calleeReturnAddr));
-                    return Operand.mem(Operand.R11, offset);
-                } else {
-                    // If reading returns as caller, read from return address
-                    // -2 for regs
-                    int offset = normalize(callerReturnOffset - (i - 2));
-                    return Operand.mem(Operand.RSP, offset);
-                }
+                return Operand.mem(base, reg, t.offset, t.scale);
 
             // Get the address for multiple returns
             case MULT_RET:
-                if (t.callee) {
-                    // Return the memory address to write multiple returns to
-                    // as the callee
-                    return calleeReturnAddr;
-                } else {
-                    // Return the memory address calcuated by the caller before
-                    // making a call
-                    System.out.println("caller ret addr:");
-                    System.out.println(Operand.mem(Operand.RSP, normalize(callerReturnOffset)));
-                    return Operand.mem(Operand.RSP, normalize(callerReturnOffset));
-                }
+                return calleeReturnAddr;
 
             // Get the fixed register
             case FIXED:
