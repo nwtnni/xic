@@ -9,7 +9,7 @@ import assemble.instructions.*;
 import assemble.instructions.BinOp.Kind;
 import xic.XicInternalException;
 
-public class TrivialAllocator {
+public class TrivialAllocator extends InsVisitor<Void> {
 
     public static CompUnit allocate(CompUnit unit) {
         TrivialAllocator allocator = new TrivialAllocator(unit);
@@ -116,7 +116,7 @@ public class TrivialAllocator {
         }
 
         for (Instr i : fn.stmts) {
-            allocate(i);
+            i.accept(this);
         }
         fn.stmts = instrs;
 
@@ -136,109 +136,146 @@ public class TrivialAllocator {
 
     }
 
-    private void allocate(Instr ins) {
-        if (ins instanceof BinOp) {
-            BinOp op = (BinOp) ins;
+    public Void visit(BinOp op) {
+        assert op.dest == null && op.src == null;
 
-            assert op.dest == null && op.src == null;
+        Operand dest = allocate(op.destTemp);
+        op.dest = dest;
 
-            Operand dest = allocate(op.destTemp);
-            op.dest = dest;
-
-            Operand src = allocate(op.srcTemp);
-            // Insert mov when performing mem to mem or when imm > 32 bits
-            // TODO: add reg alloc for shift instructions
-            // Shift instructions only use imm8 or CL
-            if (src.isMem() && dest.isMem() || (src.isImm() && !Config.within(32, src.value()))) {
-                instrs.add(new Mov(Operand.RAX, src));
-                src = Operand.RAX;
-            }
-            op.src = src;
-            
-        } else if (ins instanceof Call) {
-            Call call = (Call) ins;
-
-            maxArgs = Math.max(maxArgs, call.numArgs);
-            maxRets = Math.max(maxRets, call.numRet);
-
-            callerReturnAddr = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
-
-            // Hoist args out of call into list of arguments
-            for (Instr arg : call.args) {
-                allocate(arg);
-            }
-            call.args = new ArrayList<>();
-
-            instrs.add(ins);
-
-            return;
-
-        } else if (ins instanceof Cmp) {
-            Cmp cmp = (Cmp) ins;
-
-            Operand left = allocate(cmp.leftTemp);
-            Operand right = allocate(cmp.rightTemp);
-
-            if (left.isMem() && right.isMem() || (left.isImm() && !Config.within(32, left.value()))) {
-            instrs.add(new Mov(Operand.RAX, left));
-                left = Operand.RAX;
-            }
-            cmp.left = left;
-
-            if (right.isImm()) {
-            instrs.add(new Mov(Operand.R11, right));
-                right = Operand.R11;
-            }
-            cmp.right = right;
-            
-        } else if (ins instanceof DivMul) { 
-            DivMul op = (DivMul) ins;
-
-            Operand src = allocate(op.srcTemp);
-            if (src.isImm()) {
-                instrs.add(new Mov(Operand.R11, src));
-                src = Operand.R11;
-            }
-            op.src = src;
-
-            op.dest = allocate(op.destTemp);
-
-        } else if (ins instanceof Lea) {
-            Lea lea = (Lea) ins;
-            lea.dest = allocate(lea.destTemp);
-            lea.src = allocate(lea.srcTemp);
-
-        } else if (ins instanceof Mov) {
-            Mov mov = (Mov) ins;
-
-            boolean destIsMem = mov.destTemp.trivialIsMem();
-
-            Operand src = allocate(mov.srcTemp);
-            if ((src.isMem() && destIsMem) || (src.isImm() && !Config.within(32, src.value()))) {
-                instrs.add(new Mov(Operand.RAX, src));
-                src = Operand.RAX;
-            }
-            mov.src = src;
-
-            mov.dest = allocate(mov.destTemp);
-            
+        Operand src = allocate(op.srcTemp);
+        // Insert mov when performing mem to mem or when imm > 32 bits
+        // TODO: add reg alloc for shift instructions
+        // Shift instructions only use imm8 or CL
+        if (src.isMem() && dest.isMem() || (src.isImm() && !Config.within(32, src.value()))) {
+            instrs.add(new Mov(Operand.RAX, src));
+            src = Operand.RAX;
         }
+        op.src = src;
+        
+        instrs.add(op);
+        return null;
+    }
 
-        instrs.add(ins);
+    public Void visit(Call call) {
+        maxArgs = Math.max(maxArgs, call.numArgs);
+        maxRets = Math.max(maxRets, call.numRet);
+
+        callerReturnAddr = Math.max(call.numArgs - 6, 0) + call.numRet - 2 - 1;
+
+        // Hoist args out of call into list of arguments
+        for (Instr arg : call.args) {
+            arg.accept(this);
+        }
+        call.args = new ArrayList<>();
+
+        instrs.add(call);
+        return null;
+    }
+
+    public Void visit(Cmp cmp) {
+        Operand left = allocate(cmp.leftTemp);
+        Operand right = allocate(cmp.rightTemp);
+
+        if (left.isMem() && right.isMem() || (left.isImm() && !Config.within(32, left.value()))) {
+        instrs.add(new Mov(Operand.RAX, left));
+            left = Operand.RAX;
+        }
+        cmp.left = left;
+
+        if (right.isImm()) {
+        instrs.add(new Mov(Operand.R11, right));
+            right = Operand.R11;
+        }
+        cmp.right = right;
+
+        instrs.add(cmp);
+        return null;
+    }
+
+    public Void visit(Cqo i) {
+        instrs.add(i);
+        return null;
+    }
+
+    public Void visit(DivMul op) {
+        Operand src = allocate(op.srcTemp);
+        if (src.isImm()) {
+            instrs.add(new Mov(Operand.R11, src));
+            src = Operand.R11;
+        }
+        op.src = src;
+
+        op.dest = allocate(op.destTemp);
+
+        instrs.add(op);
+        return null;
+    }
+
+    public Void visit(Jcc i) {
+        instrs.add(i);
+        return null;
+    }
+
+    public Void visit(Jmp i) {
+        instrs.add(i);
+        return null;
+    }
+
+    public Void visit(Label i) {
+        instrs.add(i);
+        return null;
+    }
+
+    public Void visit(Lea lea) {
+        lea.dest = allocate(lea.destTemp);
+        lea.src = allocate(lea.srcTemp);
+
+        instrs.add(lea);
+        return null;
+    }
+
+    public Void visit(Mov mov) {
+        boolean destIsMem = mov.destTemp.trivialIsMem();
+
+        Operand src = allocate(mov.srcTemp);
+        if ((src.isMem() && destIsMem) || (src.isImm() && !Config.within(32, src.value()))) {
+            instrs.add(new Mov(Operand.RAX, src));
+            src = Operand.RAX;
+        }
+        mov.src = src;
+
+        mov.dest = allocate(mov.destTemp);
+
+        instrs.add(mov);
+        return null;
+    }
+
+    public Void visit(Pop i) {
+        instrs.add(i);
+        return null;
+    }
+
+    public Void visit(Push i) {
+        instrs.add(i);
+        return null;
+    }
+
+    public Void visit(Ret i) {
+        instrs.add(i);
+        return null;
+    }
+
+    public Void visit(Set i) {
+        instrs.add(i);
+        return null;
+    }
+
+    public Void visit(Text i) {
+        instrs.add(i);
+        return null;
     }
 
     private Operand allocate(Temp t) {
-
-        if (t.equals(Temp.CALLEE_RET_ADDR)) {
-            // Return the memory address to write multiple returns to
-            // as the callee
-            return calleeReturnAddr;
-        } else if (t.equals(Temp.CALLER_RET_ADDR)) {
-            // Return the memory address calcuated by the caller before
-            // making a call
-            return Operand.mem(Operand.RSP, normalize(callerReturnAddr));
-        }
-
         String name = t.name;
         int i = 0;
         switch (t.kind) {
@@ -315,6 +352,18 @@ public class TrivialAllocator {
                     // -2 for regs
                     int offset = normalize(callerReturnAddr - (i - 2));
                     return Operand.mem(Operand.RSP, offset);
+                }
+
+            // Get the address for multiple returns
+            case MULT_RET:
+                if (t.callee) {
+                    // Return the memory address to write multiple returns to
+                    // as the callee
+                    return calleeReturnAddr;
+                } else {
+                    // Return the memory address calcuated by the caller before
+                    // making a call
+                    return Operand.mem(Operand.RSP, normalize(callerReturnAddr));
                 }
 
             // Get the fixed register
