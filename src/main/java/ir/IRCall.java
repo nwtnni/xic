@@ -80,4 +80,6 @@ public class IRCall extends IRExpr {
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
     }
+
+    // Calls are never in the set of expressions for CSE, don't need equals method
 }

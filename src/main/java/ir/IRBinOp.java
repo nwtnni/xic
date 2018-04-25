@@ -89,4 +89,14 @@ public class IRBinOp extends IRExpr {
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof IRBinOp && 
+            type.equals(((IRBinOp) obj).type) &&
+            ((left.equals(((IRBinOp) obj).left) && 
+            right.equals(((IRBinOp) obj).right)) ||
+            (left.equals(((IRBinOp) obj).right) && 
+            right.equals(((IRBinOp) obj).left)));
+    }
 }

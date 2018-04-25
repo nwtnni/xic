@@ -70,4 +70,11 @@ public class IRMem extends IRExpr {
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof IRMem && 
+            memType.equals(((IRMem) obj).memType) &&
+            expr.equals(((IRMem) obj).expr);
+    }
 }

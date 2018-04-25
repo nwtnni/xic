@@ -32,4 +32,9 @@ public class IRName extends IRExpr {
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof IRName && name.equals(((IRName) obj).name);
+    }
 }

@@ -125,6 +125,7 @@ public class WorklistVisitor extends IRVisitor<Void> {
     }
     
     public Void visit(IRConst c) {
+        c.exprs.add(c);
         return null;
     }
     
@@ -138,6 +139,7 @@ public class WorklistVisitor extends IRVisitor<Void> {
     }
 
     public Void visit(IRName n) {
+        n.exprs.add(n);
         return null;
     }
 
