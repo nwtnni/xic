@@ -89,16 +89,16 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
         return fn;
     }
 
-    public void exportCfg(String basename, String phase) throws XicException {
+    public void exportCfg(String basename, String phase) {
         IntegerComponentNameProvider<IRStmt> idProvider = new IntegerComponentNameProvider<>();
         StringComponentNameProvider<IRStmt> nameProvider = new StringComponentNameProvider<>();
         PairEdgeDotExporter<IRStmt, E> export = new PairEdgeDotExporter<>(idProvider, nameProvider);
 
-        String filename = String.format("%s_%s_%s", basename, name, phase);
+        String filename = String.format("%s_%s_%s.dot", basename, name, phase);
         try {
             export.exportGraph(this, new FileWriter(filename));
         } catch (IOException e) {
-            throw XicException.write(filename);
+            throw new XicInternalException(e.toString());
         }
     }
 
