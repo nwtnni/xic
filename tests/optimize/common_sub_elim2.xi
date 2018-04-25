@@ -6,13 +6,14 @@ main (args:int[][]) {
     y:int
     while i<200000000 {
         x:int = 0
-        y = x+1
         if x+1 == 0 {
-            y = (x+1)*2
+            y = x+1
         }
         else {
-            y = (x+1)*3
+            x = 1
+            y = x+1
         }
+        y = x+1
         i = i+1
     }
     print(unparseInt(y))
