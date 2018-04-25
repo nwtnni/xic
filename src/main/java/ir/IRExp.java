@@ -20,6 +20,10 @@ public class IRExp extends IRStmt {
         return expr;
     }
 
+    public void setExpr(IRExpr n) {
+        expr = n;
+    }
+
     @Override
     public String label() {
         return "EXP";

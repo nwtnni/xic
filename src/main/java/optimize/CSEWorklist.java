@@ -165,11 +165,13 @@ public class CSEWorklist {
      */
     public void cse(IRGraph<HashMap<IRExpr, IRStmt>> g) {
         // Temp names for exprs that are common subexprs
-        HashMap<IRExpr, String> assigned = new HashMap<IRExpr, String>();
+        HashMap<IRExpr, IRTemp> assigned = new HashMap<IRExpr, IRTemp>();
         Integer varCount = 0;
 
         ArrayList<IRStmt> seen = new ArrayList<IRStmt>();
         Queue<IRStmt> q = new LinkedList<IRStmt>();
+
+        CSEReplaceVisitor replVisit = new CSEReplaceVisitor();
         
         q.add(g.start);
         while (!q.isEmpty()) {
@@ -193,12 +195,18 @@ public class CSEWorklist {
             IRExpr cur = orderedExprs.poll();
             while (cur != null) {
                 if (assigned.containsKey(cur)) {
-//                    replaceExpr(s, cur, assigned.get(cur));
+                    replVisit.replaceExpr = cur;
+                    replVisit.newExpr = assigned.get(cur);
+                    s.accept(replVisit);
                     break;
-                } else if (s.CSEin.containsKey(cur)) {
+                } else if (s.CSEin.containsKey(cur) && !(cur instanceof IRTemp)) {
                     // look at mapped assignment
                     IRStmt node = s.CSEin.get(cur);
-                    IRStmt newStmt = new IRMove(new IRTemp("_cse_" + varCount.toString()), cur);
+                    IRTemp newTemp = new IRTemp("_cse_" + varCount.toString());
+                    assigned.put(cur, newTemp);
+
+                    IRStmt newStmt = new IRMove(newTemp, cur);
+
                     varCount++;
 
                     g.addVertex(newStmt);
@@ -208,7 +216,12 @@ public class CSEWorklist {
                     }
                     g.removeAllEdges(g.incomingEdgesOf(node));
                     g.addEdge(node, newStmt);
-                    // TODO: replace expressions of orig and current node
+                    
+                    replVisit.replaceExpr = cur;
+                    replVisit.newExpr = newTemp;
+                    s.accept(replVisit);
+                    node.accept(replVisit);
+
                     break;
 
                 }
