@@ -7,9 +7,9 @@ import static xic.phase.Phase.Kind;
 
 /**
  * Command line interface for Xic.
- * 
+ *
  * Possible flags are:
- * 
+ *
  */
 public class Main {
 
@@ -17,16 +17,11 @@ public class Main {
      * Main compiler interface. Usage information can be printed with the --help flag.
      */
     public static void main(String[] args) {
-        boolean lexFlag = false;
-        boolean parseFlag = false;
-        boolean typeFlag = false;
-        boolean irGenFlag = false;
-        boolean irRunFlag = false;
-        boolean helpFlag = false;
         String source = "";
         String sink = "";
         String lib = "";
         String asm = "";
+        boolean helpFlag = false;
         boolean optFlag = true;
         boolean targetFlag = false;
         String targetOS = "linux";
@@ -35,42 +30,87 @@ public class Main {
 
         ArrayList<String> sourceFiles = new ArrayList<String>();
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("--lex")) {
+
+            switch (args[i]) {
+            case "--lex":
                 xic.setOutput(Kind.LEX);
-            } else if (args[i].equals("--parse")) {
+                break;
+            case "--parse":
                 xic.setOutput(Kind.PARSE);
-            } else if (args[i].equals("--typecheck")) {
+                break;
+            case "--typecheck":
                 xic.setOutput(Kind.TYPE);
-            } else if (args[i].equals("--irgen")) {
+                break;
+            case "--irgen":
                 xic.setOutput(Kind.CANONIZE);
-            } else if (args[i].equals("--irrun")) {
+                break;
+            case "--irrun":
                 xic.addPhase(new Interpret());
-            } else if (args[i].equals("--help")) {
+                break;
+            case "--report-opts":
+                displayOpts();
+                break;
+            case "--optir":
+                switch (args[++i]){
+                case "initial":
+                    xic.setOutput(Kind.EMIT);
+                    break;
+                case "cf":
+                    // TODO
+                    xic.setOutput(Kind.FOLD);
+                    break;
+                default:
+                    // TODO
+                    assert false;
+                }
+                break;
+            case "--optcfg":
+                switch (args[++i]) {
+                case "initial":
+                    xic.setOutputCFG(Kind.EMIT);
+                    break;
+                case "cf":
+                    // TODO
+                    xic.setOutputCFG(Kind.FOLD);
+                    break;
+                default:
+                    // TODO
+                    assert false;
+                }
+                break;
+            case "--help":
                 displayHelp();
-                return;
-            } else if (args[i].equals("-sourcepath") && i + 1 < args.length) {
+                break;
+            case "-sourcepath":
                 xic.setSource(args[++i]);
-            } else if (args[i].equals("-D") && i + 1 < args.length) {
+                break;
+            case "-D":
                 xic.setSink(args[++i]);
-            } else if (args[i].equals("-d") && i + 1 < args.length) {
+                break;
+            case "-d":
                 xic.setAsm(args[++i]);
-            } else if (args[i].equals("-libpath") && i + 1 < args.length){
+                break;
+            case "-libpath":
                 xic.setLib(args[++i]);
-            } else if (args[i].equals("-O")) {
+                break;
+            case "-O":
                 optFlag = false;
-            } else if (args[i].equals("-target")) {
+                break;
+            case "-target":
                 targetFlag = true;
                 targetOS = args[++i];
-            } else {
+                break;
+            default:
                 xic.addUnit(args[i]);
+                break;
             }
         }
-        
+
         if (targetFlag && !targetOS.equals("linux")) {
         	System.out.println("Unsupported target OS. Must be linux.");
         	return;
         }
-        
+
         xic.run();
     }
 
@@ -99,5 +139,25 @@ public class Main {
         System.out.println("-------------------------------------------------------------------------------------");
         System.out.println("Where <FILE> is one or more source files to operate on                               ");
         System.out.println("-------------------------------------------------------------------------------------");
+        System.out.println("Where <PHASE> is exactly one of:                                                     ");
+        System.out.println("  initial : Before any optimizations                                                 ");
+        System.out.println("  cf      : Constant folding                                                         ");
+        System.out.println("  cp      : Constant propagation                                                     ");
+        System.out.println("  reg     : Register allocation                                                      ");
+        System.out.println("  mc      : Move coalescing                                                          ");
+        System.out.println("  cse     : Common subexpression elimination                                         ");
+        System.out.println("  final   : After all optimizations                                                  ");
+        System.out.println("-------------------------------------------------------------------------------------");
+    }
+
+    /**
+     * Helper function to display optimization information.
+     */
+    private static void displayOpts() {
+        System.out.println("cf");
+        System.out.println("cp");
+        System.out.println("reg");
+        System.out.println("mc");
+        System.out.println("cse");
     }
 }

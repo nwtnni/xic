@@ -58,6 +58,12 @@ public class Xic {
         }
     }
 
+    public void setOutputCFG(Phase.Kind kind) {
+        for (Phase phase : phases) {
+            if (phase.matches(kind)) phase.setOutputCFG();
+        }
+    }
+
     public void run() {
 
         Config config = new Config(source, sink, asm, lib);

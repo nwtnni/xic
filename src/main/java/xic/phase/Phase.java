@@ -43,6 +43,8 @@ public abstract class Phase implements Comparable<Phase> {
 
     public void setOutput() { output = true; }
 
+    public void setOutputCFG() {}
+
     public boolean matches(Kind kind) { return this.kind == kind;}
 
     public abstract Result<Product> process(Config config, Result<Product> previous);
