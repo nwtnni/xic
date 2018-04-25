@@ -2,6 +2,11 @@ package xic;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Arrays;
+
+import static xic.Opt.*;
 
 /**
  * Represents possible Xic command-line options.
@@ -15,12 +20,12 @@ public class XicConfig {
     /**
      * Print help information.
      */
-    public boolean help = false;
+    private boolean help = false;
 
     /**
      * Report supported optimizations.
      */
-    public boolean report = false;
+    private boolean report = false;
 
     //
     // Directory Options
@@ -29,65 +34,93 @@ public class XicConfig {
 	/**
 	 * Directory to search for source files.
 	 */
-	public String source = "";
+	private String source = "";
 
 	/**
 	 * Directory to generate diagnostic files.
 	 */
-	public String sink = "";
+	private String sink = "";
 
 	/**
 	 * Directory to generate assembly files.
 	 */
-	public String asm = "";
+	private String asm = "";
 
 	/**
 	 * Directory to search for library files.
 	 */
-	public String lib = "";
+	private String lib = "";
 
     //
     // Diagnostic Options
     //
     
     /**
-     * Lexing phase of compilation.
+     * Lexing phase of compilation with optional diagnostics.
      */
-    public LexPhase lex = new LexPhase(false);
+    private LexPhase lex = new LexPhase();
 
     /**
-     * Parsing phase of compilation.
+     * Parsing phase of compilation with optional diagnostics.
      */
-    public ParsePhase parse = new ParsePhase(false);
+    private ParsePhase parse = new ParsePhase();
 
     /**
-     * Typechecking phase of compilation.
+     * Typechecking phase of compilation with optional diagnostics.
      */
-    public TypePhase type = new TypePhase(false);
+    private TypePhase type = new TypePhase();
 
     /**
-     * IR emitting phase of compilation.
+     * IR emitting phase of compilation with optional diagnostics.
      */
-    public EmitPhase emit = new EmitPhase(false);
+    private EmitPhase emit = new EmitPhase();
 
     /**
      * (Optional) IR interpreting phase of compilation.
      */
-    public List<InterpretPhase> interpet = new ArrayList<>();
+    private List<InterpretPhase> interpet = new ArrayList<>();
 
-    public List<OptimizePhase> optimize = new ArrayList<>();
+    /**
+     * (Optional) IR optimizing phase of compilation with optional diagnostics.
+     */
+    private List<OptimizePhase> optimize = new ArrayList<OptimizePhase>();
 
     //
     // Compilation Options
     //
+    
+    /**
+     * Enable compiler optimizations.
+     */
+    private Set<Opt> opt = new HashSet<>(Arrays.asList(CF, REG, CSE, MC, CP));
 
 	/**
 	 * Target the given OS.
 	 */
-	public String os = "linux";
+	private String os = "linux";
 
 	/**
 	 * Compile the given files.
 	 */
-	public List<String> files = new ArrayList<>();
+	private List<String> files = new ArrayList<>();
+
+    public void setHelp() { help = true; }
+
+    public void setReport() { report = true; }
+
+    public void setSource(String source) { this.source = source; }
+
+    public void setSink(String sink) { this.sink = sink; }
+
+    public void setAsm(String asm) { this.asm = asm; }
+
+    public void setLib(String lib) { this.lib = lib; }
+
+    public void setLex() { this.lex.setOutput(); }
+
+    public void setParse() { this.parse.setOutput(); }
+
+    public void setType() { this.type.setOutput(); }
+
+    public void setEmit() { this.emit.setOutput(); }
 }

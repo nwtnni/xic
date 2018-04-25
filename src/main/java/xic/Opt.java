@@ -1,6 +1,6 @@
 package xic;
 
-public enum Optimization {
+public enum Opt {
     CF   ("Constant folding"),
     REG  ("Register allocation"),
     MC   ("Move coalescing"),
@@ -18,7 +18,7 @@ public enum Optimization {
 
     private String description;
 
-    private Optimization(String description) {
+    private Opt(String description) {
         this.description = description;
     }
 }
