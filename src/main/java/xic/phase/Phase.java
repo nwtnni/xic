@@ -1,20 +1,25 @@
 package xic.phase;
 
-import util.Result;
 import java.util.List;
 import java.util.Arrays;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
-abstract class Phase implements Comparable<Phase> {
+import util.Result;
 
-    public static List<Phase> minimal() {
-        return List.of(
-            new Lex(),
-            new Parse(),
-            new Type(),
-            new Emit(),
-            new Canonize(),
-            new Tile(),
-            new Allocate()
+public abstract class Phase implements Comparable<Phase> {
+
+    public static SortedSet<Phase> minimal() {
+        return new TreeSet<>(
+            List.of(
+                new Lex(),
+                new Parse(),
+                new Type(),
+                new Emit(),
+                new Canonize(),
+                new Tile(),
+                new Allocate()
+            )
         );
     }
 
@@ -36,6 +41,8 @@ abstract class Phase implements Comparable<Phase> {
     public Phase() { output = false; }
 
     public void setOutput() { output = true; }
+
+    public boolean matches(Kind kind) { return this.kind == kind; }
 
     public abstract Result<Product> process(Config config, Result<Product> previous);
 
