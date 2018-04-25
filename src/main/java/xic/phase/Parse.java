@@ -57,6 +57,7 @@ public class Parse extends Phase {
 
             } catch (XicException e) {
                 if (output) {
+                    Filename.makePathTo(out);
                     BufferedWriter w = new BufferedWriter(new FileWriter(out));
                     w.write(e.toWrite());
                     w.close();
