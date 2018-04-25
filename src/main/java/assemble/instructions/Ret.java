@@ -13,4 +13,9 @@ public class Ret extends Instr {
     public List<String> toAssembly() {
         return Arrays.asList("retq");
     }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

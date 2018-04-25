@@ -36,4 +36,9 @@ public class Call extends Instr {
         instrs.add("callq " + name);
         return instrs;
     }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

@@ -37,4 +37,9 @@ public class Jcc extends Instr {
     public List<String> toAssembly() {
         return Arrays.asList(String.format("j%s %s", kind.cond, target));
     }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

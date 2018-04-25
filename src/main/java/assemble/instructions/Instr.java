@@ -13,4 +13,6 @@ public abstract class Instr {
     public abstract List<String> toAbstractAssembly();
     
     public abstract List<String> toAssembly();
+
+    public abstract <T> T accept(InsVisitor<T> v);
 }

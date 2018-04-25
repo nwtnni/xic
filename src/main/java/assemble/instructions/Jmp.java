@@ -22,4 +22,8 @@ public class Jmp extends Instr {
         return Arrays.asList("jmp " + target);
     }
 
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

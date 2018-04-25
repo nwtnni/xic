@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Arrays;
 
 import assemble.*;
+import ir.IRVisitor;
 
 public class BinOp extends Instr {
     public enum Kind {
@@ -55,4 +56,8 @@ public class BinOp extends Instr {
         return Arrays.asList(String.format("%s %s, %s", kind.opcode, src, dest));
     }
 
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

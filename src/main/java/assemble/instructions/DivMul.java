@@ -45,4 +45,8 @@ public class DivMul extends Instr {
         return Arrays.asList(kind.opcode + " " + src);
     }
 
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

@@ -26,4 +26,9 @@ public class Cmp extends Instr {
     public List<String> toAssembly() {
         return Arrays.asList(String.format("cmpq %s, %s", left, right));
     }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

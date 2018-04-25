@@ -53,4 +53,9 @@ public class Label extends Instr {
     public List<String> toAssembly() {
         return Arrays.asList(name);
     }
+    
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

@@ -35,4 +35,9 @@ public class Mov extends Instr {
     public List<String> toAssembly() {
         return Arrays.asList(String.format("movq %s, %s", src, dest));
     }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

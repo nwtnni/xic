@@ -13,4 +13,9 @@ public class Cqo extends Instr {
     public List<String> toAssembly() {
         return Arrays.asList("cqo");
     }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }
