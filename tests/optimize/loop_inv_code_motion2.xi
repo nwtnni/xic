@@ -12,4 +12,5 @@ main (args:int[][]) {
         z[0] = 1
         i = i+1
     }
+    print(unparseInt(x[0]))
 }

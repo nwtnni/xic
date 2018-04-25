@@ -3,9 +3,10 @@ use conv
 
 main (args:int[][]) {
     i:int = 0
+    y:int = 0
     while i<100000000 {
         x:int = foo()
-        y:int = x+1
+        y = x+1
         if x+1 == 0 {
             y = (x+1)*2
         }
@@ -14,6 +15,7 @@ main (args:int[][]) {
         }
         i = i+1
     }
+    print(unparseInt(y))
 }
 
 foo():int {

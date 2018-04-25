@@ -3,10 +3,12 @@ use conv
 
 main (args:int[][]) {
     i:int = 0
+    c:int = 0
     while i<200000000 {
-        c:int = foo(i)
+        c = foo(i)
         i = i+1
     }
+    print(unparseInt(c))
 }
 
 foo(x:int):int {

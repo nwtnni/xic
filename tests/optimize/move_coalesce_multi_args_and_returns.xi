@@ -14,6 +14,7 @@ main (args:int[][]) {
         m:int,n:int,o:int,p:int,q:int,r:int = foo(a,b,c,d,e,f)
         i = i+1
     }
+    print(unparseInt(f))
 }
 
 foo (a:int, b:int, c:int, d:int, e:int, f:int):int,int,int,int,int,int {

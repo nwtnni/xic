@@ -8,4 +8,5 @@ main (args:int[][]) {
         k:int = j/3
         i = k - i + 1
     }
+    print(unparseInt(i))
 }

@@ -17,4 +17,5 @@ main (args:int[][]) {
         }
         i = i+1
     }
+    print(unparseInt(c))
 }

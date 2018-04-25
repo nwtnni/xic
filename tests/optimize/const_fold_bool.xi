@@ -8,5 +8,7 @@ main (args:int[][]) {
         x = true & true & true | false
         i = i+1
     }
-    
+    if x == true {
+        print("True")
+    }
 }

@@ -6,4 +6,5 @@ main (args:int[][]) {
     while i<100000000 {
         i = i*2-i+1
     }
+    print(unparseInt(i))
 }

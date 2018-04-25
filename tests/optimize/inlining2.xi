@@ -8,6 +8,7 @@ main (args:int[][]) {
         x = foo(x)
         i = i+1
     }
+    print(unparseInt(x))
 }
 
 foo(x:int):int {
