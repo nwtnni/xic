@@ -9,32 +9,7 @@ public class IRCJump extends IRStmt {
     * cond is IRExpr in release code
     */
     public IRExpr cond;
-    private String trueName, falseName;
     private IRLabel trueLabel, falseLabel;
-
-    /**
-     * Construct a CJUMP instruction with fall-through on false.
-     * @param cond the condition for the jump
-     * @param trueName the destination of the jump if {@code expr} evaluates
-     *          to true
-     */
-    public IRCJump(IRExpr cond, String trueName) {
-        this(cond, trueName, null);
-    }
-
-    /**
-     *
-     * @param cond the condition for the jump
-     * @param trueName the destination of the jump if {@code expr} evaluates
-     *          to true
-     * @param falseName the destination of the jump if {@code expr} evaluates
-     *          to false
-     */
-    public IRCJump(IRExpr cond, String trueName, String falseName) {
-        this.cond = cond;
-        this.trueName = trueName;
-        this.falseName = falseName;
-    }
 
     /**
      * Construct a CJUMP instruction with fall-through on false.
@@ -65,11 +40,11 @@ public class IRCJump extends IRStmt {
     }
 
     public String trueName() {
-        return (trueLabel != null) ? trueLabel.name() : trueName;
+        return trueLabel.name();
     }
 
     public String falseName() {
-        return (falseLabel != null) ? falseLabel.name() : falseName;
+        return (falseLabel != null) ? falseLabel.name() : null;
     }
 
     public IRLabel trueLabel() {
@@ -81,7 +56,7 @@ public class IRCJump extends IRStmt {
     }
 
     public boolean hasFalseLabel() {
-        return falseLabel != null || falseName != null;
+        return falseLabel != null;
     }
 
     @Override

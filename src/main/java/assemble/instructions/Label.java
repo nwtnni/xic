@@ -1,11 +1,7 @@
 package assemble.instructions;
 
-import java.util.List;
-
 import ir.IRFuncDecl;
 import ir.IRLabel;
-
-import java.util.Arrays;
 
 public class Label extends Instr {
     protected String name;
@@ -20,7 +16,7 @@ public class Label extends Instr {
     /**
      * Generate a label from an IRLabel
      */
-    public static Label label(IRFuncDecl fn) {
+    public static Label funLabel(IRFuncDecl fn) {
         return new Label(fn.name()+ ":");
     }
 
@@ -40,17 +36,32 @@ public class Label extends Instr {
     }
 
     @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Label && name.equals(((Label) o).name);
+    }
+
+    @Override
     public String toString() {
         return name;
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
+    public String toAbstractAssembly() {
         return toAssembly();
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(name);
+    public String toAssembly() {
+        return name;
+    }
+    
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
     }
 }

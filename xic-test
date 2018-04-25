@@ -151,7 +151,19 @@ test_course() {
 }
 
 if [[ -f $1 ]] ; then
-  ./xic -target linux -libpath tests/libs $1
+  ./xic -target linux -O -libpath tests/libs $1
+  asm="${1%.*}.s"
+  base=$(basename -- "$1")
+  name="${base%.*}.s"
+  cp $asm "runtime/tests/$name"
+  platform=`uname`
+  if [ "$platform" = "Linux" ]; then
+    pushd "runtime"
+    time ./run_test "tests/$name"
+    popd
+  else
+    echo "Cannot run assembly on $platform"
+  fi
 else
   cmd=$1
   if [ "$cmd" = "--nb" ] ; then

@@ -29,6 +29,8 @@ public class Tiler extends IRVisitor<Temp> {
         return tiler.unit;
     }
 
+    public static final boolean INCLUDE_COMMENTS = false;
+
     // Mangled names context
     private ABIContext context;
 
@@ -38,6 +40,12 @@ public class Tiler extends IRVisitor<Temp> {
     // Current list of instructions
     List<Instr> instrs;
 
+    // 1 if current function has multiple returns else 0
+    private int calleeIsMultiple;
+
+    // Number of args passed to a called function
+    private int callerNumArgs;
+
     // Return label of current function visited
     Label returnLabel;
 
@@ -46,6 +54,8 @@ public class Tiler extends IRVisitor<Temp> {
         this.unit = new CompUnit();
 
         this.instrs = new ArrayList<>();
+        this.calleeIsMultiple = 0;
+        this.callerNumArgs = 0;
         this.returnLabel = null;
     }
 
@@ -102,14 +112,30 @@ public class Tiler extends IRVisitor<Temp> {
         instrs = new ArrayList<>();
         TempFactory.reset();
 
-        // Set return label and accept the function body
+        String funcName = f.name();
+
+        // Set the number of returns
+        int returns = numReturns(funcName);
+
+        // If function has multiple returns, save return address from arg 0 to a temp
+        if (returns > 2) {
+            calleeIsMultiple = 1;
+            instrs.add(0, new Mov(Temp.CALLEE_RET_ADDR, Temp.calleeArg(0)));
+        } else {
+            calleeIsMultiple = 0;
+        }
+
+        // Set number of arguments including offset for multiple returns
+        int args = numArgs(funcName) + calleeIsMultiple;
+
+        // Set return label
         returnLabel = Label.retLabel(f);
+
+        // Tile the function body
         f.body().accept(this);
 
+
         // Set up prologue and epilogue
-        String funcName = f.name();
-        int args = numArgs(funcName);
-        int returns = numReturns(funcName);
         FuncDecl fn = new FuncDecl(f, args, returns, instrs);
         unit.fns.add(fn);
         
@@ -172,13 +198,13 @@ public class Tiler extends IRVisitor<Temp> {
             default:
         }
         if (uop != null) {
-            instrs.add(new Mov(Operand.RAX, left));
+            instrs.add(new Mov(Temp.fixed(Operand.RAX), left));
             if (uop == DIV || uop == MOD) {
                 instrs.add(new Cqo());
             }
             DivMul op = new DivMul(uop, right);
             instrs.add(op);
-            instrs.add(new Mov(dest, op.dest));
+            instrs.add(new Mov(dest, op.destTemp));
             return dest;
         }
             
@@ -205,31 +231,40 @@ public class Tiler extends IRVisitor<Temp> {
             default:
         }
         instrs.add(new Cmp(right, left));
-        instrs.add(new Mov(Operand.RAX, Operand.imm(0)));
+        instrs.add(new Mov(Temp.fixed(Operand.RAX), Temp.imm(0)));
         instrs.add(new Set(flag));
-        instrs.add(new Mov(dest, Operand.RAX));
+        instrs.add(new Mov(dest, Temp.fixed(Operand.RAX)));
         return dest;
     }
     
     public Temp visit(IRCall c) {
-        List<Instr> args = new ArrayList<>();
-
         String target = c.target().name();
 
         int callIsMultiple = 0;
-        int ret = numReturns(target);
-        if (ret > 2) {
+        
+        int numRets = numReturns(target);
+
+        callerNumArgs = numArgs(target);
+
+        // Set up for multiple returns from call
+        if (numRets > 2) {
             callIsMultiple = 1;
-            args.add(new Lea(Temp.arg(0, false), Temp.MULT_RET_ADDR));
+            callerNumArgs++;
+
+            // CALLER defines address that is passed as CALLER_RET_ADDR
+            // Address passed is the same as address to write ret2 to
+            instrs.add(new Lea(Temp.callerArg(0), Temp.callerRet(2, callerNumArgs)));
         }
 
+        // CALLER args
+        // callIsMultiple deined by this CALL
         for (int i = 0; i < c.size(); i++) {
             Temp val = c.get(i).accept(this);
-            args.add(new Mov(Temp.arg(i + callIsMultiple, false), val));
+            instrs.add(new Mov(Temp.callerArg(i + callIsMultiple), val));
         }
 
-        instrs.add(new Call(target, args, ret));
-        return Temp.ret(0, false);
+        instrs.add(new Call(target, callerNumArgs, numRets));
+        return Temp.callerRet(0, callerNumArgs);
     }
 
     public Temp visit(IRCJump c) {
@@ -264,12 +299,13 @@ public class Tiler extends IRVisitor<Temp> {
                 default:
                     throw XicInternalException.runtime("Invalid binop for CJUMP");
             }
-            instrs.add(new Jcc(flag, c.trueName()));
+            instrs.add(new Jcc(flag, c.trueLabel()));
+            return null;
         }
 
         Temp cond = c.cond.accept(this);
         instrs.add(new Cmp(Temp.imm(1), cond));
-        instrs.add(new Jcc(Jcc.Kind.Z, c.trueName()));
+        instrs.add(new Jcc(Jcc.Kind.Z, c.trueLabel()));
         return null;
     }
 
@@ -278,7 +314,7 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRJump j) {
-        instrs.add(new Jmp(((IRName) j.target()).name()));
+        instrs.add(Jmp.fromJmp(j));
         return null;
     }
 
@@ -346,20 +382,25 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRReturn r) {
+        // CALLEE returns (write by callee)
         for (int i = r.size() - 1; i >= 0; i--) {
             Temp val = r.get(i).accept(this);
-            instrs.add(new Mov(Temp.ret(i, true), val));
+            instrs.add(new Mov(Temp.calleeRet(i), val));
         }
-        instrs.add(new Jmp(returnLabel.name()));
+        instrs.add(Jmp.toLabel(returnLabel));
         return null;
     }
 
     public Temp visit(IRSeq s) { 
         int i = 0;
         for(IRNode stmt : s.stmts()) {
-            instrs.add(Text.comment("stmt: " + i));
+            if (INCLUDE_COMMENTS) {
+                String ir = "\nStmt " + i + ": " + stmt;
+                ir = ir.replaceAll("\n\\s*", "\n# ");
+                ir = ir.substring(0, ir.length() - 3);
+                instrs.add(Text.comment(ir));
+            }
             stmt.accept(this);
-            instrs.add(Text.text(""));
             i++;
         }
         return null;
@@ -368,15 +409,19 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRTemp t) {
         String name = t.name();
 
-        // Argument read by callee
+        // CALLEE args (read by callee)
         if (name.matches(Configuration.ABSTRACT_ARG_PREFIX + "\\d+")) {
-            return Temp.arg(Integer.parseInt(name.substring(4)), true);
-            
+            // isMultiple defined by FUNCDECL to offset for multiple 
+            // return address passed as arg0
+            int num = Integer.parseInt(name.substring(4)) + calleeIsMultiple;
+            return Temp.calleeArg(num);
         } 
-        
-        // Return read by caller
+
+        // CALLER returns (read by caller)
         if (name.matches(Configuration.ABSTRACT_RET_PREFIX + "\\d+")) {
-            return Temp.ret(Integer.parseInt(name.substring(4)), false);
+            // callerNumArgs defined by CALL
+            int num = Integer.parseInt(name.substring(4));
+            return Temp.callerRet(num, callerNumArgs);
         }
 
         // Default temp

@@ -1,7 +1,7 @@
 package optimize;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import ir.*;
 
@@ -10,7 +10,6 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
     public IRGraphFactory(IRCompUnit compUnit, IREdgeFactory<E> edgeFactory) {
         this.compUnit = compUnit;
         this.edgeFactory = edgeFactory;
-        this.prev = null;
     }
 
     /** The compilation unit to generate CFGs from. */
@@ -26,19 +25,18 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
     private IRStmt prev;
 
     /** Returns the list of CFGs for the compilation unit. */
-    public List<IRGraph<E>> getCfgs() {
-        List<IRGraph<E>> fns = new ArrayList<>();
+    public Map<String, IRGraph<E>> getCfgs() {
+        Map<String, IRGraph<E>> fns = new HashMap<>();
         for (IRFuncDecl fn : compUnit.functions().values()) {
             visit(fn);
-            fns.add(cfg);
+            fns.put(fn.name(), cfg);
         }
         return fns;
     }
 
     public IRStmt visit(IRFuncDecl f) {
         prev = null;
-
-        cfg = new IRGraph<>(f.name(), f.get(0), edgeFactory);
+        cfg = new IRGraph<>(f.sourceName(), f.name(), f.get(0), edgeFactory);
         f.body().accept(this);
 
         return null;
@@ -46,14 +44,13 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
 
     public IRStmt visit(IRSeq s) {
         for (IRStmt n : s.stmts()) {
-            // System.out.println("adding " + n.label());
             cfg.addVertex(n);
            
-            // System.out.println("added node " + n.label()); 
             if (prev != null) {
                 cfg.addEdge(prev, n);
             }
-            n.accept(this);
+
+            prev = n.accept(this);
         }
         return s;
     }
@@ -61,29 +58,24 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
     public IRStmt visit(IRCJump c) {
         cfg.addVertex(c.trueLabel());
         cfg.addEdge(c, c.trueLabel());
-        prev = c;
         return c;
     }
 
     public IRStmt visit(IRJump j) {
         cfg.addVertex(j.targetLabel());
         cfg.addEdge(j, j.targetLabel());
-        prev = null;
-        return j;
+        return null;
     }
 
     public IRStmt visit(IRLabel l) {
-        prev = l;
         return l;
     }
 
     public IRStmt visit(IRMove m) {
-        prev = m;
         return m;
     }
 
     public IRStmt visit(IRReturn r) {
-        prev = null;
-        return r;
+        return null;
     }
 }

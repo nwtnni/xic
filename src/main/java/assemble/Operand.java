@@ -70,7 +70,7 @@ public class Operand {
     }
 
     /**
-     * A memory access computed from a register:
+     * A memory access [base]
      * In the form: (base)
      */
     public static Operand mem(Operand base) {
@@ -80,7 +80,7 @@ public class Operand {
     }
 
     /**
-     * A memory access computed base-relative:
+     * A memory access [base + offset]
      * In the form: offset(base)
      */
     public static Operand mem(Operand base, int offset) {
@@ -90,21 +90,21 @@ public class Operand {
     }
 
     /**
-     * A memory access computed scaled-base-relative
+     * A memory access [scale*reg + offset]
      * In the form offset(base,scale)
      * 
      * scale must be 1, 2, 4 or 8
      */
-    public static Operand mem(Operand base, int offset, int scale) {
-        assert (base.kind != IMM && base.kind != MEM);
+    public static Operand mem(Operand reg, int offset, int scale) {
+        assert (reg.kind != IMM && reg.kind != MEM);
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
-        String mem = String.format("%d(,%s,%d)", offset, base, scale);
+        String mem = String.format("%d(,%s,%d)", offset, reg, scale);
         return new Operand(MEM, mem, 0);
     }
 
     /**
-     * A memory access computed offset-scaled-base-relative
-     * In the form offset(base,scale)
+     * A memory access [base + scale*reg + offset]
+     * In the form offset(base,reg,scale)
      * 
      * scale must be 1, 2, 4 or 8
      */
@@ -115,6 +115,9 @@ public class Operand {
         return new Operand(MEM, mem, 0);
     }
 
+    /**
+     * A immediate operand.
+     */
     public static Operand imm(long value) {
         return new Operand(IMM, null, value);
     }

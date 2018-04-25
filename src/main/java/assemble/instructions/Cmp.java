@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
 
 public class Cmp extends Instr {
@@ -18,12 +15,17 @@ public class Cmp extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return Arrays.asList(String.format("cmpq %s, %s", leftTemp, rightTemp));
+    public String toAbstractAssembly() {
+        return String.format("cmpq %s, %s", leftTemp, rightTemp);
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("cmpq %s, %s", left, right));
+    public String toAssembly() {
+        return String.format("cmpq %s, %s", left, right);
+    }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
     }
 }

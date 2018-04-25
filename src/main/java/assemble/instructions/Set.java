@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
 
 public class Set extends Instr {
@@ -27,12 +24,17 @@ public class Set extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return Arrays.asList(String.format("set%s %%al", kind.flag));
+    public String toAbstractAssembly() {
+        return String.format("set%s %%al", kind.flag);
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("set%s %%al", kind.flag));
+    public String toAssembly() {
+        return String.format("set%s %%al", kind.flag);
+    }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
     }
 }

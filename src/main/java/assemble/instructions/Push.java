@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.Arrays;
-import java.util.List;
-
 import assemble.*;
 
 public class Push extends Instr {
@@ -14,12 +11,17 @@ public class Push extends Instr {
     }
     
     @Override
-    public List<String> toAbstractAssembly() {
+    public String toAbstractAssembly() {
         return toAssembly();
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList("pushq " + operand);
+    public String toAssembly() {
+        return "pushq " + operand;
+    }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
     }
 }

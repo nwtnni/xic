@@ -40,7 +40,7 @@ public class ConstantFolderTest {
     @Test
     public void cjump1() {
     		IRBinOp b3 = new IRBinOp(IRBinOp.OpType.NEQ, b2, b2);
-    		IRCJump cj = new IRCJump(b3, "hi", "hello");
+    		IRCJump cj = new IRCJump(b3, new IRLabel("hi"), new IRLabel("hello"));
     		cf.visit(cj);
     		assertEquals(((IRConst) cj.cond).value(), 0);
     }

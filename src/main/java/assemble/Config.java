@@ -35,6 +35,17 @@ public class Config {
         return null;
     }
 
+    /** Get the register for returns 0-1 on System V. */
+    public static Operand getRet(int i) {
+        if (i == 0) {
+            return Operand.RAX;
+        } else if (i == 1) {
+            return Operand.RDX;
+        }
+        assert false;
+        return null;
+    }
+
     /**
      * Check if value is representable with n-bits in 2's complement notation
      * Loses MIN_INT for each n bits for simplicity

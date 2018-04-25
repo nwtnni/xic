@@ -1,30 +1,14 @@
 use io
 use conv
 
-main(args:int[][]) {
-    x:int = 0
-    println(unparseInt(x))
-    // a:int[foo()]
-
-    // x:int = 0
-    // while (x < length(a)) {
-    //     a[x] = fib(x)
-    //     printInt(a[x])
-    //     x = x + 1
-    // }
+main (args:int[][]) {
+    x:bool
+    i:int = 0
+    while i<300000000 {
+        x = true & true & true & true & true | false | false | false
+        i = i+1
+    }
+    if x == true {
+        print("True")
+    }
 }
-
-// foo() : int {
-//     return 40
-// }
-
-// fib(n:int) : int {
-//     if (n <= 2) {
-//         return 1
-//     }
-//     return fib(n-1) + fib(n-2)
-// }
-
-// printInt(x:int) {
-//     println(unparseInt(x))
-// }

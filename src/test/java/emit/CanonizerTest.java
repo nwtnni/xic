@@ -120,7 +120,7 @@ public class CanonizerTest {
 		IRTemp temp = IRTempFactory.generate();
 		IRConst cond = new IRConst(1);
 		IRESeq c = new IRESeq(new IRMove(temp, cond), temp);
-		IRCJump j = new IRCJump(c, "true");
+		IRCJump j = new IRCJump(c, new IRLabel("true"));
 		IRNode result = Canonizer.canonize(j);
 		List<IRStmt> statements = Canonizer.debug(j);
 		

@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
 
 public class DivMul extends Instr {
@@ -17,6 +14,7 @@ public class DivMul extends Instr {
     }
 
     public Kind kind;
+    public Temp destTemp;
     public Temp srcTemp;
 
     public Operand dest;
@@ -28,20 +26,24 @@ public class DivMul extends Instr {
 
         // Intermediate register is fixed for these instructions
         if (kind == Kind.MUL || kind == Kind.DIV) {
-            this.dest = Operand.RAX;
+            this.destTemp = Temp.fixed(Operand.RAX);
         } else {
-            this.dest = Operand.RDX;
+            this.destTemp = Temp.fixed(Operand.RDX);
         }
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return Arrays.asList(kind.opcode + " " + srcTemp);
+    public String toAbstractAssembly() {
+        return kind.opcode + " " + srcTemp;
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(kind.opcode + " " + src);
+    public String toAssembly() {
+        return kind.opcode + " " + src;
     }
 
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }

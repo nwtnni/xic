@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 public class Text extends Instr {
     protected String text;
 
@@ -23,12 +20,17 @@ public class Text extends Instr {
     }
     
     @Override
-    public List<String> toAbstractAssembly() {
+    public String toAbstractAssembly() {
         return toAssembly();
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(text);
+    public String toAssembly() {
+        return text;
+    }
+
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
     }
 }

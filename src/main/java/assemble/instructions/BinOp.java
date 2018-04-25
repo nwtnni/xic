@@ -1,8 +1,5 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
 
 public class BinOp extends Instr {
@@ -27,12 +24,18 @@ public class BinOp extends Instr {
     public Operand dest;
     public Operand src;
 
+    /**
+     * Creates a BinOp with abstract operands.
+     */
     public BinOp(Kind kind, Temp d, Temp s) {
         this.kind = kind;
         this.destTemp = d;
         this.srcTemp = s;
     }
 
+    /** 
+     * Create a BinOp with real operands. Should not be used until allocation.
+     */
     public BinOp(Kind kind, Operand dest, Operand src) {
         this.kind = kind;
         this.dest = dest;
@@ -40,13 +43,17 @@ public class BinOp extends Instr {
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return Arrays.asList(String.format("%s %s, %s", kind.opcode, srcTemp, destTemp));
+    public String toAbstractAssembly() {
+        return String.format("%s %s, %s", kind.opcode, srcTemp, destTemp);
     }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("%s %s, %s", kind.opcode, src, dest));
+    public String toAssembly() {
+        return String.format("%s %s, %s", kind.opcode, src, dest);
     }
 
+    @Override
+    public <T> T accept(InsVisitor<T> v) {
+        return v.visit(this);
+    }
 }
