@@ -1,15 +1,30 @@
 package assemble.instructions;
 
 import java.util.List;
+
+import ir.IRJump;
+
 import java.util.Arrays;
 
 public class Jmp extends Instr {
 
-    // Only support translating jumps to labels for now
-    public String target;
+    public static Jmp fromJmp(IRJump j) {
+        return new Jmp(Label.label(j.targetLabel()));
+    }
 
-    public Jmp(String target) {
-        this.target = target;
+    public static Jmp toLabel(Label l) {
+        return new Jmp(l);
+    }
+
+    public Label label;
+
+    // TODO: only support jump to label for now
+    private Jmp(Label label) {
+        this.label = label;
+    }
+
+    public boolean hasLabel() {
+        return label != null;
     }
 
     @Override
@@ -19,7 +34,7 @@ public class Jmp extends Instr {
 
     @Override
     public List<String> toAssembly() {
-        return Arrays.asList("jmp " + target);
+        return Arrays.asList("jmp " + label.name());
     }
 
     @Override

@@ -284,12 +284,12 @@ public class Tiler extends IRVisitor<Temp> {
                 default:
                     throw XicInternalException.runtime("Invalid binop for CJUMP");
             }
-            instrs.add(new Jcc(flag, c.trueName()));
+            instrs.add(new Jcc(flag, c.trueLabel()));
         }
 
         Temp cond = c.cond.accept(this);
         instrs.add(new Cmp(Temp.imm(1), cond));
-        instrs.add(new Jcc(Jcc.Kind.Z, c.trueName()));
+        instrs.add(new Jcc(Jcc.Kind.Z, c.trueLabel()));
         return null;
     }
 
@@ -298,7 +298,7 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRJump j) {
-        instrs.add(new Jmp(((IRName) j.target()).name()));
+        instrs.add(Jmp.fromJmp(j));
         return null;
     }
 
@@ -370,7 +370,7 @@ public class Tiler extends IRVisitor<Temp> {
             Temp val = r.get(i).accept(this);
             instrs.add(new Mov(Temp.ret(i, true), val));
         }
-        instrs.add(new Jmp(returnLabel.name()));
+        instrs.add(Jmp.toLabel(returnLabel));
         return null;
     }
 

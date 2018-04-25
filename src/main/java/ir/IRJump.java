@@ -47,22 +47,6 @@ public class IRJump extends IRStmt {
         return "JUMP";
     }
 
-    // @Override
-    // public IRNode visitChildren(IRVisitor v) {
-    //     IRExpr expr = (IRExpr) v.visit(this, target);
-
-    //     if (expr != target) return v.nodeFactory().IRJump(expr);
-
-    //     return this;
-    // }
-
-    // @Override
-    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
-    //     T result = v.unit();
-    //     result = v.bind(result, v.visit(target));
-    //     return result;
-    // }
-
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);

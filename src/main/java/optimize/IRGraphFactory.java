@@ -50,7 +50,8 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
             if (prev != null) {
                 cfg.addEdge(prev, n);
             }
-            n.accept(this);
+
+            prev = n.accept(this);
         }
         return s;
     }
@@ -58,29 +59,24 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
     public IRStmt visit(IRCJump c) {
         cfg.addVertex(c.trueLabel());
         cfg.addEdge(c, c.trueLabel());
-        prev = c;
         return c;
     }
 
     public IRStmt visit(IRJump j) {
         cfg.addVertex(j.targetLabel());
         cfg.addEdge(j, j.targetLabel());
-        prev = null;
-        return j;
+        return null;
     }
 
     public IRStmt visit(IRLabel l) {
-        prev = l;
         return l;
     }
 
     public IRStmt visit(IRMove m) {
-        prev = m;
         return m;
     }
 
     public IRStmt visit(IRReturn r) {
-        prev = null;
-        return r;
+        return null;
     }
 }

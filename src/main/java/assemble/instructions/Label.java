@@ -20,7 +20,7 @@ public class Label extends Instr {
     /**
      * Generate a label from an IRLabel
      */
-    public static Label label(IRFuncDecl fn) {
+    public static Label funLabel(IRFuncDecl fn) {
         return new Label(fn.name()+ ":");
     }
 
@@ -37,6 +37,15 @@ public class Label extends Instr {
 
     public String name() {
         return name.substring(0, name.length() - 1);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Label) {
+            Label l = (Label) o;
+            return name().equals(l.name());
+        }
+        return false;
     }
 
     @Override

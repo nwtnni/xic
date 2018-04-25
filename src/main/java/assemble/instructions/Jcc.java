@@ -3,6 +3,8 @@ package assemble.instructions;
 import java.util.List;
 import java.util.Arrays;
 
+import ir.IRLabel;
+
 public class Jcc extends Instr {
 
     public enum Kind {
@@ -20,11 +22,11 @@ public class Jcc extends Instr {
     }
 
     public Kind kind;
-    public String target;
+    public Label target;
 
-    public Jcc(Kind kind, String target) {
+    public Jcc(Kind kind, IRLabel target) {
         this.kind = kind;
-        this.target = target;
+        this.target = Label.label(target);
     }
 
 
@@ -35,7 +37,7 @@ public class Jcc extends Instr {
 
     @Override
     public List<String> toAssembly() {
-        return Arrays.asList(String.format("j%s %s", kind.cond, target));
+        return Arrays.asList(String.format("j%s %s", kind.cond, target.name()));
     }
 
     @Override

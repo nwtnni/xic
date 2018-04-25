@@ -29,7 +29,7 @@ public class FuncDecl {
         prelude.add(Text.text("################################################################################"));
         prelude.add(Text.text(".globl " + name));
         prelude.add(Text.text(".align 4"));
-        prelude.add(Label.label(fn));
+        prelude.add(Label.funLabel(fn));
         
         prelude.add(Text.comment("Stack Setup"));
         prelude.add(new Push(Operand.RBP));
