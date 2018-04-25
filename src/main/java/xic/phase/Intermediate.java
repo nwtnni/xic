@@ -4,6 +4,7 @@ import xic.XicInternalException;
 import lex.XiLexer;
 import ast.Program;
 import ir.IRCompUnit;
+import assemble.instructions.CompUnit;
 
 public class Intermediate {
     
@@ -12,6 +13,7 @@ public class Intermediate {
         LEXER,
         AST,
         IR,
+        ASM,
     }
 
     public final Kind kind;
@@ -25,6 +27,7 @@ public class Intermediate {
     private XiLexer lexer;
     private Program ast;
     private IRCompUnit ir;
+    private CompUnit assembly;
 
     /**
      * Initial intermediate: compilation
@@ -39,6 +42,7 @@ public class Intermediate {
         this.lexer = null;
         this.ast = null;
         this.ir = null;
+        this.assembly = null;
     }
 
     public Intermediate(Intermediate previous, XiLexer lexer) {
@@ -51,6 +55,7 @@ public class Intermediate {
         this.lexer = lexer;
         this.ast = null;
         this.ir = null;
+        this.assembly = null;
     }
 
     public Intermediate(Intermediate previous, Program ast) {
@@ -63,6 +68,7 @@ public class Intermediate {
         this.lexer = null;
         this.ast = ast;
         this.ir = null;
+        this.assembly = null;
     }
 
     public Intermediate(Intermediate previous, IRCompUnit ir) {
@@ -75,6 +81,20 @@ public class Intermediate {
         this.lexer = null;
         this.ast = null;
         this.ir = ir;
+        this.assembly = null;
+    }
+
+    public Intermediate(Intermediate previous, CompUnit assembly) {
+        this.kind = Kind.IR;
+        this.source = previous.source;
+        this.sink = previous.sink; 
+        this.asm = previous.asm;
+        this.lib = previous.lib;
+        this.file = previous.file;
+        this.lexer = null;
+        this.ast = null;
+        this.ir = null;
+        this.assembly = assembly;
     }
 
     public XiLexer getLexer() {
@@ -96,5 +116,12 @@ public class Intermediate {
             throw XicInternalException.runtime("Could not retrieve IR from intermediate.");
         }
         return ir;
+    }
+
+    public CompUnit getAssembly() {
+        if (!(kind == Kind.ASM) || assembly == null) {
+            throw XicInternalException.runtime("Could not retrieve assembly from intermediate.");
+        }
+        return assembly;
     }
 }

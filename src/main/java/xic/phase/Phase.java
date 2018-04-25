@@ -1,8 +1,22 @@
 package xic.phase;
 
 import util.Result;
+import java.util.List;
+import java.util.Arrays;
 
 abstract class Phase implements Comparable<Phase> {
+
+    public static List<Phase> minimal() {
+        return List.of(
+            new Lex(),
+            new Parse(),
+            new Type(),
+            new Emit(),
+            new Canonize(),
+            new Tile(),
+            new Allocate()
+        );
+    }
 
     public enum Kind {
         LEX,
@@ -11,7 +25,9 @@ abstract class Phase implements Comparable<Phase> {
         EMIT,
         FOLD,
         CANONIZE,
-        INTERPRET
+        INTERPRET,
+        TILE,
+        ALLOCATE,
     }
     
     protected Kind kind;
