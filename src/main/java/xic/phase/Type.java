@@ -1,5 +1,15 @@
-package xic;
+package xic.phase;
 
-public class TypePhase extends XicPhase {
+import util.Result;
+
+public class Type extends Phase {
+
+    public Type() { kind = Phase.Kind.TYPE; }
+
+    @Override
+    public Result<Intermediate> process(Result<Intermediate> previous) {
+        // TODO
+        return null;
+    }
 
 }

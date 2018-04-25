@@ -1,6 +1,14 @@
-package xic;
+package xic.phase;
 
-public class EmitPhase extends XicPhase {
+import util.Result;
 
+public class Emit extends Phase {
 
+    public Emit() { kind = Phase.Kind.EMIT; }
+
+    @Override
+    public Result<Intermediate> process(Result<Intermediate> previous) {
+        // TODO
+        return null;
+    }
 }

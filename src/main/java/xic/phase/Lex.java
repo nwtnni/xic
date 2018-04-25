@@ -1,6 +1,15 @@
-package xic;
+package xic.phase;
 
-public class LexPhase extends XicPhase {
+import util.Result;
 
+public class Lex extends Phase {
+
+    public Lex() { kind = Phase.Kind.LEX; }
+
+    @Override
+    public Result<Intermediate> process(Result<Intermediate> previous) {
+        // TODO
+        return null;
+    }
 
 }
