@@ -41,19 +41,23 @@ public class FuncDecl {
 
         // Function epilogue
         epilogue = new ArrayList<>();
-        epilogue.add(Text.comment("Stack Teardown"));
         epilogue.add(returnLabel);
+        epilogue.add(Text.comment("Stack Teardown"));
         epilogue.add(Text.comment("~~~Replace with add to %rsp here:"));
         epilogue.add(new Pop(Operand.RBP));
         epilogue.add(new Ret());
         epilogue.add(Text.text(""));
     }
     
-    public FuncDecl(String name, List<Instr> prelude, List<Instr> stmts, List<Instr> epilogue) {
-        this.name = name;
-        this.prelude = prelude;
-        this.stmts = stmts;
-        this.epilogue = epilogue;
+    public FuncDecl(FuncDecl fn) {
+        this.sourceName = fn.sourceName;
+        this.name = fn.name;
+        this.args = fn.args;
+        this.rets = fn.rets;
+        this.returnLabel = fn.returnLabel;
+        this.prelude = fn.prelude;
+        this.stmts = fn.stmts;
+        this.epilogue = fn.epilogue;
     }
 
     public void setStackSize(int i) {

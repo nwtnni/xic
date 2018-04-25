@@ -50,7 +50,7 @@ public class Emitter extends Visitor<IRNode> {
     protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
     // Toggle inserting library functions
-    private static final boolean INCLUDE_LIB = false;
+    private static final boolean INCLUDE_LIB = true;
 
     /* 
      * Utility methods for code generation
@@ -366,7 +366,7 @@ public class Emitter extends Visitor<IRNode> {
     public IRNode visit(Program p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
 
-        if (!INCLUDE_LIB) {
+        if (INCLUDE_LIB) {
             program.appendFunc(xiArrayConcat());
             program.appendFunc(xiDynamicAlloc());
         }

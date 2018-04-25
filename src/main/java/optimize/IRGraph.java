@@ -57,7 +57,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                 if (current instanceof IRLabel) {
                     continue;
                 } else {
-                    throw XicInternalException.runtime("Trying to add label twice from IR CFG!");
+                    throw XicInternalException.runtime("Trying to add node twice from IR CFG!");
                 }
             }
             visited.add(current);
@@ -78,6 +78,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                 // Trace ends with jump
                 IRJump j = (IRJump) current;
                 if (j.hasLabel()) {
+                    // Start new trace with target
                     traces.push(j.targetLabel());
                 } else {
                     // TODO: Handle arbitrary jumps

@@ -36,20 +36,24 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
     /** 
      * Adds the tail node from the edge in edges to a set of 
      * visited nodes and the sequence of nodes. 
-     * Requires: edges contains a single edge.
+     * Requires: edges contains at most 1 edge.
      * */
     private Instr getSuccessor(Set<PairEdge<Instr, E>> edges) {
         assert edges.size() == 1;
-        return edges.iterator().next().tail;
+        if (edges.iterator().hasNext()) {
+            return edges.iterator().next().tail;
+        } 
+        return null;
     }
 
     /**
      * Converts CFG back to abstract assembly code. 
      */
     public FuncDecl toASA() {
-        // TODO: figure out dealing with prelude and epilogue
+        // TODO: prelude and epilogue not included in cfg
         List<Instr> body = new ArrayList<>();
-        FuncDecl fn = new FuncDecl(name, orignalFn.prelude, body, orignalFn.epilogue);
+        FuncDecl fn = new FuncDecl(orignalFn);
+        fn.stmts = body;
 
         Set<Instr> visited = new HashSet<>();
         Deque<Instr> traces = new ArrayDeque<>();
@@ -63,7 +67,7 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
                 if (current instanceof Label) {
                     continue;
                 } else {
-                    throw XicInternalException.runtime("Trying to add label twice from ASA CFG!");
+                    throw XicInternalException.runtime("Trying to add instruction twice from ASA CFG!");
                 }
             }
             visited.add(current);
@@ -71,7 +75,6 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
 
             // Get next instruction and update traces
             Set<PairEdge<Instr, E>> edges = new HashSet<>(outgoingEdgesOf(current));
-            // Do traces.push here
             if (current instanceof Jcc) {
                 // Add trace label if it is different from the fall-through
                 if (edges.size() > 1) {
@@ -85,7 +88,10 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
                 // Trace ends with jump
                 Jmp jmp = (Jmp) current;
                 if (jmp.hasLabel()) {
-                    traces.push(jmp.label);
+                    // Start new trace if not jump to return
+                    if (!jmp.label.equals(fn.returnLabel)) {
+                        traces.push(jmp.label);
+                    }
                 } else {
                     // TODO: handle arbitary jumps
                 }

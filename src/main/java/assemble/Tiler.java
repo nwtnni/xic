@@ -29,6 +29,8 @@ public class Tiler extends IRVisitor<Temp> {
         return tiler.unit;
     }
 
+    public static final boolean INCLUDE_COMMENTS = false;
+
     // Mangled names context
     private ABIContext context;
 
@@ -298,6 +300,7 @@ public class Tiler extends IRVisitor<Temp> {
                     throw XicInternalException.runtime("Invalid binop for CJUMP");
             }
             instrs.add(new Jcc(flag, c.trueLabel()));
+            return null;
         }
 
         Temp cond = c.cond.accept(this);
@@ -391,10 +394,12 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRSeq s) { 
         int i = 0;
         for(IRNode stmt : s.stmts()) {
-            String ir = "\nStmt " + i + ": " + stmt;
-            ir = ir.replaceAll("\n\\s*", "\n# ");
-            ir = ir.substring(0, ir.length() - 3);
-            instrs.add(Text.comment(ir));
+            if (INCLUDE_COMMENTS) {
+                String ir = "\nStmt " + i + ": " + stmt;
+                ir = ir.replaceAll("\n\\s*", "\n# ");
+                ir = ir.substring(0, ir.length() - 3);
+                instrs.add(Text.comment(ir));
+            }
             stmt.accept(this);
             i++;
         }

@@ -10,6 +10,11 @@ public abstract class Instr {
     public UUID id;
 
     @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o instanceof Instr) {
             return id.equals(((Instr) o).id);

@@ -36,12 +36,13 @@ public class Label extends Instr {
     }
 
     @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    @Override
     public boolean equals(Object o) {
-        if (o instanceof Label) {
-            Label l = (Label) o;
-            return name().equals(l.name());
-        }
-        return false;
+        return o instanceof Label && name.equals(((Label) o).name);
     }
 
     @Override

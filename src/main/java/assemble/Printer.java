@@ -67,10 +67,10 @@ public class Printer {
                 CompUnit aAfter = new CompUnit();
                 for (ASAGraph<Void> c : acfgs.values()) {
                     c.exportCfg(output, "initial");
-                    // aAfter.fns.add(c.toASA());
+                    aAfter.fns.add(c.toASA());
                 }
 
-                // u = aAfter;
+                u = aAfter;
 
                 // end test
 
