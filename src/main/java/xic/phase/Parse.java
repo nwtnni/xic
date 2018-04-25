@@ -21,7 +21,7 @@ public class Parse extends Phase {
     public Parse() { kind = Phase.Kind.PARSE; }
     
     @Override
-    public Result<Intermediate> process(Config config, Result<Intermediate> previous) {
+    public Result<Product> process(Config config, Result<Product> previous) {
 
         try {
 
@@ -53,7 +53,7 @@ public class Parse extends Phase {
                     ast.accept(printer);
                 }
 
-                return new Result<>(new Intermediate(ast));
+                return new Result<>(Product.parsed(ast));
 
             } catch (XicException e) {
                 if (output) {

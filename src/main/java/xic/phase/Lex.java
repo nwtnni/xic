@@ -16,7 +16,7 @@ public class Lex extends Phase {
     public Lex() { kind = Phase.Kind.LEX; }
 
     @Override
-    public Result<Intermediate> process(Config config, Result<Intermediate> previous) {
+    public Result<Product> process(Config config, Result<Product> previous) {
 
         // Write to file
         if (output) {
@@ -50,16 +50,8 @@ public class Lex extends Phase {
             }
         }
         
-        // Return a fresh lexer for the next phase
-        try {
-            return new Result<>(
-                new Intermediate(
-                    XiLexer.from(config.source, config.unit)
-                )
-            );
-        } catch (XicException e) {
-            return new Result<>(e);
-        }
+        // TODO: refactor XiParser to take in a lexer?
+        return new Result<>(Product.empty());
     }
 
     /**

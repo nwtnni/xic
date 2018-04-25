@@ -7,7 +7,7 @@ public class Emit extends Phase {
     public Emit() { kind = Phase.Kind.EMIT; }
 
     @Override
-    public Result<Intermediate> process(Config config, Result<Intermediate> previous) {
+    public Result<Product> process(Config config, Result<Product> previous) {
         // TODO
         return null;
     }

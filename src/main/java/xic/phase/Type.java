@@ -5,8 +5,10 @@ import java.io.FileWriter;
 
 import ast.Program;
 import type.TypeChecker;
+import type.FnContext;
 
 import util.Filename;
+import util.Pair;
 import util.Result;
 
 import xic.XicException;
@@ -17,7 +19,7 @@ public class Type extends Phase {
     public Type() { kind = Phase.Kind.TYPE; }
 
     @Override
-    public Result<Intermediate> process(Config config, Result<Intermediate> previous) {
+    public Result<Product> process(Config config, Result<Product> previous) {
 
         String ext = Filename.getExtension(config.unit);
         String out = Filename.concat(config.sink, config.unit);
@@ -30,9 +32,9 @@ public class Type extends Phase {
 
                 if (!ext.equals("xi")) throw XicException.unsupported(config.unit);
 
-                Program ast = previous.ok().getAST();
+                Program ast = previous.ok().getParsed();
 
-                TypeChecker.check(config.lib, ast);
+                FnContext context = TypeChecker.check(config.lib, ast);
 
                 if (output) {
                     Filename.makePathTo(out);
@@ -41,7 +43,7 @@ public class Type extends Phase {
                     writer.close();
                 }
 
-                return new Result<>(new Intermediate(ast));
+                return new Result<>(Product.typed(new Pair<>(ast, context)));
 
             } catch (XicException e) {
 
