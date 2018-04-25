@@ -29,9 +29,11 @@ public class Canonize extends Phase {
 
         try {
 
+            // Run lowering
             Pair<IRCompUnit, ABIContext> emitted = previous.ok().getEmitted();
             IRCompUnit canonized = (IRCompUnit) Canonizer.canonize(emitted.first);
 
+            // Generate output for irrun and irgen
             if (output) {
                 String out = Filename.concat(config.sink, config.unit);
                 out = Filename.setExtension(out, "ir");

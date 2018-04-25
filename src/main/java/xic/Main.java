@@ -59,6 +59,12 @@ public class Main {
                     // TODO
                     xic.setOutput(Kind.FOLD);
                     break;
+                case "cse":
+                    xic.setOutput(Kind.CSE);
+                    break;
+                case "final":
+                    xic.setOutput(Kind.IRGEN);
+                    break;
                 default:
                     // TODO
                     assert false;
@@ -73,11 +79,21 @@ public class Main {
                     // TODO
                     xic.setOutputCFG(Kind.FOLD);
                     break;
+                case "cse":
+                    xic.setOutputCFG(Kind.CSE);
+                    break;
+                case "final":
+                    xic.setOutputCFG(Kind.IRGEN);
+                    break;
                 default:
                     // TODO
                     assert false;
                 }
                 break;
+
+            // TODO: disable individual optimizations
+
+            // TODO: enable individual optimzations
             case "--help":
                 displayHelp();
                 break;
@@ -93,6 +109,9 @@ public class Main {
             case "-libpath":
                 xic.setLib(args[++i]);
                 break;
+
+            // TODO: figure out precedence of flags for optimization control
+            // also add back disabling optimizations
             case "-O":
                 optFlag = false;
                 break;

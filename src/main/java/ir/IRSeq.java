@@ -51,6 +51,10 @@ public class IRSeq extends IRStmt {
         return stmts.set(index, s);
     }
 
+    public IRStmt remove(int index) {
+        return stmts.remove(index);
+    }
+
     public IRStmt get(int index) {
         return stmts.get(index);
     }

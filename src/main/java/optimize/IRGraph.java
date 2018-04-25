@@ -84,6 +84,24 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                     // TODO: Handle arbitrary jumps
                 }
             } else if (current instanceof IRLabel) {
+                for (int i = body.size() - 2; i >= 0; i--) {
+                    IRStmt prev = body.get(i);
+                    if (prev instanceof IRJump) {
+                        IRJump jmp = (IRJump) prev;
+                        if (jmp.targetLabel().equals(current)) {
+                            body.remove(i);
+                        }
+                    } else if (prev instanceof IRCJump) {
+                        IRCJump jmp = (IRCJump) prev;
+                        if (jmp.trueLabel().equals(current)) {
+                            body.remove(i);
+                        }
+                    } else if (prev instanceof IRLabel) {
+                        continue;
+                    } else {
+                        break;
+                    }
+                }
                 traces.push(getSuccessor(edges));
             } else if (current instanceof IRMove) {
                 traces.push(getSuccessor(edges));
@@ -95,6 +113,9 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
         return fn;
     }
 
+    /**
+     * Writes dot file of CFG.
+     */
     public void exportCfg(String basename, String phase) throws XicException {
         String filename = String.format("%s_%s_%s.dot", basename, sourceName, phase);
         super.exportCfg(filename);

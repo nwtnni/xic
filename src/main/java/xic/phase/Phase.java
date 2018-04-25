@@ -12,14 +12,16 @@ public abstract class Phase implements Comparable<Phase> {
     public static SortedSet<Phase> minimal() {
         return new TreeSet<>(
             List.of(
-                new Type(),
-                new Canonize(),
-                new Parse(),
-                new Tile(),
-                new Allocate(),
                 new Lex(),
+                new Parse(),
+                new Type(),
+                new Emit(),
                 new Fold(),
-                new Emit()
+                new Canonize(),
+                new Cse(),
+                new Irgen(),
+                new Tile(),
+                new Allocate()
             )
         );
     }
@@ -32,6 +34,8 @@ public abstract class Phase implements Comparable<Phase> {
         FOLD,
         CANONIZE,
         INTERPRET,
+        CSE,
+        IRGEN,
         TILE,
         ALLOCATE,
     }
