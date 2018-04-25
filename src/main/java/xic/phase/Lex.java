@@ -16,16 +16,13 @@ public class Lex extends Phase {
     public Lex() { kind = Phase.Kind.LEX; }
 
     @Override
-    public Result<Intermediate> process(Result<Intermediate> previous) {
-
-        // First phase; must be ok
-        Intermediate files = previous.ok();
+    public Result<Intermediate> process(Config config, Result<Intermediate> previous) {
 
         // Write to file
         if (output) {
 
-            String lexed = Filename.setExtension(files.unit, "lexed");
-            lexed = Filename.concat(files.sink, lexed);
+            String lexed = Filename.setExtension(config.unit, "lexed");
+            lexed = Filename.concat(config.sink, lexed);
 
             try { 
 
@@ -33,7 +30,7 @@ public class Lex extends Phase {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(lexed, false));
 
                 try {
-                    XiLexer lexer = XiLexer.from(files.source, files.unit);
+                    XiLexer lexer = XiLexer.from(config.source, config.unit);
 
                     for (
                         ComplexSymbol s = (ComplexSymbol) lexer.nextToken();
@@ -57,8 +54,7 @@ public class Lex extends Phase {
         try {
             return new Result<>(
                 new Intermediate(
-                    files,
-                    XiLexer.from(files.source, files.unit)
+                    XiLexer.from(config.source, config.unit)
                 )
             );
         } catch (XicException e) {

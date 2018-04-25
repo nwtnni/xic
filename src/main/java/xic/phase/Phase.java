@@ -37,7 +37,7 @@ abstract class Phase implements Comparable<Phase> {
 
     public void setOutput() { output = true; }
 
-    public abstract Result<Intermediate> process(Result<Intermediate> previous);
+    public abstract Result<Intermediate> process(Config config, Result<Intermediate> previous);
 
     @Override
     public int compareTo(Phase p) {

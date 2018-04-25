@@ -1,6 +1,7 @@
 package xic.phase;
 
 import xic.XicInternalException;
+import xic.XicConfig;
 import lex.XiLexer;
 import ast.Program;
 import ir.IRCompUnit;
@@ -9,7 +10,7 @@ import assemble.instructions.CompUnit;
 public class Intermediate {
     
     public enum Kind {
-        FILE,
+        NONE,
         LEXER,
         AST,
         IR,
@@ -17,80 +18,48 @@ public class Intermediate {
     }
 
     public final Kind kind;
-
-    public final String source;
-    public final String sink;
-    public final String asm;
-    public final String lib;
-    public final String unit;
-
     private XiLexer lexer;
     private Program ast;
     private IRCompUnit ir;
     private CompUnit assembly;
 
     /**
-     * Initial intermediate: compilation
+     * Empty intermediate
      */
-    public Intermediate(String source, String sink, String lib, String asm, String unit) {
-        this.kind = Kind.FILE;
-        this.source = source;
-        this.sink = sink;
-        this.lib = lib;
-        this.asm = asm;
-        this.unit = unit;
+    public Intermediate() {
+        this.kind = Kind.NONE;
         this.lexer = null;
         this.ast = null;
         this.ir = null;
         this.assembly = null;
     }
 
-    public Intermediate(Intermediate previous, XiLexer lexer) {
+    public Intermediate(XiLexer lexer) {
         this.kind = Kind.LEXER; 
-        this.source = previous.source;
-        this.sink = previous.sink; 
-        this.asm = previous.asm;
-        this.lib = previous.lib;
-        this.unit = previous.unit;
         this.lexer = lexer;
         this.ast = null;
         this.ir = null;
         this.assembly = null;
     }
 
-    public Intermediate(Intermediate previous, Program ast) {
+    public Intermediate(Program ast) {
         this.kind = Kind.AST;
-        this.source = previous.source;
-        this.sink = previous.sink; 
-        this.asm = previous.asm;
-        this.lib = previous.lib;
-        this.unit = previous.unit;
         this.lexer = null;
         this.ast = ast;
         this.ir = null;
         this.assembly = null;
     }
 
-    public Intermediate(Intermediate previous, IRCompUnit ir) {
+    public Intermediate(IRCompUnit ir) {
         this.kind = Kind.IR;
-        this.source = previous.source;
-        this.sink = previous.sink; 
-        this.asm = previous.asm;
-        this.lib = previous.lib;
-        this.unit = previous.unit;
         this.lexer = null;
         this.ast = null;
         this.ir = ir;
         this.assembly = null;
     }
 
-    public Intermediate(Intermediate previous, CompUnit assembly) {
+    public Intermediate(CompUnit assembly) {
         this.kind = Kind.IR;
-        this.source = previous.source;
-        this.sink = previous.sink; 
-        this.asm = previous.asm;
-        this.lib = previous.lib;
-        this.unit = previous.unit;
         this.lexer = null;
         this.ast = null;
         this.ir = null;
