@@ -136,31 +136,6 @@ public class CSEWorklist {
 
 
     /*
-     * Replace common subexpressions within a given node
-     * TODO: check to make sure seq will never be a vertex in this graph 
-     * binop, mem?
-     * jump, cjump, exp
-     */
-    public IRNode replaceExpr(IRNode n, IRExpr e, IRExpr newE) {
-        // if (n.equals(e)) {
-        //    return newE;
-        // }
-        // if (n instanceof IRMove) {
-        //    IRMove m = (IRMove) s;
-        //    m.src = replaceExpr(m.src, e, newE);
-        // }
-        // if (n instanceof IRJump) {
-        //    IRJump j = (IRJump) n;
-        //    return new IRJump(replaceExpr(j.target(), e, newE));
-        // }
-        // if (n instanceof IRCJump) {
-        //    IRCJump cj = (IRCJump) n;
-        //    // return new 
-        // }
-        return null;
-    }
-
-    /*
      * CSE optimization 
      */
     public void cse(IRGraph<HashMap<IRExpr, IRStmt>> g) {
