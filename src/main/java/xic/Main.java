@@ -146,7 +146,7 @@ public class Main {
             xic.removePhase(phase);
         }
 
-        // xic.run();
+        xic.run();
     }
 
     private static Kind optToPhase(String opt) {
