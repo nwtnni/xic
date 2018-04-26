@@ -14,12 +14,14 @@ public class PairEdge<V, E> {
         this.tail = b;
         this.value = v;
     }
-
+    
+    // TODO: this is sort of a hack to get remove working with JGraphT
+    /** PairEdge equality is only defined by head and tail node equality. */
     @Override
     public boolean equals(Object o) {
         if (o instanceof PairEdge<?, ?>) {
             PairEdge<?, ?> e = (PairEdge<?, ?>) o;
-            return head.equals(e.head) && tail.equals(e.tail) && value.equals(e.value);
+            return head.equals(e.head) && tail.equals(e.tail);
         } 
         return false;
     }

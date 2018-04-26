@@ -54,7 +54,7 @@ public class Emitter extends Visitor<IRNode> {
     protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
     // Toggle inserting library functions
-    private static final boolean INCLUDE_LIB = false;
+    private static final boolean INCLUDE_LIB = true;
 
     /* 
      * Utility methods for code generation
