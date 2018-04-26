@@ -1,26 +1,40 @@
-// package optimize.register;
+package optimize.register;
 
-// import java.util.Set;
-// import java.util.HashSet;
+import java.util.Set;
+import java.util.HashSet;
 
-// import assemble.*;
-// import assemble.instructions.*;
-// import optimize.*;
-// import util.PairEdge;
-// import util.PairEdgeGraph;
-// import xic.XicInternalException;
+import assemble.*;
+import assemble.instructions.*;
+import optimize.*;
+import util.PairEdge;
+import xic.XicInternalException;
 
-// public class LiveVariableWorklist {
+public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr, Set<Temp>> {
 
-//     public void liveVariable(ASAGraph<Set<Temp>> g) {
-        
-//     }
+    public LiveVariableWorklist(ASAGraph<Set<Temp>> cfg) {
+        super(cfg, Direction.BACKWARDS);
+    }
 
-//     public void 
+    /** 
+     * Takes the result of the meet [m] and applys the transfer function
+     * at node [v].
+     */
+    public Set<Temp> transfer(Set<Temp> m, Instr v) {
+        return null;
+    }
 
-//     public Set<IRTemp> transfer(Set<IRTemp> outSet) {
-    
-//     }
+    /** 
+     * Meet function takes a set of the paths [paths] and merges 
+     * them with the meet operator.
+     */
+    public Set<Temp> meet(Set<PairEdge<Instr,Set<Temp>>> paths) {
+        return null;
+    }
 
-//     public void meet(ASA)
-// }
+    /**
+     * Annotates a node [v] with the result of the meet [e].
+     */
+    public boolean annotate(Instr v, Set<Temp> e) {
+        return false;
+    }
+}
