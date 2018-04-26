@@ -29,7 +29,7 @@ public class Xic {
 
     private List<String> units;
 
-    private SortedSet<Phase> phases;
+    private List<Phase> phases;
 
     public Xic() {
         source = ""; 
@@ -37,7 +37,7 @@ public class Xic {
         asm = "";
         lib = "";
         units = new ArrayList<>();
-        phases = Phase.minimal();
+        phases = Phase.complete();
     }
 
     public void setSource(String source) { this.source = source; }
@@ -50,7 +50,9 @@ public class Xic {
 
     public void addUnit(String unit) { this.units.add(unit); }
 
-    public void addPhase(Phase phase) { phases.add(phase); }
+    public void removePhase(Phase.Kind kind) {
+        phases.removeIf(phase -> phase.matches(kind));
+    }
 
     public void setOutput(Phase.Kind kind) {
         for (Phase phase : phases) {

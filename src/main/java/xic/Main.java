@@ -1,6 +1,8 @@
 package xic;
 
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 
 import xic.phase.*;
 import static xic.phase.Phase.Kind;
@@ -13,6 +15,11 @@ import static xic.phase.Phase.Kind;
  */
 public class Main {
 
+    enum State { NONE, DISABLE, ENABLE, DISABLE_ALL }
+
+    private static Set<Kind> opts = new HashSet<>();
+    private static State state;
+
     /**
      * Main compiler interface. Usage information can be printed with the --help flag.
      */
@@ -21,10 +28,11 @@ public class Main {
         String sink = "";
         String lib = "";
         String asm = "";
-        boolean helpFlag = false;
-        boolean optFlag = true;
-        boolean targetFlag = false;
         String targetOS = "linux";
+        boolean targetFlag = false;
+
+        opts.add(Kind.INTERPRET);
+        state = State.NONE;
 
         Xic xic = new Xic();
 
@@ -45,11 +53,11 @@ public class Main {
                 xic.setOutput(Kind.CANONIZE);
                 break;
             case "--irrun":
-                xic.addPhase(new Interpret());
+                opts.remove(Kind.INTERPRET);
                 break;
             case "--report-opts":
                 displayOpts();
-                System.exit(0);
+                return;
             case "--optir":
                 switch (args[++i]){
                 case "initial":
@@ -76,7 +84,6 @@ public class Main {
                     xic.setOutputCFG(Kind.EMIT);
                     break;
                 case "cf":
-                    // TODO
                     xic.setOutputCFG(Kind.FOLD);
                     break;
                 case "cse":
@@ -86,14 +93,9 @@ public class Main {
                     xic.setOutputCFG(Kind.IRGEN);
                     break;
                 default:
-                    // TODO
                     assert false;
                 }
                 break;
-
-            // TODO: disable individual optimizations
-
-            // TODO: enable individual optimzations
             case "--help":
                 displayHelp();
                 break;
@@ -109,17 +111,21 @@ public class Main {
             case "-libpath":
                 xic.setLib(args[++i]);
                 break;
-
-            // TODO: figure out precedence of flags for optimization control
-            // also add back disabling optimizations
             case "-O":
-                optFlag = false;
+                if (state != State.NONE && state != State.DISABLE_ALL) {
+                    System.out.println("Error: ignoring conflicting flag -O.");
+                } else {
+                    opts.add(Kind.FOLD);
+                    opts.add(Kind.CSE);
+                    state = State.DISABLE_ALL;
+                }
                 break;
             case "-target":
                 targetFlag = true;
                 targetOS = args[++i];
                 break;
             default:
+                if (parseOpt(args[i])) break;
                 xic.addUnit(args[i]);
                 break;
             }
@@ -127,15 +133,61 @@ public class Main {
 
         if (args.length == 0) {
             displayHelp();
-            System.exit(0);
+            return;
         }
 
         if (targetFlag && !targetOS.equals("linux")) {
-        	System.out.println("Unsupported target OS. Must be linux.");
+        	System.out.println("Error: unsupported target OS. Must be linux.");
         	return;
         }
 
-        xic.run();
+        for (Kind phase : opts) {
+            System.out.println(phase);
+            xic.removePhase(phase);
+        }
+
+        // xic.run();
+    }
+
+    private static Kind optToPhase(String opt) {
+        switch (opt) {
+            case "-Ocf":
+            case "-O-no-cf":
+                return Kind.FOLD;
+            case "-Ocse":
+            case "-O-no-cse":
+                return Kind.CSE;
+            default:
+                return null;
+        }
+    }
+
+    private static boolean parseOpt(String opt) {
+        switch (opt) {
+        case "-Ocf":
+        case "-Ocse":
+            if (state == State.NONE) {
+                opts.addAll(Set.of(Kind.FOLD, Kind.CSE));
+                state = State.ENABLE;
+            }
+            if (state == State.ENABLE) {
+                opts.remove(optToPhase(opt));
+            } else {
+                System.out.println("Error: ignoring conflicting flag " + opt + ".");
+            }
+            return true;
+        case "-O-no-cf":
+        case "-O-no-cse":
+            if (state == State.NONE || state == State.DISABLE) {
+                opts.add((optToPhase(opt)));
+                state = State.DISABLE;
+            } else {
+                System.out.println("Error: ignoring conflicting flag " + opt + ".");
+            }
+            return true;
+        default:
+            return false;
+        }
     }
 
     /**
@@ -153,12 +205,11 @@ public class Main {
         System.out.println("  -libpath    <DIRECTORY> : Search for interface files in <DIRECTORY>                ");
         System.out.println("  -sourcepath <DIRECTORY> : Search for source files in <DIRECTORY>                   ");
         System.out.println("  -target     <OS>        : Specify the OS for which to generate code                ");
-        System.out.println("  -O                      : Disable optimizations                                    ");
         System.out.println("  --optir     <PHASE>     : Generate .ir file for phase <PHASE>                      ");
         System.out.println("  --optcfg    <PHASE>     : Generate .dot file for phase <PHASE>                     ");
         System.out.println("  -O<opt>                 : Enable optimization <opt>                                ");
-        System.out.println("  -O                      : Disable optimizations, redundant if -O<opt> passed       ");
         System.out.println("  -O-no-<opt>             : Disable optimization <opt>                               ");
+        System.out.println("  -O                      : Disable optimizations, redundant if -O<opt> passed       ");
         System.out.println("-------------------------------------------------------------------------------------");
         System.out.println("Where <OPERATION> is one or more of:                                                 ");
         System.out.println("  --lex                   : For each f.(i)xi, generate lex diagnostic file f.lexed   ");
