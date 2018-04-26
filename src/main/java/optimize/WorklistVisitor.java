@@ -21,17 +21,17 @@ public class WorklistVisitor extends IRVisitor<Void> {
      * Top level nodes
      */
     
-    // public Void visit(IRCompUnit c) {
-    //     for (IRFuncDecl fd : c.functions().values()) {
-    //         fd.accept(this);
-    //     }
-    //     return null;
-    // }
+    public Void visit(IRCompUnit c) {
+        for (IRFuncDecl fd : c.functions().values()) {
+            fd.accept(this);
+        }
+        return null;
+    }
 
-    // public Void visit(IRFuncDecl f) {
-    //     f.body.accept(this);
-    //     return null;
-    // }
+    public Void visit(IRFuncDecl f) {
+        f.body().accept(this);
+        return null;
+    }
 
     /*
      * Statement nodes
@@ -74,9 +74,7 @@ public class WorklistVisitor extends IRVisitor<Void> {
     }
 
     public Void visit(IRMove m) {
-        m.target.accept(this);
         m.src.accept(this);
-        m.exprs.addAll(m.target.exprs);
         m.exprs.addAll(m.src.exprs);
         m.kill.add(m.target());
 

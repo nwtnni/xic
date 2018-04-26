@@ -20,7 +20,8 @@ public abstract class Phase {
             new CSE(),
             new Irgen(),
             new Tile(),
-            new Allocate()
+            new RegAlloc(),
+            new TrivialAlloc()
         ));
     }
 
@@ -35,6 +36,7 @@ public abstract class Phase {
         CSE,
         IRGEN,
         TILE,
+        REG_ALLOC,
         ALLOCATE,
     }
     

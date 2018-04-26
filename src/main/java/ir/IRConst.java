@@ -30,6 +30,11 @@ public class IRConst extends IRExpr {
     }
 
     @Override
+    public int hashCode() {
+        return (int) (value ^ (value >>> 32));
+    }
+
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof IRConst && value == ((IRConst) obj).value;
     }

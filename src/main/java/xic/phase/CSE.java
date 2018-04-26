@@ -12,8 +12,11 @@ import ir.IRCompUnit;
 import ir.Printer;
 import ir.*;
 
-import optimize.graph.*;
+import optimize.IRGraph;
+import optimize.IRGraphFactory;
+import optimize.IREdgeFactory;
 import optimize.CSEWorklist;
+import optimize.WorklistVisitor;
 
 import util.Filename;
 import util.Pair;
@@ -21,11 +24,11 @@ import util.Result;
 import xic.XicException;
 import xic.XicInternalException;
 
-public class CSE extends Phase {
+public class Cse extends Phase {
 
     private boolean outputCFG;
 
-    public CSE() { kind = Phase.Kind.CSE; output = false; }
+    public Cse() { kind = Phase.Kind.CSE; output = false; }
 
     @Override
     public void setOutputCFG() { this.outputCFG = true; }
@@ -36,6 +39,8 @@ public class CSE extends Phase {
         if (previous.isErr()) return previous;
 
         Pair<IRCompUnit, ABIContext> ir = previous.ok().getEmitted();
+
+        WorklistVisitor.annotateNodes(ir.first);
 
         // Transform to CFG
         IREdgeFactory<Map<IRExpr, IRStmt>> ef = new IREdgeFactory<>();

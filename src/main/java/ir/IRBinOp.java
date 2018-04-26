@@ -97,11 +97,13 @@ public class IRBinOp extends IRExpr {
 
     @Override
     public boolean equals(Object obj) {
-        return obj instanceof IRBinOp && 
-            type.equals(((IRBinOp) obj).type) &&
-            ((left.equals(((IRBinOp) obj).left) && 
-            right.equals(((IRBinOp) obj).right)) ||
-            (left.equals(((IRBinOp) obj).right) && 
-            right.equals(((IRBinOp) obj).left)));
+        if (!(obj instanceof IRBinOp)) {
+            return false;
+        }
+
+        IRBinOp op = (IRBinOp) obj;
+        return op.type.equals(this.type) 
+            && op.left.equals(this.left)
+            && op.right.equals(this.right);
     }
 }
