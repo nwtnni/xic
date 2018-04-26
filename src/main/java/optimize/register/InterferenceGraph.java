@@ -26,7 +26,7 @@ public class InterferenceGraph {
     
         for (Instr instr : instructions) {
         
-            List<Temp> live = new ArrayList<>(instr.live);
+            List<Temp> live = new ArrayList<>(instr.in);
             int size = live.size();
 
             for (int i = 0; i < size; i++) {
