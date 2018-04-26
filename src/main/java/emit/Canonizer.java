@@ -79,6 +79,7 @@ public class Canonizer extends IRVisitor<IRNode> {
     public IRNode visit(IRCall c) {
         List<IRExpr> temps = new ArrayList<>();
         
+        // TODO: can be less conservative with hoisting for arguments
         for (IRExpr arg : c.args()) {
             IRExpr argExpr = (IRExpr) arg.accept(this);
             IRTemp temp = IRTempFactory.generate();
@@ -148,6 +149,7 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRExp node by discarding its expression.
      */
     public IRNode visit(IRExp e) {
+        // TODO: improve lowering by preserving IRExp statements
         e.expr().accept(this);
         return null;
     }

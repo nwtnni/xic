@@ -324,6 +324,8 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRExp e) {
+        // TODO: add tile to deal with procedure calls with no returns
+        // in the form of IRExp(IRCall(...))
         throw XicInternalException.runtime("IRExp is not canoncial");        
     }
 

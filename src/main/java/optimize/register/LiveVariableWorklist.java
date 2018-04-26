@@ -8,10 +8,18 @@ import assemble.instructions.*;
 import optimize.*;
 import optimize.graph.*;
 import util.PairEdge;
-import xic.XicInternalException;
 
+/**
+ * Worklist for live variable analysis.
+ */
 public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr, Set<Temp>> {
 
+    /**
+     * Initializes the worklist on the graph [cfg].
+     * Requires that the graph is initialized to all empty sets on the edges.
+     * This ensures that old liveness information stored on the instructions
+     * will be overwritten by a fresh liveness analysis.
+     */
     public LiveVariableWorklist(ASAGraph<Set<Temp>> cfg) {
         super(cfg, Direction.BACKWARDS);
     }
