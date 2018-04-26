@@ -12,9 +12,7 @@ import ir.IRCompUnit;
 import ir.Printer;
 import ir.*;
 
-import optimize.IRGraph;
-import optimize.IRGraphFactory;
-import optimize.IREdgeFactory;
+import optimize.graph.*;
 import optimize.CSEWorklist;
 
 import util.Filename;

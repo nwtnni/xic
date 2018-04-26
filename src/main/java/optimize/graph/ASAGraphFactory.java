@@ -1,4 +1,4 @@
-package optimize;
+package optimize.graph;
 
 import java.util.HashMap;
 import java.util.Map;

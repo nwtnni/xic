@@ -6,6 +6,7 @@ import java.util.HashSet;
 import assemble.*;
 import assemble.instructions.*;
 import optimize.*;
+import optimize.graph.*;
 import util.PairEdge;
 import xic.XicInternalException;
 
