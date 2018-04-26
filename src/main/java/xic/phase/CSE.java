@@ -12,7 +12,9 @@ import ir.IRCompUnit;
 import ir.Printer;
 import ir.*;
 
-import optimize.graph.*;
+import optimize.IRGraph;
+import optimize.IRGraphFactory;
+import optimize.IREdgeFactory;
 import optimize.CSEWorklist;
 import optimize.WorklistVisitor;
 
@@ -22,11 +24,11 @@ import util.Result;
 import xic.XicException;
 import xic.XicInternalException;
 
-public class CSE extends Phase {
+public class Cse extends Phase {
 
     private boolean outputCFG;
 
-    public CSE() { kind = Phase.Kind.CSE; output = false; }
+    public Cse() { kind = Phase.Kind.CSE; output = false; }
 
     @Override
     public void setOutputCFG() { this.outputCFG = true; }
