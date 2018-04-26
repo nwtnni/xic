@@ -7,6 +7,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import ir.*;
+import optimize.graph.*;
 
 public class IRGraphTest {
     

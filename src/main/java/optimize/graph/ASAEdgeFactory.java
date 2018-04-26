@@ -1,4 +1,4 @@
-package optimize;
+package optimize.graph;
 
 import assemble.instructions.Instr;
 import util.PairEdge;

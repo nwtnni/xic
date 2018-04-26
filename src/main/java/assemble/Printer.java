@@ -16,6 +16,7 @@ import util.Pair;
 // for tests
 import java.util.Map;
 import optimize.*;
+import optimize.graph.*;
 
 /**
  * Convenience class to write the result of a lexing run to file.

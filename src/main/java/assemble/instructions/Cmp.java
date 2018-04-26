@@ -12,6 +12,9 @@ public class Cmp extends Instr {
     public Cmp(Temp leftTemp, Temp rightTemp) {
         this.leftTemp = leftTemp;
         this.rightTemp = rightTemp;
+
+        this.use = this.leftTemp.getTemps();
+        this.use.addAll(this.rightTemp.getTemps());
     }
 
     @Override

@@ -256,7 +256,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
         return null;
     }
 
-    public Void visit(Set i) {
+    public Void visit(Setcc i) {
         instrs.add(i);
         return null;
     }

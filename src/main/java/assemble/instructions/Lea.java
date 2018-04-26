@@ -12,6 +12,9 @@ public class Lea extends Instr {
     public Lea(Temp destTemp, Temp srcTemp) {
         this.destTemp = destTemp;
         this.srcTemp = srcTemp;
+        
+        this.use = this.srcTemp.getTemps();
+        this.def = this.destTemp.getTemps();
     }
 
     @Override
