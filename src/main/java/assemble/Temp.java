@@ -203,6 +203,10 @@ public class Temp {
         return kind == TEMP || kind == FIXED;
     }
 
+    public boolean isFixed() {
+        return kind == FIXED;
+    }
+
     public boolean isMultRet() {
         return kind == MULT_RET;
     }
