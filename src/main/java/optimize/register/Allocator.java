@@ -1,6 +1,7 @@
 package optimize.register;
 
 import java.util.Set;
+import java.util.Stack;
 import java.util.Optional;
 
 import assemble.Temp;
@@ -22,22 +23,47 @@ public class Allocator {
     }
 
     private FuncDecl fn;
-    private Stack<Temp> popped;
+    private Stack<Temp> stack;
 
     private Allocator(FuncDecl fn) {
         this.fn = fn; 
+        this.stack = new Stack();
     }
     
     // Main try -> spill loop
     private FuncDecl process() {
 
+        InterferenceGraph interfere = new InterferenceGraph(fn.stmts, available.size());
+        ColorGraph color = new ColorGraph(fn.stmts, available);
+        
+
+        //TODO
+        return fn;
     }
 
     // Returns empty if colorable with spills
     // Otherwise false and must spill the returned Temp
-    private Optional<Temp> tryAllocate() {
+    //
+    // Colors the provided ColorGraph
+    private Optional<Temp> tryAllocate(InterferenceGraph interfere, ColorGraph color) {
 
+        while (interfere.size() > 0) {
+            interfere.pop().ifPresentOrElse(
+                temp -> stack.push(temp),
+                () -> stack.push(interfere.spill().get())
+            );
+        }
+        
+        while (stack.size() > 0) {
+            
+            Temp temp = stack.pop();
 
+            if (!color.tryColor(temp)) {
+                return Optional.of(temp);
+            }
+        }
+        
+        return Optional.empty();
     }
 
     // Mutates FuncDecl fn to spill the temp
@@ -45,6 +71,4 @@ public class Allocator {
     private void spill(Temp t) {
 
     }
-    
-    
 }
