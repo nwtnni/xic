@@ -142,7 +142,6 @@ public class Main {
         }
 
         for (Kind phase : opts) {
-            System.out.println(phase);
             xic.removePhase(phase);
         }
 
