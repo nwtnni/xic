@@ -24,11 +24,11 @@ import util.Result;
 import xic.XicException;
 import xic.XicInternalException;
 
-public class Cse extends Phase {
+public class CSE extends Phase {
 
     private boolean outputCFG;
 
-    public Cse() { kind = Phase.Kind.CSE; output = false; }
+    public CSE() { kind = Phase.Kind.CSE; output = false; }
 
     @Override
     public void setOutputCFG() { this.outputCFG = true; }
@@ -47,7 +47,7 @@ public class Cse extends Phase {
         IRGraphFactory<Map<IRExpr, IRStmt>> gf = new IRGraphFactory<>(ir.first, ef);
         Map<String, IRGraph<Map<IRExpr, IRStmt>>> cfgs = gf.getCfgs();
 
-        // TODO: Run analyses and optimizations
+        // Run analyses and optimizations
         for(String key: cfgs.keySet()) {
             IRGraph<Map<IRExpr, IRStmt>> cfg = cfgs.get(key);
             CSEWorklist cse = new CSEWorklist();

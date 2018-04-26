@@ -17,7 +17,7 @@ public abstract class Phase {
             new Fold(),
             new Canonize(),
             new Interpret(),
-            new Cse(),
+            new CSE(),
             new Irgen(),
             new Tile(),
             new RegAlloc(),

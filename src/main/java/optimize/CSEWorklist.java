@@ -28,7 +28,6 @@ public class CSEWorklist {
         //     System.out.println("I am killing this: " + k);
         // }
         if (e instanceof IRTemp && killSet.contains(e)) {
-            System.out.println("Kill e: " + e);
             return true;
         }
         if (e instanceof IRBinOp) {
@@ -69,13 +68,10 @@ public class CSEWorklist {
 
         // Adding gen to out
         for (IRExpr e : s.exprs) {
-            System.out.println("Expr at line 70:" + e);
             if (!out.containsKey(e)) {
                 out.put(e, s);
             }
         }
-
-        System.out.println("Transfer size MAX: " + out.size());
 
         // Kill mems if moving into mem or calling a function
         boolean shouldDelMem = false;
@@ -86,21 +82,11 @@ public class CSEWorklist {
         // Performing kill for out
         Map<IRExpr, IRStmt> tempOut = new HashMap<IRExpr, IRStmt>(out);
         for (IRExpr e : tempOut.keySet()) {
-            System.out.println("Expr: " + e);
-            System.out.println("Kill: " + s.kill.size());
             if ((shouldDelMem && s.delMem) || kill(s.kill, e)) {
                 out.remove(e);
-                System.out.println("Remove:" + e);
             }
         }
 
-        System.out.println("Transfer size: " + out.size());
-
-        System.out.println("Transfer Set ----------------");
-        for (IRExpr o : out.keySet()) {
-            System.out.println("This Expr: " + o + " came from: " + out.get(o));
-        }
-        System.out.println("End of Transfer Set ----------------");
         return out;
     }
 
@@ -163,10 +149,8 @@ public class CSEWorklist {
         Queue<IRStmt> w = new LinkedList<IRStmt>();
         w.add(g.start);
 
-        System.out.println("New Annotate -------------------------");
         while (!w.isEmpty()) {
             IRStmt v = w.remove();
-            System.out.println("Current Statment: " + v.toString().replace("\n",""));
             
             Map<IRExpr, IRStmt> oldIn = null;
             if (v.CSEin != null) {
@@ -185,7 +169,6 @@ public class CSEWorklist {
             } else {
                 for(IRExpr e: v.CSEin.keySet()) {
                     if (!(oldIn.keySet().contains(e) && oldIn.get(e).equals(v.CSEin.get(e)))) {
-                        System.out.println("Things changed!");
                         hasChanged = true;
                     }
                 }
@@ -195,7 +178,6 @@ public class CSEWorklist {
             if (hasChanged) {
                 Map<IRExpr, IRStmt> out = transfer(v);
                 for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : g.outgoingEdgesOf(v)) {
-                    System.out.println("Changing e.value");
                     e.value = out;
                     w.add(e.tail);
                 }
@@ -211,8 +193,6 @@ public class CSEWorklist {
 
         annotate(g);
 
-        System.out.println("Annotation is done ------------------------------");
-
         // Temp names for exprs that are common subexprs
         Map<IRExpr, IRTemp> assigned = new HashMap<IRExpr, IRTemp>();
         Integer varCount = 0;
@@ -225,16 +205,6 @@ public class CSEWorklist {
         q.add(g.start);
         while (!q.isEmpty()) {
             IRStmt s = q.poll();
-            System.out.println("----- Current statment: " + s);
-            // if (s instanceof IRSeq) {
-            //     for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : g.outgoingEdgesOf(s)) {
-            //         if (!seen.contains(g.getEdgeTarget(e))) {
-            //             q.add(g.getEdgeTarget(e));
-            //         }
-                    
-            //     }
-            //     break;
-            // }
 
             seen.add(s);
             PriorityQueue<IRExpr> orderedExprs = new PriorityQueue<IRExpr>(new ExprComparator());
@@ -244,22 +214,18 @@ public class CSEWorklist {
             }
             IRExpr cur = orderedExprs.poll();
 
-            System.out.println("CSEin Keyset Size: " + s.CSEin.keySet().size());
 
             boolean alreadyRepl = false;
             // Iterate and pop orderedExprs
             while (cur != null && !alreadyRepl) {
-                System.out.println("Current Expr: " + cur);
                 // If current expression was ALREADY used
                 if (assigned.containsKey(cur)) {
-                    System.out.println("Current expr has been replaced");
                     replVisit.replaceExpr = cur;
                     replVisit.newExpr = assigned.get(cur);
                     s.accept(replVisit);
                     alreadyRepl = true;
                 // If current expression can be replaced (and cur is not a temp)
                 } else if (s.CSEin.containsKey(cur) && !(cur instanceof IRTemp)) {                    
-                    System.out.println("Current expr can be replaced");
                     // look at mapped assignment
                     IRStmt node = s.CSEin.get(cur);
                     IRTemp newTemp = new IRTemp("_cse_" + varCount.toString());
