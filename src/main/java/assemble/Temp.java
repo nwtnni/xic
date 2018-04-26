@@ -248,6 +248,15 @@ public class Temp {
         return temps;
     }
 
+    /**
+     * Gets the register associated with this fixed temp.
+     * Requires temp is fixed.
+     */
+    public Operand getRegister() {
+        assert isFixed();
+        return register;
+    }
+
     @Override
     public int hashCode() {
         switch (kind) {
