@@ -8,9 +8,10 @@ import assemble.Temp;
 import assemble.Operand;
 import assemble.FuncDecl;
 import assemble.CompUnit;
+import assemble.instructions.InsVisitor;
 import assemble.instructions.Instr;
 
-public class Allocator {
+public class Allocator extends InsVisitor<Optional<Temp>> {
 
     private static final Set<Operand> available = Set.of(
         Operand.R10,

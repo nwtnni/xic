@@ -38,10 +38,6 @@ public class TrivialAllocator extends InsVisitor<Void> {
     // in stack where multiple returns > 2 must be written by callee.
     private Operand calleeReturnAddr;
 
-    // Number of words to add to rsp to get location in stack where 
-    // multiple returns > 2 are accessed by caller.
-    private int callerReturnOffset;
-
     // Caller saved registers - not required for trivial allocation
     // private Operand r10;
     // private Operand r11;
@@ -56,7 +52,6 @@ public class TrivialAllocator extends InsVisitor<Void> {
         this.maxRets = 0;
         // this.isMultiple = 0;
         this.calleeReturnAddr = null;
-        this.callerReturnOffset = -1;
     }
 
     /**

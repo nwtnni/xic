@@ -36,6 +36,7 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
         return fns;
     }
 
+    // TODO: fix this to properly inject jumps to preserve basic blocks
     public void toCfg(FuncDecl fn) {
         prev = null;
         cfg = new ASAGraph<>(fn, fn.stmts.get(0), edgeFactory);

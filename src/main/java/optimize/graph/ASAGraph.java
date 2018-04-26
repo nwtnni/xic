@@ -96,6 +96,8 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
                     // TODO: handle arbitary jumps
                 }
             } else {
+                // TODO: handle jump & label clean up
+
                 if (edges.size() > 0) {
                     assert edges.size() == 1;
                     traces.push(getSuccessor(edges));

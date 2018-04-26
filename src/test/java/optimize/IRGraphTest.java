@@ -28,9 +28,9 @@ public class IRGraphTest {
         Map<String, IRGraph<Void>> cfgs = gf.getCfgs();
 
         IRFuncDecl after = cfgs.get("fn").toIR();
-        assertEquals(fn.get(0), after.get(0));
-        assertEquals(fn.get(1), after.get(1));
-        assertEquals(fn.get(2), after.get(2));
+        assertEquals(fn.get(0), after.get(1));
+        assertEquals(fn.get(1), after.get(2));
+        assertEquals(fn.get(2), after.get(3));
 
     }
 }
