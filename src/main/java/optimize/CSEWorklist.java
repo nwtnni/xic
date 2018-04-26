@@ -151,6 +151,7 @@ public class CSEWorklist {
         q.add(g.start);
         while (!q.isEmpty()) {
             IRStmt s = q.poll();
+            // add the outgoing edges of an IRSeq to queue and don't look for subexpressions at this level 
             if (s instanceof IRSeq) {
                 for (PairEdge<IRStmt, HashMap<IRExpr, IRStmt>> e : g.outgoingEdgesOf(s)) {
                     if (!seen.contains(g.getEdgeTarget(e))) {
@@ -158,7 +159,7 @@ public class CSEWorklist {
                     }
                     
                 }
-                break;
+                continue;
             }
 
             seen.add(s);
