@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedGraph;
+import util.PairEdge;
 
 import assemble.Temp; 
 import assemble.CompUnit; 
@@ -15,13 +16,13 @@ import assemble.instructions.Instr;
 
 public class InterferenceGraph {
 
-    private Graph<Temp, Void> graph;
+    private Graph<Temp, PairEdge<Temp, Void>> graph;
     private Set<Temp> vertices;
     private int colors;
 
     public InterferenceGraph(List<Instr> instructions, int colors) {
 
-        graph = new DefaultDirectedGraph<>(Void.class);
+        graph = new DefaultDirectedGraph<>((a, b) -> new PairEdge<>(a, b, null));
         vertices = new HashSet<>();
     
         for (Instr instr : instructions) {
