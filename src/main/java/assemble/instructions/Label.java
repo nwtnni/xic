@@ -40,6 +40,9 @@ public class Label extends Instr {
         return name.hashCode();
     }
 
+    /**
+     * All labels with same name are equal.
+     */
     @Override
     public boolean equals(Object o) {
         return o instanceof Label && name.equals(((Label) o).name);

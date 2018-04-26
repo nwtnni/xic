@@ -197,6 +197,10 @@ public class Temp {
         return kind == TEMP || kind == FIXED;
     }
 
+    public boolean isMultRet() {
+        return kind == MULT_RET;
+    }
+
     public boolean isMem() {
         return !(isImm() || isTemp());
     }
@@ -208,6 +212,73 @@ public class Temp {
             kind == MEMBR || 
             kind == MEMSBR || 
             kind == MULT_RET;
+    }
+
+    @Override
+    public int hashCode() {
+        switch (kind) {
+            case IMM:
+                return Long.hashCode(value);
+            case TEMP:
+                return name.hashCode();
+            case FIXED:
+                return register.hashCode();
+            case MULT_RET:
+                return MULT_RET.hashCode();
+            case MEM:
+                return base.hashCode();
+            case MEMBR:
+                return 41 * base.hashCode() ^ 59 * Integer.hashCode(offset);
+            case MEMSBR:
+                return 43 * base.hashCode() ^ 61 * reg.hashCode() ^
+                    71 * Integer.hashCode(offset) ^ 73 * Integer.hashCode(scale);
+            default:
+                assert false;
+                return -1;
+        }
+    }
+
+    /**
+     * Temp equality:
+     *      IMM by value
+     *      TEMP by name
+     *      MEM by offset, scale and recursive equals on base and reg
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Temp) {
+            Temp t = (Temp) obj;
+            if (isImm() && t.isImm()) {
+                // IMM
+                return value == t.value;
+            } else if (isTemp() && t.isTemp()) {
+                if (kind == TEMP) {
+                    // TEMP
+                    return name.equals(t.name);
+                } else {
+                    // FIXED
+                    return register.equals(t.register);
+                }
+            } else if (isMem()) {
+                if (isMultRet()) {
+                    // MULT_RET
+                    return t.isMultRet();
+                } else if (kind == MEM) {
+                    // MEM [base]
+                    return base.equals(t.base);
+                } else if (kind == MEMBR) {
+                    // MEM off[base]
+                    return base.equals(t.base) && offset == t.offset;
+                } else if (kind == MEMSBR) {
+                    // MEM off[base,reg,scale]
+                    return base.equals(t.base) &&
+                        reg.equals(t.reg) &&
+                        offset == t.offset &&
+                        scale == t.scale;
+                }
+            }
+        }
+        return false;
     }
 
     @Override
