@@ -1,6 +1,12 @@
 package assemble.instructions;
 
+import assemble.*;
+
 public class Cqo extends Instr {
+    public Cqo() {
+        this.def.add(Temp.fixed(Operand.RDX));
+    }
+
     @Override
     public String toAbstractAssembly() {
         return toAssembly();

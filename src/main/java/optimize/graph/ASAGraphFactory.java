@@ -110,7 +110,7 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
         return null;
     }
 
-    public Instr visit(Set i) {
+    public Instr visit(Setcc i) {
         return i;
     }
 

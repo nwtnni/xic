@@ -41,7 +41,7 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
 
     /**
      * Updates a node [v] by taking meet of all paths and applying the
-     * transfer function.
+     * transfer function in the direction [direction].
      */
     public boolean update(V v) {
         if (direction == Direction.FORWARD) {
@@ -99,6 +99,9 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
         }
     }
 
+    /**
+     * Get the children of node [v] in relation to [direction].
+     */
     protected List<V> getChildren(V v) {
         List<V> children = new ArrayList<>();
         if (direction == Direction.FORWARD) {

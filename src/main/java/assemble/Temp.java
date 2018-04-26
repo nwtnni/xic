@@ -1,5 +1,8 @@
 package assemble;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static assemble.Temp.Kind.*;
 
 /**
@@ -165,17 +168,19 @@ public class Temp {
     /** Register for fixed temp. */
     Operand register;
 
-    /** A named temp. */
+    /** Constructor for a named temp. */
     private Temp(Kind kind, String name) {
         this.kind = kind;
         this.name = name;
     }
 
+    /** Constructor for immediates. */
     private Temp(long value) {
         this.kind = IMM;
         this.value = value;
     }
 
+    /** Constructor for a mem temp. */
     private Temp(Kind kind, Temp base, Temp reg, int offset, int scale) {
         this.kind = kind;
         this.base = base;
@@ -184,6 +189,7 @@ public class Temp {
         this.scale = scale;
     }
 
+    /** Constructor for a fixed temp. */
     private Temp(Operand reg) {
         this.kind = FIXED;
         this.register = reg;
@@ -205,13 +211,37 @@ public class Temp {
         return !(isImm() || isTemp());
     }
 
-    // All temps are memory addresses for trivial allocation
+    // Adds constraint that all named temps are memory addresses for 
+    // trivial allocation purposes
     public boolean trivialIsMem() {
         return kind == TEMP || 
             kind == MEM || 
             kind == MEMBR || 
             kind == MEMSBR || 
             kind == MULT_RET;
+    }
+
+    /**
+     * Gets the set of temps and fixed temps associated with this temp.
+     * Returns an empty set for IMM.
+     */
+    public Set<Temp> getTemps() {
+        Set<Temp> temps = new HashSet<>();
+        switch (kind) {
+            case TEMP:
+            case FIXED:
+            case MULT_RET:
+                temps.add(this);
+                break;
+            case MEMSBR:
+                temps.add(reg);
+            case MEM:
+            case MEMBR:
+                temps.add(base);
+                break;
+            case IMM:
+        }
+        return temps;
     }
 
     @Override
@@ -281,6 +311,9 @@ public class Temp {
         return false;
     }
 
+    /**
+     * toString() is used when outputing abstract assembly to dot files and to debug.
+     */
     @Override
     public String toString() {
         switch(kind) {

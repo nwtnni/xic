@@ -54,7 +54,7 @@ public class InsVisitor<T> {
         return null;
     }
 
-    public T visit(Set i) {
+    public T visit(Setcc i) {
         return null;
     }
 
