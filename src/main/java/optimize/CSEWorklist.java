@@ -13,6 +13,7 @@ import java.util.UUID;
 
 
 import ir.*;
+import optimize.graph.*;
 import util.PairEdge;
 import util.PairEdgeGraph;
 import xic.XicInternalException;

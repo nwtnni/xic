@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import static assemble.instructions.BinOp.Kind.*;
 import static assemble.instructions.DivMul.Kind.*;
-import static assemble.instructions.Set.Kind.*;
+import static assemble.instructions.Setcc.Kind.*;
 
 import assemble.instructions.*;
 import assemble.Config;
@@ -29,7 +29,7 @@ public class Tiler extends IRVisitor<Temp> {
         return tiler.unit;
     }
 
-    public static final boolean INCLUDE_COMMENTS = false;
+    public static final boolean INCLUDE_COMMENTS = true;
 
     // Mangled names context
     private ABIContext context;
@@ -208,7 +208,7 @@ public class Tiler extends IRVisitor<Temp> {
             return dest;
         }
             
-        Set.Kind flag = null;
+        Setcc.Kind flag = null;
         switch (b.type()) {
             case EQ:
                 flag = EQ;
@@ -231,8 +231,9 @@ public class Tiler extends IRVisitor<Temp> {
             default:
         }
         instrs.add(new Cmp(right, left));
+        // TODO: this is sub-optimal use of setcc which can use other registers
         instrs.add(new Mov(Temp.fixed(Operand.RAX), Temp.imm(0)));
-        instrs.add(new Set(flag));
+        instrs.add(new Setcc(flag));
         instrs.add(new Mov(dest, Temp.fixed(Operand.RAX)));
         return dest;
     }

@@ -15,9 +15,7 @@ import emit.Emitter;
 import ir.IRCompUnit;
 import ir.Printer;
 
-import optimize.IRGraph;
-import optimize.IRGraphFactory;
-import optimize.IREdgeFactory;
+import optimize.graph.*;
 
 import util.Filename;
 import util.Pair;

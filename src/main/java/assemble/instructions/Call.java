@@ -1,5 +1,4 @@
 package assemble.instructions;
-
 public class Call extends Instr {
 
     public String name;

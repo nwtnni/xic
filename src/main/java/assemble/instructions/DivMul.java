@@ -30,6 +30,9 @@ public class DivMul extends Instr {
         } else {
             this.destTemp = Temp.fixed(Operand.RDX);
         }
+
+        this.use = this.srcTemp.getTemps();
+        this.def = this.destTemp.getTemps();
     }
 
     @Override

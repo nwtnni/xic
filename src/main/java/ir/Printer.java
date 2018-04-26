@@ -25,6 +25,7 @@ import xic.XicException;
 // for tests
 import java.util.Map;
 import optimize.*;
+import optimize.graph.*;
 
 public class Printer extends IRVisitor<Void> {
 

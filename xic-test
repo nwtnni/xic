@@ -151,7 +151,7 @@ test_course() {
 }
 
 if [[ -f $1 ]] ; then
-  ./xic -target linux -O -libpath tests/libs $1
+  ./xic -target linux -libpath tests/libs $1
   asm="${1%.*}.s"
   base=$(basename -- "$1")
   name="${base%.*}.s"

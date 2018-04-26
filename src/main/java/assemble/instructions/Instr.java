@@ -1,13 +1,26 @@
 package assemble.instructions;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+
+import assemble.*;
 
 public abstract class Instr {
     public Instr() {
         this.id = UUID.randomUUID();
+        this.live = new HashSet<>();
+        this.use = new HashSet<>();
+        this.def = new HashSet<>();
     }
 
     public UUID id;
+
+    // Fields used for live variable analysis
+    // Must be initialized with LiveVariableAnnotator before running LV analysis
+    public Set<Temp> live;
+    public Set<Temp> use;
+    public Set<Temp> def;
 
     @Override
     public int hashCode() {

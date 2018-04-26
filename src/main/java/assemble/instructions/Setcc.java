@@ -2,7 +2,7 @@ package assemble.instructions;
 
 import assemble.*;
 
-public class Set extends Instr {
+public class Setcc extends Instr {
     public enum Kind {
         EQ  ("e"),
         NEQ ("ne"),
@@ -18,9 +18,11 @@ public class Set extends Instr {
     public Kind kind;
     public Operand dest;
 
-    public Set(Kind kind) {
+    public Setcc(Kind kind) {
         this.kind = kind;
         this.dest = Operand.RAX;
+
+        this.def.add(Temp.fixed(Operand.RAX));
     }
 
     @Override
