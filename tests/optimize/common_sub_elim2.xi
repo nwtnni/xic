@@ -4,6 +4,7 @@ use conv
 main (args:int[][]) {
     i:int = 0
     y:int
+    z:int
     while i<200000000 {
         x:int = 0
         if x+1 == 0 {
@@ -11,7 +12,7 @@ main (args:int[][]) {
         }
         else {
             x = 1
-            y = x+1
+            z = x+1
         }
         y = x+1
         y = 2*(x+1)
