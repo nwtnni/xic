@@ -29,7 +29,7 @@ public class Tiler extends IRVisitor<Temp> {
         return tiler.unit;
     }
 
-    public static final boolean INCLUDE_COMMENTS = true;
+    public static final boolean INCLUDE_COMMENTS = false;
 
     // Mangled names context
     private ABIContext context;

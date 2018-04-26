@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import assemble.*;
+import assemble.instructions.*;
 import optimize.graph.*;
 import optimize.register.*;
 import util.Result;
@@ -54,6 +55,19 @@ public class RegAlloc extends Phase {
             after.fns.add(cfg.toASA());
         }
         
+        // Debug LV
+        // for (FuncDecl fn : after.fns) {
+        //     System.out.println(fn.sourceName + "\n");
+        //     for (Instr i : fn.stmts) {
+        //         System.out.println(i + ": ");
+        //         System.out.println(i.in);
+        //         System.out.println(i.use);
+        //         System.out.println(i.def);
+        //         System.out.println(i.out);
+        //         System.out.println("");
+        //     }
+        // }
+
         return new Result<>(Product.assembled(after));
     }
 }
