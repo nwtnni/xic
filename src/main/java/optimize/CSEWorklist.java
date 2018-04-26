@@ -24,6 +24,9 @@ public class CSEWorklist {
      */
     
     public boolean kill(Set<IRExpr> killSet, IRExpr e) {
+        // for (IRExpr k : killSet) {
+        //     System.out.println("I am killing this: " + k);
+        // }
         if (e instanceof IRTemp && killSet.contains(e)) {
             System.out.println("Kill e: " + e);
             return true;
@@ -65,7 +68,6 @@ public class CSEWorklist {
         Map<IRExpr, IRStmt> out = new HashMap<IRExpr, IRStmt>(s.CSEin);
 
         // Adding gen to out
-        // TODO This is the wrong equals
         for (IRExpr e : s.exprs) {
             System.out.println("Expr at line 70:" + e);
             if (!out.containsKey(e)) {
@@ -88,12 +90,17 @@ public class CSEWorklist {
             System.out.println("Kill: " + s.kill.size());
             if ((shouldDelMem && s.delMem) || kill(s.kill, e)) {
                 out.remove(e);
-                System.out.println("Remove");
+                System.out.println("Remove:" + e);
             }
         }
 
         System.out.println("Transfer size: " + out.size());
 
+        System.out.println("Transfer Set ----------------");
+        for (IRExpr o : out.keySet()) {
+            System.out.println("This Expr: " + o + " came from: " + out.get(o));
+        }
+        System.out.println("End of Transfer Set ----------------");
         return out;
     }
 
@@ -101,8 +108,14 @@ public class CSEWorklist {
         
         Map<IRExpr, IRStmt> in = null;
         
+        System.out.println("Incoming Edges Set ----------------");
         for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> edge: g.incomingEdgesOf(v)) {
             Map<IRExpr, IRStmt> s = edge.value;
+            if (edge.head.CSEin == null) {
+                System.out.println(edge.head + " has 0 CSEin exprs");
+            } else {
+                System.out.println(edge.head + " has " + edge.head.CSEin.size() + " CSEin exprs");
+            }
             // only want to intersect if s has been initialized
             if (s != null) {
                 // if in has not been initialized, put all of the non-empty set's objects into it
@@ -112,6 +125,8 @@ public class CSEWorklist {
                 } else {
                     for (IRExpr e : new HashSet<IRExpr>(in.keySet())) {
                         if (!s.containsKey(e) || !in.get(e).equals(s.get(e))) {
+                            System.out.println("The expr from in: " + in.get(e));
+                            System.out.println("The expr from s: " + s.get(e));
                             in.remove(e);
                         } 
                     }
@@ -119,13 +134,22 @@ public class CSEWorklist {
                 }
             }
         }
+        System.out.println("END of Incoming Edges Set ----------------");
+
+
 
         // If it is the start node, initialize to empty
         if (in == null) {
             v.CSEin = new HashMap<IRExpr,IRStmt>();
         }
         else {
+            System.out.println("CSEin Set ----------------");
+            for (IRExpr i : in.keySet()) {
+                System.out.println("This Expr: " + i + " came from: " + in.get(i));
+
+            }
             v.CSEin = in;
+            System.out.println("END OF CSEin Set ----------------");
         }
 
     }
@@ -156,7 +180,9 @@ public class CSEWorklist {
                 hasChanged = true;
             }
             // Otherwise, check if old CSEin == new CSEin (termination condition)
-            else {
+            else if (v.CSEin.size() != oldIn.size()) {
+                hasChanged = true;
+            } else {
                 for(IRExpr e: v.CSEin.keySet()) {
                     if (!(oldIn.keySet().contains(e) && oldIn.get(e).equals(v.CSEin.get(e)))) {
                         System.out.println("Things changed!");
@@ -248,9 +274,10 @@ public class CSEWorklist {
                     Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> incoming = new HashSet<>(g.incomingEdgesOf(node));
                     // Editing the graph
                     for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : incoming) {
+                        System.out.println("I added an edge to the graph from: " +  e.head + "to" + newStmt);
                         g.addEdge(e.head, newStmt);
                     }
-
+                    System.out.println(incoming.size());
                     g.removeAllEdges(incoming);
                     g.addEdge(newStmt, node);
                     
