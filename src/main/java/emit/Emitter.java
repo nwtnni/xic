@@ -623,6 +623,7 @@ public class Emitter extends Visitor<IRNode> {
         stmts.add(jump(doneL));
         stmts.add(outOfBounds);
         stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
+        stmts.add(jump(doneL));
         stmts.add(doneL);
 
         return new IRMem(new IRESeq(stmts, result));

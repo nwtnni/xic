@@ -95,10 +95,11 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
                 } else {
                     // TODO: handle arbitary jumps
                 }
-            } else if (current instanceof Ret) {
-                // Trace ends with return
             } else {
-                traces.push(getSuccessor(edges));
+                if (edges.size() > 0) {
+                    assert edges.size() == 1;
+                    traces.push(getSuccessor(edges));
+                } 
             }
         }
 

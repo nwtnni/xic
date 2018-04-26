@@ -43,11 +43,11 @@ public class CSE extends Phase {
         Map<String, IRGraph<Map<IRExpr, IRStmt>>> cfgs = gf.getCfgs();
 
         // TODO: Run analyses and optimizations
-        for(String key: cfgs.keySet()) {
-            IRGraph<Map<IRExpr, IRStmt>> cfg = cfgs.get(key);
-            CSEWorklist cse = new CSEWorklist();
-            cse.cse(cfg);
-        }
+        // for(String key: cfgs.keySet()) {
+        //     IRGraph<Map<IRExpr, IRStmt>> cfg = cfgs.get(key);
+        //     CSEWorklist cse = new CSEWorklist();
+        //     cse.cse(cfg);
+        // }
 
         // Convert back to IR
         IRCompUnit after = new IRCompUnit(ir.first.name());
