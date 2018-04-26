@@ -44,8 +44,8 @@ public class RegAlloc extends Phase {
 
         // Run analyses and optimizations
         for(ASAGraph<Set<Temp>> cfg : cfgs.values()) {
-            // LiveVariableWorklist lv = new LiveVariableWorklist(cfg);
-            // lv.doWorklist();
+            LiveVariableWorklist lv = new LiveVariableWorklist(cfg);
+            lv.doWorklist();
         }
 
         // Convert back to IR
