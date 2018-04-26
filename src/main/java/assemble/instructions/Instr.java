@@ -1,13 +1,19 @@
 package assemble.instructions;
 
+import java.util.Set;
 import java.util.UUID;
+
+import assemble.*;
 
 public abstract class Instr {
     public Instr() {
         this.id = UUID.randomUUID();
+        this.live = null;
     }
 
     public UUID id;
+
+    public Set<Temp> live;
 
     @Override
     public int hashCode() {

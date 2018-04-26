@@ -144,8 +144,46 @@ public class Operand {
         return kind == MEM;
     }
 
+    public Kind kind() {
+        return kind;
+    }
+
     public long value() {
         return value;
+    }
+
+    public String mem() {
+        return mem;
+    }
+
+    @Override
+    public int hashCode() {
+        switch (kind) {
+            case IMM:
+                return Long.hashCode(value);
+            case MEM:
+                return mem.hashCode();
+            default:
+                return kind.name().hashCode();
+        }
+    }
+
+    /**
+     * Mems are only equal if they are the exact same access.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Operand) {
+            Operand op = (Operand) o;
+            if (isImm() && op.isImm()) {
+                return value == op.value();
+            } else if (isMem() && op.isMem()) {
+                return mem.equals(op.mem());
+            } else if (isReg() && op.isReg()) {
+                return kind == op.kind();
+            }
+        }
+        return false;
     }
 
     @Override
