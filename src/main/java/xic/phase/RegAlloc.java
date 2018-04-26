@@ -1,5 +1,7 @@
 package xic.phase;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -7,6 +9,7 @@ import assemble.*;
 import optimize.graph.*;
 import optimize.register.*;
 import util.Result;
+import util.Filename;
 
 public class RegAlloc extends Phase {
 
@@ -17,7 +20,23 @@ public class RegAlloc extends Phase {
 
         if (previous.isErr()) return previous; 
 
-        CompUnit assembly = previous.ok().getAssembled(); 
+        CompUnit assembly = previous.ok().getAssembled();
+        
+        // Debug
+        String out = Filename.concat(config.sink, config.unit);
+        out = Filename.setExtension(out, "as.s");
+        Filename.makePathTo(out);
+        
+        try {
+            FileWriter w = new FileWriter(out);
+            
+            for (String i : assembly.toAbstractAssembly()) {
+                w.append(i + "\n");
+            }
+
+            w.close();
+        } catch (IOException e) {
+        }
 
         LVEdgeFactory ef = new LVEdgeFactory();
         ASAGraphFactory<Set<Temp>> gf = new ASAGraphFactory<>(assembly, ef);
@@ -25,8 +44,8 @@ public class RegAlloc extends Phase {
 
         // Run analyses and optimizations
         for(ASAGraph<Set<Temp>> cfg : cfgs.values()) {
-            LiveVariableWorklist lv = new LiveVariableWorklist(cfg);
-            lv.doWorklist();
+            // LiveVariableWorklist lv = new LiveVariableWorklist(cfg);
+            // lv.doWorklist();
         }
 
         // Convert back to IR
