@@ -3,6 +3,7 @@ package optimize;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Queue;
@@ -136,36 +137,11 @@ public class CSEWorklist {
 
 
     /*
-     * Replace common subexpressions within a given node
-     * TODO: check to make sure seq will never be a vertex in this graph 
-     * binop, mem?
-     * jump, cjump, exp
-     */
-    public IRNode replaceExpr(IRNode n, IRExpr e, IRExpr newE) {
-        // if (n.equals(e)) {
-        //    return newE;
-        // }
-        // if (n instanceof IRMove) {
-        //    IRMove m = (IRMove) s;
-        //    m.src = replaceExpr(m.src, e, newE);
-        // }
-        // if (n instanceof IRJump) {
-        //    IRJump j = (IRJump) n;
-        //    return new IRJump(replaceExpr(j.target(), e, newE));
-        // }
-        // if (n instanceof IRCJump) {
-        //    IRCJump cj = (IRCJump) n;
-        //    // return new 
-        // }
-        return null;
-    }
-
-    /*
      * CSE optimization 
      */
-    public void cse(IRGraph<HashMap<IRExpr, IRStmt>> g) {
+    public void cse(IRGraph<Map<IRExpr, IRStmt>> g) {
         // Temp names for exprs that are common subexprs
-        HashMap<IRExpr, IRTemp> assigned = new HashMap<IRExpr, IRTemp>();
+        Map<IRExpr, IRTemp> assigned = new HashMap<IRExpr, IRTemp>();
         Integer varCount = 0;
 
         ArrayList<IRStmt> seen = new ArrayList<IRStmt>();
@@ -177,7 +153,7 @@ public class CSEWorklist {
         while (!q.isEmpty()) {
             IRStmt s = q.poll();
             if (s instanceof IRSeq) {
-                for (PairEdge<IRStmt, HashMap<IRExpr, IRStmt>> e : g.outgoingEdgesOf(s)) {
+                for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : g.outgoingEdgesOf(s)) {
                     if (!seen.contains(g.getEdgeTarget(e))) {
                         q.add(g.getEdgeTarget(e));
                     }
@@ -211,7 +187,7 @@ public class CSEWorklist {
 
                     g.addVertex(newStmt);
 
-                    for (PairEdge<IRStmt, HashMap<IRExpr, IRStmt>> e : g.incomingEdgesOf(node)) {
+                    for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : g.incomingEdgesOf(node)) {
                         g.addEdge(e.head, newStmt);
                     }
                     g.removeAllEdges(g.incomingEdgesOf(node));
@@ -229,7 +205,7 @@ public class CSEWorklist {
                 cur = orderedExprs.poll();
             }
 
-            for (PairEdge<IRStmt, HashMap<IRExpr, IRStmt>> e : g.outgoingEdgesOf(s)) {
+            for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : g.outgoingEdgesOf(s)) {
                 if (!seen.contains(g.getEdgeTarget(e))) {
                     q.add(g.getEdgeTarget(e));
                 }
