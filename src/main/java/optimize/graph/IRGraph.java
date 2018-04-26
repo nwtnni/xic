@@ -38,7 +38,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
     }
 
     /**
-     * Converts CFG back to IR tree. Destructively mutates the graph.
+     * Converts CFG back to IR tree.
      */
     public IRFuncDecl toIR() {
         IRSeq body = new IRSeq();
@@ -91,6 +91,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
             } else if (current instanceof IRLabel) {
                 IRLabel label = (IRLabel) current;
 
+                Set<PairEdge<IRStmt, E>> edges = new HashSet<>(outgoingEdgesOf(current));
                 // Remove prior jumps and cjumps if equvialent to a fall-through
                 // Keeps on searching only if a fall-through is found
                 for (int last = body.size() - 1; last > 0; last--) {
@@ -99,7 +100,8 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                         IRJump jmp = (IRJump) prev;
                         if (jmp.targetLabel().equals(current)) {
                             body.remove(last);
-                            removeEdge(jmp, label);
+                            edges.remove(getEdge(jmp, label));
+                            // removeEdge(jmp, label);
                             last--;
                             continue;
                         }
@@ -107,7 +109,8 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                         IRCJump jmp = (IRCJump) prev;
                         if (jmp.trueLabel().equals(current)) {
                             body.remove(last);
-                            removeEdge(jmp, label);
+                            edges.remove(getEdge(jmp, label));
+                            // removeEdge(jmp, label);
                             last--;
                             continue;
                         }
@@ -116,7 +119,8 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                 }
 
                 // Only add label if exists paths to it
-                if (inDegreeOf(label) > 0) {
+                if (edges.size() > 0) {
+                // if (inDegreeOf(label) > 0) {
                     body.add(current);
                 }
 
