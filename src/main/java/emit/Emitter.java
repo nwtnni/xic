@@ -54,7 +54,7 @@ public class Emitter extends Visitor<IRNode> {
     protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
     // Toggle inserting library functions
-    private static final boolean INCLUDE_LIB = false;
+    private static final boolean INCLUDE_LIB = true;
 
     /* 
      * Utility methods for code generation
@@ -482,9 +482,10 @@ public class Emitter extends Visitor<IRNode> {
             stmts.add(stmts.size() - 1, jump(doneL));
             stmts.add((IRStmt) i.elseBlock.accept(this));
             stmts.add(doneL);
-        } else {
-            stmts.add(stmts.size() - 1, jump(falseL));
         }
+        // } else {
+        //     stmts.add(stmts.size() - 1, jump(falseL));
+        // }
         return stmts;
     }
 
@@ -623,7 +624,6 @@ public class Emitter extends Visitor<IRNode> {
         stmts.add(jump(doneL));
         stmts.add(outOfBounds);
         stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
-        stmts.add(jump(doneL));
         stmts.add(doneL);
 
         return new IRMem(new IRESeq(stmts, result));

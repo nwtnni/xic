@@ -29,17 +29,16 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
     private String name;
 
     /** 
-     * Adds the tail node from the edge in edges to a set of 
-     * visited nodes and the sequence of nodes. 
-     * Requires: edges contains a single edge.
+     * Adds the successor node to the given node.
+     * Requires: there is only a single outgoing edge from this node.
      * */
-    private IRStmt getSuccessor(Set<PairEdge<IRStmt, E>> edges) {
-        assert edges.size() == 1;
-        return edges.iterator().next().tail;
+    private IRStmt getSuccessor(IRStmt node) {
+        assert outDegreeOf(node) == 1;
+        return outgoingEdgesOf(node).iterator().next().tail;
     }
 
     /**
-     * Converts CFG back to IR tree.
+     * Converts CFG back to IR tree. Destructively mutates the graph.
      */
     public IRFuncDecl toIR() {
         IRSeq body = new IRSeq();
@@ -52,42 +51,85 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
         while (traces.size() > 0) {
             IRStmt current = traces.poll();
 
-            // Add node to IR
+            // Check and update visited set
             if (visited.contains(current)) {
                 if (current instanceof IRLabel) {
                     continue;
-                } else {
-                    throw XicInternalException.runtime("Trying to add node twice from IR CFG!");
                 }
+                throw XicInternalException.runtime("Trying to add node twice from IR CFG!");
             }
             visited.add(current);
-            body.add(current);
+            // body.add(current);
 
-            // Get next node and update traces
-            Set<PairEdge<IRStmt, E>> edges = new HashSet<>(outgoingEdgesOf(current));
+            // Update traces
+            // Set<PairEdge<IRStmt, E>> edges = new HashSet<>(outgoingEdgesOf(current));
+
             if (current instanceof IRCJump) {
-                // Add trace to the label if it is different from the fall-through
-                if (edges.size() > 1) {
-                    IRCJump jump = (IRCJump) current;
-                    PairEdge<IRStmt, E> toLabel = getEdge(current, jump.trueLabel());
-                    edges.remove(toLabel);
-                    traces.push(toLabel.tail);
+                IRCJump jump = (IRCJump) current;
+                body.add(jump);
+
+                // Push branch trace
+                traces.push(jump.trueLabel());
+
+                // Push fall-through trace if it is different from the branch
+                if (outDegreeOf(jump) > 1) {
+                    IRStmt next = outgoingEdgesOf(jump).stream()
+                        .filter((PairEdge<IRStmt,E> e) -> !e.tail.equals(jump.trueLabel()))
+                        .iterator().next().tail;
+                    traces.push(next);
                 }
-                traces.push(getSuccessor(edges));
             } else if (current instanceof IRJump) {
-                // Trace ends with jump
-                IRJump j = (IRJump) current;
-                if (j.hasLabel()) {
+                IRJump jump = (IRJump) current;
+                body.add(jump);
+
+                if (jump.hasLabel()) {
                     // Start new trace with target
-                    traces.push(j.targetLabel());
+                    traces.push(jump.targetLabel());
                 } else {
                     // TODO: Handle arbitrary jumps
                 }
             } else if (current instanceof IRLabel) {
-                traces.push(getSuccessor(edges));
+                IRLabel label = (IRLabel) current;
+
+                // Remove prior jumps and cjumps if equvialent to a fall-through
+                // Keeps on searching only if a fall-through is found
+                for (int last = body.size() - 1; last > 0; last--) {
+                    IRStmt prev = body.get(last);
+                    if (prev instanceof IRJump) {
+                        IRJump jmp = (IRJump) prev;
+                        if (jmp.targetLabel().equals(current)) {
+                            body.remove(last);
+                            removeEdge(jmp, label);
+                            last--;
+                            continue;
+                        }
+                    } else if (prev instanceof IRCJump) {
+                        IRCJump jmp = (IRCJump) prev;
+                        if (jmp.trueLabel().equals(current)) {
+                            body.remove(last);
+                            removeEdge(jmp, label);
+                            last--;
+                            continue;
+                        }
+                    }
+                    break;
+                }
+
+                // Only add label if exists paths to it
+                if (inDegreeOf(label) > 0) {
+                    body.add(current);
+                }
+
+                // Follow the fall-through trace
+                traces.push(getSuccessor(label));
             } else if (current instanceof IRMove) {
-                traces.push(getSuccessor(edges));
+                body.add(current);
+
+                // Follow the fall-through trace
+                traces.push(getSuccessor(current));
             } else if (current instanceof IRReturn) {
+                body.add(current);
+
                 // Trace ends with return
             }
         }
