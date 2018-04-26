@@ -56,17 +56,26 @@ public class RegAlloc extends Phase {
         }
         
         // Debug LV
-        // for (FuncDecl fn : after.fns) {
-        //     System.out.println(fn.sourceName + "\n");
-        //     for (Instr i : fn.stmts) {
-        //         System.out.println(i + ": ");
-        //         System.out.println(i.in);
-        //         System.out.println(i.use);
-        //         System.out.println(i.def);
-        //         System.out.println(i.out);
-        //         System.out.println("");
-        //     }
-        // }
+        out = Filename.setExtension(out, "lv.s");
+        try {
+            FileWriter lvw = new FileWriter(out); 
+            for (FuncDecl fn : after.fns) {
+
+                lvw.append(fn.sourceName + "\n");
+                for (Instr i : fn.stmts) {
+                    lvw.append(i + ": \n");
+                    lvw.append("in: " + i.in + "\n");
+                    lvw.append("use: " + i.use + "\n");
+                    lvw.append("def: " + i.def + "\n");
+                    lvw.append("out: " + i.out + "\n");
+                    lvw.append("\n");
+                }
+            
+            }
+            lvw.close();
+        } catch (IOException e) {
+        }
+
 
         return new Result<>(Product.assembled(after));
     }

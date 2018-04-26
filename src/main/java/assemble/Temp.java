@@ -111,7 +111,7 @@ public class Temp {
      * In the form: (base)
      */
     public static Temp mem(Temp b) {
-        assert b != null && b.isTemp();
+        assert b != null && (b.isTemp() || b.isFixed());
         return new Temp(MEM, b, null, 0, 1);
     }
 
@@ -120,7 +120,7 @@ public class Temp {
      * In the form: offset(base)
      */
     public static Temp mem(Temp b, int off) {
-        assert b != null && b.isTemp() || b.equals(CALLEE_RET_ADDR);
+        assert b != null && (b.isTemp() || b.isFixed() || b.equals(CALLEE_RET_ADDR));
         assert off % Config.WORD_SIZE == 0;
         return new Temp(MEMBR, b, null, off, 1);
     }
@@ -132,8 +132,8 @@ public class Temp {
      * scale must be 1, 2, 4 or 8
      */
     public static Temp mem(Temp b, Temp r, int off, int scale) {
-        assert b != null && b.isTemp();
-        assert r != null && r.isTemp();
+        assert b != null && (b.isTemp() || b.isFixed());
+        assert r != null && (r.isTemp() || b.isFixed());
         assert off % Config.WORD_SIZE == 0;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
         return new Temp(MEMSBR, b, r, off, scale);
@@ -200,7 +200,7 @@ public class Temp {
     }
 
     public boolean isTemp() {
-        return kind == TEMP || kind == FIXED;
+        return kind == TEMP;
     }
 
     public boolean isFixed() {
@@ -212,7 +212,7 @@ public class Temp {
     }
 
     public boolean isMem() {
-        return !(isImm() || isTemp());
+        return !(isImm() || isTemp() || isFixed());
     }
 
     // Adds constraint that all named temps are memory addresses for 
@@ -295,13 +295,11 @@ public class Temp {
                 // IMM
                 return value == t.value;
             } else if (isTemp() && t.isTemp()) {
-                if (kind == TEMP) {
-                    // TEMP
-                    return name.equals(t.name);
-                } else {
-                    // FIXED
-                    return register.equals(t.register);
-                }
+                // TEMP
+                return name.equals(t.name);
+            } else if (isFixed() && t.isFixed()) {
+                // FIXED
+                return register.equals(t.register);
             } else if (isMem()) {
                 if (isMultRet()) {
                     // MULT_RET
