@@ -3,6 +3,7 @@ package ir;
 import java.util.UUID;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.HashSet;
 
 /**
@@ -11,7 +12,7 @@ import java.util.HashSet;
 public abstract class IRNode {
     public IRNode() {
         this.id = UUID.randomUUID();
-        this.CSEin = new HashMap<>();
+        this.CSEin = null;
         this.kill = new HashSet<>();
         this.exprs = new HashSet<IRExpr>();
         this.delMem = false;
@@ -23,7 +24,7 @@ public abstract class IRNode {
 
     public UUID id;
 
-    public HashMap<IRExpr, IRStmt> CSEin;
+    public Map<IRExpr, IRStmt> CSEin;
 
     public Set<IRExpr> kill;
 
