@@ -46,7 +46,7 @@ public abstract class BinOp<S, D, A> extends Instr<A> {
      */
     public static class TIR extends BinOp<Imm, Temp, Temp> {
         public TIR(Kind kind, Imm src, Temp dest) { super(kind, src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -54,7 +54,7 @@ public abstract class BinOp<S, D, A> extends Instr<A> {
      */
     public static class TIM extends BinOp<Imm, Mem<Temp>, Temp> {
         public TIM(Kind kind, Imm src, Mem<Temp> dest) { super(kind, src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -62,7 +62,7 @@ public abstract class BinOp<S, D, A> extends Instr<A> {
      */
     public static class TRM extends BinOp<Temp, Mem<Temp>, Temp> {
         public TRM(Kind kind, Temp src, Mem<Temp> dest) { super(kind, src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -70,7 +70,7 @@ public abstract class BinOp<S, D, A> extends Instr<A> {
      */
     public static class TMR extends BinOp<Mem<Temp>, Temp, Temp> {
         public TMR(Kind kind, Mem<Temp> src, Temp dest) { super(kind, src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -78,7 +78,7 @@ public abstract class BinOp<S, D, A> extends Instr<A> {
      */
     public static class TRR extends BinOp<Temp, Temp, Temp> {
         public TRR(Kind kind, Temp src, Temp dest) { super(kind, src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /*

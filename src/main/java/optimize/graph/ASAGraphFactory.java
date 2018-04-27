@@ -7,7 +7,7 @@ import assemble.*;
 import assemble.instructions.*;
 import emit.IRLabelFactory;
 
-public class ASAGraphFactory<E> extends InsVisitor<Instr> {
+public class ASAGraphFactory<E> extends InstrVisitor<Instr> {
 
     public ASAGraphFactory(CompUnit compUnit, ASAEdgeFactory<E> edgeFactory) {
         this.compUnit = compUnit;

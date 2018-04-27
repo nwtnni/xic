@@ -57,7 +57,7 @@ public abstract class Label<A> extends Instr<A> {
 
     public static class T extends Label<Temp> {
         public T(String name) { super(name); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     public static class R extends Label<Reg> {

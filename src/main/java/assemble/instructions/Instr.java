@@ -25,7 +25,7 @@ public abstract class Instr<A> {
         return false;
     }
 
-    public <T> T accept(InsVisitor<T> v) {
+    public <T> T accept(InstrVisitor<T> v) {
         return null;
     }
 }

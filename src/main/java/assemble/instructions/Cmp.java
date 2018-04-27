@@ -28,7 +28,7 @@ public abstract class Cmp<L, R, A> extends Instr<A> {
      */
     public static class TIR extends Cmp<Imm, Temp, Temp> {
         public TIR(Imm left, Temp right) { super(left, right); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -36,7 +36,7 @@ public abstract class Cmp<L, R, A> extends Instr<A> {
      */
     public static class TRM extends Cmp<Temp, Mem<Temp>, Temp> {
         public TRM(Temp left, Mem<Temp> right) { super(left, right); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -44,7 +44,7 @@ public abstract class Cmp<L, R, A> extends Instr<A> {
      */
     public static class TMR extends Cmp<Mem<Temp>, Temp, Temp> {
         public TMR(Mem<Temp> left, Temp right) { super(left, right); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -52,7 +52,7 @@ public abstract class Cmp<L, R, A> extends Instr<A> {
      */
     public static class TRR extends Cmp<Temp, Temp, Temp> {
         public TRR(Temp left, Temp right) { super(left, right); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /*

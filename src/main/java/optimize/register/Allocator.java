@@ -21,7 +21,7 @@ import util.Either;
 
 import xic.XicInternalException;
 
-public class Allocator extends InsVisitor<Void> {
+public class Allocator extends InstrVisitor<Void> {
 
     private static final Set<Operand> available = Set.of(
         Operand.RAX,

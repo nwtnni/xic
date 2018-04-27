@@ -9,7 +9,7 @@ import assemble.instructions.*;
 import assemble.instructions.BinOp.Kind;
 import xic.XicInternalException;
 
-public class TrivialAllocator extends InsVisitor<Void> {
+public class TrivialAllocator extends InstrVisitor<Void> {
 
     public static CompUnit allocate(CompUnit unit) {
         TrivialAllocator allocator = new TrivialAllocator(unit);

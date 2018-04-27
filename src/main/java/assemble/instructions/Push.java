@@ -28,7 +28,7 @@ public abstract class Push<S, A> extends Instr<A> {
      */
     public static class TR extends Push<Temp, Temp> {
         public TR(Temp src) { super(src); } 
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -36,7 +36,7 @@ public abstract class Push<S, A> extends Instr<A> {
      */
     public static class TM extends Push<Mem<Temp>, Temp> {
         public TM(Mem<Temp> src) { super(src); } 
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /*

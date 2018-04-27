@@ -29,7 +29,7 @@ public abstract class Mov<S, D, A> extends Instr<A> {
      */
     public static class TIR extends Mov<Imm, Temp, Temp> {
         public TIR(Imm src, Temp dest) { super(src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -37,7 +37,7 @@ public abstract class Mov<S, D, A> extends Instr<A> {
      */
     public static class TIM extends Mov<Imm, Mem<Temp>, Temp> {
         public TIM(Imm src, Mem<Temp> dest) { super(src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -45,7 +45,7 @@ public abstract class Mov<S, D, A> extends Instr<A> {
      */
     public static class TRM extends Mov<Temp, Mem<Temp>, Temp> {
         public TRM(Temp src, Mem<Temp> dest) { super(src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -53,7 +53,7 @@ public abstract class Mov<S, D, A> extends Instr<A> {
      */
     public static class TMR extends Mov<Mem<Temp>, Temp, Temp> {
         public TMR(Mem<Temp> src, Temp dest) { super(src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -61,7 +61,7 @@ public abstract class Mov<S, D, A> extends Instr<A> {
      */
     public static class TRR extends Mov<Temp, Temp, Temp> {
         public TRR(Temp src, Temp dest) { super(src, dest); }
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /*

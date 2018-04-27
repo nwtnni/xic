@@ -28,7 +28,7 @@ public abstract class Pop<D, A> extends Instr<A> {
      */
     public static class TR extends Pop<Temp, Temp> {
         public TR(Temp dest) { super(dest); } 
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -36,7 +36,7 @@ public abstract class Pop<D, A> extends Instr<A> {
      */
     public static class TM extends Pop<Mem<Temp>, Temp> {
         public TM(Mem<Temp> dest) { super(dest); } 
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     /*

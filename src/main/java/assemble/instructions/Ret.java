@@ -10,7 +10,7 @@ public abstract class Ret<A> extends Instr<A> {
     }
 
     public static class T extends Ret<Temp> {
-        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     public static class R extends Ret<Reg> {}

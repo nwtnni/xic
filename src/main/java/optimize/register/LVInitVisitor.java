@@ -8,7 +8,7 @@ import assemble.instructions.*;
 /**
  * Annotates instructions with use and def sets for liveness analysis.
  */
-public class LVInitVisitor extends InsVisitor<Void> {
+public class LVInitVisitor extends InstrVisitor<Void> {
 
     public static void init(FuncDecl fn) {
         LVInitVisitor visitor = new LVInitVisitor();

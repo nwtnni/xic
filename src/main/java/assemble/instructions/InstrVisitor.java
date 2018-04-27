@@ -2,7 +2,7 @@ package assemble.instructions;
 
 import assemble.*;
 
-public abstract class InsVisitor<T> {
+public abstract class InstrVisitor<T> {
 
     /*
      * BinOp Visitors
