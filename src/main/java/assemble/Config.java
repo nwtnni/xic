@@ -61,14 +61,14 @@ public class Config {
      *      ...
      *      movq [8*(n-5)], an
      */
-    protected static Either<Temp, Mem<Temp>> calleeArg(int i) {
+    protected static Operand calleeArg(int i) {
 
-        if (i < 6) return Either.left(getArg(i));
+        if (i < 6) return Operand.temp(getArg(i));
 
         // Args 6+ read in reverse order from stack starting at 16(%rbp)
         // +1 for stored BP, +1 for stored PC
         Mem<Temp> mem = Mem.of(Temp.RBP, Config.WORD_SIZE * (i - 6 + 2));
-        return Either.right(mem);
+        return Operand.mem(mem);
     }
 
     /** 
@@ -82,12 +82,12 @@ public class Config {
      *      ...
      *      movq an, [8*(n-6)](%rsp)
      */
-    protected static Either<Temp, Mem<Temp>> callerArg(int i) {
-        if (i < 6) return Either.left(getArg(i));
+    protected static Operand callerArg(int i) {
+        if (i < 6) return Operand.temp(getArg(i));
 
         // Args 6+ pushed in reverse order to stack starting at (%rsp)
         Mem<Temp> mem = Mem.of(Temp.RSP, Config.WORD_SIZE * (i - 6));
-        return Either.right(mem);
+        return Operand.mem(mem);
     }
 
     /** 
@@ -102,13 +102,13 @@ public class Config {
      * 
      * RET_ADDR is passed in as arg0 and will be decided at alloc
      */
-    protected static Either<Temp, Mem<Temp>> calleeRet(Temp addr, int i) {
+    protected static Operand calleeRet(Temp addr, int i) {
 
-        if (i < 2) return Either.left(getRet(i));
+        if (i < 2) return Operand.temp(getRet(i));
 
         // Rets 2+ written in reverse order to offset(ret_addr)
         Mem<Temp> mem = Mem.of(addr, WORD_SIZE * (i - 2));
-        return Either.right(mem);
+        return Operand.mem(mem);
     }
 
     /**
@@ -121,14 +121,14 @@ public class Config {
      * ...
      * mov [off + 8*(n-2)](%rsp), rn
      */
-    protected static Either<Temp, Mem<Temp>> callerRet(int i, int numArgs) {
+    protected static Operand callerRet(int i, int numArgs) {
 
-        if (i < 2) return Either.left(getRet(i));
+        if (i < 2) return Operand.temp(getRet(i));
 
         // Rets 2+ read in reverse order from offset(%rsp)
         int offset = Config.WORD_SIZE * (i - 2 + Math.max(numArgs - 6, 0));
         Mem<Temp> mem = Mem.of(Temp.RSP, offset);
-        return Either.right(mem);
+        return Operand.mem(mem);
     }
 
     /**

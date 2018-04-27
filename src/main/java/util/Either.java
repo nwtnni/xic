@@ -8,7 +8,7 @@ public class Either<L, R> {
     private L left;
     private R right;
 
-    private Either(L left, R right) {
+    public Either(L left, R right) {
         this.kind = (left == null) ? Kind.RIGHT : Kind.LEFT;
         this.left = left; 
         this.right = right;

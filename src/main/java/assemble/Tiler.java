@@ -20,7 +20,7 @@ import xic.XicInternalException;
 
 import util.Either;
 
-public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
+public class Tiler extends IRVisitor<Operand> {
 
     /**
      * Returns the list of abstract assembly code given an canonical IR tree
@@ -104,8 +104,8 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
     /*
      * Psuedo-visit method for visiting a list of nodes.
      */
-    public List<Either<Temp, Mem<Temp>>> visit(List<IRNode> nodes) {
-        List<Either<Temp, Mem<Temp>>> t = new ArrayList<>();
+    public List<Operand> visit(List<IRNode> nodes) {
+        List<Operand> t = new ArrayList<>();
         for (IRNode n : nodes) {
             t.add(n.accept(this));
         }
@@ -116,14 +116,14 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
      * Visitor methods ---------------------------------------------------------------------
      */
     
-    public Either<Temp, Mem<Temp>> visit(IRCompUnit c) {
+    public Operand visit(IRCompUnit c) {
         for (IRFuncDecl fn : c.functions().values()) {
             fn.accept(this);
         }
         return null;
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRFuncDecl f) {
+    public Operand visit(IRFuncDecl f) {
 
         // Reset instance variables for each function
         instrs = new ArrayList<>();
@@ -135,7 +135,7 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         // If function has multiple returns, save return address from arg 0 to a temp
         if (returns > 2) {
             calleeIsMultiple = 1;
-            Temp returnAddr = Config.calleeArg(0).getLeft();
+            Temp returnAddr = Config.calleeArg(0).getTemp();
             Temp returnTemp = TempFactory.generate("RETURN");
             instrs.add(0, movRR(returnAddr, returnTemp));
         } else {
@@ -160,14 +160,14 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         return null;
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRBinOp b) {
-        Either<Temp, Mem<Temp>> dest = Either.left(TempFactory.generate());
+    public Operand visit(IRBinOp b) {
+        Operand dest = Operand.temp(TempFactory.generate());
 
         Optional<Imm> immL = checkImm(b.left());
         Optional<Imm> immR = checkImm(b.right());
 
-        Either<Temp, Mem<Temp>> left = b.left().accept(this);
-        Either<Temp, Mem<Temp>> right = b.right().accept(this);
+        Operand left = b.left().accept(this);
+        Operand right = b.right().accept(this);
         
         BinOp.Kind bop = null;
         switch (b.type()) {
@@ -213,18 +213,18 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         }
 
         if (uop != null) {
-            instrs.addAll(mov(left, Either.left(Temp.RAX)));
+            instrs.addAll(mov(left, Operand.temp(Temp.RAX)));
 
             if (uop == DIV || uop == MOD) instrs.add(cqo());
 
-            if (right.isLeft()) {
-                DivMul<Temp, Temp> op = divMulR(uop, right.getLeft());
+            if (right.isTemp()) {
+                DivMul<Temp, Temp> op = divMulR(uop, right.getTemp());
                 instrs.add(op);
-                instrs.add(movRR(op.dest, dest.getLeft()));
+                instrs.add(movRR(op.dest, dest.getTemp()));
             } else {
-                DivMul<Mem<Temp>, Temp> op = divMulM(uop, right.getRight());
+                DivMul<Mem<Temp>, Temp> op = divMulM(uop, right.getMem());
                 instrs.add(op);
-                instrs.add(movRR(op.dest, dest.getLeft()));
+                instrs.add(movRR(op.dest, dest.getTemp()));
             }
 
             return dest;
@@ -256,11 +256,11 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         // TODO: this is sub-optimal use of setcc which can use other registers
         instrs.add(movIR(new Imm(0), Temp.RAX));
         instrs.add(setcc(flag));
-        instrs.add(movRR(Temp.RAX, dest.getLeft()));
+        instrs.add(movRR(Temp.RAX, dest.getTemp()));
         return dest;
     }
     
-    public Either<Temp, Mem<Temp>> visit(IRCall c) {
+    public Operand visit(IRCall c) {
         String target = c.target().name();
 
         int callIsMultiple = 0;
@@ -278,8 +278,8 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
             // Address passed is the same as address to write ret2 to
 
             // These unwraps are guaranteed to be safe based on our stack layout
-            Temp callerArg = Config.callerArg(0).getLeft();
-            Mem<Temp> callerRet = Config.callerRet(2, callerNumArgs).getRight();
+            Temp callerArg = Config.callerArg(0).getTemp();
+            Mem<Temp> callerRet = Config.callerRet(2, callerNumArgs).getMem();
             instrs.add(lea(callerRet, callerArg));
         }
 
@@ -288,21 +288,21 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         for (int i = 0; i < c.size(); i++) {
 
             Optional<Imm> imm = checkImm(c.get(i)); 
-            Either<Temp, Mem<Temp>> arg = Config.callerArg(i + calleeIsMultiple);
+            Operand arg = Config.callerArg(i + calleeIsMultiple);
 
-            // Constant argument into register
-            if (imm.isPresent() && arg.isLeft()) {
-                instrs.add(movIR(imm.get(), arg.getLeft()));
+            // Constant argument into register argument
+            if (imm.isPresent() && arg.isTemp()) {
+                instrs.add(movIR(imm.get(), arg.getTemp()));
             }
             
-            // Constant argument into mem
-            else if (imm.isPresent() && arg.isRight()) {
-                instrs.add(movIM(imm.get(), arg.getRight()));
+            // Constant argument into the stack for arguments
+            else if (imm.isPresent() && arg.isMem()) {
+                instrs.add(movIM(imm.get(), arg.getMem()));
             }
 
             // Non-constant argument into something
             else {
-                Either<Temp, Mem<Temp>> val = c.get(i).accept(this);
+                Operand val = c.get(i).accept(this);
                 instrs.addAll(mov(Config.callerArg(i + callIsMultiple), val));
             }
         }
@@ -311,7 +311,7 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         return Config.callerRet(0, callerNumArgs);
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRCJump c) {
+    public Operand visit(IRCJump c) {
 
         if (c.cond instanceof IRBinOp) {
             IRBinOp bop = (IRBinOp) c.cond;
@@ -326,20 +326,20 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
 
             } else if (immR.isPresent()) {
 
-                Either<Temp, Mem<Temp>> left = bop.left().accept(this);
+                Operand left = bop.left().accept(this);
                 
                 // Check if fits in imm32 for cmp instruction
                 if (Config.within(32, immR.get().getValue())) {
 
                     // Check what the LHS side is: either temp or mem
-                    if (left.isLeft()) {
-                        instrs.add(cmpIR(immR.get(), left.getLeft()));
+                    if (left.isTemp()) {
+                        instrs.add(cmpIR(immR.get(), left.getTemp()));
                     } else {
                     
                         //Otherwise must shuttle
                         Temp shuttle = TempFactory.generate("immR_mem_shuttle");
                         instrs.add(movIR(immR.get(), shuttle));
-                        instrs.add(cmpRM(shuttle, left.getRight()));
+                        instrs.add(cmpRM(shuttle, left.getMem()));
                     }
 
                 } else {
@@ -349,25 +349,25 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
                     instrs.add(movIR(immR.get(), shuttle));
 
                     // Check what the LHS side is
-                    if (left.isLeft()) {
-                        instrs.add(cmpRR(shuttle, left.getLeft()));
+                    if (left.isTemp()) {
+                        instrs.add(cmpRR(shuttle, left.getTemp()));
                     } else {
-                        instrs.add(cmpRM(shuttle, left.getRight()));
+                        instrs.add(cmpRM(shuttle, left.getMem()));
                     }
                 }
 
             } else if (immL.isPresent()) {
                 
-                Either<Temp, Mem<Temp>> right = bop.right().accept(this);
+                Operand right = bop.right().accept(this);
 
                 // Have to shuttle since only IR addressing, no RI
                 Temp shuttle = TempFactory.generate("immL_shuttle");
                 instrs.add(movIR(immL.get(), shuttle));
 
-                if (right.isLeft()) {
-                    instrs.add(cmpRR(right.getLeft(), shuttle));
+                if (right.isTemp()) {
+                    instrs.add(cmpRR(right.getTemp(), shuttle));
                 } else {
-                    instrs.add(cmpMR(right.getRight(), shuttle));
+                    instrs.add(cmpMR(right.getMem(), shuttle));
                 }
             }
 
@@ -411,46 +411,46 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         }
 
         // Otherwise is either a temp or mem
-        Either<Temp, Mem<Temp>> cond = c.cond.accept(this);
+        Operand cond = c.cond.accept(this);
 
-        if (cond.isLeft()) {
-            instrs.add(cmpIR(new Imm(1), cond.getLeft()));
+        if (cond.isTemp()) {
+            instrs.add(cmpIR(new Imm(1), cond.getTemp()));
         } else {
             // Must shuttle due to addressing modes for cmp
             Temp shuttle = TempFactory.generate("cond_shuttle");
             instrs.add(movIR(new Imm(1), shuttle));
-            instrs.add(cmpRM(shuttle, cond.getRight()));
+            instrs.add(cmpRM(shuttle, cond.getMem()));
         }
 
         instrs.add(jcc(Jcc.Kind.Z, c.trueLabel()));
         return null;
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRConst c) {
+    public Operand visit(IRConst c) {
         throw XicInternalException.runtime("Missed an immediate");
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRJump j) {
+    public Operand visit(IRJump j) {
         instrs.add(jmpFromIRJump(j));
         return null;
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRESeq e) {
+    public Operand visit(IRESeq e) {
         throw XicInternalException.runtime("IRESeq is not canonical");
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRExp e) {
+    public Operand visit(IRExp e) {
         // TODO: add tile to deal with procedure calls with no returns
         // in the form of IRExp(IRCall(...))
         throw XicInternalException.runtime("IRExp is not canonical");        
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRLabel l) {
+    public Operand visit(IRLabel l) {
         instrs.add(labelFromIRLabel(l));
         return null;
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRMem m) {
+    public Operand visit(IRMem m) {
         // Use set temporaries to make allocator use addressing modes 
         // for immutable memory accesses
         if (m.memType() == MemType.IMMUTABLE && m.expr() instanceof IRBinOp) {
@@ -463,16 +463,16 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
                 // B + off
                 if (bop.right() instanceof IRConst) {
 
-                    Either<Temp, Mem<Temp>> base = bop.left().accept(this);
+                    Operand base = bop.left().accept(this);
                     Imm offset = checkImm(bop.right()).get();
 
                     // Off must be within 32 bits
                     assert Config.within(32, offset.getValue());
 
                     // B must be a temp, not nested memory access
-                    if (base.isLeft()) {
-                        Mem<Temp> mem = Mem.of(base.getLeft(), (int) offset.getValue());
-                        return Either.right(mem);
+                    if (base.isTemp()) {
+                        Mem<Temp> mem = Mem.of(base.getTemp(), (int) offset.getValue());
+                        return Operand.mem(mem);
                     } else {
                         throw XicInternalException.runtime("Nested memory access");
                     }
@@ -480,7 +480,7 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
                 // B + R * scale
                 } else if (bop.right() instanceof IRBinOp) {
 
-                    Either<Temp, Mem<Temp>> base = bop.left().accept(this);
+                    Operand base = bop.left().accept(this);
     
                     IRBinOp index = (IRBinOp) bop.right();
 
@@ -488,57 +488,57 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
                         index.left() instanceof IRTemp &&
                         index.right() instanceof IRConst;
                         
-                    Either<Temp, Mem<Temp>> reg = index.left().accept(this);
+                    Operand reg = index.left().accept(this);
                     Imm scale = checkImm(index.right()).get();
 
                     // Assumes no nested memory access
-                    assert base.isLeft() && reg.isLeft();
+                    assert base.isTemp() && reg.isTemp();
                     
                     Mem<Temp> mem = Mem.of(
-                        base.getLeft(),
-                        reg.getLeft(),
+                        base.getTemp(),
+                        reg.getTemp(),
                         0,
                         (int) scale.getValue()
                     );
 
-                    return Either.right(mem);
+                    return Operand.mem(mem);
                 }
             }
         }
 
         Temp t = TempFactory.generate();
-        instrs.addAll(mov(m.expr().accept(this), Either.left(t)));
-        return Either.right(Mem.of(t));
+        instrs.addAll(mov(m.expr().accept(this), Operand.temp(t)));
+        return Operand.mem(Mem.of(t));
     }
 
     // TODO: currently assumes the dest of an IRMove is never a constant
-    public Either<Temp, Mem<Temp>> visit(IRMove m) {
+    public Operand visit(IRMove m) {
 
         // Must be Mem<Temp> or else IRGen has a bug
-        Either<Temp, Mem<Temp>> dest = m.target().accept(this);
+        Operand dest = m.target().accept(this);
             
 
         Optional<Imm> imm = checkImm(m.src());
 
         if (imm.isPresent()) {
-            if (dest.isLeft()) {
-                instrs.add(movIR(imm.get(), dest.getLeft()));
+            if (dest.isTemp()) {
+                instrs.add(movIR(imm.get(), dest.getTemp()));
             } else {
-                instrs.add(movIM(imm.get(), dest.getRight()));
+                instrs.add(movIM(imm.get(), dest.getMem()));
             }
             return null;
         }
 
-        Either<Temp, Mem<Temp>> src = m.src().accept(this);
+        Operand src = m.src().accept(this);
         instrs.addAll(mov(src, dest));
         return null;
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRName n) {
+    public Operand visit(IRName n) {
         throw XicInternalException.runtime("IRName not visited");
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRReturn r) {
+    public Operand visit(IRReturn r) {
         // CALLEE returns (write by callee)
         for (int i = r.size() - 1; i >= 0; i--) {
 
@@ -547,13 +547,13 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
             // Constant return
             if (imm.isPresent()) {
                 
-                Either<Temp, Mem<Temp>> ret = Config.calleeRet(calleeReturnAddress, i);
+                Operand ret = Config.calleeRet(calleeReturnAddress, i);
                 
                 // Check if return is a register or on the stack
-                if (ret.isLeft()) {
-                    instrs.add(movIR(imm.get(), ret.getLeft()));
+                if (ret.isTemp()) {
+                    instrs.add(movIR(imm.get(), ret.getTemp()));
                 } else {
-                    instrs.add(movIM(imm.get(), ret.getRight()));
+                    instrs.add(movIM(imm.get(), ret.getMem()));
                 }
 
             }
@@ -573,7 +573,7 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         return null;
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRSeq s) { 
+    public Operand visit(IRSeq s) { 
         int i = 0;
         for(IRNode stmt : s.stmts()) {
             if (INCLUDE_COMMENTS) {
@@ -588,7 +588,7 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         return null;
     }
 
-    public Either<Temp, Mem<Temp>> visit(IRTemp t) {
+    public Operand visit(IRTemp t) {
         String name = t.name();
 
         // CALLEE args (read by callee)
@@ -607,6 +607,6 @@ public class Tiler extends IRVisitor<Either<Temp, Mem<Temp>>> {
         }
 
         // Default temp
-        return Either.left(new Temp(name));
+        return Operand.temp(new Temp(name));
     }
 }
