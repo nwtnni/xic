@@ -7,7 +7,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 /*
- * Visitor for annotating IRExprs with use, def, gen, kill, exprs
+ * Visitor for finding the IRExpr to replace with the IRTemp generated
+ * during common subexpression analysis
+ *
+ * Visitor propogates up newExpr if it should be replaced by parent node
  */
 public class CSEReplaceVisitor extends IRVisitor<IRExpr> {
 
@@ -20,33 +23,13 @@ public class CSEReplaceVisitor extends IRVisitor<IRExpr> {
     }
 
 
-    /*
-     * Top level nodes
-     */
-    
-    // public Void visit(IRCompUnit c) {
-    //     for (IRFuncDecl fd : c.functions().values()) {
-    //         fd.accept(this);
+    // public IRExpr visit(IRExp e) {
+    //     IRExpr n = e.expr().accept(this);
+    //     if (n != null) {
+    //         e.setExpr(n);
     //     }
     //     return null;
     // }
-
-    // public Void visit(IRFuncDecl f) {
-    //     f.body.accept(this);
-    //     return null;
-    // }
-
-    /*
-     * Statement nodes
-     */
-
-    public IRExpr visit(IRExp e) {
-        IRExpr n = e.expr().accept(this);
-        if (n != null) {
-            e.setExpr(n);
-        }
-        return null;
-    }
 
     // TODO: check if calls - shouldn't be in lowered IR
     public IRExpr visit(IRCall c) {

@@ -37,12 +37,6 @@ public class WorklistVisitor extends IRVisitor<Void> {
      * Statement nodes
      */
 
-    public Void visit(IRExp e) {
-        e.expr().accept(this);
-        e.exprs = e.expr().exprs;
-        e.delMem = e.expr().delMem;
-        return null;
-    }
 
     // TODO: check if calls - shouldn't be in lowered IR
     public Void visit(IRCall c) {

@@ -24,9 +24,6 @@ public class CSEWorklist {
      */
     
     public boolean kill(Set<IRExpr> killSet, IRExpr e) {
-        // for (IRExpr k : killSet) {
-        //     System.out.println("I am killing this: " + k);
-        // }
         if (e instanceof IRTemp && killSet.contains(e)) {
             return true;
         }
@@ -60,6 +57,7 @@ public class CSEWorklist {
 
     /*
      * Given an IR statement, calculate the corresponding out
+     * using transfer function for CSE analysis
      */
     public Map<IRExpr, IRStmt> transfer(IRStmt s) {
 
@@ -80,8 +78,7 @@ public class CSEWorklist {
         }
 
         // Performing kill for out
-        Map<IRExpr, IRStmt> tempOut = new HashMap<IRExpr, IRStmt>(out);
-        for (IRExpr e : tempOut.keySet()) {
+        for (IRExpr e : new HashSet<IRExpr>(out.keySet())) {
             if ((shouldDelMem && s.delMem) || kill(s.kill, e)) {
                 out.remove(e);
             }
@@ -90,18 +87,18 @@ public class CSEWorklist {
         return out;
     }
 
+    /*
+     * Perform the meet of all outs of a node's predecessors 
+     * which is the intersection of these sets
+     *
+     * Checks for equality of two expressions using the common subexpression and IRStmt that defined it
+     */
     public void meet(IRGraph<Map<IRExpr, IRStmt>> g, IRStmt v) {        
         
         Map<IRExpr, IRStmt> in = null;
         
-        System.out.println("Incoming Edges Set ----------------");
         for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> edge: g.incomingEdgesOf(v)) {
             Map<IRExpr, IRStmt> s = edge.value;
-            if (edge.head.CSEin == null) {
-                System.out.println(edge.head + " has 0 CSEin exprs");
-            } else {
-                System.out.println(edge.head + " has " + edge.head.CSEin.size() + " CSEin exprs");
-            }
             // only want to intersect if s has been initialized
             if (s != null) {
                 // if in has not been initialized, put all of the non-empty set's objects into it
@@ -111,8 +108,6 @@ public class CSEWorklist {
                 } else {
                     for (IRExpr e : new HashSet<IRExpr>(in.keySet())) {
                         if (!s.containsKey(e) || !in.get(e).equals(s.get(e))) {
-                            System.out.println("The expr from in: " + in.get(e));
-                            System.out.println("The expr from s: " + s.get(e));
                             in.remove(e);
                         } 
                     }
@@ -120,22 +115,13 @@ public class CSEWorklist {
                 }
             }
         }
-        System.out.println("END of Incoming Edges Set ----------------");
 
-
-
-        // If it is the start node, initialize to empty
+        // If it is the start node, initialize to empty, else assign to CSEin
         if (in == null) {
             v.CSEin = new HashMap<IRExpr,IRStmt>();
         }
         else {
-            System.out.println("CSEin Set ----------------");
-            for (IRExpr i : in.keySet()) {
-                System.out.println("This Expr: " + i + " came from: " + in.get(i));
-
-            }
             v.CSEin = in;
-            System.out.println("END OF CSEin Set ----------------");
         }
 
     }
@@ -240,10 +226,8 @@ public class CSEWorklist {
                     Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> incoming = new HashSet<>(g.incomingEdgesOf(node));
                     // Editing the graph
                     for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : incoming) {
-                        System.out.println("I added an edge to the graph from: " +  e.head + "to" + newStmt);
                         g.addEdge(e.head, newStmt);
                     }
-                    System.out.println(incoming.size());
                     g.removeAllEdges(incoming);
                     g.addEdge(newStmt, node);
                     
