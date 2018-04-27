@@ -1,5 +1,7 @@
 package assemble.instructions;
 
+import java.util.Set;
+
 import assemble.*;
 
 public class Push extends Instr {
@@ -8,6 +10,7 @@ public class Push extends Instr {
     public Push(Operand o) {
         assert (o.kind != Operand.Kind.MEM);
         operand = o;
+        this.use = Set.of(Temp.fixed(o));
     }
     
     @Override

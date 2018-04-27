@@ -34,6 +34,7 @@ public class BinOp extends Instr {
 
         this.use = this.srcTemp.getTemps();
         this.def = this.destTemp.getTemps();
+        this.use.addAll(this.def);
     }
 
     /** 

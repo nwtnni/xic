@@ -1,5 +1,7 @@
 package assemble.instructions;
 
+import java.util.Set;
+
 import assemble.*;
 
 public class Pop extends Instr {
@@ -8,6 +10,7 @@ public class Pop extends Instr {
     public Pop(Operand o) {
         assert (o.kind != Operand.Kind.MEM);
         operand = o;
+        this.def = Set.of(Temp.fixed(o));
     }
 
     @Override

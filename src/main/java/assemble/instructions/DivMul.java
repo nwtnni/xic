@@ -32,6 +32,7 @@ public class DivMul extends Instr {
         }
 
         this.use = this.srcTemp.getTemps();
+        this.use.add(Temp.fixed(Operand.RAX));
         this.def = this.destTemp.getTemps();
     }
 
