@@ -8,11 +8,11 @@ import java.util.HashSet;
 /*
  * Visitor for annotating IRNodes with use, def, gen, kill, exprs
  */
-public class WorklistVisitor extends IRVisitor<Void> {
+public class CSEInitVisitor extends IRVisitor<Void> {
 
     
     public static void annotateNodes(IRNode start) {
-        start.accept(new WorklistVisitor());
+        start.accept(new CSEInitVisitor());
     }
 
 
