@@ -11,16 +11,16 @@ import xic.XicInternalException;
 
 public class TrivialAllocator extends InstrVisitor<Void> {
 
-    public static CompUnit allocate(CompUnit unit) {
+    public static CompUnit<Reg> allocate(CompUnit<Temp> unit) {
         TrivialAllocator allocator = new TrivialAllocator(unit);
         return allocator.allocate();
     }
 
     // Running list of assembly instructions
-    private CompUnit unit;
+    private CompUnit<Reg> unit;
 
     // Current list of instructions
-    private List<Instr> instrs;
+    private List<Instr<Reg>> instrs;
 
     // Map of named temps to offset on stack
     private Map<String, Integer> tempStack;
@@ -42,7 +42,7 @@ public class TrivialAllocator extends InstrVisitor<Void> {
     // private Operand r10;
     // private Operand r11;
 
-    private TrivialAllocator(CompUnit unit) {
+    private TrivialAllocator(CompUnit<Temp> unit) {
         this.unit = unit;
         
         this.instrs = new ArrayList<>();
@@ -57,7 +57,7 @@ public class TrivialAllocator extends InstrVisitor<Void> {
     /**
      * Push a named temp to the stack.
      */
-    private Operand pushTemp(String name) {
+    private Temp pushTemp(String name) {
         tempStack.put(name, tempCounter++);
         return getTemp(name);
     }

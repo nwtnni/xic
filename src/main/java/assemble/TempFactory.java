@@ -12,7 +12,7 @@ public class TempFactory {
      */
     public static Temp generate() {
         String t = String.format("_ASM_%04d", tempIndex++);
-        return Temp.temp(t);
+        return new Temp(t);
     }
 
     /**
@@ -20,7 +20,7 @@ public class TempFactory {
      */
     public static Temp generate(String name) {
         String t = String.format("_ASM_%04d_%s", tempIndex++, name);
-        return Temp.temp(t);
+        return new Temp(t);
     }
 
     /*
