@@ -12,8 +12,11 @@ import ir.IRCompUnit;
 import ir.Printer;
 import ir.*;
 
-import optimize.graph.*;
-import optimize.CSEWorklist;
+import optimize.graph.IRGraph;
+import optimize.graph.IRGraphFactory;
+import optimize.graph.IREdgeFactory;
+import optimize.cse.CSEWorklist;
+import optimize.cse.CSEInitVisitor;
 
 import util.Filename;
 import util.Pair;
@@ -37,17 +40,19 @@ public class CSE extends Phase {
 
         Pair<IRCompUnit, ABIContext> ir = previous.ok().getEmitted();
 
+        CSEInitVisitor.annotateNodes(ir.first);
+
         // Transform to CFG
         IREdgeFactory<Map<IRExpr, IRStmt>> ef = new IREdgeFactory<>();
         IRGraphFactory<Map<IRExpr, IRStmt>> gf = new IRGraphFactory<>(ir.first, ef);
         Map<String, IRGraph<Map<IRExpr, IRStmt>>> cfgs = gf.getCfgs();
 
-        // TODO: Run analyses and optimizations
-        // for(String key: cfgs.keySet()) {
-        //     IRGraph<Map<IRExpr, IRStmt>> cfg = cfgs.get(key);
-        //     CSEWorklist cse = new CSEWorklist();
-        //     cse.cse(cfg);
-        // }
+        // Run analyses and optimizations
+        for(String key: cfgs.keySet()) {
+            IRGraph<Map<IRExpr, IRStmt>> cfg = cfgs.get(key);
+            CSEWorklist cse = new CSEWorklist();
+            cse.cse(cfg);
+        }
 
         // Convert back to IR
         IRCompUnit after = new IRCompUnit(ir.first.name());

@@ -2,7 +2,10 @@ use io
 use conv
 
 main(args:int[][]) {
-    x:int = 2
-    y:int = 3
-    print(unparseInt(x) + " + " + unparseInt(y) + " = " + unparseInt(x+y))
+    x:int = 1
+    y:int = x + 1
+    y = x + 1
+    x = x + 1
+    y = x + 1
+    y = x + 1 + 2
 }

@@ -1,4 +1,4 @@
-package optimize;
+package optimize.cse;
 
 
 import ir.*;
@@ -8,11 +8,11 @@ import java.util.HashSet;
 /*
  * Visitor for annotating IRNodes with use, def, gen, kill, exprs
  */
-public class WorklistVisitor extends IRVisitor<Void> {
+public class CSEInitVisitor extends IRVisitor<Void> {
 
     
     public static void annotateNodes(IRNode start) {
-        start.accept(new WorklistVisitor());
+        start.accept(new CSEInitVisitor());
     }
 
 
@@ -21,28 +21,22 @@ public class WorklistVisitor extends IRVisitor<Void> {
      * Top level nodes
      */
     
-    // public Void visit(IRCompUnit c) {
-    //     for (IRFuncDecl fd : c.functions().values()) {
-    //         fd.accept(this);
-    //     }
-    //     return null;
-    // }
+    public Void visit(IRCompUnit c) {
+        for (IRFuncDecl fd : c.functions().values()) {
+            fd.accept(this);
+        }
+        return null;
+    }
 
-    // public Void visit(IRFuncDecl f) {
-    //     f.body.accept(this);
-    //     return null;
-    // }
+    public Void visit(IRFuncDecl f) {
+        f.body().accept(this);
+        return null;
+    }
 
     /*
      * Statement nodes
      */
 
-    public Void visit(IRExp e) {
-        e.expr().accept(this);
-        e.exprs = e.expr().exprs;
-        e.delMem = e.expr().delMem;
-        return null;
-    }
 
     // TODO: check if calls - shouldn't be in lowered IR
     public Void visit(IRCall c) {
@@ -74,9 +68,7 @@ public class WorklistVisitor extends IRVisitor<Void> {
     }
 
     public Void visit(IRMove m) {
-        m.target.accept(this);
         m.src.accept(this);
-        m.exprs.addAll(m.target.exprs);
         m.exprs.addAll(m.src.exprs);
         m.kill.add(m.target());
 
