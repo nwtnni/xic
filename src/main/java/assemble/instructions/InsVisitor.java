@@ -1,6 +1,7 @@
 package assemble.instructions;
 
 public class InsVisitor<T> {
+
     public T visit(BinOp i) {
         return null;
     }
@@ -49,7 +50,6 @@ public class InsVisitor<T> {
         return null;
     }
 
-
     public T visit(Ret i) {
         return null;
     }
@@ -61,4 +61,5 @@ public class InsVisitor<T> {
     public T visit(Text i) {
         return null;
     }
+
 }
