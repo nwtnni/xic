@@ -156,9 +156,13 @@ public abstract class InsVisitor<T> {
         return null;
     }
 
-//     public T visit(Ret i) {
-//         return null;
-//     }
+    /*
+     * Ret Visitor
+     */
+
+    public T visit(Ret.T r) {
+        return null;
+    }
 
 //     public T visit(Setcc i) {
 //         return null;
