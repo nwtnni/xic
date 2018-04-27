@@ -2,7 +2,8 @@ package assemble.instructions;
 
 import assemble.*;
 
-public class DivMul extends Instr {
+public class DivMul<S, A> extends Instr<A> {
+
     public enum Kind {
         MUL     ("imulq"),
         HMUL    ("imulq"),
@@ -10,44 +11,73 @@ public class DivMul extends Instr {
         MOD     ("idivq");
         String opcode;
         private Kind (String s) { opcode = s; }
-
     }
 
     public Kind kind;
-    public Temp destTemp;
-    public Temp srcTemp;
+    public S src;
+    public A dest;
 
-    public Operand dest;
-    public Operand src;
-
-    public DivMul(Kind kind, Temp srcTemp) {
+    private DivMul(Kind kind, S src, A dest) {
         this.kind = kind;
-        this.srcTemp = srcTemp;
-
-        // Intermediate register is fixed for these instructions
-        if (kind == Kind.MUL || kind == Kind.DIV) {
-            this.destTemp = Temp.RAX;
-        } else {
-            this.destTemp = Temp.RDX;
-        }
-    }
-
-    public boolean isDivOrMod()  {
-        return kind == Kind.DIV || kind == Kind.MOD;
+        this.src = src;
+        this.dest = dest;
     }
 
     @Override
-    public String toAbstractAssembly() {
-        return kind.opcode + " " + srcTemp;
-    }
-
-    @Override
-    public String toAssembly() {
+    public String toString() {
         return kind.opcode + " " + src;
     }
 
     @Override
-    public <T> T accept(InsVisitor<T> v) {
+    public <T> T accept(InsVisitor<A, T> v) {
         return v.visit(this);
+    }
+
+    /*
+     *
+     * Abstract Assembly Instructions
+     *
+     */
+
+    /**
+     * Abstract register source addressing mode.
+     */
+    public static class TR extends DivMul<Temp, Temp> {
+        public TR(Kind kind, Temp src) {
+            super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Temp.RDX : Temp.RAX);
+        }
+    }
+
+    /**
+     * Abstract memory source addressing mode.
+     */
+    public static class TM extends DivMul<Mem<Temp>, Temp> {
+        public TM(Kind kind, Mem<Temp> src) {
+            super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Temp.RDX : Temp.RAX);
+        }
+    }
+
+    /*
+     *
+     * Assembly Instructions
+     *
+     */
+
+    /**
+     * Register source addressing mode.
+     */
+    public static class RR extends DivMul<Temp, Reg> {
+        public RR(Kind kind, Temp src) {
+            super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Reg.RDX : Reg.RAX);
+        }
+    }
+
+    /**
+     * Memory source addressing mode.
+     */
+    public static class RM extends DivMul<Mem<Temp>, Reg> {
+        public RM(Kind kind, Mem<Temp> src) {
+            super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Reg.RDX : Reg.RAX);
+        }
     }
 }
