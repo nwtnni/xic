@@ -156,6 +156,38 @@ public class Operand {
         return mem;
     }
 
+    public boolean isCallerSaved() {
+        switch (kind) {
+        case RAX:
+        case RCX:
+        case RDX:
+        case RSI:
+        case RDI:
+        case R8:
+        case R9:
+        case R10:
+        case R11:
+            return true;
+        default:
+            return false;
+        }
+    }
+
+    public boolean isCalleeSaved() {
+        switch (kind) {
+        case RSP:
+        case RBP:
+        case RBX:
+        case R12:
+        case R13:
+        case R14:
+        case R15:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     @Override
     public int hashCode() {
         switch (kind) {
