@@ -22,7 +22,7 @@ public class RegAlloc extends Phase {
 
         if (previous.isErr()) return previous;
 
-        CompUnit assembly = previous.ok().getAssembled();
+        CompUnit<Temp> assembly = previous.ok().getAssembled();
 
         // Debug
         String out = Filename.concat(config.sink, config.unit);
@@ -32,7 +32,7 @@ public class RegAlloc extends Phase {
         try {
             FileWriter w = new FileWriter(out);
 
-            for (String i : assembly.toAbstractAssembly()) {
+            for (String i : assembly.toAssembly()) {
                 w.append(i + "\n");
             }
 
@@ -53,7 +53,7 @@ public class RegAlloc extends Phase {
         }
 
         // Convert back to IR
-        CompUnit after = new CompUnit();
+        CompUnit<Temp> after = new CompUnit<>();
         for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
             after.fns.add(cfg.toASA());
             try {
@@ -62,26 +62,26 @@ public class RegAlloc extends Phase {
         }
 
         // Debug LV
-        out = Filename.setExtension(out, "lv.s");
-        try {
-            FileWriter lvw = new FileWriter(out);
-            for (FuncDecl fn : after.fns) {
+        // out = Filename.setExtension(out, "lv.s");
+        // try {
+        //     FileWriter lvw = new FileWriter(out);
+        //     for (FuncDecl<Temp> fn : after.fns) {
 
-                lvw.append(fn.sourceName + "\n");
-                for (Instr i : fn.stmts) {
-                    lvw.append(i + ": \n");
-                    lvw.append("in: " + i.in + "\n");
-                    lvw.append("use: " + i.use + "\n");
-                    lvw.append("def: " + i.def + "\n");
-                    lvw.append("out: " + i.out + "\n");
-                    lvw.append("\n");
-                }
-            }
-            lvw.close();
-        } catch (IOException e) {
-        }
+        //         lvw.append(fn.sourceName + "\n");
+        //         for (Instr<Temp> i : fn.stmts) {
+        //             lvw.append(i + ": \n");
+        //             lvw.append("in: " + i.in + "\n");
+        //             lvw.append("use: " + i.use + "\n");
+        //             lvw.append("def: " + i.def + "\n");
+        //             lvw.append("out: " + i.out + "\n");
+        //             lvw.append("\n");
+        //         }
+        //     }
+        //     lvw.close();
+        // } catch (IOException e) {
+        // }
 
-        CompUnit allocated = Allocator.allocate(after);
+        CompUnit<Reg> allocated = Allocator.allocate(after);
 
         out = Filename.concat(config.sink, config.unit);
         out = Filename.setExtension(out, "s");

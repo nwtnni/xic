@@ -18,7 +18,7 @@ import ir.IRBinOp.OpType;
 import ir.IRMem.MemType;
 import xic.XicInternalException;
 
-import util.Either;
+import util.Pair;
 
 public class Tiler extends IRVisitor<Operand> {
 
@@ -160,9 +160,8 @@ public class Tiler extends IRVisitor<Operand> {
         return null;
     }
 
-    public Operand visit(IRBinOp b) {
-        Operand dest = Operand.temp(TempFactory.generate());
 
+    public Operand visit(IRBinOp b) {
         Optional<Imm> immL = checkImm(b.left());
         Optional<Imm> immR = checkImm(b.right());
 
@@ -190,9 +189,9 @@ public class Tiler extends IRVisitor<Operand> {
         }
 
         if (bop != null) {
-            instrs.addAll(mov(left, dest));
-            instrs.addAll(binOp(bop, dest, right));
-            return dest;
+            Pair<Operand, List<Instr<Temp>>> tiling = binOp(bop, left, right, immL, immR);
+            instrs.addAll(tiling.second);
+            return tiling.first;
         }
 
         DivMul.Kind uop = null;
@@ -213,21 +212,9 @@ public class Tiler extends IRVisitor<Operand> {
         }
 
         if (uop != null) {
-            instrs.addAll(mov(left, Operand.temp(Temp.RAX)));
-
-            if (uop == DIV || uop == MOD) instrs.add(cqo());
-
-            if (right.isTemp()) {
-                DivMul<Temp, Temp> op = divMulR(uop, right.getTemp());
-                instrs.add(op);
-                instrs.add(movRR(op.dest, dest.getTemp()));
-            } else {
-                DivMul<Mem<Temp>, Temp> op = divMulM(uop, right.getMem());
-                instrs.add(op);
-                instrs.add(movRR(op.dest, dest.getTemp()));
-            }
-
-            return dest;
+            Pair<Operand, List<Instr<Temp>>> tiling = divMul(uop, left, right, immL, immR);
+            instrs.addAll(tiling.second);
+            return tiling.first;
         }
             
         Setcc.Kind flag = null;
@@ -256,8 +243,9 @@ public class Tiler extends IRVisitor<Operand> {
         // TODO: this is sub-optimal use of setcc which can use other registers
         instrs.add(movIR(new Imm(0), Temp.RAX));
         instrs.add(setcc(flag));
-        instrs.add(movRR(Temp.RAX, dest.getTemp()));
-        return dest;
+        Temp t = TempFactory.generate();
+        instrs.add(movRR(Temp.RAX, t));
+        return Operand.temp(t);
     }
     
     public Operand visit(IRCall c) {

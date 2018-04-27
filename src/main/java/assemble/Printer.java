@@ -77,7 +77,7 @@ public class Printer {
 
                 // For debug:
                 FileWriter debug = new FileWriter(output + ".asa.s");
-                for (String i : u.toAbstractAssembly()) {
+                for (String i : u.toAssembly()) {
                     debug.append(i + "\n");
                 }
                 debug.close();

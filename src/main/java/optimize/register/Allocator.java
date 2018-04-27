@@ -67,7 +67,7 @@ public class Allocator extends InstrVisitor<Void> {
     // private Operand r10;
     // private Operand r11;
 
-    private Allocator(CompUnit unit) {
+    private Allocator(CompUnit<Temp> unit) {
         this.unit = unit;
         this.instrs = new ArrayList<>();
         this.tempCounter = 0;
@@ -78,14 +78,14 @@ public class Allocator extends InstrVisitor<Void> {
         // this.isMultiple = 0;
     }
 
-    private CompUnit allocate() {
-        for (FuncDecl fn : unit.fns) {
+    private CompUnit<Reg> allocate() {
+        for (FuncDecl<Temp> fn : unit.fns) {
             allocate(fn);
         }
-        return unit;
+        return null;
     }
 
-    private void allocate(FuncDecl fn) {
+    private void allocate(FuncDecl<Temp> fn) {
 
         instrs = new ArrayList<>();
         Set<Operand> saved = new HashSet<>();

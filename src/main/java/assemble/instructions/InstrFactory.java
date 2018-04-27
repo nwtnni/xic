@@ -1,11 +1,12 @@
 package assemble.instructions;
 
 import java.util.Optional;
+import java.util.ArrayList;
 import java.util.List;
 
 import assemble.*;
 import ir.*;
-import util.Either;
+import util.Pair;
 
 public abstract class InstrFactory {
 
@@ -38,25 +39,149 @@ public abstract class InstrFactory {
      */
     public static List<Instr<Temp>> binOp(
         BinOp.Kind kind,
-        Either<Temp, Mem<Temp>> src,
-        Either<Temp, Mem<Temp>> dest
+        Operand src,
+        Operand dest
     ) {
 
         // src is register, dest is register
-        if (src.isLeft() && dest.isLeft()) return List.of(binOpRR(kind, src.getLeft(), dest.getLeft()));
+        if (src.isTemp() && dest.isTemp()) return List.of(binOpRR(kind, src.getTemp(), dest.getTemp()));
 
         // src is register, dest is memory
-        else if (src.isLeft() && dest.isRight()) return List.of(binOpRM(kind, src.getLeft(), dest.getRight()));
+        else if (src.isTemp() && dest.isMem()) return List.of(binOpRM(kind, src.getTemp(), dest.getMem()));
 
         // src is memory, dest is register
-        else if (src.isRight() && dest.isLeft()) return List.of(binOpMR(kind, src.getRight(), dest.getLeft()));
+        else if (src.isMem() && dest.isTemp()) return List.of(binOpMR(kind, src.getMem(), dest.getTemp()));
 
         // Both src and dest are in memory; must shuttle one
         Temp shuttle = TempFactory.generate("bin_op_shuttle");
         return List.of(
-            movMR(src.getRight(), shuttle),
-            binOpRM(kind, shuttle, dest.getRight())
+            movMR(src.getMem(), shuttle),
+            binOpRM(kind, shuttle, dest.getMem())
         );
+    }
+
+
+    /**
+     * Generate a proper BinOp tiling of left and right operands.
+     */
+    public static Pair<Operand, List<Instr<Temp>>> binOp(
+        BinOp.Kind kind,
+        Operand left,
+        Operand right,
+        Optional<Imm> immL,
+        Optional<Imm> immR
+    ) {
+        List<Instr<Temp>> instrs = new ArrayList<>();
+
+        Temp destT = TempFactory.generate("bin_op_result");
+        Operand dest = Operand.temp(destT);
+
+        if (immL.isPresent() && immR.isPresent()) {
+            // imm op imm
+
+            // Shuttle left imm into register
+            instrs.add(movIR(immL.get(), destT));
+
+            // Also shuttle right imm64 into register
+            if (!Config.within(32, immR.get().getValue())) {
+                Temp shuttle = TempFactory.generate("bin_op_shuttle");
+                instrs.add(movIR(immR.get(), shuttle));
+                instrs.add(binOpRR(kind, shuttle, destT));
+
+            // Otherwise don't need to shuttle right
+            } else {
+                instrs.add(binOpIR(kind, immR.get(), destT));
+            }
+        } else if (immL.isPresent()) {
+            // imm op r/m64
+
+            // Can't commute subtraction
+            if (kind == BinOp.Kind.SUB) {
+                instrs.add(movIR(immL.get(), destT));
+                instrs.addAll(binOp(kind, right, dest));
+
+            // Otherwise commute as immR case
+            } else {
+                instrs.addAll(mov(right, dest));
+
+                // Shuttle left imm64
+                if (!Config.within(32, immL.get().getValue())) {
+                    Temp shuttle = TempFactory.generate("bin_op_shuttle");
+                    instrs.add(movIR(immL.get(), shuttle));
+                    instrs.add(binOpRR(kind, shuttle, destT));
+
+                // Otherwise add imm directly
+                } else {
+                    instrs.add(binOpIR(kind, immL.get(), destT));
+                }
+            }
+        } else if (immR.isPresent()) {
+            // r/m64 op imm
+
+            instrs.addAll(mov(left, dest));
+
+            // Shuttle right imm64
+            if (!Config.within(32, immR.get().getValue())) {
+                Temp shuttle = TempFactory.generate("bin_op_shuttle");
+                instrs.add(movIR(immR.get(), shuttle));
+                instrs.add(binOpRR(kind, shuttle, destT));
+
+            // Otherwise add imm directly
+            } else {
+                instrs.add(binOpIR(kind, immR.get(), destT));
+            }
+        } else {
+            // General case of r/m64 op r/m64
+            instrs.addAll(mov(left, dest));
+            instrs.addAll(binOp(kind, right, dest));
+        }
+
+        return new Pair<>(dest, instrs);
+    }
+
+    /**
+     * Generate tiling for DivMul instructions with left and right
+     */
+    public static Pair<Operand, List<Instr<Temp>>> divMul(
+        DivMul.Kind kind,
+        Operand left,
+        Operand right,
+        Optional<Imm> immL,
+        Optional<Imm> immR
+    ) {
+        List<Instr<Temp>> instrs = new ArrayList<>();
+        
+        // Always shuttle left into RAX
+        if (immL.isPresent()) {
+            instrs.add(movIR(immL.get(), Temp.RAX));
+        } else {
+            instrs.addAll(mov(left, Operand.temp(Temp.RAX)));
+        }
+
+        // Shuttle right if imm
+        if (immR.isPresent()) {
+            Temp shuttle = TempFactory.generate("div_mul_shuttle");
+            instrs.add(movIR(immR.get(), shuttle));
+
+            DivMul<Temp, Temp> op = divMulR(kind, shuttle);
+            instrs.add(op);
+
+            return new Pair<>(Operand.temp(op.dest), instrs);
+
+        // Can use r/m64 directly
+        } else {
+            // General case of r/m64 op r/m64
+
+            if (right.isMem()) {
+                DivMul<Mem<Temp>, Temp> op = divMulM(kind, right.getMem());
+                instrs.add(op);
+                return new Pair<>(Operand.mem(op.src), instrs);
+            } else {
+                DivMul<Temp, Temp> op = divMulR(kind, right.getTemp());
+                instrs.add(op);
+                return new Pair<>(Operand.temp(op.src), instrs);
+            }
+        }
     }
 
     /*
@@ -119,26 +244,26 @@ public abstract class InstrFactory {
      * Assign a proper Cmp tiling for an unknown combination of operands.
      */
     public static List<Instr<Temp>> cmp(
-        Either<Temp, Mem<Temp>> l,
-        Either<Temp, Mem<Temp>> r
+        Operand l,
+        Operand r
     ) {
 
         // Semantics of L vs. R reversed here due to AT&T syntax
 
         // left is register, right is register
-        if (l.isLeft() && r.isLeft()) return List.of(cmpRR(r.getLeft(), l.getLeft()));
+        if (l.isTemp() && r.isTemp()) return List.of(cmpRR(r.getTemp(), l.getTemp()));
 
         // left is register, right is memory
-        else if (l.isLeft() && r.isRight()) return List.of(cmpMR(r.getRight(), l.getLeft()));
+        else if (l.isTemp() && r.isMem()) return List.of(cmpMR(r.getMem(), l.getTemp()));
 
         // left is memory, right is register
-        else if (l.isRight() && r.isLeft()) return List.of(cmpRM(r.getLeft(), l.getRight()));
+        else if (l.isMem() && r.isTemp()) return List.of(cmpRM(r.getTemp(), l.getMem()));
 
         // Both src and dest are in memory; must shuttle one
         Temp shuttle = TempFactory.generate("cmp_shuttle");
         return List.of(
-            movMR(r.getRight(), shuttle),
-            cmpRM(shuttle, l.getRight())
+            movMR(r.getMem(), shuttle),
+            cmpRM(shuttle, l.getMem())
         );
     }
 
@@ -234,24 +359,24 @@ public abstract class InstrFactory {
      * Assign a proper Mov tiling for an unknown combination of operands.
      */
     public static List<Instr<Temp>> mov(
-        Either<Temp, Mem<Temp>> src,
-        Either<Temp, Mem<Temp>> dest
+        Operand src,
+        Operand dest
     ) {
 
         // src is register, dest is register
-        if (src.isLeft() && dest.isLeft()) return List.of(movRR(src.getLeft(), dest.getLeft()));
+        if (src.isTemp() && dest.isTemp()) return List.of(movRR(src.getTemp(), dest.getTemp()));
 
         // src is register, dest is memory
-        else if (src.isLeft() && dest.isRight()) return List.of(movRM(src.getLeft(), dest.getRight()));
+        else if (src.isTemp() && dest.isMem()) return List.of(movRM(src.getTemp(), dest.getMem()));
 
         // src is memory, dest is register
-        else if (src.isRight() && dest.isLeft()) return List.of(movMR(src.getRight(), dest.getLeft()));
+        else if (src.isMem() && dest.isTemp()) return List.of(movMR(src.getMem(), dest.getTemp()));
 
         // Both src and dest are in memory; must shuttle one
         Temp shuttle = TempFactory.generate("mov_shuttle");
         return List.of(
-            movMR(src.getRight(), shuttle),
-            movRM(shuttle, dest.getRight())
+            movMR(src.getMem(), shuttle),
+            movRM(shuttle, dest.getMem())
         );
     }
 

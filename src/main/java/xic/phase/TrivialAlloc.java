@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.FileWriter;
 
 import assemble.CompUnit;
+import assemble.Temp;
+import assemble.Reg;
 import assemble.TrivialAllocator;
 
 import util.Filename;
@@ -24,8 +26,8 @@ public class TrivialAlloc extends Phase {
 
             if (previous.isErr()) return previous;
 
-            CompUnit tiled = previous.ok().getAssembled();
-            tiled = TrivialAllocator.allocate(tiled);
+            CompUnit<Temp> tiled = previous.ok().getAssembled();
+            CompUnit<Reg> allocated = TrivialAllocator.allocate(tiled);
 
             String out = Filename.concat(config.sink, config.unit);
             out = Filename.setExtension(out, "s");
@@ -33,13 +35,13 @@ public class TrivialAlloc extends Phase {
             Filename.makePathTo(out);
             FileWriter w = new FileWriter(out);
             
-            for (String i : tiled.toAssembly()) {
+            for (String i : allocated.toAssembly()) {
                 w.append(i + "\n");
             }
 
             w.close();
 
-            return new Result<>(Product.assembled(tiled));
+            return new Result<>(Product.assembled(allocated));
 
         } catch (IOException e) {
             throw new XicInternalException(e.toString());

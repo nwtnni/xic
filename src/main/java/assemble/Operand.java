@@ -15,6 +15,14 @@ public class Operand extends Either<Temp, Mem<Temp>> {
         return new Operand(null, mem);
     }
 
+    public static Operand of(Temp t) {
+        return new Operand(t, null);
+    }
+
+    public static Operand of(Mem<Temp> m) {
+        return new Operand(null, m);
+    }
+
     public boolean isTemp() {
         return super.isLeft();
     }
