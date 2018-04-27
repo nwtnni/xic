@@ -13,11 +13,16 @@ import java.util.UUID;
 
 
 import ir.*;
+import optimize.Worklist;
 import optimize.graph.*;
 import util.PairEdge;
 import util.PairEdgeGraph;
 import xic.XicInternalException;
-public class CSEWorklist {
+public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, Map<IRExpr, IRStmt>> {
+
+    public CSEWorklist(IRGraph<Map<IRExpr, IRStmt>> cfg) {
+        super(cfg, Direction.FORWARD);
+    }
 
     /*
      * Helper method to return boolean if IRExpr contains a IRTemp from kill set
@@ -93,7 +98,7 @@ public class CSEWorklist {
      *
      * Checks for equality of two expressions using the common subexpression and IRStmt that defined it
      */
-    public void meet(IRGraph<Map<IRExpr, IRStmt>> g, IRStmt v) {        
+    public Map<IRExpr, IRStmt> meet(IRGraph<Map<IRExpr, IRStmt>> g, IRStmt v) {        
         
         Map<IRExpr, IRStmt> in = null;
         
