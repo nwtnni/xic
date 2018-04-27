@@ -3,13 +3,13 @@ package assemble;
 /**
  * Represents a memory location operand for assembly instructions.
  */
-public class AbstractMem {
+public class Mem<T> {
 
     private enum Kind { R, RO, RSO, BRSO }
 
     private Kind kind;
-    private Temp base;
-    private Temp reg;
+    private T base;
+    private T reg;
     private int offset;
     private int scale;
 
@@ -17,19 +17,19 @@ public class AbstractMem {
      * A memory access [reg]
      * In the form: (reg)
      */
-    public static AbstractMem mem(Temp reg) {
+    public static Mem<Temp> mem(Temp reg) {
         assert reg != null;
-        return new AbstractMem(Kind.R, null, reg, 0, 0);
+        return new Mem<>(Kind.R, null, reg, 0, 0);
     }
 
     /**
      * A memory access [reg + offset]
      * In the form: offset(reg)
      */
-    public static AbstractMem mem(Temp reg, int offset) {
+    public static Mem<Temp> mem(Temp reg, int offset) {
         assert reg != null;
         assert offset % Config.WORD_SIZE == 0;
-        return new AbstractMem(Kind.RO, null, reg, offset, 0);
+        return new Mem<>(Kind.RO, null, reg, offset, 0);
     }
 
     /**
@@ -38,11 +38,11 @@ public class AbstractMem {
      * 
      * Scale must be 1, 2, 4 or 8
      */
-    public static AbstractMem mem(Temp reg, int offset, int scale) {
+    public static Mem<Temp> mem(Temp reg, int offset, int scale) {
         assert reg != null;
         assert offset % Config.WORD_SIZE == 0;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
-        return new AbstractMem(Kind.RSO, null, reg, offset, scale);
+        return new Mem<>(Kind.RSO, null, reg, offset, scale);
     }
 
     /**
@@ -51,14 +51,33 @@ public class AbstractMem {
      * 
      * Scale must be 1, 2, 4 or 8
      */
-    public static AbstractMem mem(Temp base, Temp reg, int offset, int scale) {
+    public static Mem<Temp> mem(Temp base, Temp reg, int offset, int scale) {
         assert base != null && reg != null;
         assert offset % Config.WORD_SIZE == 0;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
-        return new AbstractMem(Kind.BRSO, base, reg, offset, scale);
+        return new Mem<>(Kind.BRSO, base, reg, offset, scale);
     }
 
-    private AbstractMem(Kind kind, Temp base, Temp reg, int offset, int scale) {
+    /**
+     * Allocates the provided mem using the given register.
+     */
+    public static Mem<Reg> allocate(Mem<Temp> mem, Reg reg) {
+        assert mem.kind != Kind.BRSO;
+        return new Mem<>(mem.kind, null, reg, mem.offset, mem.scale);
+    }
+
+    /**
+     * Allocates the provided mem using the given registers.
+     */
+    public static Mem<Reg> allocate(Mem<Temp> mem, Reg base, Reg reg) {
+        assert mem.kind == Kind.BRSO;
+        return new Mem<>(mem.kind, base, reg, mem.offset, mem.scale);
+    }
+
+    /**
+     * Private constructor.
+     */
+    private Mem(Kind kind, T base, T reg, int offset, int scale) {
         this.kind = kind;
         this.base = base;
         this.reg = reg;
@@ -67,13 +86,20 @@ public class AbstractMem {
     }
 
     /**
+     * Checks if this Mem is spilled onto the stack.
+     */
+    public boolean isSpill() {
+        return false;
+    }
+
+    /**
      * Checks equality recursively depending on type.
      */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AbstractMem)) return false;
+        if (!(o instanceof Mem<?>)) return false;
 
-        AbstractMem t = (AbstractMem) o;
+        Mem<?> t = (Mem<?>) o;
         switch (kind) {
         case R:
             return reg.equals(t.reg);
