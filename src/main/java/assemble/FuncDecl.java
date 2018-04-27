@@ -19,19 +19,21 @@ public abstract class FuncDecl<A> {
     public List<Instr<A>> stmts;
     public List<Instr<A>> epilogue;
 
-    // /*
-    //  * Copy constructor
-    //  */
-    // public FuncDecl(FuncDecl<A> fn) {
-    //     this.sourceName = fn.sourceName;
-    //     this.name = fn.name;
-    //     this.args = fn.args;
-    //     this.rets = fn.rets;
-    //     this.returnLabel = fn.returnLabel;
-    //     this.prelude = fn.prelude;
-    //     this.stmts = fn.stmts;
-    //     this.epilogue = fn.epilogue;
-    // }
+    /*
+     * Copy constructor
+     */
+    public FuncDecl(FuncDecl<A> fn) {
+        this.sourceName = fn.sourceName;
+        this.name = fn.name;
+        this.args = fn.args;
+        this.rets = fn.rets;
+        this.returnLabel = fn.returnLabel;
+        this.prelude = fn.prelude;
+        this.stmts = fn.stmts;
+        this.epilogue = fn.epilogue;
+    }
+
+    private FuncDecl() {}
 
     /*
      * Convert this function into its abstract assembly or assembly form.
@@ -97,6 +99,20 @@ public abstract class FuncDecl<A> {
         public void saveRegister(Temp reg) {
             prelude.add(prelude.size() - 1, pushR(reg));
             epilogue.add(3, popR(reg));
+        }
+    }
+
+    public static class R extends FuncDecl<Reg> {
+
+        public R(FuncDecl<Temp> fn) {
+            this.sourceName = fn.sourceName;
+            this.name = fn.name;
+            this.args = fn.args;
+            this.rets = fn.rets;
+            this.returnLabel = fn.returnLabel.promote();
+            this.prelude = new ArrayList<>(); 
+            this.stmts = new ArrayList<>(); 
+            this.epilogue = new ArrayList<>(); 
         }
     }
 }
