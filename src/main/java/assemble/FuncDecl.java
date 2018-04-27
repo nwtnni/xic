@@ -20,22 +20,6 @@ public abstract class FuncDecl<A> {
     public List<Instr<A>> epilogue;
 
     /*
-     * Copy constructor
-     */
-    public FuncDecl(FuncDecl<A> fn) {
-        this.sourceName = fn.sourceName;
-        this.name = fn.name;
-        this.args = fn.args;
-        this.rets = fn.rets;
-        this.returnLabel = fn.returnLabel;
-        this.prelude = fn.prelude;
-        this.stmts = fn.stmts;
-        this.epilogue = fn.epilogue;
-    }
-
-    private FuncDecl() {}
-
-    /*
      * Convert this function into its abstract assembly or assembly form.
      */
     public List<String> toAssembly() {
@@ -53,6 +37,24 @@ public abstract class FuncDecl<A> {
     }
     
     public static class T extends FuncDecl<Temp> {
+
+        /*
+        * Copy constructor
+        */
+        public static FuncDecl<Temp> copy(FuncDecl<Temp> fn) {
+            T copy = new T();
+            copy.sourceName = fn.sourceName;
+            copy.name = fn.name;
+            copy.args = fn.args;
+            copy.rets = fn.rets;
+            copy.returnLabel = fn.returnLabel;
+            copy.prelude = fn.prelude;
+            copy.stmts = fn.stmts;
+            copy.epilogue = fn.epilogue;
+            return copy;
+        }
+
+        private T() {}
 
         public T(IRFuncDecl fn, int args, int rets, List<Instr<Temp>> stmts) {
             this.sourceName = fn.sourceName();
