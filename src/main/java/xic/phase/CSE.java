@@ -15,8 +15,8 @@ import ir.*;
 import optimize.graph.IRGraph;
 import optimize.graph.IRGraphFactory;
 import optimize.graph.IREdgeFactory;
-import optimize.CSEWorklist;
-import optimize.WorklistVisitor;
+import optimize.cse.CSEWorklist;
+import optimize.cse.CSEInitVisitor;
 
 import util.Filename;
 import util.Pair;
@@ -40,7 +40,7 @@ public class CSE extends Phase {
 
         Pair<IRCompUnit, ABIContext> ir = previous.ok().getEmitted();
 
-        WorklistVisitor.annotateNodes(ir.first);
+        CSEInitVisitor.annotateNodes(ir.first);
 
         // Transform to CFG
         IREdgeFactory<Map<IRExpr, IRStmt>> ef = new IREdgeFactory<>();
