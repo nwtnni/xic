@@ -164,12 +164,16 @@ public abstract class InsVisitor<T> {
         return null;
     }
 
-//     public T visit(Setcc i) {
-//         return null;
-//     }
+    /*
+     * Setcc Visitor
+     */
 
-//     public T visit(Text i) {
-//         return null;
-//     }
+    public T visit(Setcc.T s) {
+        return null;
+    }
+
+    public T visit(Text.T t) {
+        return null;
+    }
 
 }

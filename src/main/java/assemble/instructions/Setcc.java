@@ -2,7 +2,8 @@ package assemble.instructions;
 
 import assemble.*;
 
-public class Setcc extends Instr {
+public abstract class Setcc<A> extends Instr<A> {
+
     public enum Kind {
         EQ  ("e"),
         NEQ ("ne"),
@@ -16,25 +17,24 @@ public class Setcc extends Instr {
     }
 
     public Kind kind;
-    public Operand dest;
+    public A dest;
 
-    public Setcc(Kind kind) {
+    public Setcc(Kind kind, A dest) {
         this.kind = kind;
-        this.dest = Operand.RAX;
+        this.dest = dest;
     }
 
     @Override
-    public String toAbstractAssembly() {
+    public String toString() {
         return String.format("set%s %%al", kind.flag);
     }
 
-    @Override
-    public String toAssembly() {
-        return String.format("set%s %%al", kind.flag);
+    public static class T extends Setcc<Temp> {
+        public T(Kind kind) { super(kind, Temp.RAX); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
-    @Override
-    public <T> T accept(InsVisitor<T> v) {
-        return v.visit(this);
+    public static class R extends Setcc<Reg> {
+        public R(Kind kind) { super(kind, Reg.RAX); }
     }
 }
