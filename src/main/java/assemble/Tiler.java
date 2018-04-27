@@ -198,7 +198,7 @@ public class Tiler extends IRVisitor<Temp> {
             default:
         }
         if (uop != null) {
-            instrs.add(new Mov(Temp.fixed(Operand.RAX), left));
+            instrs.add(new Mov(Temp.RAX, left));
             if (uop == DIV || uop == MOD) {
                 instrs.add(new Cqo());
             }
@@ -232,9 +232,9 @@ public class Tiler extends IRVisitor<Temp> {
         }
         instrs.add(new Cmp(right, left));
         // TODO: this is sub-optimal use of setcc which can use other registers
-        instrs.add(new Mov(Temp.fixed(Operand.RAX), Temp.imm(0)));
+        instrs.add(new Mov(Temp.RAX, Temp.imm(0)));
         instrs.add(new Setcc(flag));
-        instrs.add(new Mov(dest, Temp.fixed(Operand.RAX)));
+        instrs.add(new Mov(dest, Temp.RAX));
         return dest;
     }
     

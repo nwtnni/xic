@@ -97,7 +97,7 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
     public Instr visit(Jmp i) {
         if (state == State.IN_BLOCK) {
             // Add edge to jump target if not the return label
-            if (i.hasLabel() && !i.label.equals(cfg.orignalFn.returnLabel)) {
+            if (i.hasLabel() && !i.label.equals(cfg.originalFn.returnLabel)) {
                 cfg.addVertex(i.label);
                 cfg.addEdge(i, i.label);
             }

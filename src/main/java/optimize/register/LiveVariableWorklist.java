@@ -22,6 +22,7 @@ public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr, S
      */
     public LiveVariableWorklist(ASAGraph<Set<Temp>> cfg) {
         super(cfg, Direction.BACKWARDS);
+        LVInitVisitor.init(cfg.originalFn);
     }
 
     /** 

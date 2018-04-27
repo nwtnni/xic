@@ -23,7 +23,7 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
         super(start, edgeFactory);
         this.sourceName = fn.sourceName;
         this.name = fn.name;
-        this.orignalFn = fn;
+        this.originalFn = fn;
     }
 
     /** The original function name from source. */
@@ -32,7 +32,7 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
     /** The name of the function associated with this CFG. */
     private String name;
 
-    protected FuncDecl orignalFn;
+    public FuncDecl originalFn;
 
     /** 
      * Gets the successor node of the given node.
@@ -49,7 +49,7 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
     public FuncDecl toASA() {
         // TODO: prelude and epilogue not included in cfg
         List<Instr> body = new ArrayList<>();
-        FuncDecl fn = new FuncDecl(orignalFn);
+        FuncDecl fn = new FuncDecl(originalFn);
         fn.stmts = body;
 
         Set<Instr> visited = new HashSet<>();

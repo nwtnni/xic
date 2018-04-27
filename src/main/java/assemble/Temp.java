@@ -10,8 +10,26 @@ import static assemble.Temp.Kind.*;
  */
 public class Temp {
 
-    // Special temp to be replaced with
+    // Special temp to be replaced with callee return address for multiple returns
     public final static Temp CALLEE_RET_ADDR = new Temp(MULT_RET, "CALLEE_RET_ADDR");
+
+    // All the fixed registers
+    public static final Temp RAX = Temp.fixed(Operand.RAX);
+    public static final Temp RBX = Temp.fixed(Operand.RBX);
+    public static final Temp RCX = Temp.fixed(Operand.RCX);
+    public static final Temp RDX = Temp.fixed(Operand.RDX);
+    public static final Temp RSI = Temp.fixed(Operand.RSI);
+    public static final Temp RDI = Temp.fixed(Operand.RDI);
+    public static final Temp RBP = Temp.fixed(Operand.RBP);
+    public static final Temp RSP = Temp.fixed(Operand.RSP);
+    public static final Temp R8  = Temp.fixed(Operand.R8);
+    public static final Temp R9  = Temp.fixed(Operand.R9);
+    public static final Temp R10 = Temp.fixed(Operand.R10);
+    public static final Temp R11 = Temp.fixed(Operand.R11);
+    public static final Temp R12 = Temp.fixed(Operand.R12);
+    public static final Temp R13 = Temp.fixed(Operand.R13);
+    public static final Temp R14 = Temp.fixed(Operand.R14);
+    public static final Temp R15 = Temp.fixed(Operand.R15);
 
     /* Temp factory methods. ------------------------------------------ */
 

@@ -21,8 +21,6 @@ public class Setcc extends Instr {
     public Setcc(Kind kind) {
         this.kind = kind;
         this.dest = Operand.RAX;
-
-        this.def.add(Temp.fixed(Operand.RAX));
     }
 
     @Override

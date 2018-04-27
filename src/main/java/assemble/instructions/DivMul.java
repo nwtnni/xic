@@ -26,14 +26,14 @@ public class DivMul extends Instr {
 
         // Intermediate register is fixed for these instructions
         if (kind == Kind.MUL || kind == Kind.DIV) {
-            this.destTemp = Temp.fixed(Operand.RAX);
+            this.destTemp = Temp.RAX;
         } else {
-            this.destTemp = Temp.fixed(Operand.RDX);
+            this.destTemp = Temp.RDX;
         }
+    }
 
-        this.use = this.srcTemp.getTemps();
-        this.use.add(Temp.fixed(Operand.RAX));
-        this.def = this.destTemp.getTemps();
+    public boolean isDivOrMod()  {
+        return kind == Kind.DIV || kind == Kind.MOD;
     }
 
     @Override

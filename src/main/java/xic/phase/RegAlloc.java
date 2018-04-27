@@ -60,26 +60,26 @@ public class RegAlloc extends Phase {
             } catch (Exception e) {}
         }
         
-        // // Debug LV
-        // out = Filename.setExtension(out, "lv.s");
-        // try {
-        //     FileWriter lvw = new FileWriter(out); 
-        //     for (FuncDecl fn : after.fns) {
+        // Debug LV
+        out = Filename.setExtension(out, "lv.s");
+        try {
+            FileWriter lvw = new FileWriter(out); 
+            for (FuncDecl fn : after.fns) {
 
-        //         lvw.append(fn.sourceName + "\n");
-        //         for (Instr i : fn.stmts) {
-        //             lvw.append(i + ": \n");
-        //             lvw.append("in: " + i.in + "\n");
-        //             lvw.append("use: " + i.use + "\n");
-        //             lvw.append("def: " + i.def + "\n");
-        //             lvw.append("out: " + i.out + "\n");
-        //             lvw.append("\n");
-        //         }
+                lvw.append(fn.sourceName + "\n");
+                for (Instr i : fn.stmts) {
+                    lvw.append(i + ": \n");
+                    lvw.append("in: " + i.in + "\n");
+                    lvw.append("use: " + i.use + "\n");
+                    lvw.append("def: " + i.def + "\n");
+                    lvw.append("out: " + i.out + "\n");
+                    lvw.append("\n");
+                }
             
-        //     }
-        //     lvw.close();
-        // } catch (IOException e) {
-        // }
+            }
+            lvw.close();
+        } catch (IOException e) {
+        }
 
 
         return new Result<>(Product.assembled(after));

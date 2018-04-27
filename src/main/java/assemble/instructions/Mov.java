@@ -12,9 +12,6 @@ public class Mov extends Instr {
     public Mov(Temp destTemp, Temp srcTemp) {
         this.destTemp = destTemp;
         this.srcTemp = srcTemp;
-
-        this.use = this.srcTemp.getTemps();
-        this.def = this.destTemp.getTemps();
     }
 
     public Mov(Operand dest, Operand src) {
