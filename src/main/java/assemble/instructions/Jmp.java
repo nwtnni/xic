@@ -1,22 +1,19 @@
 package assemble.instructions;
 
+import assemble.*;
+
 import ir.IRJump;
 
-public class Jmp extends Instr {
-
-    public static Jmp fromJmp(IRJump j) {
-        return new Jmp(Label.label(j.targetLabel()));
-    }
-
-    public static Jmp toLabel(Label l) {
-        return new Jmp(l);
-    }
+public class Jmp<A> extends Instr<A> {
 
     public Label label;
 
-    // TODO: only support jump to label for now
     private Jmp(Label label) {
         this.label = label;
+    }
+
+    private Jmp(IRJump jump) {
+        this.label = Label.label(jump.targetLabel());
     }
 
     public boolean hasLabel() {
@@ -24,17 +21,22 @@ public class Jmp extends Instr {
     }
 
     @Override
-    public String toAbstractAssembly() {
-        return toAssembly();
-    }
-
-    @Override
-    public String toAssembly() {
+    public String toString() {
         return "jmp " + label.name();
     }
 
     @Override
-    public <T> T accept(InsVisitor<T> v) {
+    public <T> T accept(InsVisitor<A, T> v) {
         return v.visit(this);
+    }
+
+    public static class T extends Jmp<Temp> {
+        public T(Label label) { super(label); }
+        public T(IRJump jump) { super(jump); }
+    }
+
+    public static class R extends Jmp<Reg> {
+        public R(Label label) { super(label); }
+        public R(IRJump jump) { super(jump); }
     }
 }
