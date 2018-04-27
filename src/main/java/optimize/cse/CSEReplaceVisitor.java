@@ -1,4 +1,4 @@
-package optimize;
+package optimize.cse;
 
 
 import ir.*;

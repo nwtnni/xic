@@ -15,8 +15,8 @@ import ir.*;
 import optimize.graph.IRGraph;
 import optimize.graph.IRGraphFactory;
 import optimize.graph.IREdgeFactory;
-import optimize.CSEWorklist;
-import optimize.CSEInitVisitor;
+import optimize.cse.CSEWorklist;
+import optimize.cse.CSEInitVisitor;
 
 import util.Filename;
 import util.Pair;
