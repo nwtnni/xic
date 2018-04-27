@@ -65,11 +65,11 @@ public class FuncDecl {
     public void setStackSize(int i) {
         Operand shift = Operand.imm(Config.WORD_SIZE * i);
 
-        // Insert stack setup at prelude[7]
+        // Insert stack setup at end of prelude
         BinOp sub = new BinOp(BinOp.Kind.SUB, Operand.RSP, shift);
         prelude.set(prelude.size() - 1, sub);
 
-        // Insert stack teardown at epilogue[2]
+        // Insert stack teardown at beginning of epilogue
         BinOp add = new BinOp(BinOp.Kind.ADD, Operand.RSP, shift);
         epilogue.set(2, add);
     }
