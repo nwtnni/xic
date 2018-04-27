@@ -1,5 +1,9 @@
 package assemble.instructions;
-public class Call extends Instr {
+
+import assemble.Temp;
+import assemble.Reg;
+
+public class Call<A> extends Instr<A> {
 
     public String name;
     public int numArgs;
@@ -11,13 +15,16 @@ public class Call extends Instr {
         this.numRet = numRet;
     }
 
-    @Override
-    public String toAbstractAssembly() {
-        return "callq " + name;
+    public abstract class T extends Call<Temp> {
+        public T(String name, int numArgs, int numRet) { super(name, numArgs, numRet); }
+    }
+
+    public abstract class R extends Call<Reg> {
+        public R(String name, int numArgs, int numRet) { super(name, numArgs, numRet); }
     }
 
     @Override
-    public String toAssembly() {
+    public String toString() {
         return "callq " + name;
     }
 
