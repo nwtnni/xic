@@ -20,12 +20,12 @@ public class InterferenceGraph {
     private Set<Temp> vertices;
     private int colors;
 
-    public InterferenceGraph(List<Instr> instructions, int colors) {
+    public InterferenceGraph(List<Instr<Temp>> instructions, int colors) {
 
         graph = new DefaultDirectedGraph<>((a, b) -> new PairEdge<>(a, b, null));
         vertices = new HashSet<>();
     
-        for (Instr instr : instructions) {
+        for (Instr<Temp> instr : instructions) {
         
             List<Temp> live = new ArrayList<>(instr.in);
             int size = live.size();
