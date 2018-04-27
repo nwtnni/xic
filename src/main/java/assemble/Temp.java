@@ -11,32 +11,22 @@ import static assemble.Temp.Kind.*;
 public class Temp {
 
     // All the fixed registers
-    public static final Temp RAX = Temp.fixed(Reg.RAX);
-    public static final Temp RBX = Temp.fixed(Reg.RBX);
-    public static final Temp RCX = Temp.fixed(Reg.RCX);
-    public static final Temp RDX = Temp.fixed(Reg.RDX);
-    public static final Temp RSI = Temp.fixed(Reg.RSI);
-    public static final Temp RDI = Temp.fixed(Reg.RDI);
-    public static final Temp RBP = Temp.fixed(Reg.RBP);
-    public static final Temp RSP = Temp.fixed(Reg.RSP);
-    public static final Temp R8  = Temp.fixed(Reg.R8);
-    public static final Temp R9  = Temp.fixed(Reg.R9);
-    public static final Temp R10 = Temp.fixed(Reg.R10);
-    public static final Temp R11 = Temp.fixed(Reg.R11);
-    public static final Temp R12 = Temp.fixed(Reg.R12);
-    public static final Temp R13 = Temp.fixed(Reg.R13);
-    public static final Temp R14 = Temp.fixed(Reg.R14);
-    public static final Temp R15 = Temp.fixed(Reg.R15);
-
-    /** Factory method for named temp. */
-    protected static Temp temp(String name) {
-        return new Temp(TEMP, name);
-    }
-
-    // For temp of a fixed register
-    public static Temp fixed(Reg reg) {
-        return new Temp(reg);
-    }
+    public static final Temp RAX = new Temp(Reg.RAX);
+    public static final Temp RBX = new Temp(Reg.RBX);
+    public static final Temp RCX = new Temp(Reg.RCX);
+    public static final Temp RDX = new Temp(Reg.RDX);
+    public static final Temp RSI = new Temp(Reg.RSI);
+    public static final Temp RDI = new Temp(Reg.RDI);
+    public static final Temp RBP = new Temp(Reg.RBP);
+    public static final Temp RSP = new Temp(Reg.RSP);
+    public static final Temp R8  = new Temp(Reg.R8);
+    public static final Temp R9  = new Temp(Reg.R9);
+    public static final Temp R10 = new Temp(Reg.R10);
+    public static final Temp R11 = new Temp(Reg.R11);
+    public static final Temp R12 = new Temp(Reg.R12);
+    public static final Temp R13 = new Temp(Reg.R13);
+    public static final Temp R14 = new Temp(Reg.R14);
+    public static final Temp R15 = new Temp(Reg.R15);
 
     public enum Kind { TEMP, FIXED; }
 
@@ -49,8 +39,8 @@ public class Temp {
     Reg reg;
 
     /** Constructor for a named temp. */
-    private Temp(Kind kind, String name) {
-        this.kind = kind;
+    public Temp(String name) {
+        this.kind = Kind.TEMP;
         this.name = name;
     }
 
