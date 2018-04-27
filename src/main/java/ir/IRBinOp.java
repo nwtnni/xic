@@ -57,27 +57,6 @@ public class IRBinOp extends IRExpr {
             assert false;
             return "";
         }
-
-        public OpType negate() {
-            switch (this) {
-            case EQ:
-                return NEQ;
-            case NEQ:
-                return EQ;
-            case LT:
-                return GEQ;
-            case GT:
-                return LEQ;
-            case LEQ:
-                return GT;
-            case GEQ:
-                return LT;
-            case XOR:
-                return EQ;
-            default:
-                return null;
-            }
-        }
     };
 
     private OpType type;
