@@ -19,7 +19,7 @@ public abstract class Setcc<A> extends Instr<A> {
     public Kind kind;
     public A dest;
 
-    public Setcc(Kind kind, A dest) {
+    private Setcc(Kind kind, A dest) {
         this.kind = kind;
         this.dest = dest;
     }

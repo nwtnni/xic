@@ -6,18 +6,6 @@ public abstract class Text<A> extends Instr<A> {
 
     protected String text;
 
-    // public static Text comment(String c) {
-    //     return new Text("# " + c);
-    // }
-
-    // public static Text text(String t) {
-    //     return new Text(t);
-    // }
-
-    // public static Text label(String l) {
-    //     return new Text(l + ":");
-    // }
-
     private Text(String text) {
         this.text = text;
     }

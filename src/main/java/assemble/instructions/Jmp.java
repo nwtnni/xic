@@ -12,10 +12,6 @@ public abstract class Jmp<A> extends Instr<A> {
         this.label = label;
     }
 
-    private Jmp(IRJump jump) {
-        this.label = Label.label(jump.targetLabel());
-    }
-
     public boolean hasLabel() {
         return label != null;
     }
@@ -27,12 +23,12 @@ public abstract class Jmp<A> extends Instr<A> {
 
     public static class T extends Jmp<Temp> {
         public T(Label<Temp> label) { super(label); }
-        public T(IRJump jump) { super(jump); }
+        public T(IRJump jump) { super(new Label.T(jump.targetLabel())); }
         public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     public static class R extends Jmp<Reg> {
         public R(Label<Reg> label) { super(label); }
-        public R(IRJump jump) { super(jump); }
+        public R(IRJump jump) { super(new Label.R(jump.targetLabel())); }
     }
 }

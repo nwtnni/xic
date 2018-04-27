@@ -23,9 +23,9 @@ public abstract class Jcc<A> extends Instr<A> {
     public Kind kind;
     public Label<A> target;
 
-    private Jcc(Kind kind, IRLabel target) {
+    private Jcc(Kind kind, Label<A> target) {
         this.kind = kind;
-        this.target = Label.label(target);
+        this.target = target;
     }
 
     @Override
@@ -34,11 +34,11 @@ public abstract class Jcc<A> extends Instr<A> {
     }
 
     public static class T extends Jcc<Temp> {
-        public T(Kind kind, IRLabel target) { super(kind, target); }
+        public T(Kind kind, IRLabel target) { super(kind, new Label.T(target)); }
         public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
     
     public static class R extends Jcc<Reg> {
-        public R(Kind kind, IRLabel target) { super(kind, target); }
+        public R(Kind kind, IRLabel target) { super(kind, new Label.R(target)); }
     }
 }
