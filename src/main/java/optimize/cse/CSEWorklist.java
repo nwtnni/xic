@@ -135,15 +135,21 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
      */
     @Override
     public boolean annotate(IRStmt v, Map<IRExpr, IRStmt> in, Map<IRExpr, IRStmt> out) {
+
+        Map<IRExpr, IRStmt> oldExprs = v.CSEin;
+        Map<IRExpr, IRStmt> newExprs = in;
+
         boolean hasChanged = false;
-        if (v.CSEin == null) {
+        if (oldExprs == null) {
             hasChanged = true;
-        } else if (v.CSEin.size() != in.size()) {
+        } else if (oldExprs.size() != newExprs.size()) {
             hasChanged = true;
         } else {
-            Set<IRExpr> oldExprs = v.CSEin.keySet();
-            Set<IRExpr> newExprs = in.keySet();
-            hasChanged = !(oldExprs.containsAll(newExprs) && newExprs.containsAll(oldExprs));
+            for(IRExpr e: newExprs.keySet()) {
+                if (!(oldExprs.keySet().contains(e) && oldExprs.get(e).equals(newExprs.get(e)))) {
+                    hasChanged = true;
+                }
+            }
         }
 
         v.CSEin = in;
