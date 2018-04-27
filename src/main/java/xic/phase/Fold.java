@@ -8,8 +8,7 @@ import java.util.Map;
 import emit.ABIContext;
 import emit.ConstantFolder;
 import emit.Canonizer;
-import ir.IRCompUnit;
-import ir.Printer;
+import ir.*;
 
 import optimize.graph.*;
 
@@ -19,6 +18,10 @@ import util.Result;
 import xic.XicException;
 import xic.XicInternalException;
 
+/**
+ * Performs constant folding on the IR.
+ * This phase also lowers the IR to canonical form in the process of constant folding.
+ */
 public class Fold extends Phase {
 
     private boolean outputCFG;
@@ -33,19 +36,24 @@ public class Fold extends Phase {
 
         if (previous.isErr()) return previous;
 
+        // Run lowering and constant folding
         Pair<IRCompUnit, ABIContext> ir = previous.ok().getEmitted();
+        ConstantFolder.constantFold(ir.first);
+        IRCompUnit canonized = (IRCompUnit) Canonizer.canonize(ir.first);
+        ConstantFolder.constantFold(canonized);
 
-        if (!(output || outputCFG)) {
-            ConstantFolder.constantFold(ir.first);
-            return new Result<>(Product.emitted(ir));
+        // Transform to CFG and convert back to eliminate unneccesary jumps and labels
+        IREdgeFactory<Map<IRExpr, IRStmt>> ef = new IREdgeFactory<>();
+        IRGraphFactory<Map<IRExpr, IRStmt>> gf = new IRGraphFactory<>(canonized, ef);
+        Map<String, IRGraph<Map<IRExpr, IRStmt>>> cfgs = gf.getCfgs();
+        canonized = new IRCompUnit(ir.first.name());
+        for (IRGraph<Map<IRExpr, IRStmt>> cfg : cfgs.values()) {
+            canonized.appendFunc(cfg.toIR());
         }
+
 
         String out = Filename.concat(config.sink, config.unit);
         out = Filename.removeExtension(out);
-
-        // TODO: figure out a better phase ordering so this isn't necessary?
-        IRCompUnit canonized = (IRCompUnit) Canonizer.canonize(ir.first);
-        ConstantFolder.constantFold(canonized);
 
         try {
             try {
@@ -56,11 +64,11 @@ public class Fold extends Phase {
                 }
     
                 if (outputCFG) {
-                    IREdgeFactory<Void> ef = new IREdgeFactory<>();
-                    IRGraphFactory<Void> gf = new IRGraphFactory<>(canonized, ef);
-                    Map<String, IRGraph<Void>> cfgs = gf.getCfgs();
+                    IREdgeFactory<Void> ef2 = new IREdgeFactory<>();
+                    IRGraphFactory<Void> gf2 = new IRGraphFactory<>(canonized, ef2);
+                    Map<String, IRGraph<Void>> cfgs2 = gf2.getCfgs();
     
-                    for (IRGraph<Void> cfg : cfgs.values()) {
+                    for (IRGraph<Void> cfg : cfgs2.values()) {
                         cfg.exportCfg(out, "cf");
                     }
                 }

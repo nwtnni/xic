@@ -1,10 +1,12 @@
 package optimize.graph;
 
 import java.util.ArrayDeque;
-import java.util.HashSet;
 import java.util.Deque;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.jgrapht.Graphs;
 
 import ir.*;
 import util.PairEdge;
@@ -29,12 +31,12 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
     private String name;
 
     /** 
-     * Adds the successor node to the given node.
+     * Gets the successor node of the given node.
      * Requires: there is only a single outgoing edge from this node.
      * */
     private IRStmt getSuccessor(IRStmt node) {
         assert outDegreeOf(node) == 1;
-        return outgoingEdgesOf(node).iterator().next().tail;
+        return outgoingEdgesOf(node).stream().findFirst().get().tail;
     }
 
     /**
@@ -53,6 +55,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
 
             // Check and update visited set
             if (visited.contains(current)) {
+                // Can visit labels multiple times
                 if (current instanceof IRLabel) {
                     continue;
                 }
@@ -62,8 +65,6 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
             // body.add(current);
 
             // Update traces
-            // Set<PairEdge<IRStmt, E>> edges = new HashSet<>(outgoingEdgesOf(current));
-
             if (current instanceof IRCJump) {
                 IRCJump jump = (IRCJump) current;
                 body.add(jump);
@@ -73,9 +74,10 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
 
                 // Push fall-through trace if it is different from the branch
                 if (outDegreeOf(jump) > 1) {
+                    assert outDegreeOf(jump) == 2;
                     IRStmt next = outgoingEdgesOf(jump).stream()
-                        .filter((PairEdge<IRStmt,E> e) -> !e.tail.equals(jump.trueLabel()))
-                        .iterator().next().tail;
+                        .filter(e -> !e.tail.equals(jump.trueLabel()))
+                        .findFirst().get().tail;
                     traces.push(next);
                 }
             } else if (current instanceof IRJump) {
@@ -91,26 +93,24 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
             } else if (current instanceof IRLabel) {
                 IRLabel label = (IRLabel) current;
 
-                Set<PairEdge<IRStmt, E>> edges = new HashSet<>(outgoingEdgesOf(current));
                 // Remove prior jumps and cjumps if equvialent to a fall-through
                 // Keeps on searching only if a fall-through is found
+                List<IRStmt> preds = Graphs.predecessorListOf(this, label);
                 for (int last = body.size() - 1; last > 0; last--) {
                     IRStmt prev = body.get(last);
                     if (prev instanceof IRJump) {
                         IRJump jmp = (IRJump) prev;
-                        if (jmp.targetLabel().equals(current)) {
+                        if (jmp.targetLabel().equals(label)) {
                             body.remove(last);
-                            edges.remove(getEdge(jmp, label));
-                            // removeEdge(jmp, label);
+                            preds.remove(jmp);
                             last--;
                             continue;
                         }
                     } else if (prev instanceof IRCJump) {
                         IRCJump jmp = (IRCJump) prev;
-                        if (jmp.trueLabel().equals(current)) {
+                        if (jmp.trueLabel().equals(label)) {
                             body.remove(last);
-                            edges.remove(getEdge(jmp, label));
-                            // removeEdge(jmp, label);
+                            preds.remove(jmp);
                             last--;
                             continue;
                         }
@@ -119,8 +119,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                 }
 
                 // Only add label if exists paths to it
-                if (edges.size() > 0) {
-                // if (inDegreeOf(label) > 0) {
+                if (preds.size() > 0) {
                     body.add(current);
                 }
 
@@ -128,8 +127,6 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
                 traces.push(getSuccessor(label));
             } else if (current instanceof IRMove) {
                 body.add(current);
-
-                // Follow the fall-through trace
                 traces.push(getSuccessor(current));
             } else if (current instanceof IRReturn) {
                 body.add(current);
