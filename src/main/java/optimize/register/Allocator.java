@@ -135,7 +135,7 @@ public class Allocator extends InsVisitor<Void> {
     private Either<Temp, Map<Temp, Operand>> tryColor(FuncDecl fn) {
 
         Stack<Temp> stack = new Stack<>();
-        InterferenceGraph interfere = new InterferenceGraph(fn.sourceName + "_" + fn.name, fn.stmts, available.size());
+        InterferenceGraph interfere = new InterferenceGraph(fn.stmts, available.size());
         ColorGraph color = new ColorGraph(fn.stmts, available);
 
         while (interfere.size() > 0) {
