@@ -10,7 +10,6 @@ public class Either<L, R> {
 
     private Either(L left, R right) {
         this.kind = (left == null) ? Kind.RIGHT : Kind.LEFT;
-        System.out.println(this.kind);
         this.left = left; 
         this.right = right;
     }

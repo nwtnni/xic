@@ -9,6 +9,7 @@ import assemble.*;
 import assemble.instructions.*;
 import optimize.graph.*;
 import optimize.register.*;
+
 import util.Result;
 import util.Filename;
 
@@ -19,18 +20,18 @@ public class RegAlloc extends Phase {
     @Override
     public Result<Product> process(Config config, Result<Product> previous) {
 
-        if (previous.isErr()) return previous; 
+        if (previous.isErr()) return previous;
 
         CompUnit assembly = previous.ok().getAssembled();
-        
+
         // Debug
         String out = Filename.concat(config.sink, config.unit);
         out = Filename.setExtension(out, "as.s");
         Filename.makePathTo(out);
-        
+
         try {
             FileWriter w = new FileWriter(out);
-            
+
             for (String i : assembly.toAbstractAssembly()) {
                 w.append(i + "\n");
             }
@@ -59,11 +60,11 @@ public class RegAlloc extends Phase {
                 cfg.exportCfg(out, "debug");
             } catch (Exception e) {}
         }
-        
+
         // Debug LV
         out = Filename.setExtension(out, "lv.s");
         try {
-            FileWriter lvw = new FileWriter(out); 
+            FileWriter lvw = new FileWriter(out);
             for (FuncDecl fn : after.fns) {
 
                 lvw.append(fn.sourceName + "\n");
@@ -75,12 +76,26 @@ public class RegAlloc extends Phase {
                     lvw.append("out: " + i.out + "\n");
                     lvw.append("\n");
                 }
-            
             }
             lvw.close();
         } catch (IOException e) {
         }
 
+        CompUnit allocated = Allocator.allocate(after);
+
+        out = Filename.concat(config.sink, config.unit);
+        out = Filename.setExtension(out, "s");
+        Filename.makePathTo(out);
+
+        try {
+            FileWriter w = new FileWriter(out);
+
+            for (String i : allocated.toAssembly()) {
+                w.append(i + "\n");
+            }
+            w.close();
+        } catch (IOException e) {
+        }
 
         return new Result<>(Product.assembled(after));
     }
