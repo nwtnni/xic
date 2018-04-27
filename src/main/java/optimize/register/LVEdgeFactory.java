@@ -14,7 +14,7 @@ import util.PairEdge;
  * */
 public class LVEdgeFactory extends ASAEdgeFactory<Set<Temp>> {
     @Override
-    public PairEdge<Instr, Set<Temp>> createEdge(Instr a, Instr b) {
+    public PairEdge<Instr<Temp>, Set<Temp>> createEdge(Instr<Temp> a, Instr<Temp> b) {
         return new PairEdge<>(a, b, new HashSet<>());
     }
 }

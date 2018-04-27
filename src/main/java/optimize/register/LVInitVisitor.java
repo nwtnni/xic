@@ -5,105 +5,178 @@ import java.util.Set;
 import assemble.*;
 import assemble.instructions.*;
 
-/**
- * Annotates instructions with use and def sets for liveness analysis.
- */
-public class LVInitVisitor extends InstrVisitor<Void> {
+public class LVInitVisitor extends InstrVisitor<T> {
 
-    public static void init(FuncDecl fn) {
-        LVInitVisitor visitor = new LVInitVisitor();
-        for (Instr in : fn.stmts) {
-            in.accept(visitor);
-        }
-    }
+    /*
+     * BinOp Visitors
+     */
 
-    public Void visit(BinOp i) {
-        i.use = i.srcTemp.getTemps();
-        i.use.addAll(i.destTemp.getTemps());
-
-        if (i.destTemp.isFixed() || i.destTemp.isTemp()) {
-            i.def = i.destTemp.getTemps();
-        }
+    public T visit(BinOp.TIR b) {
         return null;
     }
 
-    public Void visit(Call i) {
-        i.def = Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RSI, Temp.RDI, Temp.R8, Temp.R9, Temp.R10, Temp.R11);
+    public T visit(BinOp.TIM b) {
         return null;
     }
 
-    public Void visit(Cmp i) {
-        i.use = i.leftTemp.getTemps();
-        i.use.addAll(i.rightTemp.getTemps());
+    public T visit(BinOp.TRM b) {
         return null;
     }
 
-    public Void visit(Cqo i) {
-        i.use = Set.of(Temp.RAX);
-        i.def = Set.of(Temp.RDX);
+    public T visit(BinOp.TMR b) {
         return null;
     }
 
-    public Void visit(DivMul i) {
-        i.use = i.srcTemp.getTemps();
-        i.use.add(Temp.RAX);
-        if (i.isDivOrMod()) {
-            i.use.add(Temp.RDX);
-        }
-        i.def = Set.of(Temp.RAX, Temp.RDX);
+    public T visit(BinOp.TRR i) {
         return null;
     }
 
-    public Void visit(Jcc i) {
+    /*
+     * Call Visitor
+     */
+
+    public T visit(Call.T b) {
         return null;
     }
 
-    public Void visit(Jmp i) {
+    /*
+     * Cmp Visitors
+     */
+
+    public T visit(Cmp.TIR c) {
         return null;
     }
 
-    public Void visit(Label i) {
+    public T visit(Cmp.TRM c) {
         return null;
     }
 
-    public Void visit(Lea i) {
-        i.use = i.srcTemp.getTemps();
-        i.def = i.destTemp.getTemps();
+    public T visit(Cmp.TMR c) {
         return null;
     }
 
-    public Void visit(Mov i) {
-        i.use = i.srcTemp.getTemps();
-
-        if (i.destTemp.isFixed() || i.destTemp.isTemp()) {
-            i.def = i.destTemp.getTemps();
-        } else {
-            i.use.addAll(i.destTemp.getTemps());
-        }
+    public T visit(Cmp.TRR c) {
         return null;
     }
 
-    public Void visit(Pop i) {
-        i.def = Set.of(Temp.fixed(i.operand));
+    /*
+     * Cqo Visitor
+     */
+
+    public T visit(Cqo.T i) {
         return null;
     }
 
-    public Void visit(Push i) {
-        i.use = Set.of(Temp.fixed(i.operand));
+    /*
+     * DivMul Visitors
+     */
+
+    public T visit(DivMul.TR d) {
         return null;
     }
 
-
-    public Void visit(Ret i) {
+    public T visit(DivMul.TM d) {
         return null;
     }
 
-    public Void visit(Setcc i) {
-        i.def = Set.of(Temp.RAX);
+    /*
+     * Jcc Visitor
+     */
+
+    public T visit(Jcc.T j) {
         return null;
     }
 
-    public Void visit(Text i) {
+    /*
+     * Jmp Visitor
+     */
+
+    public T visit(Jmp.T j) {
         return null;
     }
+
+    /*
+     * Label Visitor
+     */
+
+    public T visit(Label.T l) {
+        return null;
+    }
+
+    /*
+     * Lea Visitor
+     */
+
+    public T visit(Lea.T l) {
+        return null;
+    }
+
+    /*
+     * Mov Visitors
+     */
+
+    public <L, R> T visit(Mov.TIR m) {
+        return null;
+    }
+
+    public <L, R> T visit(Mov.TIM m) {
+        return null;
+    }
+
+    public <L, R> T visit(Mov.TRM m) {
+        return null;
+    }
+
+    public <L, R> T visit(Mov.TMR m) {
+        return null;
+    }
+
+    public <L, R> T visit(Mov.TRR m) {
+        return null;
+    }
+    
+    /*
+     * Pop Visitors
+     */
+
+    public T visit(Pop.TR p) {
+        return null;
+    }
+
+    public T visit(Pop.TM p) {
+        return null;
+    }
+
+    /*
+     * Push Visitors
+     */
+
+    public T visit(Push.TR p) {
+        return null;
+    }
+
+    public T visit(Push.TM p) {
+        return null;
+    }
+
+    /*
+     * Ret Visitor
+     */
+
+    public T visit(Ret.T r) {
+        return null;
+    }
+
+    /*
+     * Setcc Visitor
+     */
+
+    public T visit(Setcc.T s) {
+        return null;
+    }
+
+    public T visit(Text.T t) {
+        return null;
+    }
+
 }
