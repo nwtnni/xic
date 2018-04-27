@@ -5,19 +5,19 @@ package assemble;
  */
 public class Mem<T> {
 
-    private enum Kind { R, RO, RSO, BRSO }
+    public enum Kind { R, RO, RSO, BRSO }
 
-    private Kind kind;
-    private T base;
-    private T reg;
-    private int offset;
-    private int scale;
+    public Kind kind;
+    public T base;
+    public T reg;
+    public int offset;
+    public int scale;
 
     /**
      * A memory access [reg]
      * In the form: (reg)
      */
-    public static Mem<Temp> of(Temp reg) {
+    public static <A> Mem<A> of(A reg) {
         assert reg != null;
         return new Mem<>(Kind.R, null, reg, 0, 0);
     }
@@ -26,7 +26,7 @@ public class Mem<T> {
      * A memory access [reg + offset]
      * In the form: offset(reg)
      */
-    public static Mem<Temp> of(Temp reg, int offset) {
+    public static <A> Mem<A> of(A reg, int offset) {
         assert reg != null;
         assert offset % Config.WORD_SIZE == 0;
         return new Mem<>(Kind.RO, null, reg, offset, 0);
@@ -38,7 +38,7 @@ public class Mem<T> {
      * 
      * Scale must be 1, 2, 4 or 8
      */
-    public static Mem<Temp> of(Temp reg, int offset, int scale) {
+    public static <A> Mem<A> of(A reg, int offset, int scale) {
         assert reg != null;
         assert offset % Config.WORD_SIZE == 0;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
@@ -51,7 +51,7 @@ public class Mem<T> {
      * 
      * Scale must be 1, 2, 4 or 8
      */
-    public static Mem<Temp> of(Temp base, Temp reg, int offset, int scale) {
+    public static <A> Mem<A> of(A base, A reg, int offset, int scale) {
         assert base != null && reg != null;
         assert offset % Config.WORD_SIZE == 0;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;

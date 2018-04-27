@@ -63,8 +63,8 @@ public abstract class DivMul<S, A> extends Instr<A> {
     /**
      * Register source addressing mode.
      */
-    public static class RR extends DivMul<Temp, Reg> {
-        public RR(Kind kind, Temp src) {
+    public static class RR extends DivMul<Reg, Reg> {
+        public RR(Kind kind, Reg src) {
             super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Reg.RDX : Reg.RAX);
         }
     }
@@ -72,8 +72,8 @@ public abstract class DivMul<S, A> extends Instr<A> {
     /**
      * Memory source addressing mode.
      */
-    public static class RM extends DivMul<Mem<Temp>, Reg> {
-        public RM(Kind kind, Mem<Temp> src) {
+    public static class RM extends DivMul<Mem<Reg>, Reg> {
+        public RM(Kind kind, Mem<Reg> src) {
             super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Reg.RDX : Reg.RAX);
         }
     }

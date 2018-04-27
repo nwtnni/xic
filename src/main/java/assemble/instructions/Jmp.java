@@ -28,7 +28,7 @@ public abstract class Jmp<A> extends Instr<A> {
     }
 
     public static class R extends Jmp<Reg> {
-        public R(Label<Reg> label) { super(label); }
+        public R(Label<Temp> label) { super(label.promote()); }
         public R(IRJump jump) { super(new Label.R(jump.targetLabel())); }
     }
 }

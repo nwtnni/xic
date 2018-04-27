@@ -4,10 +4,10 @@ import assemble.*;
 
 public abstract class Lea<A> extends Instr<A> {
 
-    public A dest;
     public Mem<A> src;
+    public A dest;
 
-    private Lea(A dest, Mem<A> src) {
+    private Lea(Mem<A> src, A dest) {
         this.src = src;
         this.dest = dest;
     }
@@ -18,11 +18,11 @@ public abstract class Lea<A> extends Instr<A> {
     }
 
     public static class T extends Lea<Temp> {
-        public T(Temp dest, Mem<Temp> src) { super(dest, src); }
+        public T(Mem<Temp> src, Temp dest) { super(src, dest); }
         public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
     public static class R extends Lea<Reg> {
-        public R(Reg dest, Mem<Reg> src) { super(dest, src); }
+        public R(Mem<Reg> src, Reg dest) { super(src, dest); }
     }
 }

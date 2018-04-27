@@ -328,7 +328,7 @@ public abstract class InstrFactory {
      */
 
     public static Lea<Temp> lea(Mem<Temp> src, Temp dest) {
-        return new Lea.T(dest, src);    
+        return new Lea.T(src, dest);    
     }
 
     /*

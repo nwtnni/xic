@@ -48,14 +48,14 @@ public abstract class Push<S, A> extends Instr<A> {
     /**
      * Register source addressing mode.
      */
-    public static class RR extends Push<Reg, Temp> {
+    public static class RR extends Push<Reg, Reg> {
         public RR(Reg src) { super(src); } 
     }
 
     /**
      * Memory source addressing mode.
      */
-    public static class RM extends Push<Mem<Reg>, Temp> {
+    public static class RM extends Push<Mem<Reg>, Reg> {
         public RM(Mem<Reg> src) { super(src); } 
     }
 }

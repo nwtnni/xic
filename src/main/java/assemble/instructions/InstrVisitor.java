@@ -172,6 +172,10 @@ public abstract class InstrVisitor<T> {
         return null;
     }
 
+    /*
+     * Text Visitor
+     */
+
     public T visit(Text.T t) {
         return null;
     }

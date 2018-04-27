@@ -4,7 +4,7 @@ import assemble.*;
 
 public abstract class Text<A> extends Instr<A> {
 
-    protected String text;
+    public String text;
 
     private Text(String text) {
         this.text = text;

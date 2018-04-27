@@ -48,14 +48,14 @@ public abstract class Pop<D, A> extends Instr<A> {
     /**
      * Register source addressing mode.
      */
-    public static class RR extends Pop<Reg, Temp> {
+    public static class RR extends Pop<Reg, Reg> {
         public RR(Reg dest) { super(dest); } 
     }
 
     /**
      * Memory source addressing mode.
      */
-    public static class RM extends Pop<Mem<Reg>, Temp> {
+    public static class RM extends Pop<Mem<Reg>, Reg> {
         public RM(Mem<Reg> dest) { super(dest); } 
     }
 }
