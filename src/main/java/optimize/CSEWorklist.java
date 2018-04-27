@@ -40,6 +40,7 @@ public class CSEWorklist {
      */
     public boolean containsCall(IRExpr e) {
         if (e instanceof IRCall) {
+            System.out.println("killing a call: " + e);
             return true;
         }
         if (e instanceof IRTemp || e instanceof IRConst || e instanceof IRName) {

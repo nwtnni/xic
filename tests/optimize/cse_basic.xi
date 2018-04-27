@@ -3,9 +3,12 @@ use conv
 
 main (args:int[][]) {
     x:int = 1
-    y:int
-    y = x+1
-    y = x+1
-    y = x+1
-    y = x+1
+    a:int = x + 1
+    b:int = foo()
+    y:int = x+1
+
+}
+
+foo():int {
+    return 6
 }
