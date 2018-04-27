@@ -4,15 +4,7 @@ import assemble.*;
 
 import ir.IRJump;
 
-public class Jmp<A> extends Instr<A> {
-
-    public static <T> Jmp<T> of(Label<T> label) {
-        return new Jmp<>(label);
-    }
-
-    public static <T> Jmp<T> of(IRJump jump) {
-        return new Jmp<>(jump);
-    }
+public abstract class Jmp<A> extends Instr<A> {
 
     public Label<A> label;
 
@@ -33,8 +25,14 @@ public class Jmp<A> extends Instr<A> {
         return "jmp " + label.name();
     }
 
-    @Override
-    public <T> T accept(InsVisitor<A, T> v) {
-        return v.visit(this);
+    public static class T extends Jmp<Temp> {
+        public T(Label<Temp> label) { super(label); }
+        public T(IRJump jump) { super(jump); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+    }
+
+    public static class R extends Jmp<Reg> {
+        public R(Label<Reg> label) { super(label); }
+        public R(IRJump jump) { super(jump); }
     }
 }

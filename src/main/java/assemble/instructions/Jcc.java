@@ -4,11 +4,7 @@ import assemble.*;
 
 import ir.IRLabel;
 
-public class Jcc<A> extends Instr<A> {
-
-    public static <T> Jcc<T> of(Kind kind, IRLabel target) {
-        return new Jcc<>(kind, target);
-    }
+public abstract class Jcc<A> extends Instr<A> {
 
     public enum Kind {
         E   ("e"),
@@ -32,14 +28,17 @@ public class Jcc<A> extends Instr<A> {
         this.target = Label.label(target);
     }
 
-
     @Override
     public String toString() {
         return String.format("j%s %s", kind.cond, target.name());
     }
 
-    @Override
-    public <T> T accept(InsVisitor<A, T> v) {
-        return v.visit(this);
+    public static class T extends Jcc<Temp> {
+        public T(Kind kind, IRLabel target) { super(kind, target); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+    }
+    
+    public static class R extends Jcc<Reg> {
+        public R(Kind kind, IRLabel target) { super(kind, target); }
     }
 }

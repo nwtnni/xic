@@ -4,7 +4,7 @@ import assemble.*;
 
 import util.Pair;
 
-public class BinOp<L, R, A> extends Instr<A> {
+public abstract class BinOp<S, D, A> extends Instr<A> {
 
     public enum Kind {
         ADD     ("addq"),
@@ -18,26 +18,21 @@ public class BinOp<L, R, A> extends Instr<A> {
     }
 
     public Kind kind;
-    public L src;
-    public R dest;
+    public S src;
+    public D dest;
 
     /**
      * Creates a BinOp with operands.
      */
-    private BinOp(Kind kind, L src, R dest) {
+    private BinOp(Kind kind, S src, D dest) {
         this.kind = kind;
-        this.src = src;
         this.dest = dest;
+        this.src = src;
     }
 
     @Override
     public String toString() {
         return String.format("%s %s, %s", kind.opcode, src, dest);
-    }
-
-    @Override
-    public <T> T accept(InsVisitor<A, T> v) {
-        return v.visit(this);
     }
 
     /*
@@ -51,6 +46,7 @@ public class BinOp<L, R, A> extends Instr<A> {
      */
     public static class TIR extends BinOp<Imm, Temp, Temp> {
         public TIR(Kind kind, Imm src, Temp dest) { super(kind, src, dest); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -58,6 +54,7 @@ public class BinOp<L, R, A> extends Instr<A> {
      */
     public static class TIM extends BinOp<Imm, Mem<Temp>, Temp> {
         public TIM(Kind kind, Imm src, Mem<Temp> dest) { super(kind, src, dest); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -65,6 +62,7 @@ public class BinOp<L, R, A> extends Instr<A> {
      */
     public static class TRM extends BinOp<Temp, Mem<Temp>, Temp> {
         public TRM(Kind kind, Temp src, Mem<Temp> dest) { super(kind, src, dest); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -72,6 +70,7 @@ public class BinOp<L, R, A> extends Instr<A> {
      */
     public static class TMR extends BinOp<Mem<Temp>, Temp, Temp> {
         public TMR(Kind kind, Mem<Temp> src, Temp dest) { super(kind, src, dest); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -79,6 +78,7 @@ public class BinOp<L, R, A> extends Instr<A> {
      */
     public static class TRR extends BinOp<Temp, Temp, Temp> {
         public TRR(Kind kind, Temp src, Temp dest) { super(kind, src, dest); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /*

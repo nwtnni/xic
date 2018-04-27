@@ -2,12 +2,12 @@ package assemble.instructions;
 
 import assemble.*;
 
-public class Cmp<L, R, A> extends Instr<A> {
+public abstract class Cmp<L, R, A> extends Instr<A> {
 
     public L left;
     public R right;
 
-    public Cmp(L left, R right) {
+    private Cmp(L left, R right) {
         this.left = left;
         this.right = right;
     }
@@ -15,11 +15,6 @@ public class Cmp<L, R, A> extends Instr<A> {
     @Override
     public String toString() {
         return String.format("cmpq %s, %s", left, right);
-    }
-
-    @Override
-    public <T> T accept(InsVisitor<A, T> v) {
-        return v.visit(this);
     }
 
     /*
@@ -33,6 +28,7 @@ public class Cmp<L, R, A> extends Instr<A> {
      */
     public static class TIR extends Cmp<Imm, Temp, Temp> {
         public TIR(Imm left, Temp right) { super(left, right); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -40,6 +36,7 @@ public class Cmp<L, R, A> extends Instr<A> {
      */
     public static class TRM extends Cmp<Temp, Mem<Temp>, Temp> {
         public TRM(Temp left, Mem<Temp> right) { super(left, right); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -47,6 +44,7 @@ public class Cmp<L, R, A> extends Instr<A> {
      */
     public static class TMR extends Cmp<Mem<Temp>, Temp, Temp> {
         public TMR(Mem<Temp> left, Temp right) { super(left, right); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -54,6 +52,7 @@ public class Cmp<L, R, A> extends Instr<A> {
      */
     public static class TRR extends Cmp<Temp, Temp, Temp> {
         public TRR(Temp left, Temp right) { super(left, right); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /*

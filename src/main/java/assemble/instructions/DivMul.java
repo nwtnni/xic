@@ -2,7 +2,7 @@ package assemble.instructions;
 
 import assemble.*;
 
-public class DivMul<S, A> extends Instr<A> {
+public abstract class DivMul<S, A> extends Instr<A> {
 
     public enum Kind {
         MUL     ("imulq"),
@@ -28,11 +28,6 @@ public class DivMul<S, A> extends Instr<A> {
         return kind.opcode + " " + src;
     }
 
-    @Override
-    public <T> T accept(InsVisitor<A, T> v) {
-        return v.visit(this);
-    }
-
     /*
      *
      * Abstract Assembly Instructions
@@ -46,6 +41,7 @@ public class DivMul<S, A> extends Instr<A> {
         public TR(Kind kind, Temp src) {
             super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Temp.RDX : Temp.RAX);
         }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /**
@@ -55,6 +51,7 @@ public class DivMul<S, A> extends Instr<A> {
         public TM(Kind kind, Mem<Temp> src) {
             super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Temp.RDX : Temp.RAX);
         }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
     /*

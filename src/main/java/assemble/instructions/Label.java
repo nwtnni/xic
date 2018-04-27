@@ -1,32 +1,33 @@
 package assemble.instructions;
 
+import assemble.*;
 import ir.IRFuncDecl;
 import ir.IRLabel;
 
-public class Label<A> extends Instr<A> {
+public abstract class Label<A> extends Instr<A> {
 
     protected String name;
 
-    /**
-     * Generate a label from an IRLabel
-     */
-    public static <T> Label<T> label(IRLabel l) {
-        return new Label<>(l.name() + ":");
-    }
+    // /**
+    //  * Generate a label from an IRLabel
+    //  */
+    // public static <T> Label<T> label(IRLabel l) {
+    //     return new Label<>(l.name() + ":");
+    // }
 
-    /**
-     * Generate a label from an IRLabel
-     */
-    public static <T> Label<T> funLabel(IRFuncDecl fn) {
-        return new Label<>(fn.name()+ ":");
-    }
+    // /**
+    //  * Generate a label from an IRLabel
+    //  */
+    // public static <T> Label<T> funLabel(IRFuncDecl fn) {
+    //     return new Label<>(fn.name()+ ":");
+    // }
 
-    /**
-     * Generate a label from an IRFuncDecl 
-     */
-    public static <T> Label<T> retLabel(IRFuncDecl fn) {
-        return new Label<>("_RET_" + fn.name() + ":");
-    }
+    // /**
+    //  * Generate a label from an IRFuncDecl 
+    //  */
+    // public static <T> Label<T> retLabel(IRFuncDecl fn) {
+    //     return new Label<>("_RET_" + fn.name() + ":");
+    // }
 
     private Label(String name) {
         this.name = name;
@@ -54,8 +55,12 @@ public class Label<A> extends Instr<A> {
         return name;
     }
 
-    @Override
-    public <T> T accept(InsVisitor<A, T> v) {
-        return v.visit(this);
+    public static class T extends Label<Temp> {
+        public T(String name) { super(name); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+    }
+
+    public static class R extends Label<Reg> {
+        public R(String name) { super(name); }
     }
 }

@@ -2,9 +2,7 @@ package assemble.instructions;
 
 import assemble.*;
 
-public class Cqo<A> extends Instr<A> {
-
-    public static <T> Cqo<T> get() { return new Cqo<>(); }
+public abstract class Cqo<A> extends Instr<A> {
 
     private Cqo() {}
 
@@ -13,8 +11,9 @@ public class Cqo<A> extends Instr<A> {
         return "cqo";
     }
 
-    @Override
-    public <T> T accept(InsVisitor<A, T> v) {
-        return v.visit(this);
+    public static class T extends Cqo<Temp> {
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
+
+    public static class R extends Cqo<Reg> {}
 }

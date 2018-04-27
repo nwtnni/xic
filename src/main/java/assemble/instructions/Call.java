@@ -3,11 +3,7 @@ package assemble.instructions;
 import assemble.Temp;
 import assemble.Reg;
 
-public class Call<A> extends Instr<A> {
-
-    public static <T> Call<T> of(String name, int numArgs, int numRet) {
-        return new Call<>(name, numArgs, numRet);
-    }
+public abstract class Call<A> extends Instr<A> {
 
     public String name;
     public int numArgs;
@@ -24,8 +20,12 @@ public class Call<A> extends Instr<A> {
         return "callq " + name;
     }
 
-    @Override
-    public <T> T accept(InsVisitor<A, T> v) {
-        return v.visit(this);
+    public static class T extends Call<Temp> {
+        public T(String name, int args, int rets) { super(name, args, rets); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+    }
+
+    public static class R extends Call<Reg> {
+        public R(String name, int args, int rets) { super(name, args, rets); }
     }
 }

@@ -2,30 +2,27 @@ package assemble.instructions;
 
 import assemble.*;
 
-public class Lea extends Instr {
-    public Temp destTemp;
-    public Temp srcTemp;
+public abstract class Lea<A> extends Instr<A> {
 
-    public Operand dest;
-    public Operand src;
+    public A dest;
+    public Mem<A> src;
 
-    public Lea(Temp destTemp, Temp srcTemp) {
-        this.destTemp = destTemp;
-        this.srcTemp = srcTemp;
+    private Lea(A dest, Mem<A> src) {
+        this.src = src;
+        this.dest = dest;
     }
 
     @Override
-    public String toAbstractAssembly() {
-        return String.format("leaq %s, %s", srcTemp, destTemp);
-    }
-
-    @Override
-    public String toAssembly() {
+    public String toString() {
         return String.format("leaq %s, %s", src, dest);
     }
 
-    @Override
-    public <T> T accept(InsVisitor<T> v) {
-        return v.visit(this);
+    public static class T extends Lea<Temp> {
+        public T(Temp dest, Mem<Temp> src) { super(dest, src); }
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+    }
+
+    public static class R extends Lea<Reg> {
+        public R(Reg dest, Mem<Reg> src) { super(dest, src); }
     }
 }
