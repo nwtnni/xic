@@ -9,7 +9,10 @@ import java.util.Set;
 import util.PairEdge;
 import util.PairEdgeGraph;
 
-/** The generic worklist algorthim interface. */
+/** 
+ * The generic worklist algorthim abstract class. 
+ * Supports both forwards and backwards analyses.
+ */
 public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
 
     public enum Direction { FORWARD, BACKWARDS };
@@ -84,23 +87,6 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
     }
 
     /**
-     * Run the worklist algorithm on [graph] until convergence.
-     */
-    public void doWorklist() {
-        Deque<V> worklist = new LinkedList<>(graph.vertexSet());
-
-        while (!worklist.isEmpty()) {
-            V node = worklist.poll();
-            boolean updated = update(node);
-            if (updated) {
-                for (V child : getChildren(node)) {
-                    worklist.push(child);
-                }
-            }
-        }
-    }
-
-    /**
      * Get the children of node [v] in relation to [direction].
      */
     protected List<V> getChildren(V v) {
@@ -116,5 +102,22 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
             }
         }
         return children;
+    }
+
+    /**
+     * Run the worklist algorithm on [graph] until convergence.
+     */
+    public void doWorklist() {
+        Deque<V> worklist = new LinkedList<>(graph.vertexSet());
+
+        while (!worklist.isEmpty()) {
+            V node = worklist.poll();
+            boolean updated = update(node);
+            if (updated) {
+                for (V child : getChildren(node)) {
+                    worklist.push(child);
+                }
+            }
+        }
     }
 }

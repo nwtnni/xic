@@ -51,7 +51,7 @@ public class CSE extends Phase {
         for(String key: cfgs.keySet()) {
             IRGraph<Map<IRExpr, IRStmt>> cfg = cfgs.get(key);
             CSEWorklist cse = new CSEWorklist(cfg);
-            cse.cse(cfg);
+            cse.runCSE();
         }
 
         // Convert back to IR

@@ -22,26 +22,8 @@ public class CSEReplaceVisitor extends IRVisitor<IRExpr> {
         newExpr = null;
     }
 
-
-    // public IRExpr visit(IRExp e) {
-    //     IRExpr n = e.expr().accept(this);
-    //     if (n != null) {
-    //         e.setExpr(n);
-    //     }
-    //     return null;
-    // }
-
-    // TODO: check if calls - shouldn't be in lowered IR
-    public IRExpr visit(IRCall c) {
-        for (IRExpr a : c.args()) {
-            IRExpr n = a.accept(this);
-            if (n != null) {
-                a = newExpr;
-            }
-        }
-        return null;
-    }
-
+    // TODO: add visit(IRExp e) if added to lowering
+   
     public IRExpr visit(IRCJump c) {
         IRExpr n = c.cond.accept(this);
         if (n != null) {
@@ -96,7 +78,19 @@ public class CSEReplaceVisitor extends IRVisitor<IRExpr> {
      * Expression nodes
      */
 
-    // only binops basically can be eliminated
+    // TODO: update this if we improve lowering of IRCalls
+    public IRExpr visit(IRCall c) {
+        for (int i = 0; i < c.size(); i++) {
+            IRExpr n = c.get(i).accept(this);
+            if (n != null) {
+                c.set(i, newExpr);
+            }
+        }
+        return null;
+    }
+
+
+    // Basically only binops can be eliminated
     public IRExpr visit(IRBinOp b) {
         if (b.equals(replaceExpr)) {
             return newExpr;
@@ -118,6 +112,7 @@ public class CSEReplaceVisitor extends IRVisitor<IRExpr> {
         return null;
     }
     
+    // TODO: can we replace mems?
     public IRExpr visit(IRMem m) {
         IRExpr n = m.expr.accept(this);
         if (n != null) {
@@ -131,7 +126,6 @@ public class CSEReplaceVisitor extends IRVisitor<IRExpr> {
     }
 
     public IRExpr visit(IRTemp t) {
-        // should we be adding temps to exprs?
         return null;
     }
     

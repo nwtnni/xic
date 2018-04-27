@@ -1,6 +1,5 @@
 package optimize.cse;
 
-import java.util.Iterator;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.Map;
@@ -9,15 +8,15 @@ import java.util.HashSet;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
-import java.util.UUID;
-
 
 import ir.*;
 import optimize.Worklist;
 import optimize.graph.*;
 import util.PairEdge;
-import util.PairEdgeGraph;
-import xic.XicInternalException;
+
+/** 
+ * Worklist for available expressions analysis and perform CSE.
+ */
 public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, Map<IRExpr, IRStmt>> {
 
     public CSEWorklist(IRGraph<Map<IRExpr, IRStmt>> cfg) {
@@ -39,6 +38,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         return false;
     } 
 
+    // TODO: remove this as this should be unnecessary with lowered IR?
     /*
      * Helper method to determine if expression contains a call
      * Used to determine if IRMems should be removed from "out"
@@ -64,10 +64,11 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
      * Given an IR statement, calculate the corresponding out
      * using transfer function for CSE analysis
      */
-    public Map<IRExpr, IRStmt> transfer(IRStmt s) {
+    @Override
+    public Map<IRExpr, IRStmt> transfer(Map<IRExpr, IRStmt> in, IRStmt s) {
 
         // Adding in to out
-        Map<IRExpr, IRStmt> out = new HashMap<IRExpr, IRStmt>(s.CSEin);
+        Map<IRExpr, IRStmt> out = new HashMap<>(in);
 
         // Adding gen to out
         for (IRExpr e : s.exprs) {
@@ -83,7 +84,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         }
 
         // Performing kill for out
-        for (IRExpr e : new HashSet<IRExpr>(out.keySet())) {
+        for (IRExpr e : new HashSet<>(out.keySet())) {
             if ((shouldDelMem && s.delMem) || kill(s.kill, e)) {
                 out.remove(e);
             }
@@ -98,11 +99,12 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
      *
      * Checks for equality of two expressions using the common subexpression and IRStmt that defined it
      */
-    public Map<IRExpr, IRStmt> meet(IRGraph<Map<IRExpr, IRStmt>> g, IRStmt v) {        
+    @Override
+    public Map<IRExpr, IRStmt> meet(Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> paths) {        
         
         Map<IRExpr, IRStmt> in = null;
         
-        for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> edge: g.incomingEdgesOf(v)) {
+        for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> edge : paths) {
             Map<IRExpr, IRStmt> s = edge.value;
             // only want to intersect if s has been initialized
             if (s != null) {
@@ -123,66 +125,38 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
 
         // If it is the start node, initialize to empty, else assign to CSEin
         if (in == null) {
-            v.CSEin = new HashMap<IRExpr,IRStmt>();
+            in = new HashMap<IRExpr,IRStmt>();
         }
-        else {
-            v.CSEin = in;
+        return in;
+    }
+
+    /**
+     * Annotates the node with the updated in set of available expressions.
+     */
+    @Override
+    public boolean annotate(IRStmt v, Map<IRExpr, IRStmt> in, Map<IRExpr, IRStmt> out) {
+        boolean hasChanged = false;
+        if (v.CSEin == null) {
+            hasChanged = true;
+        } else if (v.CSEin.size() != in.size()) {
+            hasChanged = true;
+        } else {
+            Set<IRExpr> oldExprs = v.CSEin.keySet();
+            Set<IRExpr> newExprs = in.keySet();
+            hasChanged = !(oldExprs.containsAll(newExprs) && newExprs.containsAll(oldExprs));
         }
 
+        v.CSEin = in;
+        return hasChanged;
     }
 
     /*
-     * Annotate the tree edges with the correct "out" for source's edge
+     * Run the CSE optimization on graph [g]
      */
-    public void annotate(IRGraph<Map<IRExpr, IRStmt>> g) {
-        Set<IRStmt> vertices = g.vertexSet();
-        
-        Queue<IRStmt> w = new LinkedList<IRStmt>();
-        w.add(g.start);
+    public void runCSE() {
 
-        while (!w.isEmpty()) {
-            IRStmt v = w.remove();
-            
-            Map<IRExpr, IRStmt> oldIn = null;
-            if (v.CSEin != null) {
-                oldIn = new HashMap<>(v.CSEin); // Old CSEin
-            }
-            meet(g, v);                         // New CSEin
-
-            boolean hasChanged = false;
-            // If not intialized, don't terminate
-            if (oldIn == null) {
-                hasChanged = true;
-            }
-            // Otherwise, check if old CSEin == new CSEin (termination condition)
-            else if (v.CSEin.size() != oldIn.size()) {
-                hasChanged = true;
-            } else {
-                for(IRExpr e: v.CSEin.keySet()) {
-                    if (!(oldIn.keySet().contains(e) && oldIn.get(e).equals(v.CSEin.get(e)))) {
-                        hasChanged = true;
-                    }
-                }
-            }
-
-            // Continue analysis if things changed
-            if (hasChanged) {
-                Map<IRExpr, IRStmt> out = transfer(v);
-                for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : g.outgoingEdgesOf(v)) {
-                    e.value = out;
-                    w.add(e.tail);
-                }
-            }
-        }
-    }
-
-
-    /*
-     * CSE optimization 
-     */
-    public void cse(IRGraph<Map<IRExpr, IRStmt>> g) {
-
-        annotate(g);
+        // annotate(g);
+        doWorklist();
 
         // Temp names for exprs that are common subexprs
         Map<IRExpr, IRTemp> assigned = new HashMap<IRExpr, IRTemp>();
@@ -193,7 +167,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
 
         CSEReplaceVisitor replVisit = new CSEReplaceVisitor();
         
-        q.add(g.start);
+        q.add(graph.start);
         while (!q.isEmpty()) {
             IRStmt s = q.poll();
 
@@ -226,15 +200,15 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
 
                     varCount++;
 
-                    g.addVertex(newStmt);
+                    graph.addVertex(newStmt);
 
-                    Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> incoming = new HashSet<>(g.incomingEdgesOf(node));
+                    Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> incoming = new HashSet<>(graph.incomingEdgesOf(node));
                     // Editing the graph
                     for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : incoming) {
-                        g.addEdge(e.head, newStmt);
+                        graph.addEdge(e.head, newStmt);
                     }
-                    g.removeAllEdges(incoming);
-                    g.addEdge(newStmt, node);
+                    graph.removeAllEdges(incoming);
+                    graph.addEdge(newStmt, node);
                     
                     replVisit.replaceExpr = cur;
                     replVisit.newExpr = newTemp;
@@ -256,9 +230,9 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
             }
 
             // adding all outgoing edges of node if not yet visited
-            for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : g.outgoingEdgesOf(s)) {
-                if (!seen.contains(g.getEdgeTarget(e))) {
-                    q.add(g.getEdgeTarget(e));
+            for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : graph.outgoingEdgesOf(s)) {
+                if (!seen.contains(graph.getEdgeTarget(e))) {
+                    q.add(graph.getEdgeTarget(e));
                 }
             }
         }
