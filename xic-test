@@ -150,20 +150,28 @@ test_course() {
     printf "\n========================================\n\n" 
 }
 
-if [[ -f $1 ]] ; then
-  ./xic -target linux -libpath tests/libs $1
-  asm="${1%.*}.s"
-  base=$(basename -- "$1")
-  name="${base%.*}.s"
-  cp $asm "runtime/tests/$name"
-  platform=`uname`
-  if [ "$platform" = "Linux" ]; then
-    pushd "runtime"
-    time ./run_test "tests/$name"
-    popd
-  else
-    echo "Cannot run assembly on $platform"
-  fi
+if [[ -f $2 ]] ; then
+  FILE=$2
+  case $1 in
+    --asm)
+      ./xic -target linux -libpath tests/libs $FILE
+      asm="${FILE%.*}.s"
+      base=$(basename -- "$FILE")
+      name="${base%.*}.s"
+      cp $asm "runtime/tests/$name"
+      platform=`uname`
+      if [ "$platform" = "Linux" ]; then
+          pushd "runtime"
+          time ./run_test "tests/$name"
+          popd
+      else
+          echo "Cannot run assembly on $platform"
+      fi
+      ;;
+    --irgen)
+      ./xic --irgen -libpath tests/libs --optir cse --optcfg cse $FILE
+      ;;
+  esac
 else
   cmd=$1
   if [ "$cmd" = "--nb" ] ; then
@@ -250,12 +258,23 @@ else
       test_course
       ;;
   *)
-      echo "Usage: xic-test [options] <command>"
+      echo "Usage:"
+      echo ""
+      echo "xic-test [options] [command]"
+      echo "Options:"
       echo "  --nb:   Skips running xic-build"
-      echo "  Possible commands: all r[egression] f[ails] c[ourse]"
+      echo "Possible commands: "
+      echo "  all r[egression] f[ails] c[ourse]"
       echo "  l[exer] p[arser] t[ype] te tv tm"
       echo "  i[r, b, c, s, o, a, f]"
       echo "  a[ssemble] as aa ab airf ao aas"
+      echo ""
+      echo "OR"
+      echo ""
+      echo "xic-test [output] <file>"
+      echo "Output:"
+      echo "  --asm:    Generate and run assembly"
+      echo "  --irgen:  Generate ir, optir and optcfg"
       ;;
   esac
 fi
