@@ -1,5 +1,8 @@
 package assemble;
 
+import java.util.Set;
+import java.util.HashSet;
+
 /**
  * Represents a memory location operand for assembly instructions.
  */
@@ -30,6 +33,20 @@ public class Mem<T> {
         assert reg != null;
         assert offset % Config.WORD_SIZE == 0;
         return new Mem<>(Kind.RO, null, reg, offset, 0);
+    }
+
+    /**
+     * Returns the set of Temps used by this Mem.
+     */
+    public static Set<Temp> getTemps(Mem<Temp> mem) {
+        Set<Temp> temps = new HashSet<>();
+        switch (mem.kind) {
+        case BRSO:
+            temps.add(mem.base);
+        default:
+            temps.add(mem.reg);
+        }
+        return temps;
     }
 
     /**
