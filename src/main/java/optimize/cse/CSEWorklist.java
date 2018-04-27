@@ -25,6 +25,8 @@ public class CSEWorklist {
     
     public boolean kill(Set<IRExpr> killSet, IRExpr e) {
         if (e instanceof IRTemp && killSet.contains(e)) {
+            // System.out.println("I killed inside kill func");
+
             return true;
         }
         if (e instanceof IRBinOp) {
@@ -40,7 +42,7 @@ public class CSEWorklist {
      */
     public boolean containsCall(IRExpr e) {
         if (e instanceof IRCall) {
-            System.out.println("killing a call: " + e);
+            // System.out.println("killing a call: " + e);
             return true;
         }
         if (e instanceof IRTemp || e instanceof IRConst || e instanceof IRName) {
@@ -78,12 +80,29 @@ public class CSEWorklist {
             shouldDelMem = true;        
         }
 
+
+        // for (IRExpr e : s.kill) {
+        //     System.out.println("Kill this temp: " + e);
+        // }
+        // System.out.println("Should Delete Mem is: " + shouldDelMem);
+
+
         // Performing kill for out
         for (IRExpr e : new HashSet<IRExpr>(out.keySet())) {
-            if ((shouldDelMem && s.delMem) || kill(s.kill, e)) {
+            if ((shouldDelMem && e.delMem) || kill(s.kill, e)) {
                 out.remove(e);
+                // System.out.println("Removing: " + e);
             }
         }
+
+        // System.out.println("BEGINNING OF TRANSFER SET-------------------------");
+        // for (IRExpr e : out.keySet()) {
+        //     System.out.println(e);
+        // }
+        // System.out.println("END OF TRANSFER SET-------------------------------");
+
+
+
 
         return out;
     }
@@ -123,6 +142,11 @@ public class CSEWorklist {
         }
         else {
             v.CSEin = in;
+            // System.out.println("BEGINNING OF CSEIN SET-------------------------");
+            // for (IRExpr e : in.keySet()) {
+            //     System.out.println(e);
+            // }
+            // System.out.println("END OF CSEIN SET-------------------------------");
         }
 
     }
@@ -138,7 +162,8 @@ public class CSEWorklist {
 
         while (!w.isEmpty()) {
             IRStmt v = w.remove();
-            
+            // System.out.println("Current statement: " + v);
+
             Map<IRExpr, IRStmt> oldIn = null;
             if (v.CSEin != null) {
                 oldIn = new HashMap<>(v.CSEin); // Old CSEin
