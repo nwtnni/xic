@@ -5,9 +5,7 @@ import assemble.*;
 public abstract class InsVisitor<T> {
 
     /*
-     *
-     * BinOp visitors
-     *
+     * BinOp Visitors
      */
 
     public T visit(BinOp.TIR b) {
@@ -31,9 +29,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * Call visitor
-     *
+     * Call Visitor
      */
 
     public T visit(Call.T b) {
@@ -41,9 +37,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * Cmp visitors
-     *
+     * Cmp Visitors
      */
 
     public T visit(Cmp.TIR c) {
@@ -63,9 +57,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * Cqo visitor
-     *
+     * Cqo Visitor
      */
 
     public T visit(Cqo.T i) {
@@ -73,9 +65,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * DivMul visitors
-     *
+     * DivMul Visitors
      */
 
     public T visit(DivMul.TR d) {
@@ -87,9 +77,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * Jcc visitor
-     *
+     * Jcc Visitor
      */
 
     public T visit(Jcc.T j) {
@@ -97,9 +85,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * Jmp visitor
-     *
+     * Jmp Visitor
      */
 
     public T visit(Jmp.T j) {
@@ -107,9 +93,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * Label visitor
-     *
+     * Label Visitor
      */
 
     public T visit(Label.T l) {
@@ -117,9 +101,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * Lea visitor
-     *
+     * Lea Visitor
      */
 
     public T visit(Lea.T l) {
@@ -127,9 +109,7 @@ public abstract class InsVisitor<T> {
     }
 
     /*
-     *
-     * Mov visitors
-     *
+     * Mov Visitors
      */
 
     public <L, R> T visit(Mov.TIR m) {
@@ -151,10 +131,18 @@ public abstract class InsVisitor<T> {
     public <L, R> T visit(Mov.TRR m) {
         return null;
     }
+    
+    /*
+     * Pop Visitors
+     */
 
-//     public T visit(Pop i) {
-//         return null;
-//     }
+    public T visit(Pop.TR p) {
+        return null;
+    }
+
+    public T visit(Pop.TM p) {
+        return null;
+    }
 
 //     public T visit(Push i) {
 //         return null;

@@ -4,26 +4,58 @@ import java.util.Set;
 
 import assemble.*;
 
-public class Pop extends Instr {
-    public Operand operand;
+public abstract class Pop<D, A> extends Instr<A> {
 
-    public Pop(Operand o) {
-        assert (o.kind != Operand.Kind.MEM);
-        operand = o;
+    public D dest;
+
+    private Pop(D dest) {
+        this.dest = dest;
     }
 
     @Override
-    public String toAbstractAssembly() {
-        return toAssembly();
+    public String toString() {
+        return "popq " + dest;
     }
 
-    @Override
-    public String toAssembly() {
-        return "popq " + operand;
+    /**
+     *
+     * Abstract Assembly Instructions
+     *
+     */
+
+    /**
+     * Abstract register source addressing mode.
+     */
+    public static class TR extends Pop<Temp, Temp> {
+        public TR(Temp dest) { super(dest); } 
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
     }
 
-    @Override
-    public <T> T accept(InsVisitor<T> v) {
-        return v.visit(this);
+    /**
+     * Abstract memory source addressing mode.
+     */
+    public static class TM extends Pop<Mem<Temp>, Temp> {
+        public TM(Mem<Temp> dest) { super(dest); } 
+        public <T> T accept(InsVisitor<T> v) { return v.visit(this); }
+    }
+
+    /*
+     *
+     * Assembly Instructions
+     *
+     */
+
+    /**
+     * Register source addressing mode.
+     */
+    public static class RR extends Pop<Reg, Temp> {
+        public RR(Reg dest) { super(dest); } 
+    }
+
+    /**
+     * Memory source addressing mode.
+     */
+    public static class RM extends Pop<Mem<Reg>, Temp> {
+        public RM(Mem<Reg> dest) { super(dest); } 
     }
 }
