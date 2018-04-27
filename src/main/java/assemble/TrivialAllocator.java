@@ -36,7 +36,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
 
     // Number of words to subtract from base pointer to get location
     // in stack where multiple returns > 2 must be written by callee.
-    private Operand calleeReturnAddr;
+    // private Operand calleeReturnAddr;
 
     // Caller saved registers - not required for trivial allocation
     // private Operand r10;
@@ -51,7 +51,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
         this.maxArgs = 0;
         this.maxRets = 0;
         // this.isMultiple = 0;
-        this.calleeReturnAddr = null;
+        // this.calleeReturnAddr = null;
     }
 
     /**
@@ -62,12 +62,12 @@ public class TrivialAllocator extends InsVisitor<Void> {
         return getTemp(name);
     }
 
-    /**
-     * Push an unnamed temp to the stack and return the mem operand.
-     */
-    private Operand pushTemp() {
-        return Operand.mem(Operand.RBP, -normalize(++tempCounter));
-    }
+    // /**
+    //  * Push an unnamed temp to the stack and return the mem operand.
+    //  */
+    // private Operand pushTemp() {
+    //     return Operand.mem(Operand.RBP, -normalize(++tempCounter));
+    // }
 
     /**
      * Get the mem operand to a temp on the stack.
@@ -103,12 +103,12 @@ public class TrivialAllocator extends InsVisitor<Void> {
         tempCounter = 0;
         maxArgs = 0;
         maxRets = 0;
-        calleeReturnAddr = null;
+        // calleeReturnAddr = null;
 
         // Set CALLEE_RET_ADDR to a temp on stack
-        if (fn.rets > 2) {
-            calleeReturnAddr = pushTemp();
-        }
+        // if (fn.rets > 2) {
+        //     calleeReturnAddr = pushTemp();
+        // }
 
         for (Instr i : fn.stmts) {
             i.accept(this);
@@ -306,10 +306,6 @@ public class TrivialAllocator extends InsVisitor<Void> {
                     reg = Operand.R10;
                 }
                 return Operand.mem(base, reg, t.offset, t.scale);
-
-            // Get the address for multiple returns
-            case MULT_RET:
-                return calleeReturnAddr;
 
             // Get the fixed register
             case FIXED:

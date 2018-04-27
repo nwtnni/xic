@@ -10,9 +10,6 @@ import static assemble.Temp.Kind.*;
  */
 public class Temp {
 
-    // Special temp to be replaced with callee return address for multiple returns
-    public final static Temp CALLEE_RET_ADDR = new Temp(MULT_RET, "CALLEE_RET_ADDR");
-
     // All the fixed registers
     public static final Temp RAX = Temp.fixed(Operand.RAX);
     public static final Temp RBX = Temp.fixed(Operand.RBX);
@@ -84,13 +81,13 @@ public class Temp {
      * 
      * RET_ADDR is passed in as arg0 and will be decided at alloc
      */
-    protected static Temp calleeRet(int i) {
+    protected static Temp calleeRet(Temp addr, int i) {
         if (i < 2) {
             return Temp.fixed(Config.getRet(i));
         }
         // Rets 2+ written in reverse order to offset(ret_addr)
         int offset = Config.WORD_SIZE * (i - 2);
-        return Temp.mem(CALLEE_RET_ADDR, offset);
+        return Temp.mem(addr, offset);
     }
 
     /**
@@ -138,7 +135,7 @@ public class Temp {
      * In the form: offset(base)
      */
     public static Temp mem(Temp b, int off) {
-        assert b != null && (b.isTemp() || b.isFixed() || b.equals(CALLEE_RET_ADDR));
+        assert b != null && (b.isTemp() || b.isFixed());
         assert off % Config.WORD_SIZE == 0;
         return new Temp(MEMBR, b, null, off, 1);
     }
@@ -166,7 +163,7 @@ public class Temp {
     /* Temp implementation -------------------------------------------- */
 
     public enum Kind {
-        TEMP, IMM, MEM, MEMBR, MEMSBR, MULT_RET, FIXED;
+        TEMP, IMM, MEM, MEMBR, MEMSBR, FIXED;
     }
 
     public Kind kind;
@@ -225,10 +222,6 @@ public class Temp {
         return kind == FIXED;
     }
 
-    public boolean isMultRet() {
-        return kind == MULT_RET;
-    }
-
     public boolean isMem() {
         return !(isImm() || isTemp() || isFixed());
     }
@@ -236,11 +229,7 @@ public class Temp {
     // Adds constraint that all named temps are memory addresses for 
     // trivial allocation purposes
     public boolean trivialIsMem() {
-        return kind == TEMP || 
-            kind == MEM || 
-            kind == MEMBR || 
-            kind == MEMSBR || 
-            kind == MULT_RET;
+        return kind == TEMP || isMem();
     }
 
     /**
@@ -252,7 +241,6 @@ public class Temp {
         switch (kind) {
             case TEMP:
             case FIXED:
-            case MULT_RET:
                 temps.add(this);
                 break;
             case MEMSBR:
@@ -284,8 +272,6 @@ public class Temp {
                 return name.hashCode();
             case FIXED:
                 return register.hashCode();
-            case MULT_RET:
-                return MULT_RET.hashCode();
             case MEM:
                 return base.hashCode();
             case MEMBR:
@@ -319,10 +305,7 @@ public class Temp {
                 // FIXED
                 return register.equals(t.register);
             } else if (isMem()) {
-                if (isMultRet()) {
-                    // MULT_RET
-                    return t.isMultRet();
-                } else if (kind == MEM) {
+                if (kind == MEM) {
                     // MEM [base]
                     return base.equals(t.base);
                 } else if (kind == MEMBR) {
@@ -356,8 +339,6 @@ public class Temp {
                 return String.format("%d(%s)", offset, base);
             case MEMSBR:
                 return String.format("%d(%s, %s, %d)", offset, base, reg, scale);
-            case MULT_RET:
-                return "(" + name + ")";
             case FIXED:
                 return register.toString();
         }

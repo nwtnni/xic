@@ -46,8 +46,11 @@ public class Tiler extends IRVisitor<Temp> {
     // Number of args passed to a called function
     private int callerNumArgs;
 
+    // Callee multiple return address stored at this temp
+    private Temp calleeReturnAddress;
+
     // Return label of current function visited
-    Label returnLabel;
+    private Label returnLabel;
 
     private Tiler(ABIContext c) {
         this.context = c;
@@ -110,7 +113,6 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRFuncDecl f) {
         // Reset instance variables for each function
         instrs = new ArrayList<>();
-        TempFactory.reset();
 
         String funcName = f.name();
 
@@ -120,9 +122,11 @@ public class Tiler extends IRVisitor<Temp> {
         // If function has multiple returns, save return address from arg 0 to a temp
         if (returns > 2) {
             calleeIsMultiple = 1;
-            instrs.add(0, new Mov(Temp.CALLEE_RET_ADDR, Temp.calleeArg(0)));
+            calleeReturnAddress = TempFactory.generate("RETURN");
+            instrs.add(0, new Mov(calleeReturnAddress, Temp.calleeArg(0)));
         } else {
             calleeIsMultiple = 0;
+            calleeReturnAddress = null;
         }
 
         // Set number of arguments including offset for multiple returns
@@ -388,7 +392,7 @@ public class Tiler extends IRVisitor<Temp> {
         // CALLEE returns (write by callee)
         for (int i = r.size() - 1; i >= 0; i--) {
             Temp val = r.get(i).accept(this);
-            instrs.add(new Mov(Temp.calleeRet(i), val));
+            instrs.add(new Mov(Temp.calleeRet(calleeReturnAddress, i), val));
         }
         instrs.add(Jmp.toLabel(returnLabel));
         return null;
