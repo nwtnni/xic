@@ -14,11 +14,11 @@ public class Either<L, R> {
         this.right = right;
     }
     
-    public Either<L, R> left(L left) {
+    public static <L, R> Either<L, R> left(L left) {
         return new Either<>(left, null);
     }
 
-    public Either<L, R> right(R right) {
+    public static <L, R> Either<L, R> right(R right) {
         return new Either<>(null, right);
     }
 
