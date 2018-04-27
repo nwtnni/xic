@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 import assemble.Temp; 
@@ -27,10 +28,10 @@ public class ColorGraph {
 
     public ColorGraph(List<Instr> instructions, Set<Operand> available) {
 
-        graph = new DefaultDirectedGraph<>((a, b) -> new PairEdge<>(a, b, null));
-        vertices = new HashSet<>();
-        coloring = new HashMap<>();
-        available = new HashSet<>(available);
+        this.graph = new DefaultDirectedGraph<>((a, b) -> new PairEdge<>(a, b, null));
+        this.vertices = new HashSet<>();
+        this.coloring = new HashMap<>();
+        this.available = new HashSet<>(available);
     
         for (Instr instr : instructions) {
         
@@ -63,17 +64,14 @@ public class ColorGraph {
      */
     public boolean tryColor(Temp t) {
 
+        if (isColored(t)) return true;
+        
         // Copy available set
         Set<Operand> available = new HashSet<Operand>(this.available);
         
         // Disqualify all neighboring colors
-        for (PairEdge<Temp, Void> edge : graph.edgesOf(t)) {
-            
-            Temp s = (edge.head.equals(t)) ? edge.tail : edge.head;
-
-            if (isColored(s)) {
-                available.remove(coloring.get(s));
-            }
+        for (Temp s: Graphs.neighborListOf(graph, t)) {
+            if (isColored(s)) available.remove(coloring.get(s));
         }
 
         // No available colors left
