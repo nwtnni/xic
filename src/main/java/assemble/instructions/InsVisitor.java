@@ -144,9 +144,17 @@ public abstract class InsVisitor<T> {
         return null;
     }
 
-//     public T visit(Push i) {
-//         return null;
-//     }
+    /*
+     * Push Visitors
+     */
+
+    public T visit(Push.TR p) {
+        return null;
+    }
+
+    public T visit(Push.TM p) {
+        return null;
+    }
 
 //     public T visit(Ret i) {
 //         return null;
