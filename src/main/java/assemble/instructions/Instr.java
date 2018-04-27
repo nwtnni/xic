@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import assemble.*;
 
-public abstract class Instr<T> {
+public abstract class Instr<A> {
 
     public Instr() {
         this.id = UUID.randomUUID();
@@ -25,5 +25,5 @@ public abstract class Instr<T> {
         return false;
     }
 
-    public abstract <T> T accept(InsVisitor<T> v);
+    public abstract <T> T accept(InsVisitor<A, T> v);
 }

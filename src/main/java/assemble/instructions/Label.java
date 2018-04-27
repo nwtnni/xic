@@ -3,28 +3,29 @@ package assemble.instructions;
 import ir.IRFuncDecl;
 import ir.IRLabel;
 
-public class Label extends Instr {
+public class Label<A> extends Instr<A> {
+
     protected String name;
 
     /**
      * Generate a label from an IRLabel
      */
-    public static Label label(IRLabel l) {
-        return new Label(l.name() + ":");
+    public static <T> Label<T> label(IRLabel l) {
+        return new Label<>(l.name() + ":");
     }
 
     /**
      * Generate a label from an IRLabel
      */
-    public static Label funLabel(IRFuncDecl fn) {
-        return new Label(fn.name()+ ":");
+    public static <T> Label<T> funLabel(IRFuncDecl fn) {
+        return new Label<>(fn.name()+ ":");
     }
 
     /**
      * Generate a label from an IRFuncDecl 
      */
-    public static Label retLabel(IRFuncDecl fn) {
-        return new Label("_RET_" + fn.name() + ":");
+    public static <T> Label<T> retLabel(IRFuncDecl fn) {
+        return new Label<>("_RET_" + fn.name() + ":");
     }
 
     private Label(String name) {
@@ -54,17 +55,7 @@ public class Label extends Instr {
     }
 
     @Override
-    public String toAbstractAssembly() {
-        return toAssembly();
-    }
-
-    @Override
-    public String toAssembly() {
-        return name;
-    }
-    
-    @Override
-    public <T> T accept(InsVisitor<T> v) {
+    public <T> T accept(InsVisitor<A, T> v) {
         return v.visit(this);
     }
 }

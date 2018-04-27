@@ -6,6 +6,10 @@ import ir.IRLabel;
 
 public class Jcc<A> extends Instr<A> {
 
+    public static <T> Jcc<T> of(Kind kind, IRLabel target) {
+        return new Jcc<>(kind, target);
+    }
+
     public enum Kind {
         E   ("e"),
         NE  ("ne"),
@@ -21,7 +25,7 @@ public class Jcc<A> extends Instr<A> {
     }
 
     public Kind kind;
-    public Label target;
+    public Label<A> target;
 
     private Jcc(Kind kind, IRLabel target) {
         this.kind = kind;
@@ -37,13 +41,5 @@ public class Jcc<A> extends Instr<A> {
     @Override
     public <T> T accept(InsVisitor<A, T> v) {
         return v.visit(this);
-    }
-
-    public static class T extends Jcc<Temp> {
-        public T(Kind kind, IRLabel target) { super(kind, target); }
-    }
-
-    public static class R extends Jcc<Reg> {
-        public R(Kind kind, IRLabel target) { super(kind, target); }
     }
 }

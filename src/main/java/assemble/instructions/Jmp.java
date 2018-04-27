@@ -6,9 +6,17 @@ import ir.IRJump;
 
 public class Jmp<A> extends Instr<A> {
 
-    public Label label;
+    public static <T> Jmp<T> of(Label<T> label) {
+        return new Jmp<>(label);
+    }
 
-    private Jmp(Label label) {
+    public static <T> Jmp<T> of(IRJump jump) {
+        return new Jmp<>(jump);
+    }
+
+    public Label<A> label;
+
+    private Jmp(Label<A> label) {
         this.label = label;
     }
 
@@ -28,15 +36,5 @@ public class Jmp<A> extends Instr<A> {
     @Override
     public <T> T accept(InsVisitor<A, T> v) {
         return v.visit(this);
-    }
-
-    public static class T extends Jmp<Temp> {
-        public T(Label label) { super(label); }
-        public T(IRJump jump) { super(jump); }
-    }
-
-    public static class R extends Jmp<Reg> {
-        public R(Label label) { super(label); }
-        public R(IRJump jump) { super(jump); }
     }
 }

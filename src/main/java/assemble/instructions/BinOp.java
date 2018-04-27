@@ -36,7 +36,7 @@ public class BinOp<L, R, A> extends Instr<A> {
     }
 
     @Override
-    public <T> T accept(InsVisitor<T> v) {
+    public <T> T accept(InsVisitor<A, T> v) {
         return v.visit(this);
     }
 

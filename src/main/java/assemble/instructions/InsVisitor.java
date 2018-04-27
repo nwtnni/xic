@@ -1,65 +1,65 @@
 package assemble.instructions;
 
-public class InsVisitor<T> {
+public abstract class InsVisitor<A, T> {
 
-    public T visit(BinOp i) {
+    public <L, R> T visit(BinOp<L, R, A> i) {
         return null;
     }
 
-    public T visit(Call i) {
+    public T visit(Call<A> i) {
         return null;
     }
 
-    public T visit(Cmp i) {
+    public <L, R> T visit(Cmp<L, R, A> i) {
         return null;
     }
 
-    public T visit(Cqo i) {
+    public T visit(Cqo<A> i) {
         return null;
     }
 
-    public T visit(DivMul i) {
+    public <S> T visit(DivMul<S, A> i) {
         return null;
     }
 
-    public T visit(Jcc i) {
+    public T visit(Jcc<A> i) {
         return null;
     }
 
-    public T visit(Jmp i) {
+    public T visit(Jmp<A> i) {
         return null;
     }
 
-    public T visit(Label i) {
+    public T visit(Label<A> l) {
         return null;
     }
 
-    public T visit(Lea i) {
-        return null;
-    }
+//     public T visit(Lea i) {
+//         return null;
+//     }
 
-    public T visit(Mov i) {
-        return null;
-    }
+//     public T visit(Mov i) {
+//         return null;
+//     }
 
-    public T visit(Pop i) {
-        return null;
-    }
+//     public T visit(Pop i) {
+//         return null;
+//     }
 
-    public T visit(Push i) {
-        return null;
-    }
+//     public T visit(Push i) {
+//         return null;
+//     }
 
-    public T visit(Ret i) {
-        return null;
-    }
+//     public T visit(Ret i) {
+//         return null;
+//     }
 
-    public T visit(Setcc i) {
-        return null;
-    }
+//     public T visit(Setcc i) {
+//         return null;
+//     }
 
-    public T visit(Text i) {
-        return null;
-    }
+//     public T visit(Text i) {
+//         return null;
+//     }
 
 }

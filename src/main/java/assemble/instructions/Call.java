@@ -5,22 +5,18 @@ import assemble.Reg;
 
 public class Call<A> extends Instr<A> {
 
+    public static <T> Call<T> of(String name, int numArgs, int numRet) {
+        return new Call<>(name, numArgs, numRet);
+    }
+
     public String name;
     public int numArgs;
     public int numRet;
 
-    public Call(String name, int numArgs, int numRet) {
+    private Call(String name, int numArgs, int numRet) {
         this.name = name;
         this.numArgs = numArgs;
         this.numRet = numRet;
-    }
-
-    public abstract class T extends Call<Temp> {
-        public T(String name, int numArgs, int numRet) { super(name, numArgs, numRet); }
-    }
-
-    public abstract class R extends Call<Reg> {
-        public R(String name, int numArgs, int numRet) { super(name, numArgs, numRet); }
     }
 
     @Override
@@ -29,7 +25,7 @@ public class Call<A> extends Instr<A> {
     }
 
     @Override
-    public <T> T accept(InsVisitor<T> v) {
+    public <T> T accept(InsVisitor<A, T> v) {
         return v.visit(this);
     }
 }
