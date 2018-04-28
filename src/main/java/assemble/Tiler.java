@@ -415,7 +415,8 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRConst c) {
-        throw XicInternalException.runtime("Missed an immediate");
+        // TODO: make sure we catch all constants
+        return null;
     }
 
     public Operand visit(IRJump j) {

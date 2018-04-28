@@ -111,7 +111,7 @@ public abstract class FuncDecl<A> {
             this.name = fn.name;
             this.args = fn.args;
             this.rets = fn.rets;
-            this.returnLabel = fn.returnLabel.promote();
+            this.returnLabel = new Label.R(fn.returnLabel.name());
             this.prelude = new ArrayList<>(); 
             this.stmts = new ArrayList<>(); 
             this.epilogue = new ArrayList<>(); 

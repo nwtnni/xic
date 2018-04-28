@@ -20,8 +20,6 @@ public abstract class Label<A> extends Instr<A> {
         return name.substring(0, name.length() - 1);
     }
 
-    public Label<Reg> promote() { return new Label.R(name()); }
-
     @Override
     public int hashCode() {
         return name.hashCode();

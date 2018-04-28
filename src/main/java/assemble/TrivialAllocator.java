@@ -9,8 +9,6 @@ import assemble.instructions.*;
 import assemble.instructions.BinOp.Kind;
 import static assemble.instructions.InstrFactory.*;
 
-import util.Either;
-
 import xic.XicInternalException;
 
 public class TrivialAllocator extends InstrVisitor<Void> {
@@ -120,6 +118,10 @@ public class TrivialAllocator extends InstrVisitor<Void> {
             calleeReturnAddr = pushTemp();
         }
 
+        for (Instr<Temp> i : fn.prelude) {
+             
+        }
+
         for (Instr<Temp> i : fn.stmts) {
             i.accept(this);
         }
@@ -148,16 +150,16 @@ public class TrivialAllocator extends InstrVisitor<Void> {
 
     public Void visit(BinOp.TIR b) {
 
-        Either<Reg, Mem<Reg>> dest = allocate(b.dest);
+        RegOperand dest = allocate(b.dest);
 
         // Move register into register
-        if (dest.isLeft()) {
-            instrs.add(new BinOp.RIR(b.kind, b.src, dest.getLeft()));
+        if (dest.isReg()) {
+            instrs.add(new BinOp.RIR(b.kind, b.src, dest.getReg()));
         }
         
         // Move register into mem
         else {
-            instrs.add(new BinOp.RIM(b.kind, b.src, dest.getRight()));
+            instrs.add(new BinOp.RIM(b.kind, b.src, dest.getMem()));
         }
 
         return null;
@@ -170,17 +172,17 @@ public class TrivialAllocator extends InstrVisitor<Void> {
     }
 
     public Void visit(BinOp.TRM b) {
-        Either<Reg, Mem<Reg>> src = allocate(b.src);
+        RegOperand src = allocate(b.src);
         Mem<Reg> dest = allocate(b.dest);
 
         // Move register into memory
-        if (src.isLeft()) {
-            instrs.add(new BinOp.RRM(b.kind, src.getLeft(), dest));
+        if (src.isReg()) {
+            instrs.add(new BinOp.RRM(b.kind, src.getReg(), dest));
         }
 
         // Move memory into register, then into memory
         else {
-            instrs.add(new Mov.RMR(src.getRight(), Reg.R9));
+            instrs.add(new Mov.RMR(src.getMem(), Reg.R9));
             instrs.add(new BinOp.RRM(b.kind, Reg.R9, dest));
         }
         
@@ -189,45 +191,45 @@ public class TrivialAllocator extends InstrVisitor<Void> {
 
     public Void visit(BinOp.TMR b) {
         Mem<Reg> src = allocate(b.src);
-        Either<Reg, Mem<Reg>> dest = allocate(b.dest);
+        RegOperand dest = allocate(b.dest);
 
         // Move memory into register
-        if (dest.isLeft()) {
-            instrs.add(new BinOp.RMR(b.kind, src, dest.getLeft()));
+        if (dest.isReg()) {
+            instrs.add(new BinOp.RMR(b.kind, src, dest.getReg()));
         }
 
         // Move memory into register, then into memory
         else {
             instrs.add(new Mov.RMR(src, Reg.R9));
-            instrs.add(new BinOp.RRM(b.kind, Reg.R9, dest.getRight()));
+            instrs.add(new BinOp.RRM(b.kind, Reg.R9, dest.getMem()));
         }
 
         return null;
     }
 
     public Void visit(BinOp.TRR b) {
-        Either<Reg, Mem<Reg>> src = allocate(b.src);
-        Either<Reg, Mem<Reg>> dest = allocate(b.dest);
+        RegOperand src = allocate(b.src);
+        RegOperand dest = allocate(b.dest);
 
         // Move register into register
-        if (src.isLeft() && dest.isLeft()) {
-            instrs.add(new BinOp.RRR(b.kind, src.getLeft(), dest.getLeft()));
+        if (src.isReg() && dest.isReg()) {
+            instrs.add(new BinOp.RRR(b.kind, src.getReg(), dest.getReg()));
         }
 
         // Move register into memory
-        else if (src.isLeft()) {
-            instrs.add(new BinOp.RRM(b.kind, src.getLeft(), dest.getRight()));
+        else if (src.isReg()) {
+            instrs.add(new BinOp.RRM(b.kind, src.getReg(), dest.getMem()));
         }
 
         // Move memory into register
-        else if (dest.isLeft()) {
-            instrs.add(new BinOp.RMR(b.kind, src.getRight(), dest.getLeft()));
+        else if (dest.isReg()) {
+            instrs.add(new BinOp.RMR(b.kind, src.getMem(), dest.getReg()));
         }
 
         // Move memory into register, then into memory
         else {
-            instrs.add(new Mov.RMR(src.getRight(), Reg.R9));
-            instrs.add(new BinOp.RRM(b.kind, Reg.R9, dest.getRight()));
+            instrs.add(new Mov.RMR(src.getMem(), Reg.R9));
+            instrs.add(new BinOp.RRM(b.kind, Reg.R9, dest.getMem()));
         }
 
         return null;
@@ -249,34 +251,34 @@ public class TrivialAllocator extends InstrVisitor<Void> {
      */
 
     public Void visit(Cmp.TIR c) {
-        Either<Reg, Mem<Reg>> right = allocate(c.right);
+        RegOperand right = allocate(c.right);
         
         // Compare immediate to register
-        if (right.isLeft()) {
-            instrs.add(new Cmp.RIR(c.left, right.getLeft()));
+        if (right.isReg()) {
+            instrs.add(new Cmp.RIR(c.left, right.getReg()));
         }
 
         // Move immediate to register, then compare to memory
         else {
             instrs.add(new Mov.RIR(c.left, Reg.R9));
-            instrs.add(new Cmp.RRM(Reg.R9, right.getRight()));
+            instrs.add(new Cmp.RRM(Reg.R9, right.getMem()));
         }
 
         return null;
     }
 
     public Void visit(Cmp.TRM c) {
-        Either<Reg, Mem<Reg>> left = allocate(c.left);
+        RegOperand left = allocate(c.left);
         Mem<Reg> right = allocate(c.right);
 
         // Compare register to memory
-        if (left.isLeft()) {
-            instrs.add(new Cmp.RRM(left.getLeft(), right));
+        if (left.isReg()) {
+            instrs.add(new Cmp.RRM(left.getReg(), right));
         }
 
         // Move memory to register, then compare to memory
         else {
-            instrs.add(new Mov.RMR(left.getRight(), Reg.R9));
+            instrs.add(new Mov.RMR(left.getMem(), Reg.R9));
             instrs.add(new Cmp.RRM(Reg.R9, right));
         }
 
@@ -285,45 +287,45 @@ public class TrivialAllocator extends InstrVisitor<Void> {
 
     public Void visit(Cmp.TMR c) {
         Mem<Reg> left = allocate(c.left);
-        Either<Reg, Mem<Reg>> right = allocate(c.right);
+        RegOperand right = allocate(c.right);
 
         // Compare memory to register
-        if (right.isLeft()) {
-            instrs.add(new Cmp.RMR(left, right.getLeft()));
+        if (right.isReg()) {
+            instrs.add(new Cmp.RMR(left, right.getReg()));
         }
 
         // Move memory to register, then compare to memory
         else {
             instrs.add(new Mov.RMR(left, Reg.R9));
-            instrs.add(new Cmp.RRM(Reg.R9, right.getRight()));
+            instrs.add(new Cmp.RRM(Reg.R9, right.getMem()));
         }
        
         return null;
     }
 
     public Void visit(Cmp.TRR c) {
-        Either<Reg, Mem<Reg>> left = allocate(c.left);
-        Either<Reg, Mem<Reg>> right = allocate(c.right);
+        RegOperand left = allocate(c.left);
+        RegOperand right = allocate(c.right);
         
         // Compare register to register
-        if (left.isLeft() && right.isLeft()) {
-            instrs.add(new Cmp.RRR(left.getLeft(), right.getLeft()));
+        if (left.isReg() && right.isReg()) {
+            instrs.add(new Cmp.RRR(left.getReg(), right.getReg()));
         }
 
         // Compare register to memory
-        else if (left.isLeft()) {
-            instrs.add(new Cmp.RRM(left.getLeft(), right.getRight()));
+        else if (left.isReg()) {
+            instrs.add(new Cmp.RRM(left.getReg(), right.getMem()));
         }
 
         // Compare memory to register
-        else if (right.isLeft()) {
-            instrs.add(new Cmp.RMR(left.getRight(), right.getLeft()));
+        else if (right.isReg()) {
+            instrs.add(new Cmp.RMR(left.getMem(), right.getReg()));
         }
 
         // Move memory to register, then compare
         else {
-            instrs.add(new Mov.RMR(left.getRight(), Reg.R9));
-            instrs.add(new Cmp.RRM(Reg.R9, right.getRight()));
+            instrs.add(new Mov.RMR(left.getMem(), Reg.R9));
+            instrs.add(new Cmp.RRM(Reg.R9, right.getMem()));
         }
 
         return null;
@@ -344,16 +346,16 @@ public class TrivialAllocator extends InstrVisitor<Void> {
 
     public Void visit(DivMul.TR d) {
 
-        Either<Reg, Mem<Reg>> reg = allocate(d.src);
+        RegOperand reg = allocate(d.src);
         
         // DivMul a register source
-        if (reg.isLeft()) {
-            instrs.add(new DivMul.RR(d.kind, reg.getLeft()));
+        if (reg.isReg()) {
+            instrs.add(new DivMul.RR(d.kind, reg.getReg()));
         }
 
         // DivMul a memory source
         else {
-            instrs.add(new DivMul.RM(d.kind, reg.getRight()));
+            instrs.add(new DivMul.RM(d.kind, reg.getMem()));
         }
 
         return null;
@@ -388,7 +390,7 @@ public class TrivialAllocator extends InstrVisitor<Void> {
      */
 
     public Void visit(Label.T l) {
-        instrs.add(l.promote());
+        instrs.add(new Label.R(l.name()));
         return null;
     }
 
@@ -397,12 +399,12 @@ public class TrivialAllocator extends InstrVisitor<Void> {
      */
 
     public Void visit(Lea.T l) {
-        Either<Reg, Mem<Reg>> dest = allocate(l.dest);   
+        RegOperand dest = allocate(l.dest);   
         Mem<Reg> src = allocate(l.src);
 
         // Load into register destination
-        if (dest.isLeft()) {
-            instrs.add(new Lea.R(src, dest.getLeft()));
+        if (dest.isReg()) {
+            instrs.add(new Lea.R(src, dest.getReg()));
         }
 
         // Temporarily swap using a register
@@ -410,7 +412,7 @@ public class TrivialAllocator extends InstrVisitor<Void> {
             Mem<Reg> temp = pushTemp();
             instrs.add(new Mov.RRM(Reg.R9, temp));
             instrs.add(new Lea.R(src, Reg.R9));
-            instrs.add(new Mov.RRM(Reg.R9, dest.getRight()));
+            instrs.add(new Mov.RRM(Reg.R9, dest.getMem()));
             instrs.add(new Mov.RMR(temp, Reg.R9));
         }
 
@@ -422,16 +424,16 @@ public class TrivialAllocator extends InstrVisitor<Void> {
      */
 
     public Void visit(Mov.TIR m) {
-        Either<Reg, Mem<Reg>> dest = allocate(m.dest);
+        RegOperand dest = allocate(m.dest);
 
         // Move immediate into register
-        if (dest.isLeft()) {
-            instrs.add(new Mov.RIR(m.src, dest.getLeft()));
+        if (dest.isReg()) {
+            instrs.add(new Mov.RIR(m.src, dest.getReg()));
         }
 
         // Move immediate into memory
         else {
-            instrs.add(new Mov.RIM(m.src, dest.getRight()));
+            instrs.add(new Mov.RIM(m.src, dest.getMem()));
         }
 
         return null;
@@ -444,17 +446,17 @@ public class TrivialAllocator extends InstrVisitor<Void> {
     }
 
     public Void visit(Mov.TRM m) {
-        Either<Reg, Mem<Reg>> src = allocate(m.src);
+        RegOperand src = allocate(m.src);
         Mem<Reg> dest = allocate(m.dest);
 
         // Move register into memory
-        if (src.isLeft()) {
-            instrs.add(new Mov.RRM(src.getLeft(), dest));
+        if (src.isReg()) {
+            instrs.add(new Mov.RRM(src.getReg(), dest));
         }
 
         // Move memory into register, then into memory
         else {
-            instrs.add(new Mov.RMR(src.getRight(), Reg.R9));
+            instrs.add(new Mov.RMR(src.getMem(), Reg.R9));
             instrs.add(new Mov.RRM(Reg.R9, dest));
         }
 
@@ -463,45 +465,45 @@ public class TrivialAllocator extends InstrVisitor<Void> {
 
     public Void visit(Mov.TMR m) {
         Mem<Reg> src = allocate(m.src);
-        Either<Reg, Mem<Reg>> dest = allocate(m.dest);
+        RegOperand dest = allocate(m.dest);
 
         // Move memory into register
-        if (dest.isLeft()) {
-            instrs.add(new Mov.RMR(src, dest.getLeft()));
+        if (dest.isReg()) {
+            instrs.add(new Mov.RMR(src, dest.getReg()));
         }
 
         // Move memory into register, then into memory
         else {
             instrs.add(new Mov.RMR(src, Reg.R9));
-            instrs.add(new Mov.RRM(Reg.R9, dest.getRight()));
+            instrs.add(new Mov.RRM(Reg.R9, dest.getMem()));
         }
 
         return null;
     }
 
     public Void visit(Mov.TRR m) {
-        Either<Reg, Mem<Reg>> src = allocate(m.src);
-        Either<Reg, Mem<Reg>> dest = allocate(m.dest);
+        RegOperand src = allocate(m.src);
+        RegOperand dest = allocate(m.dest);
 
         // Move register into register
-        if (src.isLeft() && dest.isLeft()) {
-            instrs.add(new Mov.RRR(src.getLeft(), dest.getLeft()));
+        if (src.isReg() && dest.isReg()) {
+            instrs.add(new Mov.RRR(src.getReg(), dest.getLeft()));
         }
 
         // Move register into memory
-        else if (src.isLeft()) {
-            instrs.add(new Mov.RRM(src.getLeft(), dest.getRight()));
+        else if (src.isReg()) {
+            instrs.add(new Mov.RRM(src.getReg(), dest.getMem()));
         }
 
         // Move memory into register
-        else if (dest.isLeft()) {
-            instrs.add(new Mov.RMR(src.getRight(), dest.getLeft()));
+        else if (dest.isReg()) {
+            instrs.add(new Mov.RMR(src.getMem(), dest.getReg()));
         }
 
         // Move memory into register, then into memory
         else {
-            instrs.add(new Mov.RMR(src.getRight(), Reg.R9));
-            instrs.add(new Mov.RRM(Reg.R9, dest.getRight()));
+            instrs.add(new Mov.RMR(src.getMem(), Reg.R9));
+            instrs.add(new Mov.RRM(Reg.R9, dest.getMem()));
         }
 
         return null;
@@ -513,16 +515,16 @@ public class TrivialAllocator extends InstrVisitor<Void> {
 
     public Void visit(Pop.TR p) {
 
-        Either<Reg, Mem<Reg>> dest = allocate(p.dest);
+        RegOperand dest = allocate(p.dest);
 
         // Pop to register
-        if (dest.isLeft()) {
-            instrs.add(new Pop.RR(dest.getLeft()));
+        if (dest.isReg()) {
+            instrs.add(new Pop.RR(dest.getReg()));
         }
 
         // Pop to memory
         else {
-            instrs.add(new Pop.RM(dest.getRight()));
+            instrs.add(new Pop.RM(dest.getMem()));
         }
         
         return null;
@@ -540,16 +542,16 @@ public class TrivialAllocator extends InstrVisitor<Void> {
 
     public Void visit(Push.TR p) {
 
-        Either<Reg, Mem<Reg>> src = allocate(p.src);
+        RegOperand src = allocate(p.src);
 
         // Push from register
-        if (src.isLeft()) {
-            instrs.add(new Push.RR(src.getLeft()));
+        if (src.isReg()) {
+            instrs.add(new Push.RR(src.getReg()));
         }
 
         // Push from memory
         else {
-            instrs.add(new Push.RM(src.getRight()));
+            instrs.add(new Push.RM(src.getMem()));
         }
         
         return null;
@@ -588,19 +590,19 @@ public class TrivialAllocator extends InstrVisitor<Void> {
         return null;
     }
 
-    private Either<Reg, Mem<Reg>> allocate(Temp t) {
+    private RegOperand allocate(Temp t) {
         String name = t.name;
         switch (t.kind) {
             // Allocate an ordinary temporary
             case TEMP:
                 if (!tempStack.containsKey(name)) {
-                    return Either.right(pushTemp(name));
+                    return RegOperand.of(pushTemp(name));
                 }
-                return Either.right(getTemp(name));
+                return RegOperand.of(getTemp(name));
 
             // Get the fixed register
             case FIXED:
-                return Either.left(t.getRegister());
+                return RegOperand.of(t.getRegister());
         }
         assert false;
         return null;
@@ -614,55 +616,55 @@ public class TrivialAllocator extends InstrVisitor<Void> {
 
         case R:
             // Spill reg if necessary
-            Either<Reg, Mem<Reg>> reg = allocate(mem.reg);
+            RegOperand reg = allocate(mem.reg);
 
-            if (reg.isRight()) {
-                instrs.add(new Mov.RMR(reg.getRight(), Reg.R10));
-                reg = Either.left(Reg.R10);
+            if (reg.isMem()) {
+                instrs.add(new Mov.RMR(reg.getMem(), Reg.R10));
+                reg = RegOperand.of(Reg.R10);
             }
 
-            return Mem.of(reg.getLeft());
+            return Mem.of(reg.getReg());
 
         case RO:
             // Spill reg if necessary
             reg = allocate(mem.reg);
 
-            if (reg.isRight()) {
-                instrs.add(new Mov.RMR(reg.getRight(), Reg.R10));
-                reg = Either.left(Reg.R10);
+            if (reg.isMem()) {
+                instrs.add(new Mov.RMR(reg.getMem(), Reg.R10));
+                reg = RegOperand.of(Reg.R10);
             }
 
-            return Mem.of(reg.getLeft(), mem.offset);
+            return Mem.of(reg.getReg(), mem.offset);
 
         case RSO:
             // Spill reg if necessary
             reg = allocate(mem.reg);
 
-            if (reg.isRight()) {
-                instrs.add(new Mov.RMR(reg.getRight(), Reg.R10));
-                reg = Either.left(Reg.R10);
+            if (reg.isMem()) {
+                instrs.add(new Mov.RMR(reg.getMem(), Reg.R10));
+                reg = RegOperand.of(Reg.R10);
             }
 
-            return Mem.of(reg.getLeft(), mem.offset, mem.scale);
+            return Mem.of(reg.getReg(), mem.offset, mem.scale);
 
         case BRSO:
             // Spill base if necessary
-            Either<Reg, Mem<Reg>> base = allocate(mem.base);
+            RegOperand base = allocate(mem.base);
 
-            if (base.isRight()) {
-                instrs.add(new Mov.RMR(base.getRight(), Reg.R11));
-                reg = Either.left(Reg.R11);
+            if (base.isMem()) {
+                instrs.add(new Mov.RMR(base.getMem(), Reg.R11));
+                base = RegOperand.of(Reg.R11);
             }
 
             // Spill reg if necessary
             reg = allocate(mem.reg);
 
-            if (reg.isRight()) {
-                instrs.add(new Mov.RMR(reg.getRight(), Reg.R10));
-                reg = Either.left(Reg.R10);
+            if (reg.isMem()) {
+                instrs.add(new Mov.RMR(reg.getMem(), Reg.R10));
+                reg = RegOperand.of(Reg.R10);
             }
 
-            return Mem.of(base.getLeft(), reg.getLeft(), mem.offset, mem.scale);
+            return Mem.of(base.getReg(), reg.getReg(), mem.offset, mem.scale);
         }
 
         // Unreachable
