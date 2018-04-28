@@ -2,6 +2,7 @@ package optimize.cse;
 
 import java.util.Set;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -153,7 +154,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
             hasChanged = true;
         } else {
             for(IRExpr e: newExprs.keySet()) {
-                if (!(oldExprs.keySet().contains(e) && oldExprs.get(e).equals(newExprs.get(e)))) {
+                if (!(oldExprs.containsKey(e) && oldExprs.get(e).equals(newExprs.get(e)))) {
                     hasChanged = true;
                 }
             }
@@ -168,18 +169,21 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
      */
     public void runCSE() {
 
-        // annotate(g);
-        doWorklist();
+        doWorklist();   // Run available expressions analysis
 
         // Temp names for exprs that are common subexprs
-        Map<Pair<IRExpr, IRStmt>, IRTemp> assigned = new HashMap<>();
-        Integer varCount = 0;
+        Map<Pair<IRExpr, IRStmt>, IRTemp> tempMap = new HashMap<>();
+        Integer varCount = 0;   // Used to name cse replacement temps
 
         Queue<IRStmt> q = new LinkedList<>();
         Set<IRStmt> seen = new HashSet<>();     // Has been added to q at some point.
 
         CSEReplaceVisitor replVisit = new CSEReplaceVisitor();
+
+        // Map from a stmt to the (expr, defining location) that will be used for CSE
+        Map<IRStmt, Pair<IRExpr, IRStmt>> stmtToExpr = new HashMap<>();
         
+        // Iterate to mark nodes for replacement
         q.add(graph.start);
         seen.add(graph.start);
 
@@ -189,53 +193,39 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
             PriorityQueue<IRExpr> orderedExprs = new PriorityQueue<IRExpr>(new ExprComparator());
             orderedExprs.addAll(s.exprs);
             
-            IRExpr cur = orderedExprs.poll();
+            IRExpr curExpr = orderedExprs.poll();
 
             // Iterate and pop orderedExprs
-            while (cur != null) {
+            while (curExpr != null) {
                 // If current expression can be replaced (and cur is not a temp)
-                if (s.CSEin.containsKey(cur) && !(cur instanceof IRTemp)) {                    
-                    IRStmt node = s.CSEin.get(cur);
-                    Pair<IRExpr, IRStmt> curPair = new Pair<>(cur, node);
-
-                    replVisit.replaceExpr = cur;    // Expression to replace using replVisit
+                if (s.CSEin.containsKey(curExpr) && !(curExpr instanceof IRTemp)) {    
+                    IRStmt defNode = s.CSEin.get(curExpr);
+                    Pair<IRExpr, IRStmt> curPair = new Pair<>(curExpr, defNode);
                     
                     // If this expression was not already replaced
-                    if (!assigned.containsKey(curPair)) {
-
+                    if (!tempMap.containsKey(curPair)) {
                         // Generate temp to hold expression
                         IRTemp newTemp = new IRTemp("_cse_" + varCount.toString());
-                        assigned.put(new Pair<IRExpr, IRStmt>(cur, node), newTemp);
+                        tempMap.put(curPair, newTemp);
                         varCount++;
-
-                        // Adding new move stmt before original computation point
-                        IRStmt newStmt = new IRMove(newTemp, cur);
-                        graph.addVertex(newStmt);
-
-                        // Editing the edges
-                        Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> incoming = new HashSet<>(graph.incomingEdgesOf(node));
-                        for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : incoming) {
-                            graph.addEdge(e.head, newStmt);
-                        }
-                        graph.removeAllEdges(incoming);
-                        graph.addEdge(newStmt, node);
-
-                        replVisit.newExpr = newTemp;    // Set replVisit to name of the new temp
                     }
-                    else {
-                        replVisit.newExpr = assigned.get(curPair);  // Set replVisit to appropriate temp
+
+                    ExprComparator cmp = new ExprComparator();
+                    // Update s replacement if it would be bigger
+                    if(!stmtToExpr.containsKey(s)
+                        || cmp.sizeExpr(curExpr) > cmp.sizeExpr(stmtToExpr.get(s).first)) {
+                        stmtToExpr.put(s, curPair);
                     }
-                    
-                    // NOTE: Not allowed to call CSEin.keySet() because mutations change keySet pointers
-                    // However, accesses are still fine because hashmaps only care about hashcode
 
-                    node.accept(replVisit);  // Update the original computation point
-                    s.accept(replVisit);     // Update the current computation point
-
+                    // Update defNode replacement if it would be bigger
+                    if(!stmtToExpr.containsKey(defNode) 
+                        || cmp.sizeExpr(curExpr) > cmp.sizeExpr(stmtToExpr.get(defNode).first)) {
+                        stmtToExpr.put(defNode, curPair);
+                    }
                     break;
                 } 
 
-                cur = orderedExprs.poll();
+                curExpr = orderedExprs.poll();
             }
 
             // Add outgoing edges to q if they haven't been seen before
@@ -243,6 +233,55 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
                 if (!seen.contains(e.tail)) {
                     seen.add(e.tail);
                     q.add(e.tail);
+                }
+            }
+        }
+
+        // Flip the stmtToExpr map to go from expr to a list of stmts
+        Map<Pair<IRExpr, IRStmt>, List<IRStmt>> exprToStmts = new HashMap<>();
+        for(IRStmt s:stmtToExpr.keySet()) {
+            
+            Pair<IRExpr,IRStmt> e = stmtToExpr.get(s);
+
+            // Initialize list if making a new key
+            if(!exprToStmts.containsKey(e)) {
+                exprToStmts.put(e, new ArrayList<IRStmt>());
+            }
+
+            exprToStmts.get(e).add(s);
+        }
+
+        // Iterate over potential exprs to replace in the IRStmts
+        for (Pair<IRExpr, IRStmt> curPair: exprToStmts.keySet()) {
+            List<IRStmt> stmts = exprToStmts.get(curPair);
+            if (stmts.size() > 1) {
+
+                // Unfolding the curPair data
+                IRExpr curExpr = curPair.first;
+                IRStmt defNode = curPair.second;
+
+                // Adding new move stmt before original computation point
+                IRStmt newStmt = new IRMove(tempMap.get(curPair), curExpr);
+                graph.addVertex(newStmt);
+
+                // Editing the edges of the graph
+                Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> incoming = new HashSet<>(graph.incomingEdgesOf(defNode));
+                for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : incoming) {
+                    graph.addEdge(e.head, newStmt);
+                }
+                graph.removeAllEdges(incoming);
+                graph.addEdge(newStmt, defNode);
+
+                // Performing the replacements
+                for(IRStmt stmt: stmts) {
+                    replVisit.replaceExpr = curExpr;    // Expression to replace using replVisit
+                    replVisit.newExpr = tempMap.get(curPair);    // Temp to replace the expression using replVisit
+
+                    // NOTE: Not allowed to call CSEin.keySet() because mutations change keySet pointers
+                    // However, accesses are still fine because hashmaps only care about hashcode
+                    defNode.accept(replVisit);  // Update the original computation point
+                    stmt.accept(replVisit);     // Update the current computation point
+
                 }
             }
         }
