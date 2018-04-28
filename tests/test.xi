@@ -15,10 +15,6 @@ main (args:int[][]) {
     // a = a + 1
 }
 
-// foo():int, int, int{
-//     return 1,2,3
-// }
-
-// printInt(i:int) {
-//     println(unparseInt(i))
-// }
+printint (i: int) {
+    println(unparseInt(i))
+}

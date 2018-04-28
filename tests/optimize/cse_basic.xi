@@ -2,10 +2,10 @@ use io
 use conv
 
 main (args:int[][]) {
-    x:int = 1
+    i:int = 0
     y:int
-    y = x+1
-    y = x+1
-    y = x+1
-    y = x+1
+    y = 2 * (i + 1)
+    y = i + 1
+
+    y = 2 * (i + 1)
 }

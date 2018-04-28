@@ -28,6 +28,7 @@ public class LVInitVisitor extends InsVisitor<Void> {
     }
 
     public Void visit(Call i) {
+        // Calls kill all caller saved registers
         i.def = Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RSI, Temp.RDI, Temp.R8, Temp.R9, Temp.R10, Temp.R11);
         return null;
     }
@@ -75,6 +76,7 @@ public class LVInitVisitor extends InsVisitor<Void> {
     public Void visit(Mov i) {
         i.use = i.srcTemp.getTemps();
 
+        // Move defines destination if is a register else uses destination as address
         if (i.destTemp.isFixed() || i.destTemp.isTemp()) {
             i.def = i.destTemp.getTemps();
         } else {
