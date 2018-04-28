@@ -80,13 +80,7 @@ public class ConstWorklist extends Worklist<IRGraph<Map<IRTemp, Optional<IRConst
 
             // Could add additional cases for constant prop of binop(x, y)...
         }
-
-        System.out.println("meet on " + v);
-
-        System.out.println("in: " + in);
-
-        System.out.println("\nout: " + out + "\n");
-
+        
         return out;
     }
 
