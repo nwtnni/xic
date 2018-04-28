@@ -3,9 +3,8 @@ use conv
 
 main (args:int[][]) {
     i:int = 0
-    y:int
-    y = 2 * (i + 1)
-    y = i + 1
-
-    y = 2 * (i + 1)
+    a:int = i+1
+    b:int = i+1
+    c:int = i+1
+    d:int = i+1
 }
