@@ -48,15 +48,7 @@ public class ConstProp extends Phase {
         // Run analyses and optimizations
         for(String key: cfgs.keySet()) {
             IRGraph<Map<IRTemp, Optional<IRConst>>> cfg = cfgs.get(key);
-
-            Map<IRStmt, Map<IRTemp, Optional<IRConst>>> consts = ConstWorklist.computeAvailableConsts(cfg);
-            
-            System.out.println(key);
-            for (IRStmt s : ir.first.getFunction(key).body().stmts()) {
-                System.out.println(consts.get(s));
-                System.out.println(s);
-            }
-            
+            ConstReplaceVisitor.runConstantProp(cfg);
         }
 
         // Convert back to IR

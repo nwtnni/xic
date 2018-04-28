@@ -2,7 +2,6 @@ package xic.phase;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import util.Result;
 
@@ -18,6 +17,9 @@ public abstract class Phase {
             new Canonize(),
             new Interpret(),
             new ConstProp(),
+            new Fold(),
+            new ConstProp(),
+            new Fold(),
             new CSE(),
             new Irgen(),
             new Tile(),

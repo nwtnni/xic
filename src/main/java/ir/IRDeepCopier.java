@@ -1,7 +1,5 @@
-package optimize.cse;
+package ir;
 
-
-import ir.*;
 import java.util.List;
 import java.util.HashSet;
 import java.util.ArrayList;

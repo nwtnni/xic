@@ -24,7 +24,7 @@ public class ConstWorklist extends Worklist<IRGraph<Map<IRTemp, Optional<IRConst
      * Runs the constant propagation analysis on graph [cfg] and returns the mapping of available
      * constants at each program point.
      */
-    public static Map<IRStmt, Map<IRTemp, Optional<IRConst>>> computeAvailableConsts(IRGraph<Map<IRTemp, Optional<IRConst>>> cfg) {
+    protected static Map<IRStmt, Map<IRTemp, Optional<IRConst>>> computeAvailableConsts(IRGraph<Map<IRTemp, Optional<IRConst>>> cfg) {
         ConstWorklist wl = new ConstWorklist(cfg);
         wl.doWorklist();
         return wl.availableConsts;

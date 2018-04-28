@@ -6,7 +6,7 @@ package ir;
  * EXP(e)
  */
 public class IRExp extends IRStmt {
-    private IRExpr expr;
+    public IRExpr expr;
 
     /**
      *
