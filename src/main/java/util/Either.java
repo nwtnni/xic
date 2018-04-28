@@ -31,12 +31,17 @@ public class Either<L, R> {
     }
 
     public L getLeft() {
-        assert isLeft();
+        assert kind == Kind.LEFT;
         return left;
     }
 
     public R getRight() {
-        assert isRight();
+        assert kind == Kind.RIGHT;
         return right;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s of %s, %s", kind, left, right);
     }
 }
