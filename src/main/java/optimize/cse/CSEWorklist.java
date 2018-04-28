@@ -33,8 +33,6 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
     
     public boolean kill(Set<IRExpr> killSet, IRExpr e) {
         if (e instanceof IRTemp && killSet.contains(e)) {
-            // System.out.println("I killed inside kill func");
-
             return true;
         }
         if (e instanceof IRBinOp) {
@@ -51,7 +49,6 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
      */
     public boolean containsCall(IRExpr e) {
         if (e instanceof IRCall) {
-            // System.out.println("killing a call: " + e);
             return true;
         }
         if (e instanceof IRTemp || e instanceof IRConst || e instanceof IRName) {
@@ -114,13 +111,16 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         for (Map<IRExpr, IRStmt> s : paths) {
             // only want to intersect if s has been initialized
             if (s != null) {
-                // if in has not been initialized, put all of the non-empty set's objects into it
+                // Used to get the first set (to intersect with everything else)
                 if (in == null) {
                     in = new HashMap<IRExpr, IRStmt>();
                     for (IRExpr e : s.keySet()) {
+                        // Deep copy needed because we will mutate the IRExprs
                         in.put(e.accept(dc), s.get(e));
                     }
-                } else {
+                } 
+                // Keep only the intersections
+                else {
                     for (IRExpr e : new HashSet<IRExpr>(in.keySet())) {
                         if (!s.containsKey(e) || !in.get(e).equals(s.get(e))) {
                             in.remove(e);
@@ -147,7 +147,9 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         Map<IRExpr, IRStmt> oldExprs = v.CSEin;
         Map<IRExpr, IRStmt> newExprs = in;
 
-        boolean hasChanged = false;
+        boolean hasChanged = false;     // Used to detect termination
+
+        // Continue if uninitialized or if newExprs has changed size or has been updated 
         if (oldExprs == null) {
             hasChanged = true;
         } else if (oldExprs.size() != newExprs.size()) {
@@ -160,7 +162,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
             }
         }
 
-        v.CSEin = in;
+        v.CSEin = in;   // Update CSEin (annotation step)
         return hasChanged;
     }
 
@@ -248,7 +250,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
                 exprToStmts.put(e, new ArrayList<IRStmt>());
             }
 
-            exprToStmts.get(e).add(s);
+            exprToStmts.get(e).add(s);  // Add s to the list of statments corresponding to e
         }
 
         // Iterate over potential exprs to replace in the IRStmts
