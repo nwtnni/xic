@@ -1,6 +1,6 @@
-package assemble.instructions;
+package assemble;
 
-import assemble.*;
+import assemble.instructions.*;
 
 public abstract class Lifter {
 
