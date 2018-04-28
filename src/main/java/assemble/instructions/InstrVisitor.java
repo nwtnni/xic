@@ -24,7 +24,7 @@ public abstract class InstrVisitor<T> {
         return null;
     }
 
-    public T visit(BinOp.TRR i) {
+    public T visit(BinOp.TRR b) {
         return null;
     }
 
@@ -32,7 +32,7 @@ public abstract class InstrVisitor<T> {
      * Call Visitor
      */
 
-    public T visit(Call.T b) {
+    public T visit(Call.T c) {
         return null;
     }
 
@@ -60,7 +60,7 @@ public abstract class InstrVisitor<T> {
      * Cqo Visitor
      */
 
-    public T visit(Cqo.T i) {
+    public T visit(Cqo.T c) {
         return null;
     }
 
