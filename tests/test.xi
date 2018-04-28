@@ -12,11 +12,15 @@ main (args:int[][]) {
     d = a + 1
     e = a + 1
     f = a + 1 + b
-    // b = 2
-    // printInt(a)
-    // printInt(b)
-    // printInt(c)
-    // a = a + 1
+    
+    i:int = foo()
+    a = i + 1
+    b = i + 1
+    c = i + 1
+}
+
+foo() : int {
+    return 1
 }
 
 printint (i: int) {
