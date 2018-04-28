@@ -169,7 +169,7 @@ if [[ -f $2 ]] ; then
       fi
       ;;
     --irrun)
-      ./xic --irrun -libpath tests/libs --optir initial --optir cf --optir cse --optir final --optcfg initial --optcfg cf --optcfg cse --optcfg final $FILE
+      ./xic --irgen -libpath tests/libs --optir initial --optir cf --optir cse --optir final --optcfg initial --optcfg cf --optcfg cse --optcfg final $FILE
       ;;
   esac
 else
