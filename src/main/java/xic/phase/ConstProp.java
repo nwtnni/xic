@@ -41,7 +41,7 @@ public class ConstProp extends Phase {
         Pair<IRCompUnit, ABIContext> ir = previous.ok().getEmitted();
 
         // Transform to CFG
-        IREdgeFactory<Map<IRTemp, Optional<IRConst>>> ef = new IREdgeFactory<>();
+        ConstEdgeFactory ef = new ConstEdgeFactory();
         IRGraphFactory<Map<IRTemp, Optional<IRConst>>> gf = new IRGraphFactory<>(ir.first, ef);
         Map<String, IRGraph<Map<IRTemp, Optional<IRConst>>>> cfgs = gf.getCfgs();
 
@@ -52,7 +52,10 @@ public class ConstProp extends Phase {
             Map<IRStmt, Map<IRTemp, Optional<IRConst>>> consts = ConstWorklist.computeAvailableConsts(cfg);
             
             System.out.println(key);
-            System.out.println(consts);
+            for (IRStmt s : ir.first.getFunction(key).body().stmts()) {
+                System.out.println(consts.get(s));
+                System.out.println(s);
+            }
             
         }
 

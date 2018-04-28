@@ -2,18 +2,12 @@ use io
 use conv
 
 main (args:int[][]) {
-    x:int = 0
-    if (x < 0) {
-        if (x > 0) {
-            return
-        }
-    }
-    // a:int = 1 
-    // b:int = 2 
-    // c:int = 3
-    // d:int = c
-    // e:int = d
-    // f:int = e
+    a:int = 1 
+    b:int = 2 
+    c:int = 3
+    d:int = c
+    e:int = d
+    f:int = e
     // b = 2
     // printInt(a)
     // printInt(b)
