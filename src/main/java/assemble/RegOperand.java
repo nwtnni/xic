@@ -36,7 +36,7 @@ public class RegOperand extends Either<Reg, Mem<Reg>> {
         return false;
     }
 
-    public Reg getTemp() {
+    public Reg getReg() {
         return super.getLeft();
     }
 
