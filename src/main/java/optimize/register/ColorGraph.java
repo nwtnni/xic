@@ -26,7 +26,7 @@ public class ColorGraph {
     private Map<Temp, Reg> coloring;
     private Set<Reg> available;
 
-    public ColorGraph(List<Instr<Temp>> instructions, Set<Reg> available) {
+    public ColorGraph(List<Instr<Temp>> instructions, Map<Instr<Temp>, Set<Temp>> liveVars, Set<Reg> available) {
 
         this.graph = new DefaultDirectedGraph<>((a, b) -> new PairEdge<>(a, b, null));
         this.vertices = new HashSet<>();
@@ -34,9 +34,7 @@ public class ColorGraph {
         this.available = new HashSet<>(available);
     
         for (Instr<Temp> instr : instructions) {
-       
-            // TODO: update when LV returns a map
-            List<Temp> live = new ArrayList<>(instr.in);
+            List<Temp> live = new ArrayList<>(liveVars.get(instr));
             int size = live.size();
 
             for (int i = 0; i < size; i++) {
