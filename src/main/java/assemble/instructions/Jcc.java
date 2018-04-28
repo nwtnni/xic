@@ -40,6 +40,6 @@ public abstract class Jcc<A> extends Instr<A> {
     
     public static class R extends Jcc<Reg> {
         public R(Kind kind, IRLabel target) { super(kind, new Label.R(target)); }
-        public R(Kind kind, Label<Temp> target) { super(kind, new Label.R(target.name())); }
+        public R(Kind kind, Label<Temp> target) { super(kind, new Label.R(target)); }
     }
 }

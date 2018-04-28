@@ -45,6 +45,7 @@ public abstract class Label<A> extends Instr<A> {
     }
 
     public static class R extends Label<Reg> {
+        public R(Label<Temp> label) { super(label.name() + ":"); }
         public R(String name) { super(name); }
         public R(IRLabel label) { super(label); }
     }

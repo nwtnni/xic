@@ -111,10 +111,26 @@ public abstract class FuncDecl<A> {
             this.name = fn.name;
             this.args = fn.args;
             this.rets = fn.rets;
-            this.returnLabel = new Label.R(fn.returnLabel.name());
-            this.prelude = new ArrayList<>(); 
+            this.returnLabel = new Label.R(fn.returnLabel);
             this.stmts = new ArrayList<>(); 
+            this.prelude = new ArrayList<>(); 
+            prelude.add(new Text.R("##########################################################################"));
+            prelude.add(new Text.R(".globl " + name));
+            prelude.add(new Text.R(".align 4"));
+            prelude.add(new Label.R(fn.name + ":"));
+            prelude.add(new Text.R("# Stack Setup"));
+            prelude.add(new Push.RR(Reg.RBP));
+            prelude.add(new Mov.RRR(Reg.RBP, Reg.RSP));
+            prelude.add(new Text.R("# ~~~Replace with subtract from %rsp here"));
+
+            // Function epilogue
             this.epilogue = new ArrayList<>(); 
+            epilogue.add(returnLabel);
+            epilogue.add(new Text.R("# Stack Teardown"));
+            epilogue.add(new Text.R("# ~~~Replace with add to %rsp here:"));
+            epilogue.add(new Pop.RR(Reg.RBP));
+            epilogue.add(new Ret.R());
+            epilogue.add(new Text.R(""));
         }
     }
 }

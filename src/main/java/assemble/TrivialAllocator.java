@@ -118,10 +118,6 @@ public class TrivialAllocator extends InstrVisitor<Void> {
             calleeReturnAddr = pushTemp();
         }
 
-        for (Instr<Temp> i : fn.prelude) {
-             
-        }
-
         for (Instr<Temp> i : fn.stmts) {
             i.accept(this);
         }
@@ -390,7 +386,7 @@ public class TrivialAllocator extends InstrVisitor<Void> {
      */
 
     public Void visit(Label.T l) {
-        instrs.add(new Label.R(l.name()));
+        instrs.add(new Label.R(l));
         return null;
     }
 

@@ -97,7 +97,7 @@ public abstract class Lifter {
      */
 
     public static Label.R lift(Label.T l) {
-        return new Label.R(l.name());
+        return new Label.R(l);
     }
 
     /*
