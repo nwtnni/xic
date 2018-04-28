@@ -10,15 +10,16 @@ public class Pair<A, B> {
 		this.second = second;
 	}
 
-    @Override 
-    public int hashCode() {
-        1013 * (this.first.hashCode()) ^ 1009 * (this.second.hashCode());
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Pair
+            && this.first.equals(((Pair) obj).first) 
+            && this.second.equals(((Pair) obj).second);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        return obj instance of Pair<A,B> 
-            && ((Pair<A,B>) obj).first.equals(this.first)
-            && ((Pair<A,B>) obj).second.equals(this.second);
+    public int hashCode() {
+        return 1013 * (this.first.hashCode()) ^ 1009 * (this.second.hashCode());
+
     }
 }

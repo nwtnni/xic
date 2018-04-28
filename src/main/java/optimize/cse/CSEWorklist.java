@@ -20,6 +20,8 @@ import util.Pair;
  */
 public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, Map<IRExpr, IRStmt>> {
 
+    public IRDeepCopier dc = new IRDeepCopier();
+
     public CSEWorklist(IRGraph<Map<IRExpr, IRStmt>> cfg) {
         super(cfg, Direction.FORWARD);
     }
@@ -71,12 +73,6 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
     @Override
     public Map<IRExpr, IRStmt> transfer(Map<IRExpr, IRStmt> in, IRStmt s) {
 
-        System.out.println("Exprs of stmt " + s + " -------------------------");
-        for (IRExpr e : s.exprs) {
-            System.out.println(e);
-        }
-        System.out.println("END OF Exprs of stmt s -------------------------------");
-
         // Adding in to out
         Map<IRExpr, IRStmt> out = new HashMap<>(in);
 
@@ -93,29 +89,12 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
             shouldDelMem = true;        
         }
 
-
-        // for (IRExpr e : s.kill) {
-        //     System.out.println("Kill this temp: " + e);
-        // }
-        // System.out.println("Should Delete Mem is: " + shouldDelMem);
-
-
         // Performing kill for out
         for (IRExpr e : new HashSet<>(out.keySet())) {
             if ((shouldDelMem && s.delMem) || kill(s.kill, e)) {
                 out.remove(e);
-                System.out.println("Removing: " + e);
             }
         }
-
-        System.out.println("BEGINNING OF TRANSFER SET of " + s + "-------------------------");
-        for (IRExpr e : out.keySet()) {
-            System.out.println(e);
-        }
-        System.out.println("END OF TRANSFER SET-------------------------------");
-
-
-
 
         return out;
     }
@@ -128,9 +107,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
      */
     @Override
     public Map<IRExpr, IRStmt> meet(Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> paths) {        
-        for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> path : paths) {
-            System.out.println("There is an edge from: " + path.head);
-        }
+
         Map<IRExpr, IRStmt> in = null;
         
         for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> edge : paths) {
@@ -140,7 +117,9 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
                 // if in has not been initialized, put all of the non-empty set's objects into it
                 if (in == null) {
                     in = new HashMap<IRExpr, IRStmt>();
-                    in.putAll(s);
+                    for (IRExpr e : s.keySet()) {
+                        in.put(e.accept(dc), s.get(e));
+                    }
                 } else {
                     for (IRExpr e : new HashSet<IRExpr>(in.keySet())) {
                         if (!s.containsKey(e) || !in.get(e).equals(s.get(e))) {
@@ -157,11 +136,6 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
             in = new HashMap<IRExpr,IRStmt>();
         }
 
-        System.out.println("BEGINNING OF CSEIN SET-------------------------");
-        for (IRExpr e : in.keySet()) {
-            System.out.println(e);
-        }
-        System.out.println("END OF CSEIN SET-------------------------------");
         return in;
     }
 
@@ -187,12 +161,6 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         }
 
         v.CSEin = in;
-        System.out.println("BEGINNING OF actual csein SET-------------------------");
-        for (IRExpr e : v.CSEin.keySet()) {
-            System.out.println(e);
-        }
-        System.out.println("END OF actual csein SET-------------------------------");
-        System.out.println("have i changed? " + hasChanged);
         return hasChanged;
     }
 
@@ -205,107 +173,77 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         doWorklist();
 
         // Temp names for exprs that are common subexprs
-        Map<Pair<IRExpr, IRStmt> , IRTemp> assigned = new HashMap<Pair<IRExpr, IRStmt> , IRTemp>();
-
+        Map<Pair<IRExpr, IRStmt>, IRTemp> assigned = new HashMap<>();
         Integer varCount = 0;
 
-        ArrayList<IRStmt> seen = new ArrayList<IRStmt>();
-        Queue<IRStmt> q = new LinkedList<IRStmt>();
+        Queue<IRStmt> q = new LinkedList<>();
+        Set<IRStmt> seen = new HashSet<>();     // Has been added to q at some point.
 
         CSEReplaceVisitor replVisit = new CSEReplaceVisitor();
         
         q.add(graph.start);
+        seen.add(graph.start);
+
         while (!q.isEmpty()) {
             IRStmt s = q.poll();
-            System.out.println("Running CSE on this statment: " + s);
 
-            System.out.println("Assigned keys -------------------------");
-            for (Pair<IRExpr, IRStmt> e : assigned.keySet()) {
-                System.out.println("The expr: " + e.first + " from:" + e.second);
-            }
-            System.out.println("END OF Assigned keys-------------------------------");
-
-            seen.add(s);
             PriorityQueue<IRExpr> orderedExprs = new PriorityQueue<IRExpr>(new ExprComparator());
+            orderedExprs.addAll(s.exprs);
             
-            for (IRExpr e : s.exprs) {
-                orderedExprs.add(e);
-            }
             IRExpr cur = orderedExprs.poll();
 
-
-            boolean alreadyRepl = false;
             // Iterate and pop orderedExprs
-            while (cur != null && !alreadyRepl) {
-                System.out.println("Expr: " + cur);
-                IRStmt frm = null;
-                Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> v_out = graph.outgoingEdgesOf(s);
-                if (v_out.size() > 0) {
-                    Map<IRExpr, IRStmt> tempmap = null;
-                    for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> sout : v_out) {
-                        tempmap = sout.value;
-                        break;
-                    }
-                    frm = tempmap.get(cur);
-                }
-                // If current expression was ALREADY used
-                if (assigned.containsKey(new Pair<IRExpr, IRStmt>(cur, frm))) {
-                    System.out.println("Able to use a temp from the key");
-                    replVisit.replaceExpr = cur;
-                    replVisit.newExpr = assigned.get(cur);
-                    s.accept(replVisit);
-                    alreadyRepl = true;
+            while (cur != null) {
                 // If current expression can be replaced (and cur is not a temp)
-                } else if (s.CSEin.containsKey(cur) && !(cur instanceof IRTemp)) {     
-                    // look at mapped assignment
+                if (s.CSEin.containsKey(cur) && !(cur instanceof IRTemp)) {                    
                     IRStmt node = s.CSEin.get(cur);
-                    IRTemp newTemp = new IRTemp("_cse_" + varCount.toString());
-                    assigned.put(new Pair<IRExpr, IRStmt>(cur, node), newTemp);
+                    Pair<IRExpr, IRStmt> curPair = new Pair<>(cur, node);
 
-                    IRStmt newStmt = new IRMove(newTemp, cur);  // New statement to insert
-
-                    varCount++;
-
-
-                    graph.addVertex(newStmt);
-
-                    Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> incoming = new HashSet<>(graph.incomingEdgesOf(node));
-                    // Editing the graph
-                    for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : incoming) {
-                        graph.addEdge(e.head, newStmt);
-                    }
-                    graph.removeAllEdges(incoming);
-                    graph.addEdge(newStmt, node);
+                    replVisit.replaceExpr = cur;    // Expression to replace using replVisit
                     
-                    replVisit.replaceExpr = cur;
-                    replVisit.newExpr = newTemp;
-                    s.accept(replVisit);
-                    node.accept(replVisit);
+                    // If this expression was not already replaced
+                    if (!assigned.containsKey(curPair)) {
 
-                    alreadyRepl = true;
+                        // Generate temp to hold expression
+                        IRTemp newTemp = new IRTemp("_cse_" + varCount.toString());
+                        assigned.put(new Pair<IRExpr, IRStmt>(cur, node), newTemp);
+                        varCount++;
 
+                        // Adding new move stmt before original computation point
+                        IRStmt newStmt = new IRMove(newTemp, cur);
+                        graph.addVertex(newStmt);
+
+                        // Editing the edges
+                        Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> incoming = new HashSet<>(graph.incomingEdgesOf(node));
+                        for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : incoming) {
+                            graph.addEdge(e.head, newStmt);
+                        }
+                        graph.removeAllEdges(incoming);
+                        graph.addEdge(newStmt, node);
+
+                        replVisit.newExpr = newTemp;    // Set replVisit to name of the new temp
+                    }
+                    else {
+                        replVisit.newExpr = assigned.get(curPair);  // Set replVisit to appropriate temp
+                    }
+                    
+                    // NOTE: Not allowed to call CSEin.keySet() because mutations change keySet pointers
+                    // However, accesses are still fine because hashmaps only care about hashcode
+
+                    node.accept(replVisit);  // Update the original computation point
+                    s.accept(replVisit);     // Update the current computation point
+
+                    break;
                 } 
 
                 cur = orderedExprs.poll();
             }
 
-            System.out.println("KILL SET -------------------------");
-            for (IRExpr e : s.kill) {
-                System.out.println(e);
-            }
-            System.out.println("END OF KILL SET-------------------------------");
-            // killing any keys in assigned that were killed at this statement
-            for (Pair<IRExpr, IRStmt> a : new HashSet<Pair<IRExpr, IRStmt>>(assigned.keySet())) {
-                if (kill(s.kill, a.first)) {
-                    assigned.remove(a);
-                    System.out.println("removing from assigned: " + a);
-                }
-            }
-
-            // adding all outgoing edges of node if not yet visited
+            // Add outgoing edges to q if they haven't been seen before
             for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> e : graph.outgoingEdgesOf(s)) {
-                if (!seen.contains(graph.getEdgeTarget(e))) {
-                    q.add(graph.getEdgeTarget(e));
+                if (!seen.contains(e.tail)) {
+                    seen.add(e.tail);
+                    q.add(e.tail);
                 }
             }
         }

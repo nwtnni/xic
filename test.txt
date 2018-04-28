@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Current Statement: (LABEL _LABEL_0015_START)
 
 Current stmt in update: (LABEL _LABEL_0015_START)
@@ -8317,3 +8318,244 @@ Current Statement: movq _TEMP_0016, _TEMP_0030
 Current stmt in update: movq _TEMP_0016, _TEMP_0030
 Current Statement: jmp _RET__xi_d_alloc
 Current stmt in update: jmp _RET__xi_d_alloc
+=======
+NEW CSE----------------------------------------------
+CUR STMT: (LABEL _LABEL_0009_START)
+
+CUR STMT: (MOVE (TEMP args) (TEMP _ARG0))
+
+CUR STMT: (MOVE (TEMP i) (CONST 0))
+
+CUR STMT: (JUMP (NAME _LABEL_0000_while))
+
+CUR STMT: (LABEL _LABEL_0000_while)
+
+CUR STMT: (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+CUR STMT: (LABEL _LABEL_0001_true)
+
+CUR STMT: (MOVE (TEMP _TEMP_0004) (TEMP y))
+
+CUR STMT: (MOVE (TEMP x) (CONST 0))
+
+CUR STMT: (MOVE (TEMP _TEMP_0008) (TEMP _TEMP_0004))
+
+CUR STMT: (CJUMP (EQ (ADD (TEMP x) (CONST 1)) (CONST 0)) _LABEL_0003_true)
+
+CUR STMT: (MOVE (TEMP _TEMP_0009) (CALL (NAME _IunparseInt_aii) (TEMP _TEMP_0008)))
+
+CUR STMT: (LABEL _LABEL_0003_true)
+
+CUR STMT: (MOVE (TEMP x) (CONST 1))
+
+CUR STMT: (MOVE (TEMP _TEMP_0005) (TEMP _TEMP_0009))
+
+CUR STMT: (MOVE (TEMP y) (ADD (TEMP x) (CONST 1)))
+
+Replacing first at stmt: (MOVE (TEMP y) (ADD (TEMP x) (CONST 1)))
+: 599ebea1-7e0b-4617-a9c9-824c21af4a1a
+CUR STMT: (MOVE (TEMP z) (ADD (TEMP x) (CONST 1)))
+
+CUR STMT: (MOVE (TEMP _TEMP_0006) (TEMP _TEMP_0005))
+
+CUR STMT: (JUMP (NAME _LABEL_0005_done))
+
+CUR STMT: (JUMP (NAME _LABEL_0005_done))
+
+CUR STMT: (MOVE (TEMP _TEMP_0010) (TEMP _TEMP_0006))
+
+CUR STMT: (LABEL _LABEL_0005_done)
+
+CUR STMT: (MOVE (TEMP _TEMP_0011) (CALL (NAME _Iprint_pai) (TEMP _TEMP_0010)))
+
+CUR STMT: (MOVE (TEMP y) (ADD (TEMP x) (CONST 1)))
+
+CUR STMT: (MOVE (TEMP _TEMP_0007) (TEMP _TEMP_0011))
+
+CUR STMT: (MOVE (TEMP y) (MUL (CONST 2) (ADD (TEMP x) (CONST 1))))
+
+Replacing first at stmt: (MOVE (TEMP y) (MUL (CONST 2) (ADD (TEMP x) (CONST 1))))
+: 9771d4a6-bb48-4dea-bf42-8ebd2fc139d6
+CUR STMT: (RETURN)
+
+CUR STMT: (MOVE (TEMP i) (ADD (TEMP i) (CONST 1)))
+
+CUR STMT: (JUMP (NAME _LABEL_0000_while))
+
+---- Current Statement: (LABEL _LABEL_0009_START)
+CSEin elems: 
+
+---- Current Statement: (MOVE (TEMP args) (TEMP _ARG0))
+CSEin elems: 
+
+---- Current Statement: (MOVE (TEMP i) (CONST 0))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+
+---- Current Statement: (JUMP (NAME _LABEL_0000_while))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+
+---- Current Statement: (LABEL _LABEL_0000_while)
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+
+---- Current Statement: (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+
+---- Current Statement: (LABEL _LABEL_0001_true)
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP _TEMP_0004) (TEMP y))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP x) (CONST 0))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP _TEMP_0008) (TEMP _TEMP_0004))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (TEMP y): (MOVE (TEMP _TEMP_0004) (TEMP y))
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP _cse_0) (ADD (TEMP x) (CONST 1)))
+CSEin elems: 
+---- Current Statement: (MOVE (TEMP _TEMP_0009) (CALL (NAME _IunparseInt_aii) (TEMP _TEMP_0008)))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (TEMP y): (MOVE (TEMP _TEMP_0004) (TEMP y))
+- (TEMP _TEMP_0004): (MOVE (TEMP _TEMP_0008) (TEMP _TEMP_0004))
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP _TEMP_0005) (TEMP _TEMP_0009))
+CSEin elems: 
+
+---- Current Statement: (LABEL _LABEL_0003_true)
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (ADD (TEMP x) (CONST 1)): (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+- (EQ (TEMP _cse_0) (CONST 0)): null
+- (TEMP x): (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP x) (CONST 1))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (ADD (TEMP x) (CONST 1)): (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+- (EQ (TEMP _cse_0) (CONST 0)): null
+- (TEMP x): (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP _TEMP_0006) (TEMP _TEMP_0005))
+CSEin elems: 
+- (TEMP _TEMP_0009): (MOVE (TEMP _TEMP_0005) (TEMP _TEMP_0009))
+
+---- Current Statement: (MOVE (TEMP y) (TEMP _cse_0))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (ADD (TEMP x) (CONST 1)): (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+- (EQ (TEMP _cse_0) (CONST 0)): null
+- (TEMP x): (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP z) (ADD (TEMP x) (CONST 1)))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP _TEMP_0010) (TEMP _TEMP_0006))
+CSEin elems: 
+- (TEMP _TEMP_0009): (MOVE (TEMP _TEMP_0005) (TEMP _TEMP_0009))
+- (TEMP _TEMP_0005): (MOVE (TEMP _TEMP_0006) (TEMP _TEMP_0005))
+
+---- Current Statement: (JUMP (NAME _LABEL_0005_done))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (ADD (TEMP x) (CONST 1)): (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+- (EQ (TEMP _cse_0) (CONST 0)): null
+- (TEMP x): (CJUMP (EQ (TEMP _cse_0) (CONST 0)) _LABEL_0003_true)
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (JUMP (NAME _LABEL_0005_done))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP x): (MOVE (TEMP z) (ADD (TEMP x) (CONST 1)))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (ADD (TEMP x) (CONST 1)): (MOVE (TEMP z) (ADD (TEMP x) (CONST 1)))
+
+---- Current Statement: (MOVE (TEMP _TEMP_0011) (CALL (NAME _Iprint_pai) (TEMP _TEMP_0010)))
+CSEin elems: 
+- (TEMP _TEMP_0006): (MOVE (TEMP _TEMP_0010) (TEMP _TEMP_0006))
+- (TEMP _TEMP_0005): (MOVE (TEMP _TEMP_0006) (TEMP _TEMP_0005))
+- (TEMP _TEMP_0009): (MOVE (TEMP _TEMP_0005) (TEMP _TEMP_0009))
+
+---- Current Statement: (LABEL _LABEL_0005_done)
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP _TEMP_0007) (TEMP _TEMP_0011))
+CSEin elems: 
+
+---- Current Statement: (MOVE (TEMP _cse_1) (ADD (TEMP x) (CONST 1)))
+CSEin elems: 
+---- Current Statement: (RETURN)
+CSEin elems: 
+- (TEMP _TEMP_0011): (MOVE (TEMP _TEMP_0007) (TEMP _TEMP_0011))
+
+---- Current Statement: (MOVE (TEMP y) (TEMP _cse_1))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (MOVE (TEMP y) (MUL (CONST 2) (TEMP _cse_1)))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP x): (MOVE (TEMP y) (TEMP _cse_1))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (ADD (TEMP x) (CONST 1)): (MOVE (TEMP y) (TEMP _cse_1))
+
+---- Current Statement: (MOVE (TEMP i) (ADD (TEMP i) (CONST 1)))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (ADD (TEMP x) (CONST 1)): (MOVE (TEMP y) (TEMP _cse_1))
+- (TEMP x): (MOVE (TEMP y) (TEMP _cse_1))
+- (TEMP i): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+- (MUL (CONST 2) (TEMP _cse_1)): null
+- (LT (TEMP i) (CONST 200000000)): (CJUMP (LT (TEMP i) (CONST 200000000)) _LABEL_0001_true)
+
+---- Current Statement: (JUMP (NAME _LABEL_0000_while))
+CSEin elems: 
+- (TEMP _ARG0): (MOVE (TEMP args) (TEMP _ARG0))
+- (TEMP x): (MOVE (TEMP y) (TEMP _cse_1))
+- (MUL (CONST 2) (TEMP _cse_1)): null
+- (ADD (TEMP x) (CONST 1)): (MOVE (TEMP y) (TEMP _cse_1))
+
+>>>>>>> d9b951bd15ffe30f705fafaf340c126813a1ff68

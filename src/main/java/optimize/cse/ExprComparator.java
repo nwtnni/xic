@@ -23,8 +23,9 @@ public class ExprComparator implements Comparator<IRExpr> {
         return 0;
     }
 
+    // This comparator sorts in descending order, flip to change to ascending
     public int compare(IRExpr e1, IRExpr e2) {
-      return sizeExpr(e1) - sizeExpr(e2);
+      return sizeExpr(e2) - sizeExpr(e1);
     }
 
 }

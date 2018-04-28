@@ -47,7 +47,6 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
      * transfer function in the direction [direction].
      */
     public boolean update(V v) {
-        System.out.println("Current stmt in update: " + v);
         if (direction == Direction.FORWARD) {
             // Forward analysis
             E in = meet(graph.incomingEdgesOf(v));
@@ -114,7 +113,6 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
 
         while (!worklist.isEmpty()) {
             V node = worklist.poll();
-            System.out.println("Current Statement: " + node);
             boolean updated = update(node);
             if (updated) {
                 for (V child : getChildren(node)) {
