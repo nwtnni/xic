@@ -47,9 +47,32 @@ public class RegAlloc extends Phase {
         Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getCfgs();
 
         // Run analyses and optimizations
+
+        // TODO: do this stuff in the allocator
         for(ASAGraph<Set<Temp>> cfg : cfgs.values()) {
-            LiveVariableWorklist lv = new LiveVariableWorklist(cfg);
-            lv.doWorklist();
+            Map<Instr<Temp>, Set<Temp>> lv = LiveVariableWorklist.computeLiveVariables(cfg);
+
+            // Debug LV
+            out = Filename.setExtension(out, "lv.s");
+            try {
+                FileWriter lvw = new FileWriter(out);
+
+                FuncDecl<Temp> fn = cfg.toASA();
+
+                lvw.append(fn.sourceName + "\n");
+                for (Instr<Temp> i : fn.stmts) {
+                    lvw.append(i + ": \n");
+                    lvw.append("live: " + lv.get(i) + "\n");
+                    // lvw.append("use: " + i.use + "\n");
+                    // lvw.append("def: " + i.def + "\n");
+                    // lvw.append("out: " + i.out + "\n");
+                    lvw.append("\n");
+                }
+
+                lvw.close();
+            } catch (IOException e) {
+            }
+
         }
 
         // Convert back to IR
@@ -61,41 +84,21 @@ public class RegAlloc extends Phase {
             } catch (Exception e) {}
         }
 
-        // Debug LV
-        // out = Filename.setExtension(out, "lv.s");
-        // try {
-        //     FileWriter lvw = new FileWriter(out);
-        //     for (FuncDecl<Temp> fn : after.fns) {
+        // CompUnit<Reg> allocated = Allocator.allocate(after);
 
-        //         lvw.append(fn.sourceName + "\n");
-        //         for (Instr<Temp> i : fn.stmts) {
-        //             lvw.append(i + ": \n");
-        //             lvw.append("in: " + i.in + "\n");
-        //             lvw.append("use: " + i.use + "\n");
-        //             lvw.append("def: " + i.def + "\n");
-        //             lvw.append("out: " + i.out + "\n");
-        //             lvw.append("\n");
-        //         }
+        // out = Filename.concat(config.sink, config.unit);
+        // out = Filename.setExtension(out, "s");
+        // Filename.makePathTo(out);
+
+        // try {
+        //     FileWriter w = new FileWriter(out);
+
+        //     for (String i : allocated.toAssembly()) {
+        //         w.append(i + "\n");
         //     }
-        //     lvw.close();
+        //     w.close();
         // } catch (IOException e) {
         // }
-
-        CompUnit<Reg> allocated = Allocator.allocate(after);
-
-        out = Filename.concat(config.sink, config.unit);
-        out = Filename.setExtension(out, "s");
-        Filename.makePathTo(out);
-
-        try {
-            FileWriter w = new FileWriter(out);
-
-            for (String i : allocated.toAssembly()) {
-                w.append(i + "\n");
-            }
-            w.close();
-        } catch (IOException e) {
-        }
 
         return new Result<>(Product.assembled(after));
     }

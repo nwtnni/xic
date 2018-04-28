@@ -41,7 +41,7 @@ public class TrivialAlloc extends Phase {
 
             w.close();
 
-            return new Result<>(Product.assembled(allocated));
+            return new Result<>(Product.allocated(allocated));
 
         } catch (IOException e) {
             throw new XicInternalException(e.toString());
