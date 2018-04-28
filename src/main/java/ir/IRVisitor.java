@@ -36,10 +36,6 @@ public abstract class IRVisitor<T> {
         return null;
     }
 
-    public T visit(IRCall c) {
-        return null;
-    }
-
     public T visit(IRCJump c) {
         return null;
     }
@@ -69,6 +65,10 @@ public abstract class IRVisitor<T> {
      */
 
     public T visit(IRBinOp b) {
+        return null;
+    }
+
+    public T visit(IRCall c) {
         return null;
     }
     

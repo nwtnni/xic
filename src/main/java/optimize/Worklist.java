@@ -5,6 +5,8 @@ import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import util.PairEdge;
 import util.PairEdgeGraph;
@@ -37,7 +39,7 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
      * Meet function takes a set of the paths [paths] and merges 
      * them with the meet operator.
      */
-    public abstract E meet(Set<PairEdge<V,E>> paths);
+    public abstract E meet(Set<E> paths);
 
     /**
      * Updates a node [v] by taking meet of all paths and applying the
@@ -45,8 +47,9 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
      */
     public boolean update(V v) {
         if (direction == Direction.FORWARD) {
+            Set<E> incoming = graph.incomingEdgesOf(v).stream().map((e -> e.value)).collect(Collectors.toSet());
             // Forward analysis
-            E in = meet(graph.incomingEdgesOf(v));
+            E in = meet(incoming);
             E out = transfer(in, v);
             if (annotate(v, in, out)) {
                 for (PairEdge<V,E> outEdge : graph.outgoingEdgesOf(v)) {
@@ -56,7 +59,8 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
             }
         } else {
             // Backwards analysis
-            E out = meet(graph.outgoingEdgesOf(v));
+            Set<E> outgoing = graph.outgoingEdgesOf(v).stream().map((e -> e.value)).collect(Collectors.toSet());
+            E out = meet(outgoing);
             E in = transfer(out, v);
             if (annotate(v, in, out)) {
                 for (PairEdge<V,E> inEdge : graph.incomingEdgesOf(v)) {
