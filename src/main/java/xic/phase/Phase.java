@@ -20,8 +20,7 @@ public abstract class Phase {
             new CSE(),
             new Irgen(),
             new Tile(),
-            new RegAlloc(),
-            new TrivialAlloc()
+            new RegAlloc()
         ));
     }
 

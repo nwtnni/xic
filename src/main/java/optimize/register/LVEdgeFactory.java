@@ -8,7 +8,10 @@ import assemble.instructions.Instr;
 import optimize.graph.ASAEdgeFactory;
 import util.PairEdge;
 
-/** Superclass for all IR control flow graph edges. */
+/** 
+ * Generates edges for live variable analysis. 
+ * Ensures each edge is initialized to an empty set.
+ * */
 public class LVEdgeFactory extends ASAEdgeFactory<Set<Temp>> {
     @Override
     public PairEdge<Instr, Set<Temp>> createEdge(Instr a, Instr b) {

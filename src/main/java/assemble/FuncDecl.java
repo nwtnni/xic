@@ -35,6 +35,8 @@ public class FuncDecl {
         prelude.add(new Push(Operand.RBP));
         prelude.add(new Mov(Operand.RBP, Operand.RSP));
 
+        
+
         prelude.add(Text.comment("~~~Replace with subtract from %rsp here"));
 
         this.stmts = stmts;
@@ -63,14 +65,21 @@ public class FuncDecl {
     public void setStackSize(int i) {
         Operand shift = Operand.imm(Config.WORD_SIZE * i);
 
-        // Insert stack setup at prelude[7]
+        // Insert stack setup at end of prelude
         BinOp sub = new BinOp(BinOp.Kind.SUB, Operand.RSP, shift);
-        prelude.set(7, sub);
+        prelude.set(prelude.size() - 1, sub);
 
-        // Insert stack teardown at epilogue[2]
+        // Insert stack teardown at beginning of epilogue
         BinOp add = new BinOp(BinOp.Kind.ADD, Operand.RSP, shift);
         epilogue.set(2, add);
     }
+
+    public void saveRegister(Operand reg) {
+        assert reg.isReg();
+        prelude.add(prelude.size() - 1, new Push(reg));
+        epilogue.add(3, new Pop(reg));
+    }
+
     
     public List<String> toAbstractAssembly() {
         List<String> instrs = new ArrayList<>();

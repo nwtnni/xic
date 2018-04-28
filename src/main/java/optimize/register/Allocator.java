@@ -1,18 +1,47 @@
-package assemble;
+package optimize.register;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Stack;
+import java.util.Optional;
 
+import assemble.Temp;
+import assemble.Config;
+import assemble.Operand;
+import assemble.FuncDecl;
+import assemble.CompUnit;
 import assemble.instructions.*;
 import assemble.instructions.BinOp.Kind;
+
+import util.Either;
+
 import xic.XicInternalException;
 
-public class TrivialAllocator extends InsVisitor<Void> {
+public class Allocator extends InsVisitor<Void> {
+
+    private static final Set<Operand> available = Set.of(
+        Operand.RAX,
+        Operand.RBX,
+        Operand.RCX,
+        Operand.RDX,
+        Operand.RSI,
+        Operand.RDI,
+        Operand.R8,
+        Operand.R9,
+        Operand.R10,
+        Operand.R11,
+        Operand.R12,
+        Operand.R13,
+        Operand.R14,
+        Operand.R15
+    );
 
     public static CompUnit allocate(CompUnit unit) {
-        TrivialAllocator allocator = new TrivialAllocator(unit);
+        Allocator allocator = new Allocator(unit);
         return allocator.allocate();
     }
 
@@ -22,8 +51,8 @@ public class TrivialAllocator extends InsVisitor<Void> {
     // Current list of instructions
     private List<Instr> instrs;
 
-    // Map of named temps to offset on stack
-    private Map<String, Integer> tempStack;
+    // Map of named temps to registers
+    private Map<Temp, Operand> allocated;
 
     // Number of temps on the stack - 1
     private int tempCounter;
@@ -34,61 +63,20 @@ public class TrivialAllocator extends InsVisitor<Void> {
     // Maximum number of returns from a call in current function
     private int maxRets;
 
-    // Number of words to subtract from base pointer to get location
-    // in stack where multiple returns > 2 must be written by callee.
-    // private Operand calleeReturnAddr;
-
     // Caller saved registers - not required for trivial allocation
     // private Operand r10;
     // private Operand r11;
 
-    private TrivialAllocator(CompUnit unit) {
+    private Allocator(CompUnit unit) {
         this.unit = unit;
-        
         this.instrs = new ArrayList<>();
-        this.tempStack = new HashMap<>();
         this.tempCounter = 0;
         this.maxArgs = 0;
         this.maxRets = 0;
+        this.allocated = null;
+        // TODO do we need this
         // this.isMultiple = 0;
-        // this.calleeReturnAddr = null;
     }
-
-    /**
-     * Push a named temp to the stack.
-     */
-    private Operand pushTemp(String name) {
-        tempStack.put(name, tempCounter++);
-        return getTemp(name);
-    }
-
-    // /**
-    //  * Push an unnamed temp to the stack and return the mem operand.
-    //  */
-    // private Operand pushTemp() {
-    //     return Operand.mem(Operand.RBP, -normalize(++tempCounter));
-    // }
-
-    /**
-     * Get the mem operand to a temp on the stack.
-     * Equivalent to -(i+1)*8(%rbp) where name -> i in the tempStack
-     * +1 to offset for saved base pointer
-     */
-    private Operand getTemp(String name) {
-        if (tempStack.containsKey(name)) {
-            return Operand.mem(Operand.RBP, -normalize(tempStack.get(name) + 1));
-        }
-        throw XicInternalException.runtime("Non-existent temp. Check tiler.");
-    }
-
-    /**
-     * Multiply by the word size to get offset for a memory location.
-     */
-    private int normalize(int i) {
-        return i * Config.WORD_SIZE;
-    }
-
-    /* Recursive descent visitors */
 
     private CompUnit allocate() {
         for (FuncDecl fn : unit.fns) {
@@ -98,41 +86,79 @@ public class TrivialAllocator extends InsVisitor<Void> {
     }
 
     private void allocate(FuncDecl fn) {
+
         instrs = new ArrayList<>();
-        tempStack = new HashMap<>();
+        Set<Operand> saved = new HashSet<>();
+
         tempCounter = 0;
         maxArgs = 0;
         maxRets = 0;
-        // calleeReturnAddr = null;
+        allocated = null;
 
-        // Set CALLEE_RET_ADDR to a temp on stack
-        // if (fn.rets > 2) {
-        //     calleeReturnAddr = pushTemp();
-        // }
+        // TODO loop and spill
+        Either<Temp, Map<Temp, Operand>> spilled = tryColor(fn);
+        assert spilled.isRight();
+        allocated = spilled.getRight();
 
-        for (Instr i : fn.stmts) {
-            i.accept(this);
+        for (Operand reg : allocated.values()) {
+            if (reg.isCalleeSaved() && !saved.contains(reg)) {
+                saved.add(reg);
+                fn.saveRegister(reg);
+            }
         }
+
+        for (Instr i : fn.stmts) i.accept(this);
         fn.stmts = instrs;
 
         // Calculate words to shift rsp, +1 to offset tempCounter
         int rsp = tempCounter + maxArgs + maxRets + 1;
+
         // 16 byte alignment
         rsp = rsp % 2 == 1 ? rsp + 1 : rsp;
-        Operand shift = Operand.imm(normalize(rsp));
+        Operand shift = Operand.imm(rsp * Config.WORD_SIZE);
 
-        // Insert stack setup 
-        BinOp sub = new BinOp(Kind.SUB, Operand.RSP, shift);
-        fn.prelude.set(7, sub);
+        fn.setStackSize(rsp);
 
-        // Insert stack teardown
-        BinOp add = new BinOp(Kind.ADD, Operand.RSP, shift);
-        fn.epilogue.set(2, add);
+        // // Insert stack setup
+        // BinOp sub = new BinOp(Kind.SUB, Operand.RSP, shift);
+        // fn.prelude.set(7, sub);
 
+        // // Insert stack teardown
+        // BinOp add = new BinOp(Kind.ADD, Operand.RSP, shift);
+        // fn.epilogue.set(2, add);
     }
+
+    // Returns empty if colorable with spills
+    // Otherwise false and must spill the returned Temp
+    //
+    // Colors the provided ColorGraph
+    private Either<Temp, Map<Temp, Operand>> tryColor(FuncDecl fn) {
+
+        Stack<Temp> stack = new Stack<>();
+        InterferenceGraph interfere = new InterferenceGraph(fn.stmts, available.size());
+        ColorGraph color = new ColorGraph(fn.stmts, available);
+
+        while (interfere.size() > 0) {
+            interfere.pop().ifPresentOrElse(
+                temp -> stack.push(temp),
+                () -> stack.push(interfere.spill().get())
+            );
+        }
+
+        while (stack.size() > 0) {
+            Temp temp = stack.pop();
+            if (!color.tryColor(temp)) return Either.left(temp);
+        }
+
+        return Either.right(color.getColoring());
+    }
+
+    /* Recursive descent visitors */
 
     public Void visit(BinOp op) {
         assert op.dest == null && op.src == null;
+
+        if (isDead(op.destTemp) || isDead(op.srcTemp)) return null;
 
         Operand dest = allocate(op.destTemp);
         op.dest = dest;
@@ -146,7 +172,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
             src = Operand.RAX;
         }
         op.src = src;
-        
+
         instrs.add(op);
         return null;
     }
@@ -159,20 +185,11 @@ public class TrivialAllocator extends InsVisitor<Void> {
     }
 
     public Void visit(Cmp cmp) {
-        Operand left = allocate(cmp.leftTemp);
-        Operand right = allocate(cmp.rightTemp);
 
-        if (left.isMem() && right.isMem() || (left.isImm() && !Config.within(32, left.value()))) {
-        instrs.add(new Mov(Operand.RAX, left));
-            left = Operand.RAX;
-        }
-        cmp.left = left;
+        if (isDead(cmp.leftTemp) || isDead(cmp.rightTemp)) return null;
 
-        if (right.isImm()) {
-        instrs.add(new Mov(Operand.R11, right));
-            right = Operand.R11;
-        }
-        cmp.right = right;
+        cmp.left = allocate(cmp.leftTemp);
+        cmp.right = allocate(cmp.rightTemp);
 
         instrs.add(cmp);
         return null;
@@ -184,13 +201,10 @@ public class TrivialAllocator extends InsVisitor<Void> {
     }
 
     public Void visit(DivMul op) {
-        Operand src = allocate(op.srcTemp);
-        if (src.isImm()) {
-            instrs.add(new Mov(Operand.R11, src));
-            src = Operand.R11;
-        }
-        op.src = src;
 
+        if (isDead(op.destTemp) || isDead(op.srcTemp)) return null;
+
+        op.src = allocate(op.srcTemp);
         op.dest = allocate(op.destTemp);
 
         instrs.add(op);
@@ -213,6 +227,9 @@ public class TrivialAllocator extends InsVisitor<Void> {
     }
 
     public Void visit(Lea lea) {
+
+        if (isDead(lea.destTemp) || isDead(lea.srcTemp)) return null;
+
         lea.dest = allocate(lea.destTemp);
         lea.src = allocate(lea.srcTemp);
 
@@ -221,15 +238,10 @@ public class TrivialAllocator extends InsVisitor<Void> {
     }
 
     public Void visit(Mov mov) {
-        boolean destIsMem = mov.destTemp.trivialIsMem();
 
-        Operand src = allocate(mov.srcTemp);
-        if ((src.isMem() && destIsMem) || (src.isImm() && !Config.within(32, src.value()))) {
-            instrs.add(new Mov(Operand.RAX, src));
-            src = Operand.RAX;
-        }
-        mov.src = src;
+        if (isDead(mov.destTemp) || isDead(mov.srcTemp)) return null;
 
+        mov.src = allocate(mov.srcTemp);
         mov.dest = allocate(mov.destTemp);
 
         instrs.add(mov);
@@ -261,8 +273,29 @@ public class TrivialAllocator extends InsVisitor<Void> {
         return null;
     }
 
+    private boolean isDead(Temp t) {
+        switch (t.kind) {
+            case TEMP:
+                return !allocated.containsKey(t);
+
+            // Allocate a memory access off a base register
+            case MEM:
+            case MEMBR:
+                assert t.base.isTemp() || t.base.isFixed() || t.base.isImm();
+                return !allocated.containsKey(t.base);
+
+            // Allocate a memory access of a 2 registers with scale and an offset
+            case MEMSBR:
+                assert t.base.isTemp() || t.base.isFixed() || t.base.isImm();
+                assert t.reg.isTemp() || t.reg.isFixed() || t.reg.isImm();
+                return !allocated.containsKey(t.base) || !allocated.containsKey(t.reg);
+
+            default:
+                return false;
+        }
+    }
+
     private Operand allocate(Temp t) {
-        String name = t.name;
         switch (t.kind) {
             // Allocate an immediate value
             case IMM:
@@ -270,10 +303,8 @@ public class TrivialAllocator extends InsVisitor<Void> {
 
             // Allocate an ordinary temporary
             case TEMP:
-                if (!tempStack.containsKey(name)) {
-                    return pushTemp(name);
-                }
-                return getTemp(name);
+                assert allocated.get(t) != null;
+                return allocated.get(t);
 
             // Allocate a memory access off a base register
             case MEM:
@@ -283,7 +314,7 @@ public class TrivialAllocator extends InsVisitor<Void> {
                     base = Operand.R11;
                 }
                 return Operand.mem(base);
-            
+
             // Allocate a memory access of a base register and offset
             case MEMBR:
                 base = allocate(t.base);
@@ -309,8 +340,10 @@ public class TrivialAllocator extends InsVisitor<Void> {
 
             // Get the fixed register
             case FIXED:
-                return t.register;
+                return t.getRegister();
         }
+
+        // Unreachable
         assert false;
         return null;
     }

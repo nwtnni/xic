@@ -1,5 +1,7 @@
 package assemble.instructions;
 
+import java.util.Set;
+
 import assemble.*;
 
 public class Pop extends Instr {

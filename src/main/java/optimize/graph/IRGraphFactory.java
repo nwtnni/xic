@@ -46,6 +46,7 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
 
     public IRStmt visit(IRFuncDecl f) {
         state = State.IN_BLOCK;
+
         IRLabel start = IRLabelFactory.generate("START");
         prev = start;
         cfg = new IRGraph<>(f.sourceName(), f.name(), prev, edgeFactory);
@@ -112,13 +113,14 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
                 IRJump fallThrough = new IRJump(l);
                 cfg.addVertex(fallThrough);
                 cfg.addEdge(prev, fallThrough);
+                
                 cfg.addVertex(l);
                 cfg.addEdge(fallThrough, l);
 
             case OUT_OF_BLOCK:
                 cfg.addVertex(l);
 
-                // Label starts a block
+                // Label always starts a block
                 state = State.IN_BLOCK;
                 return l;
 

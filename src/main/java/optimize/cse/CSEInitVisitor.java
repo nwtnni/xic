@@ -5,17 +5,14 @@ import ir.*;
 import java.util.List;
 import java.util.HashSet;
 
-/*
+/**
  * Visitor for annotating IRNodes with use, def, gen, kill, exprs
  */
 public class CSEInitVisitor extends IRVisitor<Void> {
 
-    
     public static void annotateNodes(IRNode start) {
         start.accept(new CSEInitVisitor());
     }
-
-
 
     /*
      * Top level nodes
@@ -38,16 +35,7 @@ public class CSEInitVisitor extends IRVisitor<Void> {
      */
 
 
-    // TODO: check if calls - shouldn't be in lowered IR
-    public Void visit(IRCall c) {
-
-        for (IRNode a : c.args()) {
-            a.accept(this);
-            c.exprs.addAll(a.exprs);
-        }
-        c.delMem = true;
-        return null;
-    }
+    // TODO: visit(IRExp e) if added to IR lowering
 
     public Void visit(IRCJump c) {
         c.cond.accept(this);
@@ -104,7 +92,17 @@ public class CSEInitVisitor extends IRVisitor<Void> {
      * Expression nodes
      */
 
-    // only binops basically can be eliminated
+    // TODO: check this if we update IRCall lowering
+    public Void visit(IRCall c) {
+
+        for (IRNode a : c.args()) {
+            a.accept(this);
+            c.exprs.addAll(a.exprs);
+        }
+        c.delMem = true;
+        return null;
+    }
+
     public Void visit(IRBinOp b) {
         b.left.accept(this);
         b.right.accept(this);
@@ -135,8 +133,8 @@ public class CSEInitVisitor extends IRVisitor<Void> {
         return null;
     }
 
+    // TODO: should we be adding temps to exprs?
     public Void visit(IRTemp t) {
-        // should we be adding temps to exprs?
         t.exprs.add(t);
         return null;
     }

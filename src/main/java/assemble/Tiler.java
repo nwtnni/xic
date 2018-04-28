@@ -29,7 +29,7 @@ public class Tiler extends IRVisitor<Temp> {
         return tiler.unit;
     }
 
-    public static final boolean INCLUDE_COMMENTS = true;
+    public static final boolean INCLUDE_COMMENTS = false;
 
     // Mangled names context
     private ABIContext context;
@@ -46,8 +46,11 @@ public class Tiler extends IRVisitor<Temp> {
     // Number of args passed to a called function
     private int callerNumArgs;
 
+    // Callee multiple return address stored at this temp
+    private Temp calleeReturnAddress;
+
     // Return label of current function visited
-    Label returnLabel;
+    private Label returnLabel;
 
     private Tiler(ABIContext c) {
         this.context = c;
@@ -110,7 +113,6 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRFuncDecl f) {
         // Reset instance variables for each function
         instrs = new ArrayList<>();
-        TempFactory.reset();
 
         String funcName = f.name();
 
@@ -120,9 +122,11 @@ public class Tiler extends IRVisitor<Temp> {
         // If function has multiple returns, save return address from arg 0 to a temp
         if (returns > 2) {
             calleeIsMultiple = 1;
-            instrs.add(0, new Mov(Temp.CALLEE_RET_ADDR, Temp.calleeArg(0)));
+            calleeReturnAddress = TempFactory.generate("RETURN");
+            instrs.add(0, new Mov(calleeReturnAddress, Temp.calleeArg(0)));
         } else {
             calleeIsMultiple = 0;
+            calleeReturnAddress = null;
         }
 
         // Set number of arguments including offset for multiple returns
@@ -198,7 +202,7 @@ public class Tiler extends IRVisitor<Temp> {
             default:
         }
         if (uop != null) {
-            instrs.add(new Mov(Temp.fixed(Operand.RAX), left));
+            instrs.add(new Mov(Temp.RAX, left));
             if (uop == DIV || uop == MOD) {
                 instrs.add(new Cqo());
             }
@@ -232,9 +236,9 @@ public class Tiler extends IRVisitor<Temp> {
         }
         instrs.add(new Cmp(right, left));
         // TODO: this is sub-optimal use of setcc which can use other registers
-        instrs.add(new Mov(Temp.fixed(Operand.RAX), Temp.imm(0)));
+        instrs.add(new Mov(Temp.RAX, Temp.imm(0)));
         instrs.add(new Setcc(flag));
-        instrs.add(new Mov(dest, Temp.fixed(Operand.RAX)));
+        instrs.add(new Mov(dest, Temp.RAX));
         return dest;
     }
     
@@ -324,6 +328,8 @@ public class Tiler extends IRVisitor<Temp> {
     }
 
     public Temp visit(IRExp e) {
+        // TODO: add tile to deal with procedure calls with no returns
+        // in the form of IRExp(IRCall(...))
         throw XicInternalException.runtime("IRExp is not canoncial");        
     }
 
@@ -374,6 +380,11 @@ public class Tiler extends IRVisitor<Temp> {
     public Temp visit(IRMove m) {
         Temp src = m.src().accept(this);
         Temp dest = m.target().accept(this);
+        if (src.isMem()) {
+            Temp t = TempFactory.generate();
+            instrs.add(new Mov(t, src));
+            src = t;
+        }
         instrs.add(new Mov(dest, src));
         return null;
     }
@@ -386,7 +397,7 @@ public class Tiler extends IRVisitor<Temp> {
         // CALLEE returns (write by callee)
         for (int i = r.size() - 1; i >= 0; i--) {
             Temp val = r.get(i).accept(this);
-            instrs.add(new Mov(Temp.calleeRet(i), val));
+            instrs.add(new Mov(Temp.calleeRet(calleeReturnAddress, i), val));
         }
         instrs.add(Jmp.toLabel(returnLabel));
         return null;

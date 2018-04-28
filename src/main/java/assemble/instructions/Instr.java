@@ -9,7 +9,8 @@ import assemble.*;
 public abstract class Instr {
     public Instr() {
         this.id = UUID.randomUUID();
-        this.live = new HashSet<>();
+        this.in = new HashSet<>();
+        this.out = new HashSet<>();
         this.use = new HashSet<>();
         this.def = new HashSet<>();
     }
@@ -18,7 +19,8 @@ public abstract class Instr {
 
     // Fields used for live variable analysis
     // Must be initialized with LiveVariableAnnotator before running LV analysis
-    public Set<Temp> live;
+    public Set<Temp> in;
+    public Set<Temp> out;
     public Set<Temp> use;
     public Set<Temp> def;
 

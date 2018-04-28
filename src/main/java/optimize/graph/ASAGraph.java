@@ -7,9 +7,10 @@ import java.util.HashSet;
 import java.util.Deque;
 import java.util.Set;
 
+import org.jgrapht.Graphs;
+
 import assemble.*;
 import assemble.instructions.*;
-import util.PairEdge;
 import util.PairEdgeGraph;
 import xic.XicException;
 import xic.XicInternalException;
@@ -22,7 +23,7 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
         super(start, edgeFactory);
         this.sourceName = fn.sourceName;
         this.name = fn.name;
-        this.orignalFn = fn;
+        this.originalFn = fn;
     }
 
     /** The original function name from source. */
@@ -31,19 +32,15 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
     /** The name of the function associated with this CFG. */
     private String name;
 
-    private FuncDecl orignalFn;
+    public FuncDecl originalFn;
 
     /** 
-     * Adds the tail node from the edge in edges to a set of 
-     * visited nodes and the sequence of nodes. 
-     * Requires: edges contains at most 1 edge.
+     * Gets the successor node of the given node.
+     * Requires: there is a single outgoing edge from this node.
      * */
-    private Instr getSuccessor(Set<PairEdge<Instr, E>> edges) {
-        assert edges.size() == 1;
-        if (edges.iterator().hasNext()) {
-            return edges.iterator().next().tail;
-        } 
-        return null;
+    private Instr getSuccessor(Instr node) {
+        assert outDegreeOf(node) == 1;
+        return outgoingEdgesOf(node).stream().findFirst().get().tail;
     }
 
     /**
@@ -52,7 +49,7 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
     public FuncDecl toASA() {
         // TODO: prelude and epilogue not included in cfg
         List<Instr> body = new ArrayList<>();
-        FuncDecl fn = new FuncDecl(orignalFn);
+        FuncDecl fn = new FuncDecl(originalFn);
         fn.stmts = body;
 
         Set<Instr> visited = new HashSet<>();
@@ -64,6 +61,7 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
 
             // Add instruction to assembly
             if (visited.contains(current)) {
+                // Can visit labels multiple times
                 if (current instanceof Label) {
                     continue;
                 } else {
@@ -71,35 +69,70 @@ public class ASAGraph<E> extends PairEdgeGraph<Instr, E> {
                 }
             }
             visited.add(current);
-            body.add(current);
 
             // Get next instruction and update traces
-            Set<PairEdge<Instr, E>> edges = new HashSet<>(outgoingEdgesOf(current));
             if (current instanceof Jcc) {
-                // Add trace label if it is different from the fall-through
-                if (edges.size() > 1) {
-                    Jcc jcc = (Jcc) current;
-                    PairEdge<Instr, E> toLabel = getEdge(current, jcc.target);
-                    edges.remove(toLabel);
-                    traces.push(toLabel.tail);
+                Jcc jcc = (Jcc) current;
+                body.add(jcc);
+
+                traces.push(jcc.target);
+
+                // Push fall-through trace if different from branch
+                if (outDegreeOf(jcc) > 1) {
+                    assert outDegreeOf(jcc) == 2;
+                    Instr next = outgoingEdgesOf(jcc).stream()
+                        .filter(e -> !e.tail.equals(jcc.target))
+                        .findFirst().get().tail;
+                    traces.push(next);
                 }
-                traces.push(getSuccessor(edges));
             } else if (current instanceof Jmp) {
-                // Trace ends with jump
                 Jmp jmp = (Jmp) current;
-                if (jmp.hasLabel()) {
-                    // Start new trace if not jump to return
-                    if (!jmp.label.equals(fn.returnLabel)) {
-                        traces.push(jmp.label);
-                    }
+                body.add(jmp);
+
+                // Start new trace if not jump to return
+                if (jmp.hasLabel() && !jmp.label.equals(fn.returnLabel)) {
+                    traces.push(jmp.label);
                 } else {
                     // TODO: handle arbitary jumps
                 }
+            } else if (current instanceof Label) {
+                Label label = (Label) current;
+                
+                // Remove prior jumps and cjumps if equvialent to a fall-through
+                // Keeps on searching only if a fall-through is found
+                List<Instr> preds = Graphs.predecessorListOf(this, label);
+                for (int last = body.size() - 1; last > 0; last--) {
+                    Instr prev = body.get(last);
+                    if (prev instanceof Jmp) {
+                        Jmp jmp = (Jmp) prev;
+                        if (jmp.label.equals(label)) {
+                            body.remove(last);
+                            preds.remove(jmp);
+                            last--;
+                            continue;
+                        }
+                    } else if (prev instanceof Jcc) {
+                        Jcc jmp = (Jcc) prev;
+                        if (jmp.target.equals(label)) {
+                            body.remove(last);
+                            preds.remove(jmp);
+                            last--;
+                            continue;
+                        }
+                    }
+                    break;
+                }
+
+                // Only add label if exists paths to it
+                if (preds.size() > 0) {
+                    body.add(current);
+                }
+
+                // Follow the fall-through trace
+                traces.push(getSuccessor(label));
             } else {
-                if (edges.size() > 0) {
-                    assert edges.size() == 1;
-                    traces.push(getSuccessor(edges));
-                } 
+                body.add(current);
+                traces.push(getSuccessor(current));
             }
         }
 

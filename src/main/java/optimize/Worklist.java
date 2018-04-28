@@ -9,7 +9,10 @@ import java.util.Set;
 import util.PairEdge;
 import util.PairEdgeGraph;
 
-/** The generic worklist algorthim interface. */
+/** 
+ * The generic worklist algorthim abstract class. 
+ * Supports both forwards and backwards analyses.
+ */
 public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
 
     public enum Direction { FORWARD, BACKWARDS };
@@ -44,11 +47,13 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
      * transfer function in the direction [direction].
      */
     public boolean update(V v) {
+        System.out.println("Current stmt in update: " + v);
         if (direction == Direction.FORWARD) {
             // Forward analysis
             E in = meet(graph.incomingEdgesOf(v));
-            if (annotate(v, in)) {
-                E out = transfer(in, v);
+            E out = transfer(in, v);
+
+            if (annotate(v, in, out)) {
                 for (PairEdge<V,E> outEdge : graph.outgoingEdgesOf(v)) {
                     update(outEdge, out);
                 }
@@ -57,8 +62,8 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
         } else {
             // Backwards analysis
             E out = meet(graph.outgoingEdgesOf(v));
-            if (annotate(v, out)) {
-                E in = transfer(out, v);
+            E in = transfer(out, v);
+            if (annotate(v, in, out)) {
                 for (PairEdge<V,E> inEdge : graph.incomingEdgesOf(v)) {
                     update(inEdge, in);
                 }
@@ -70,33 +75,17 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
     }
 
     /**
-     * Annotates a node [v] with the result of the meet [e].
+     * Annotates a node [v] with the in and out sets calculated by 
+     * the meet and transfer.
      * Returns true if value has changed, otherwise false.
      */
-    public abstract boolean annotate(V v, E e);
+    public abstract boolean annotate(V v, E in, E out);
 
     /**
      * Updates an edge with [value].
      */
     public void update(PairEdge<V,E> edge, E value) {
         edge.value = value;
-    }
-
-    /**
-     * Run the worklist algorithm on [graph] until convergence.
-     */
-    public void doWorklist() {
-        Deque<V> worklist = new LinkedList<>(graph.vertexSet());
-
-        while (!worklist.isEmpty()) {
-            V node = worklist.poll();
-            boolean updated = update(node);
-            if (updated) {
-                for (V child : getChildren(node)) {
-                    worklist.push(child);
-                }
-            }
-        }
     }
 
     /**
@@ -115,5 +104,23 @@ public abstract class Worklist<G extends PairEdgeGraph<V,E>, V, E> {
             }
         }
         return children;
+    }
+
+    /**
+     * Run the worklist algorithm on [graph] until convergence.
+     */
+    public void doWorklist() {
+        Deque<V> worklist = new LinkedList<>(graph.vertexSet());
+
+        while (!worklist.isEmpty()) {
+            V node = worklist.poll();
+            System.out.println("Current Statement: " + node);
+            boolean updated = update(node);
+            if (updated) {
+                for (V child : getChildren(node)) {
+                    worklist.push(child);
+                }
+            }
+        }
     }
 }
