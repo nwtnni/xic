@@ -7,7 +7,6 @@ import assemble.*;
 import assemble.instructions.*;
 import optimize.*;
 import optimize.graph.*;
-import util.PairEdge;
 
 /**
  * Worklist for live variable analysis.
@@ -39,10 +38,10 @@ public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr, S
     /** 
      * The meet operation is Union(in[n'])
      */
-    public Set<Temp> meet(Set<PairEdge<Instr,Set<Temp>>> inPaths) {
+    public Set<Temp> meet(Set<Set<Temp>> inPaths) {
         Set<Temp> out = new HashSet<>();
-        for (PairEdge<Instr, Set<Temp>> path : inPaths) {
-            out.addAll(path.value);
+        for (Set<Temp> path : inPaths) {
+            out.addAll(path);
         }
         return out;
     }
