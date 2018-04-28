@@ -34,7 +34,8 @@ public class ColorGraph {
         this.available = new HashSet<>(available);
     
         for (Instr<Temp> instr : instructions) {
-        
+       
+            // TODO: update when LV returns a map
             List<Temp> live = new ArrayList<>(instr.in);
             int size = live.size();
 

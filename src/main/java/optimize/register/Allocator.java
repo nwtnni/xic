@@ -21,6 +21,7 @@ import util.Either;
 
 import xic.XicInternalException;
 
+// TODO: refactor this like the trivial allocator
 public class Allocator extends InstrVisitor<Void> {
 
     private static final Set<Operand> available = Set.of(

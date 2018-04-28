@@ -23,6 +23,10 @@ public abstract class DivMul<S, A> extends Instr<A> {
         this.dest = dest;
     }
 
+    public boolean usesRDX() {
+        return kind == Kind.DIV || kind == Kind.MOD;
+    }
+
     @Override
     public String toString() {
         return kind.opcode + " " + src;
