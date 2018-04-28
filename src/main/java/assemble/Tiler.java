@@ -500,6 +500,8 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     // TODO: currently assumes the dest of an IRMove is never a constant
+
+    // TODO: we are getting an assertion error here!
     public Operand visit(IRMove m) {
 
         // Must be Mem<Temp> or else IRGen has a bug
