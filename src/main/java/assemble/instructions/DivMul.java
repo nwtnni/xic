@@ -39,7 +39,7 @@ public abstract class DivMul<S, A> extends Instr<A> {
      */
     public static class TR extends DivMul<Temp, Temp> {
         public TR(Kind kind, Temp src) {
-            super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Temp.RDX : Temp.RAX);
+            super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Temp.RAX : Temp.RDX);
         }
         public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
@@ -49,7 +49,7 @@ public abstract class DivMul<S, A> extends Instr<A> {
      */
     public static class TM extends DivMul<Mem<Temp>, Temp> {
         public TM(Kind kind, Mem<Temp> src) {
-            super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Temp.RDX : Temp.RAX);
+            super(kind, src, (kind == Kind.DIV || kind == Kind.MUL) ? Temp.RAX : Temp.RDX);
         }
         public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
