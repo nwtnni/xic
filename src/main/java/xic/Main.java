@@ -64,8 +64,10 @@ public class Main {
                     xic.setOutput(Kind.EMIT);
                     break;
                 case "cf":
-                    // TODO
                     xic.setOutput(Kind.FOLD);
+                    break;
+                case "cp":
+                    xic.setOutput(Kind.CONST);
                     break;
                 case "cse":
                     xic.setOutput(Kind.CSE);
@@ -85,6 +87,9 @@ public class Main {
                     break;
                 case "cf":
                     xic.setOutputCFG(Kind.FOLD);
+                    break;
+                case "cp":
+                    xic.setOutputCFG(Kind.CONST);
                     break;
                 case "cse":
                     xic.setOutputCFG(Kind.CSE);

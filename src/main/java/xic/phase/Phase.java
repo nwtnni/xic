@@ -17,10 +17,12 @@ public abstract class Phase {
             new Fold(),
             new Canonize(),
             new Interpret(),
+            new ConstProp(),
             new CSE(),
             new Irgen(),
             new Tile(),
-            new RegAlloc()
+            new RegAlloc(),
+            new TrivialAlloc()
         ));
     }
 
@@ -32,11 +34,12 @@ public abstract class Phase {
         FOLD,
         CANONIZE,
         INTERPRET,
+        CONST,
         CSE,
         IRGEN,
         TILE,
         REG_ALLOC,
-        ALLOCATE,
+        ALLOCATE;
     }
     
     protected Kind kind;
