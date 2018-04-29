@@ -99,26 +99,25 @@ public class ConstWorklist extends Worklist<IRGraph<Map<IRTemp, Optional<IRConst
         for (IRTemp temp : temps) {
             Optional<IRConst> value = null;
             for (Map<IRTemp, Optional<IRConst>> path : paths) {
+
                 // If path contains: temp -> c | NAC
                 if (path.containsKey(temp)) {
                     Optional<IRConst> c = path.get(temp);
                     // If temp is still uninitialized: temp -> c
                     if (c.isPresent() && value == null) {
                         value = c;
-                    
-                    // If there are conflicting bindings: temp -> NAC
-                    } else if (c.isPresent() && value.isPresent() && !value.get().equals(c.get())) {
-                        value = Optional.empty();
-                        break;
-
-                    // If any path maps to NAC: temp -> NAC
+                    // If the bindings do not conflict
+                    } else if (c.isPresent() && value.isPresent() && value.get().equals(c.get())) {
+                        continue;
                     } else {
                         value = Optional.empty();
                         break;
                     }
                 }
             }
-            in.put(temp, value);
+            if (value != null) {
+                in.put(temp, value);
+            }
         }
 
         return in;

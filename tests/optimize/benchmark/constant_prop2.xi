@@ -8,7 +8,6 @@ main (args:int[][]) {
         y:int = x
         z:int = y
         w:int = z
-        x = w+1
         i = i+1
     }
     println(unparseInt(x))
