@@ -3,13 +3,23 @@ package optimize.register;
 import assemble.*;
 import assemble.instructions.*;
 
-public class TempReplacer extends InstrVisitor<Void> {
+public class TempReplacer extends InstrVisitor<Boolean> {
+
+    private ColorGraph cg;
 
     public TempReplacer(ColorGraph cg) {
         this.cg = cg;
     }
 
-    private ColorGraph cg;
+    /**
+     * Coalesces temps inside the given instruction.
+     *
+     * Returns true if this instruction must be kept in the list.
+     * Returns false if this instruction can be deleted as a result of coalescing.
+     */
+    public boolean replace(Instr<Temp> instr) {
+        return instr.accept(this);
+    }
 
     /**
      * Replaces [from] Temps inside [mem] with [to].
@@ -28,36 +38,36 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(BinOp.TIR b) {
+    public Boolean visit(BinOp.TIR b) {
         b.dest = cg.getAlias(b.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(BinOp.TIM b) {
+    public Boolean visit(BinOp.TIM b) {
         replace(b.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(BinOp.TRM b) {
+    public Boolean visit(BinOp.TRM b) {
         b.src = cg.getAlias(b.src);
         replace(b.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(BinOp.TMR b) {
+    public Boolean visit(BinOp.TMR b) {
         replace(b.src);
         b.dest = cg.getAlias(b.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(BinOp.TRR b) {
+    public Boolean visit(BinOp.TRR b) {
         b.src = cg.getAlias(b.src);
         b.dest = cg.getAlias(b.dest);
-        return null;
+        return true;
     }
 
     /*
@@ -65,8 +75,8 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Call.T c) {
-        return null;
+    public Boolean visit(Call.T c) {
+        return true;
     }
 
     /*
@@ -74,30 +84,30 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Cmp.TIR c) {
+    public Boolean visit(Cmp.TIR c) {
         c.right = cg.getAlias(c.right);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Cmp.TRM c) {
+    public Boolean visit(Cmp.TRM c) {
         c.left = cg.getAlias(c.left);
         replace(c.right);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Cmp.TMR c) {
+    public Boolean visit(Cmp.TMR c) {
         replace(c.left);
         c.right = cg.getAlias(c.right);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Cmp.TRR c) {
+    public Boolean visit(Cmp.TRR c) {
         c.left = cg.getAlias(c.left);
         c.right = cg.getAlias(c.right);
-        return null;
+        return true;
     }
 
     /*
@@ -105,8 +115,8 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Cqo.T c) {
-        return null;
+    public Boolean visit(Cqo.T c) {
+        return true;
     }
 
     /*
@@ -114,25 +124,25 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(DivMul.TR d) {
+    public Boolean visit(DivMul.TR d) {
         d.src = cg.getAlias(d.src);
         if (!cg.getAlias(d.dest).equals(d.dest)) {
             // Error in register allocation
             // Can't alias fixed register dest
             assert false;
         }
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(DivMul.TM d) {
+    public Boolean visit(DivMul.TM d) {
         replace(d.src);
         if (!cg.getAlias(d.dest).equals(d.dest)) {
             // Error in register allocation
             // Can't alias fixed register dest
             assert false;
         }
-        return null;
+        return true;
     }
 
     /*
@@ -140,8 +150,8 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Jcc.T j) {
-        return null;
+    public Boolean visit(Jcc.T j) {
+        return true;
     }
 
     /*
@@ -149,8 +159,8 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Jmp.T j) {
-        return null;
+    public Boolean visit(Jmp.T j) {
+        return true;
     }
 
     /*
@@ -158,8 +168,8 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Label.T l) {
-        return null;
+    public Boolean visit(Label.T l) {
+        return true;
     }
 
     /*
@@ -167,10 +177,10 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Lea.T l) {
+    public Boolean visit(Lea.T l) {
         replace(l.src);
         l.dest = cg.getAlias(l.dest);
-        return null;
+        return true;
     }
 
     /*
@@ -178,36 +188,36 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Mov.TIR m) {
+    public Boolean visit(Mov.TIR m) {
         m.dest = cg.getAlias(m.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Mov.TIM m) {
+    public Boolean visit(Mov.TIM m) {
         replace(m.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Mov.TRM m) {
+    public Boolean visit(Mov.TRM m) {
         m.src = cg.getAlias(m.src);
         replace(m.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Mov.TMR m) {
+    public Boolean visit(Mov.TMR m) {
         replace(m.src);
         m.dest = cg.getAlias(m.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Mov.TRR m) {
+    public Boolean visit(Mov.TRR m) {
         m.src = cg.getAlias(m.src);
         m.dest = cg.getAlias(m.dest);
-        return null;
+        return !m.src.equals(m.dest);
     }
     
     /*
@@ -215,15 +225,15 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Pop.TR p) {
+    public Boolean visit(Pop.TR p) {
         p.dest = cg.getAlias(p.dest);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Pop.TM p) {
+    public Boolean visit(Pop.TM p) {
         replace(p.dest);
-        return null;
+        return true;
     }
 
     /*
@@ -231,15 +241,15 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Push.TR p) {
+    public Boolean visit(Push.TR p) {
         p.src = cg.getAlias(p.src);
-        return null;
+        return true;
     }
 
     @Override
-    public Void visit(Push.TM p) {
+    public Boolean visit(Push.TM p) {
         replace(p.src);
-        return null;
+        return true;
     }
 
     /*
@@ -247,8 +257,8 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Ret.T r) {
-        return null;
+    public Boolean visit(Ret.T r) {
+        return true;
     }
 
     /*
@@ -256,21 +266,21 @@ public class TempReplacer extends InstrVisitor<Void> {
      */
 
     @Override
-    public Void visit(Setcc.T s) {
+    public Boolean visit(Setcc.T s) {
         if (!cg.getAlias(s.dest).equals(s.dest)) {
             // Error in register allocation
             // Fixed register can't be alias
             assert false;
         }
-        return null;
+        return true;
     }
 
     /*
-     * Voidext Visitor
+     * Booleanext Visitor
      */
 
     @Override
-    public Void visit(Text.T t) {
-        return null;
+    public Boolean visit(Text.T t) {
+        return true;
     }
 }
