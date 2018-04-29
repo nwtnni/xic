@@ -386,60 +386,59 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRMem m) {
-        // Use set temporaries to make allocator use addressing modes 
-        // for immutable memory accesses
-        // if (m.memType() == MemType.IMMUTABLE && m.expr() instanceof IRBinOp) {
+        // Make allocator use addressing modes for immutable memory accesses
+        if (m.memType() == MemType.IMMUTABLE && m.expr() instanceof IRBinOp) {
 
-        //     IRBinOp bop = (IRBinOp) m.expr();
-        //     assert bop.type() == OpType.ADD;
+            IRBinOp bop = (IRBinOp) m.expr();
+            assert bop.type() == OpType.ADD;
 
-        //     if (bop.left() instanceof IRTemp) { 
+            if (bop.left() instanceof IRTemp) { 
 
-        //         // B + off
-        //         if (bop.right() instanceof IRConst) {
+                // B + off
+                if (bop.right() instanceof IRConst) {
 
-        //             Operand base = bop.left().accept(this);
-        //             Imm offset = checkImm(bop.right()).get();
+                    Operand base = bop.left().accept(this);
+                    Imm offset = checkImm(bop.right()).get();
 
-        //             // Off must be within 32 bits
-        //             assert Config.within(32, offset.getValue());
+                    // Off must be within 32 bits
+                    assert Config.within(32, offset.getValue());
 
-        //             // B must be a temp, not nested memory access
-        //             if (base.isTemp()) {
-        //                 Mem<Temp> mem = Mem.of(base.getTemp(), (int) offset.getValue());
-        //                 return Operand.mem(mem);
-        //             } else {
-        //                 throw XicInternalException.runtime("Nested memory access");
-        //             }
+                    // B must be a temp, not nested memory access
+                    if (base.isTemp()) {
+                        Mem<Temp> mem = Mem.of(base.getTemp(), (int) offset.getValue());
+                        return Operand.mem(mem);
+                    } else {
+                        throw XicInternalException.runtime("Invalid IR generated for mem");
+                    }
 
-        //         // B + R * scale
-        //         } else if (bop.right() instanceof IRBinOp) {
+                // B + R * scale
+                } else if (bop.right() instanceof IRBinOp) {
 
-        //             Operand base = bop.left().accept(this);
+                    Operand base = bop.left().accept(this);
     
-        //             IRBinOp index = (IRBinOp) bop.right();
+                    IRBinOp index = (IRBinOp) bop.right();
 
-        //             assert index.type() == OpType.MUL &&
-        //                 index.left() instanceof IRTemp &&
-        //                 index.right() instanceof IRConst;
+                    assert index.type() == OpType.MUL &&
+                        index.left() instanceof IRTemp &&
+                        index.right() instanceof IRConst;
                         
-        //             Operand reg = index.left().accept(this);
-        //             Imm scale = checkImm(index.right()).get();
+                    Operand reg = index.left().accept(this);
+                    Imm scale = checkImm(index.right()).get();
 
-        //             // Assumes no nested memory access
-        //             assert base.isTemp() && reg.isTemp();
+                    // Assumes no nested memory access
+                    assert base.isTemp() && reg.isTemp();
                     
-        //             Mem<Temp> mem = Mem.of(
-        //                 base.getTemp(),
-        //                 reg.getTemp(),
-        //                 0,
-        //                 (int) scale.getValue()
-        //             );
+                    Mem<Temp> mem = Mem.of(
+                        base.getTemp(),
+                        reg.getTemp(),
+                        0,
+                        (int) scale.getValue()
+                    );
 
-        //             return Operand.mem(mem);
-        //         }
-        //     }
-        // }
+                    return Operand.mem(mem);
+                }
+            }
+        }
 
         Optional<Imm> imm = checkImm(m.expr());
 
