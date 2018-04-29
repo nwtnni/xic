@@ -28,14 +28,8 @@ public class ColorGraph {
 
     // Main register allocation function
     public static Either<
-        Pair<
-            Map<Temp, Reg>, // Complete coloring
-            Map<Temp, Temp> // Coalesced
-        >,
-        Pair<
-            Set<Temp>,      // Spilled
-            Map<Temp, Temp> // Coalesced
-        >
+        Map<Temp, Reg>, // Complete coloring assignment of Temp to Register
+        Set<Temp>       // Set of spilled nodes
     > tryColor(List<Instr<Temp>> instructions, Map<Instr<Temp>, Set<Temp>> liveVars, Set<Reg> available) {
         
         ColorGraph cg = new ColorGraph(instructions, liveVars, available);
@@ -60,9 +54,22 @@ public class ColorGraph {
         }
 
         if (cg.spilledNodes.isEmpty()) {
-            return Either.left(new Pair<>(cg.color, cg.alias));
+            return Either.left(cg.color);
         } else {
-            return Either.right(new Pair<>(cg.spilledNodes, cg.alias));
+            return Either.right(cg.spilledNodes);
+        }
+    }
+
+    /**
+     * Returns coalesced node mappings.
+     *
+     * All occurrences of Temp [n] should be replaced by Temp getAlias[n].
+     */
+    public Temp getAlias(Temp n) {
+        if (coalescedNodes.contains(n)) {
+            return getAlias(alias.get(n));
+        } else {
+            return n;
         }
     }
 
@@ -316,14 +323,6 @@ public class ColorGraph {
         if (degree.get(u) >= colors && freezeWorklist.contains(u)) {
             freezeWorklist.remove(u);
             spillWorklist.add(u);
-        }
-    }
-
-    public Temp getAlias(Temp n) {
-        if (coalescedNodes.contains(n)) {
-            return getAlias(alias.get(n));
-        } else {
-            return n;
         }
     }
 
