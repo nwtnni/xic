@@ -56,8 +56,8 @@ public class Either<L, R> {
 
     @Override
     public int hashCode() {
-        // GUARANTEED TO BE PRIME
-        int prime = (isLeft()) ? 1282519 : 9309831; 
+        // ok actually prime now
+        int prime = (isLeft()) ? 1282529 : 9309847; 
         return (isLeft()) ? getLeft().hashCode() ^ prime : getRight().hashCode() ^ prime; 
     }
 
