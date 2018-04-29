@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Optional;
 
 import assemble.instructions.*;
 import assemble.instructions.BinOp.Kind;
@@ -11,21 +12,43 @@ import static assemble.instructions.InstrFactory.*;
 
 import xic.XicInternalException;
 
-public class TrivialAllocator extends InstrVisitor<Void> {
+public class TrivialAllocator extends Allocator {
 
     public static CompUnit<Reg> allocate(CompUnit<Temp> unit) {
         TrivialAllocator allocator = new TrivialAllocator(unit);
         return allocator.allocate();
     }
 
-    // Unallocated CompUnit
-    private CompUnit<Temp> unit;
+    /**
+     * TrivialAllocator spills everything onto the stack, reserving
+     * $r10 and $r11 as shuttle registers.
+     */
+    @Override
+    protected Optional<Reg> allocate(Temp t, int index) {
+        switch (t.kind) {
 
-    // Running list of allocated assembly functions
-    private CompUnit<Reg> allocated;
+            // Allocate an ordinary temporary
+            case TEMP:
+                boolean existing = tempStack.containsKey(t.name);
+                Mem<Reg> mem = loadTemp(t.name);
+                Reg reg = (index == 0) ? Reg.R10 : Reg.R11;
+                if (existing) instrs.add(new Mov.RMR(mem, reg));
+                return Optional.of(reg);
 
-    // Running list of allocated function instructions
-    private List<Instr<Reg>> instrs;
+            // Get the fixed register
+            case FIXED:
+                return Optional.of(t.getRegister());
+        }
+        assert false;
+        return null;
+    }
+
+    /**
+     * Places a Temp result back onto its stack location.
+     */
+    private void store(Temp t) {
+        instrs.add(new Mov.RRM(Reg.R11, loadTemp(t.name)));
+    }
 
     // Map of named temps to offset on stack
     private Map<String, Integer> tempStack;
@@ -33,26 +56,17 @@ public class TrivialAllocator extends InstrVisitor<Void> {
     // Number of temps on the stack - 1
     private int tempCounter;
 
-    // Maximum number of args to a call in current function
-    private int maxArgs;
-
-    // Maximum number of returns from a call in current function
-    private int maxRets;
-
     // Number of words to subtract from base pointer to get location
     // in stack where multiple returns > 2 must be written by callee.
     private Mem<Reg> calleeReturnAddr;
-
 
     // Caller saved registers - not required for trivial allocation
     // private Operand r10;
     // private Operand r11;
 
     private TrivialAllocator(CompUnit<Temp> unit) {
-        this.unit = unit;
-        this.allocated = new CompUnit<>();
+        super(unit);
         this.tempStack = null;
-        this.instrs = null;
         this.tempCounter = 0;
         this.maxArgs = 0;
         this.maxRets = 0;
@@ -139,43 +153,21 @@ public class TrivialAllocator extends InstrVisitor<Void> {
      * BinOp Visitors
      */
 
-    public Void visit(BinOp.TIR b) {
-        // Move register into register
-        Reg dest = load(b.dest, 0);
-        instrs.add(new BinOp.RIR(b.kind, b.src, dest));
-        store(b.dest, 0);
+    public Boolean visit(BinOp.TIR b) {
+        super.visit(b);
+        store(b.dest);
         return null;
     }
 
-    public Void visit(BinOp.TIM b) {
-        Mem<Reg> dest = load(b.dest);
-        instrs.add(new BinOp.RIM(b.kind, b.src, dest));
+    public Boolean visit(BinOp.TMR b) {
+        super.visit(b);
+        store(b.dest);
         return null;
     }
 
-    public Void visit(BinOp.TRM b) {
-        // Move register into memory
-        Mem<Reg> dest = load(b.dest);
-        Reg src = load(b.src, 1);
-        instrs.add(new BinOp.RRM(b.kind, src, dest));
-        return null;
-    }
-
-    public Void visit(BinOp.TMR b) {
-        // Move memory into register
-        Mem<Reg> src = load(b.src);
-        Reg dest = load(b.dest, 1);
-        instrs.add(new BinOp.RMR(b.kind, src, dest));
-        store(b.dest, 1);
-        return null;
-    }
-
-    public Void visit(BinOp.TRR b) {
-        // Move register into register
-        Reg src = load(b.src, 0);
-        Reg dest = load(b.dest, 1);
-        instrs.add(new BinOp.RRR(b.kind, src, dest));
-        store(b.dest, 1);
+    public Boolean visit(BinOp.TRR b) {
+        super.visit(b);
+        store(b.dest);
         return null;
     }
 
@@ -183,111 +175,22 @@ public class TrivialAllocator extends InstrVisitor<Void> {
      * Call Visitor
      */
 
-    public Void visit(Call.T c) {
+    public Boolean visit(Call.T c) {
+        super.visit(c);
         maxArgs = Math.max(maxArgs, c.numArgs);
         maxRets = Math.max(maxRets, c.numRet);
-        instrs.add(new Call.R(c.name, c.numArgs, c.numRet));
         return null;
     }
 
-    /*
-     * Cmp Visitors
-     */
-
-    public Void visit(Cmp.TIR c) {
-        // Compare immediate to register
-        Reg right = load(c.right, 0);
-        instrs.add(new Cmp.RIR(c.left, right));
-        return null;
-    }
-
-    public Void visit(Cmp.TRM c) {
-        // Compare register to memory
-        Mem<Reg> right = load(c.right);
-        Reg left = load(c.left, 1);
-        instrs.add(new Cmp.RRM(left, right));
-        return null;
-    }
-
-    public Void visit(Cmp.TMR c) {
-        // Compare memory to register
-        Mem<Reg> left = load(c.left);
-        Reg right = load(c.right, 1);
-        instrs.add(new Cmp.RMR(left, right));
-        return null;
-    }
-
-    public Void visit(Cmp.TRR c) {
-        // Compare register to register
-        Reg left = load(c.left, 0);
-        Reg right = load(c.right, 1);
-        instrs.add(new Cmp.RRR(left, right));
-        return null;
-    }
-
-    /*
-     * Cqo Visitor
-     */
-
-    public Void visit(Cqo.T c) {
-        instrs.add(new Cqo.R());
-        return null;
-    }
-
-    /*
-     * DivMul Visitors
-     */
-
-    public Void visit(DivMul.TR d) {
-        // DivMul a register source
-        Reg reg = load(d.src, 0);
-        instrs.add(new DivMul.RR(d.kind, reg));
-        return null;
-    }
-
-    public Void visit(DivMul.TM d) {
-        Mem<Reg> reg = load(d.src);
-        instrs.add(new DivMul.RM(d.kind, reg));
-        return null;
-    }
-
-    /*
-     * Jcc Visitor
-     */
-
-    public Void visit(Jcc.T j) {
-        instrs.add(new Jcc.R(j.kind, j.target));
-        return null;
-    }
-
-    /*
-     * Jmp Visitor
-     */
-
-    public Void visit(Jmp.T j) {
-        instrs.add(new Jmp.R(j.label));
-        return null;
-    }
-
-    /*
-     * Label Visitor
-     */
-
-    public Void visit(Label.T l) {
-        instrs.add(new Label.R(l));
-        return null;
-    }
 
     /*
      * Lea Visitor
      */
 
-    public Void visit(Lea.T l) {
+    public Boolean visit(Lea.T l) {
         // Load into register destination
-        Mem<Reg> src = load(l.src);
-        Reg dest = load(l.dest, 1);   
-        instrs.add(new Lea.R(src, dest));
-        store(l.dest, 1);
+        super.visit(l);
+        store(l.dest);
         return null;
     }
 
@@ -295,141 +198,23 @@ public class TrivialAllocator extends InstrVisitor<Void> {
      * Mov Visitors
      */
 
-    public Void visit(Mov.TIR m) {
+    public Boolean visit(Mov.TIR m) {
         // Move immediate into register
-        Reg dest = load(m.dest, 0);
-        instrs.add(new Mov.RIR(m.src, dest));
-        store(m.dest, 0);
+        super.visit(m);
+        store(m.dest);
         return null;
     }
 
-    public Void visit(Mov.TIM m) {
-        Mem<Reg> dest = load(m.dest);
-        instrs.add(new Mov.RIM(m.src, dest));
-        return null;
-    }
-
-    public Void visit(Mov.TRM m) {
-        // Move register into memory
-        Reg src = load(m.src, 0);
-        Mem<Reg> dest = load(m.dest);
-        instrs.add(new Mov.RRM(src, dest));
-        return null;
-    }
-
-    public Void visit(Mov.TMR m) {
+    public Boolean visit(Mov.TMR m) {
         // Move memory into register
-        Mem<Reg> src = load(m.src);
-        Reg dest = load(m.dest, 1);
-        instrs.add(new Mov.RMR(src, dest));
-        store(m.dest, 1);
+        super.visit(m);
+        store(m.dest);
         return null;
     }
 
-    public Void visit(Mov.TRR m) {
-        Reg src = load(m.src, 0);
-        Reg dest = load(m.dest, 1);
-        instrs.add(new Mov.RRR(src, dest));
-        store(m.dest, 1); 
-        return null;
-    }
-
-    /*
-     * Pop Visitors
-     */
-
-    public Void visit(Pop.TR p) {
-        // Pop to register
-        instrs.add(new Pop.RR(load(p.dest, 0)));
-        return null;
-    }
-
-    public Void visit(Pop.TM p) {
-        instrs.add(new Pop.RM(load(p.dest)));
-        return null;
-    }
-
-    /*
-     * Push Visitors
-     */
-
-    public Void visit(Push.TR p) {
-        // Push from register
-        instrs.add(new Push.RR(load(p.src, 0)));
-        return null;
-    }
-
-    public Void visit(Push.TM p) {
-        instrs.add(new Push.RM(load(p.src)));
-        return null;
-    }
-
-    /*
-     * Ret Visitor
-     */
-
-    public Void visit(Ret.T r) {
-        instrs.add(new Ret.R());
-        return null;
-    }
-
-    /*
-     * Setcc Visitor
-     */
-
-    public Void visit(Setcc.T s) {
-        instrs.add(new Setcc.R(s.kind));
-        return null;
-    }
-
-    /*
-     * Text Visitor
-     */
-
-    public Void visit(Text.T t) {
-        instrs.add(new Text.R(t.text));
-        return null;
-    }
-
-    private Reg load(Temp t, int index) {
-        switch (t.kind) {
-
-            // Allocate an ordinary temporary
-            case TEMP:
-                Mem<Reg> mem = loadTemp(t.name);
-                Reg reg = (index == 0) ? Reg.R10 : Reg.R11;
-                instrs.add(new Mov.RMR(mem, reg));
-                return reg;
-
-            // Get the fixed register
-            case FIXED:
-                return t.getRegister();
-        }
-        assert false;
-        return null;
-    }
-
-    private void store(Temp t, int index) {
-        Reg reg = (index == 0) ? Reg.R10 : Reg.R11;
-        instrs.add(new Mov.RRM(reg, loadTemp(t.name)));
-    }
-
-    private Mem<Reg> load(Mem<Temp> mem) {
-        switch (mem.kind) {
-        case R:
-            return Mem.of(load(mem.reg, 0));
-        case RO:
-            return Mem.of(load(mem.reg, 0), mem.offset);
-        case RSO:
-            return Mem.of(load(mem.reg, 0), mem.offset, mem.scale);
-        case BRSO:
-            Reg base = load(mem.base, 0);
-            Reg reg = load(mem.reg, 1);
-            return Mem.of(base, reg, mem.offset, mem.scale);
-        }
-
-        // Unreachable
-        assert false;
+    public Boolean visit(Mov.TRR m) {
+        super.visit(m);
+        store(m.dest); 
         return null;
     }
 }
