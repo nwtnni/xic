@@ -37,6 +37,58 @@ public abstract class BinOp<S, D, A> extends Instr<A> {
 
     /*
      *
+     * Temp Factory Methods
+     *
+     */
+
+    public static BinOp<Imm, Temp, Temp> temp(Kind kind, Imm src, Temp dest) {
+        return new TIR(kind, src, dest);
+    }
+
+    public static BinOp<Imm, Mem<Temp>, Temp> temp(Kind kind, Imm src, Mem<Temp> dest) {
+        return new TIM(kind, src, dest);
+    }
+
+    public static BinOp<Temp, Mem<Temp>, Temp> temp(Kind kind, Temp src, Mem<Temp> dest) {
+        return new TRM(kind, src, dest);
+    }
+
+    public static BinOp<Mem<Temp>, Temp, Temp> temp(Kind kind, Mem<Temp> src, Temp dest) {
+        return new TMR(kind, src, dest);
+    }
+
+    public static BinOp<Temp, Temp, Temp> temp(Kind kind, Temp src, Temp dest) {
+        return new TRR(kind, src, dest);
+    }
+
+    /*
+     *
+     * Reg Factory Methods
+     *
+     */
+
+    public static BinOp<Imm, Reg, Reg> reg(Kind kind, Imm src, Reg dest) {
+        return new RIR(kind, src, dest);
+    }
+
+    public static BinOp<Imm, Mem<Reg>, Reg> reg(Kind kind, Imm src, Mem<Reg> dest) {
+        return new RIM(kind, src, dest);
+    }
+
+    public static BinOp<Reg, Mem<Reg>, Reg> reg(Kind kind, Reg src, Mem<Reg> dest) {
+        return new RRM(kind, src, dest);
+    }
+
+    public static BinOp<Mem<Reg>, Reg, Reg> reg(Kind kind, Mem<Reg> src, Reg dest) {
+        return new RMR(kind, src, dest);
+    }
+
+    public static BinOp<Reg, Reg, Reg> reg(Kind kind, Reg src, Reg dest) {
+        return new RRR(kind, src, dest);
+    }
+
+    /*
+     *
      * Abstract Assembly Instructions
      *
      */
