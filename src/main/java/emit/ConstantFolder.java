@@ -65,6 +65,8 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
                 break;
             case DIV:
                 if (rt == 0) {
+                    b.left = new IRConst(ltol.getAsLong());
+                    b.right = new IRConst(rtol.getAsLong());
                     return OptionalLong.empty();
                 }
                 c = lt / rt;

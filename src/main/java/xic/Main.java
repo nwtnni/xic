@@ -116,8 +116,7 @@ public class Main {
                 if (state != State.NONE && state != State.DISABLE_ALL) {
                     System.out.println("Error: ignoring conflicting flag -O.");
                 } else {
-                    opts.add(Kind.FOLD);
-                    opts.add(Kind.CSE);
+                    opts.addAll(Set.of(Kind.FOLD, Kind.CONSTPROP, Kind.CSE, Kind.REG_ALLOC, Kind.MC));
                     state = State.DISABLE_ALL;
                 }
                 break;
@@ -157,9 +156,18 @@ public class Main {
             case "-Ocf":
             case "-O-no-cf":
                 return Kind.FOLD;
+            case "-Ocp":
+            case "-O-no-cp":
+                return Kind.FOLD;
             case "-Ocse":
             case "-O-no-cse":
                 return Kind.CSE;
+            case "-Oreg":
+            case "-O-no-reg":
+                return Kind.REG_ALLOC;
+            case "-Omc":
+            case "-O-no-mc":
+                return Kind.REG_ALLOC;
             default:
                 return null;
         }
@@ -168,19 +176,22 @@ public class Main {
     private static boolean parseOpt(String opt) {
         switch (opt) {
         case "-Ocf":
+        case "-Ocp":
         case "-Ocse":
-            if (state == State.NONE) {
-                opts.addAll(Set.of(Kind.FOLD, Kind.CSE));
-                state = State.ENABLE;
-            }
-            if (state == State.ENABLE) {
+        case "-Oreg":
+        case "-Omc":
+            if (state == State.NONE || state == State.ENABLE) {
                 opts.remove(optToPhase(opt));
+                state = State.ENABLE;
             } else {
                 System.out.println("Error: ignoring conflicting flag " + opt + ".");
             }
             return true;
         case "-O-no-cf":
+        case "-O-no-cp":
         case "-O-no-cse":
+        case "-O-no-reg":
+        case "-O-no-mc":
             if (state == State.NONE || state == State.DISABLE) {
                 opts.add((optToPhase(opt)));
                 state = State.DISABLE;

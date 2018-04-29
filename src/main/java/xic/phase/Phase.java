@@ -41,6 +41,7 @@ public abstract class Phase {
         IRGEN,
         TILE,
         REG_ALLOC,
+        MC,
         ALLOCATE;
     }
     
