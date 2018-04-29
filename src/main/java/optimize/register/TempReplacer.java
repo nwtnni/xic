@@ -5,47 +5,58 @@ import assemble.instructions.*;
 
 public class TempReplacer extends InstrVisitor<Void> {
 
-    public static void replace(Instr<Temp> instr, Temp from, Temp to) {
-        instr.accept(new TempReplacer(from, to));
+    public TempReplacer(ColorGraph cg) {
+        this.cg = cg;
     }
 
-    private TempReplacer(Temp from, Temp to) {
-        this.from = from; 
-        this.to = to;
-    }
+    private ColorGraph cg;
 
-    private Temp from;
-    private Temp to;
+    /**
+     * Replaces [from] Temps inside [mem] with [to].
+     */
+    private void replace(Mem<Temp> mem) {
+        switch (mem.kind) {
+        case BRSO:
+            mem.base = cg.getAlias(mem.base);
+        default:
+            mem.reg = cg.getAlias(mem.reg);
+        }
+    }
 
     /*
      * BinOp Visitors
      */
 
+    @Override
     public Void visit(BinOp.TIR b) {
-        if (b.dest.equals(from)) b.dest = to;
+        b.dest = cg.getAlias(b.dest);
         return null;
     }
 
+    @Override
     public Void visit(BinOp.TIM b) {
-        Mem.replace(b.dest, from, to);
+        replace(b.dest);
         return null;
     }
 
+    @Override
     public Void visit(BinOp.TRM b) {
-        if (b.src.equals(from)) b.src = to;
-        Mem.replace(b.dest, from, to);
+        b.src = cg.getAlias(b.src);
+        replace(b.dest);
         return null;
     }
 
+    @Override
     public Void visit(BinOp.TMR b) {
-        Mem.replace(b.src, from, to);
-        if (b.dest.equals(from)) b.dest = to;
+        replace(b.src);
+        b.dest = cg.getAlias(b.dest);
         return null;
     }
 
+    @Override
     public Void visit(BinOp.TRR b) {
-        if (b.src.equals(from)) b.src = to;
-        if (b.dest.equals(from)) b.dest = to;
+        b.src = cg.getAlias(b.src);
+        b.dest = cg.getAlias(b.dest);
         return null;
     }
 
@@ -53,6 +64,7 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Call Visitor
      */
 
+    @Override
     public Void visit(Call.T c) {
         return null;
     }
@@ -61,26 +73,30 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Cmp Visitors
      */
 
+    @Override
     public Void visit(Cmp.TIR c) {
-        if (c.right.equals(from)) c.right = to;
+        c.right = cg.getAlias(c.right);
         return null;
     }
 
+    @Override
     public Void visit(Cmp.TRM c) {
-        if (c.left.equals(from)) c.left = to;
-        Mem.replace(c.right, from, to);
+        c.left = cg.getAlias(c.left);
+        replace(c.right);
         return null;
     }
 
+    @Override
     public Void visit(Cmp.TMR c) {
-        Mem.replace(c.left, from, to);
-        if (c.right.equals(from)) c.right = to;
+        replace(c.left);
+        c.right = cg.getAlias(c.right);
         return null;
     }
 
+    @Override
     public Void visit(Cmp.TRR c) {
-        if (c.left.equals(from)) c.left = to;
-        if (c.right.equals(from)) c.right = to;
+        c.left = cg.getAlias(c.left);
+        c.right = cg.getAlias(c.right);
         return null;
     }
 
@@ -88,6 +104,7 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Cqo Visitor
      */
 
+    @Override
     public Void visit(Cqo.T c) {
         return null;
     }
@@ -96,13 +113,25 @@ public class TempReplacer extends InstrVisitor<Void> {
      * DivMul Visitors
      */
 
+    @Override
     public Void visit(DivMul.TR d) {
-        if (d.src.equals(from)) d.src = to;
+        d.src = cg.getAlias(d.src);
+        if (!cg.getAlias(d.dest).equals(d.dest)) {
+            // Error in register allocation
+            // Can't alias fixed register dest
+            assert false;
+        }
         return null;
     }
 
+    @Override
     public Void visit(DivMul.TM d) {
-        Mem.replace(d.src, from, to);
+        replace(d.src);
+        if (!cg.getAlias(d.dest).equals(d.dest)) {
+            // Error in register allocation
+            // Can't alias fixed register dest
+            assert false;
+        }
         return null;
     }
 
@@ -110,6 +139,7 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Jcc Visitor
      */
 
+    @Override
     public Void visit(Jcc.T j) {
         return null;
     }
@@ -118,6 +148,7 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Jmp Visitor
      */
 
+    @Override
     public Void visit(Jmp.T j) {
         return null;
     }
@@ -126,6 +157,7 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Label Visitor
      */
 
+    @Override
     public Void visit(Label.T l) {
         return null;
     }
@@ -134,9 +166,10 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Lea Visitor
      */
 
+    @Override
     public Void visit(Lea.T l) {
-        Mem.replace(l.src, from, to);
-        if (l.dest.equals(from)) l.dest = to;
+        replace(l.src);
+        l.dest = cg.getAlias(l.dest);
         return null;
     }
 
@@ -144,31 +177,36 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Mov Visitors
      */
 
-    public <L, R> Void visit(Mov.TIR m) {
-        if (m.dest.equals(from)) m.dest = to;
+    @Override
+    public Void visit(Mov.TIR m) {
+        m.dest = cg.getAlias(m.dest);
         return null;
     }
 
-    public <L, R> Void visit(Mov.TIM m) {
-        Mem.replace(m.dest, from, to);
+    @Override
+    public Void visit(Mov.TIM m) {
+        replace(m.dest);
         return null;
     }
 
-    public <L, R> Void visit(Mov.TRM m) {
-        if (m.src.equals(from)) m.src = to;
-        Mem.replace(m.dest, from, to);
+    @Override
+    public Void visit(Mov.TRM m) {
+        m.src = cg.getAlias(m.src);
+        replace(m.dest);
         return null;
     }
 
-    public <L, R> Void visit(Mov.TMR m) {
-        Mem.replace(m.src, from, to);
-        if (m.dest.equals(from)) m.dest = to;
+    @Override
+    public Void visit(Mov.TMR m) {
+        replace(m.src);
+        m.dest = cg.getAlias(m.dest);
         return null;
     }
 
-    public <L, R> Void visit(Mov.TRR m) {
-        if (m.src.equals(from)) m.src = to;
-        if (m.dest.equals(from)) m.dest = to;
+    @Override
+    public Void visit(Mov.TRR m) {
+        m.src = cg.getAlias(m.src);
+        m.dest = cg.getAlias(m.dest);
         return null;
     }
     
@@ -176,13 +214,15 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Pop Visitors
      */
 
+    @Override
     public Void visit(Pop.TR p) {
-        if (p.dest.equals(from)) p.dest = to;
+        p.dest = cg.getAlias(p.dest);
         return null;
     }
 
+    @Override
     public Void visit(Pop.TM p) {
-        Mem.replace(p.dest, from, to);
+        replace(p.dest);
         return null;
     }
 
@@ -190,13 +230,15 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Push Visitors
      */
 
+    @Override
     public Void visit(Push.TR p) {
-        if (p.src.equals(from)) p.src = to;
+        p.src = cg.getAlias(p.src);
         return null;
     }
 
+    @Override
     public Void visit(Push.TM p) {
-        Mem.replace(p.src, from, to);
+        replace(p.src);
         return null;
     }
 
@@ -204,6 +246,7 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Ret Visitor
      */
 
+    @Override
     public Void visit(Ret.T r) {
         return null;
     }
@@ -212,13 +255,12 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Setcc Visitor
      */
 
+    @Override
     public Void visit(Setcc.T s) {
-        if (s.dest.equals(from)) {
-
-            // Bad register allocation
-            assert false; 
-            s.dest = to;
-
+        if (!cg.getAlias(s.dest).equals(s.dest)) {
+            // Error in register allocation
+            // Fixed register can't be alias
+            assert false;
         }
         return null;
     }
@@ -227,6 +269,7 @@ public class TempReplacer extends InstrVisitor<Void> {
      * Voidext Visitor
      */
 
+    @Override
     public Void visit(Text.T t) {
         return null;
     }

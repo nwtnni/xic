@@ -49,19 +49,8 @@ public class Mem<T> {
         return temps;
     }
 
-    /**
-     * Replaces [from] Temps inside [mem] with [to].
-     */
-    public static void replace(Mem<Temp> mem, Temp from, Temp to) {
-        switch (mem.kind) {
-        case BRSO:
-            if (mem.base.equals(from)) mem.base = to;
-        default:
-            if (mem.reg.equals(from)) mem.reg = to;
-        }
-    }
-
-    /**
+    /*
+     *
      * A memory access [(reg * scale) + offset]
      * In the form offset(reg,scale)
      * 
