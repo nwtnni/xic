@@ -21,7 +21,7 @@ public class TrivialAllocator extends Allocator {
 
     /**
      * TrivialAllocator spills everything onto the stack, reserving
-     * $r10 and $r11 as shuttle registers.
+     * %r9, %r10 and %r11 as shuttle registers.
      */
     @Override
     protected Optional<Reg> allocate(Temp t, int index) {
@@ -31,7 +31,20 @@ public class TrivialAllocator extends Allocator {
             case TEMP:
                 boolean existing = tempStack.containsKey(t.name);
                 Mem<Reg> mem = loadTemp(t.name);
-                Reg reg = (index == 0) ? Reg.R10 : Reg.R11;
+                Reg reg = null;
+                switch (index) {
+                    case 0:
+                        reg = Reg.R9;
+                        break;
+                    case 1:
+                        reg = Reg.R10;
+                        break;
+                    case 2:
+                        reg = Reg.R11;
+                        break;
+                    default:
+                        assert false;
+                }
                 if (existing) instrs.add(new Mov.RMR(mem, reg));
                 return Optional.of(reg);
 
@@ -47,7 +60,7 @@ public class TrivialAllocator extends Allocator {
      * Places a Temp result back onto its stack location.
      */
     private void store(Temp t) {
-        instrs.add(new Mov.RRM(Reg.R11, loadTemp(t.name)));
+        instrs.add(new Mov.RRM(Reg.R10, loadTemp(t.name)));
     }
 
     // Map of named temps to offset on stack

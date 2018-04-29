@@ -155,7 +155,7 @@ if [[ -f $2 ]] ; then
   FILE=$2
   case $1 in
     --asm)
-      ./xic -O -target linux -libpath tests/libs $FILE
+      ./xic -target linux -libpath tests/libs $FILE
       asm="${FILE%.*}.s"
       base=$(basename -- "$FILE")
       name="${base%.*}.s"
@@ -163,6 +163,8 @@ if [[ -f $2 ]] ; then
       platform=`uname`
       if [ "$platform" = "Linux" ]; then
           pushd "runtime"
+          echo "running assembly:"
+          echo ""
           time ./run_test "tests/$name"
           popd
       else
@@ -170,7 +172,7 @@ if [[ -f $2 ]] ; then
       fi
       ;;
     --ir)
-      ./xic --irrun -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
+      ./xic --irgen -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
       ;;
     *)
       echo "Invalid use of xic-test"

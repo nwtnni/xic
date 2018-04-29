@@ -48,7 +48,7 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
             return reg.map(r -> Mem.of(r, mem.offset, mem.scale));
         case BRSO:
             Optional<Reg> base = allocate(mem.base, 0);
-            reg = allocate(mem.reg, 1);
+            reg = allocate(mem.reg, 2);
             return base.flatMap(b -> reg.map(r -> Mem.of(b, r, mem.offset, mem.scale)));
         }
 
