@@ -10,7 +10,7 @@ import static xic.phase.Phase.Kind;
 /**
  * Command line interface for Xic.
  *
- * Possible flags are:
+ * Possible flags are displayed by running xic --help
  *
  */
 public class Main {
@@ -24,10 +24,6 @@ public class Main {
      * Main compiler interface. Usage information can be printed with the --help flag.
      */
     public static void main(String[] args) {
-        String source = "";
-        String sink = "";
-        String lib = "";
-        String asm = "";
         String targetOS = "linux";
         boolean targetFlag = false;
 
@@ -64,8 +60,10 @@ public class Main {
                     xic.setOutput(Kind.EMIT);
                     break;
                 case "cf":
-                    // TODO
                     xic.setOutput(Kind.FOLD);
+                    break;
+                case "cp":
+                    xic.setOutput(Kind.CONSTPROP);
                     break;
                 case "cse":
                     xic.setOutput(Kind.CSE);
@@ -74,8 +72,8 @@ public class Main {
                     xic.setOutput(Kind.IRGEN);
                     break;
                 default:
-                    // TODO
-                    assert false;
+                    // TODO: check this
+                    System.out.println("Error: ignoring unknown phase for output.");
                 }
                 break;
             case "--optcfg":
@@ -86,6 +84,9 @@ public class Main {
                 case "cf":
                     xic.setOutputCFG(Kind.FOLD);
                     break;
+                case "cp":
+                    xic.setOutputCFG(Kind.CONSTPROP);
+                    break;
                 case "cse":
                     xic.setOutputCFG(Kind.CSE);
                     break;
@@ -93,7 +94,8 @@ public class Main {
                     xic.setOutputCFG(Kind.IRGEN);
                     break;
                 default:
-                    assert false;
+                    // TODO: check this
+                    System.out.println("Error: ignoring unknown phase for output.");
                 }
                 break;
             case "--help":
@@ -125,7 +127,10 @@ public class Main {
                 targetOS = args[++i];
                 break;
             default:
+                // Parse options for enabling and disabling optimizations
                 if (parseOpt(args[i])) break;
+
+                // Add source file
                 xic.addUnit(args[i]);
                 break;
             }
@@ -224,8 +229,8 @@ public class Main {
         System.out.println("  cf      : Constant folding                                                         ");
         System.out.println("  cp      : Constant propagation                                                     ");
         System.out.println("  cse     : Common subexpression elimination                                         ");
-        System.out.println("  reg     : Register allocation                                                      ");
-        System.out.println("  mc      : Move coalescing                                                          ");
+        // System.out.println("  reg     : Register allocation                                                      ");
+        // System.out.println("  mc      : Move coalescing                                                          ");
         System.out.println("  final   : After all optimizations                                                  ");
         System.out.println("-------------------------------------------------------------------------------------");
     }

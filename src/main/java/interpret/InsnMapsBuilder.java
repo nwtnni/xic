@@ -8,6 +8,9 @@ import java.util.Map;
 import xic.XicInternalException;
 import ir.*;
 
+/**
+ * Visitor that maps an IR tree to an index of instructions.
+ */
 public class InsnMapsBuilder extends IRVisitor<IRNode> {
     private Map<String, Long> nameToIndex;
     private Map<Long, IRNode> indexToInsn;

@@ -1,10 +1,8 @@
 package optimize.propagate;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -12,7 +10,6 @@ import ir.*;
 import optimize.*;
 import optimize.graph.*;
 import util.Pair;
-import util.PairEdge;
 
 /**
  * Worklist for avaliable constants.
@@ -24,7 +21,7 @@ public class ConstWorklist extends Worklist<IRGraph<Map<IRTemp, Optional<IRConst
      * Runs the constant propagation analysis on graph [cfg] and returns the mapping of available
      * constants at each program point.
      */
-    public static Map<IRStmt, Map<IRTemp, Optional<IRConst>>> computeAvailableConsts(IRGraph<Map<IRTemp, Optional<IRConst>>> cfg) {
+    protected static Map<IRStmt, Map<IRTemp, Optional<IRConst>>> computeAvailableConsts(IRGraph<Map<IRTemp, Optional<IRConst>>> cfg) {
         ConstWorklist wl = new ConstWorklist(cfg);
         wl.doWorklist();
         return wl.availableConsts;
@@ -52,7 +49,7 @@ public class ConstWorklist extends Worklist<IRGraph<Map<IRTemp, Optional<IRConst
     /** 
      * The mapping of available variables at each node.
      * For each node:
-     *      x -> Opt.Empty() => x -> NAC
+     *      x -> Opt.empty() => x -> NAC
      *      x -> Opt.of(c)   => x -> c
      *      x not in mapping => x -> UNDEF
      */
@@ -64,12 +61,23 @@ public class ConstWorklist extends Worklist<IRGraph<Map<IRTemp, Optional<IRConst
     public Map<IRTemp, Optional<IRConst>> transfer(Map<IRTemp, Optional<IRConst>> in, IRStmt v) {
         Map<IRTemp, Optional<IRConst>> out = new HashMap<>(in);
         
-        // Add/replace mapping if this node generates binding for x
+        // For all moves into a temp
         if (gen.containsKey(v)) {
-            Pair<IRTemp, Optional<IRConst>> def = gen.get(v);
-            out.put(def.first, def.second);
-        }
+            IRMove move = (IRMove) v;
 
+            // If src is a temp and maps to v = (c|NAC) then update dest -> v
+            if (move.src() instanceof IRTemp && in.containsKey(move.src())) {
+                out.put((IRTemp) move.target(), out.get(move.src()));
+            
+            // Set default mapping if this node generates binding for x for all other cases
+            } else {
+                Pair<IRTemp, Optional<IRConst>> def = gen.get(v);
+                out.put(def.first, def.second);
+            }
+
+            // Could add additional cases for constant prop of binop(x, y)...
+        }
+        
         return out;
     }
 
@@ -123,9 +131,13 @@ public class ConstWorklist extends Worklist<IRGraph<Map<IRTemp, Optional<IRConst
     public boolean annotate(IRStmt v, Map<IRTemp, Optional<IRConst>> in, Map<IRTemp, Optional<IRConst>> out) {
         boolean hasChanged = false;
         
-        // Check if bindings have changed from previous in set
+        // Create the initial set
         Map<IRTemp, Optional<IRConst>> prev = availableConsts.get(v);
-        if (prev != null) {
+        if (prev == null) {
+            hasChanged = true;
+
+        // Check if bindings have changed from previous in set
+        } else {
             // prev <= in so only need to check one side
             if (prev.keySet().containsAll(in.keySet())) {
                 for (IRTemp t : prev.keySet()) {

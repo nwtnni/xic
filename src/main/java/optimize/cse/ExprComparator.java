@@ -1,16 +1,13 @@
 package optimize.cse;
 
-import java.util.Iterator;
-import java.util.Set;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Queue;
-import java.util.LinkedList;
 
 import ir.*;
-import util.PairEdge;
-import util.PairEdgeGraph;
-import xic.XicInternalException;
+
+/** 
+ * Comparator used to sort expressions in the priority queue used during
+ * CSE to greedily replace the largest expressions.
+ */
 public class ExprComparator implements Comparator<IRExpr> {
     public int sizeExpr(IRExpr e) {
         if (e instanceof IRTemp || e instanceof IRConst || e instanceof IRName) {
@@ -26,8 +23,9 @@ public class ExprComparator implements Comparator<IRExpr> {
         return 0;
     }
 
+    // This comparator sorts in descending order, flip to change to ascending
     public int compare(IRExpr e1, IRExpr e2) {
-      return sizeExpr(e1) - sizeExpr(e2);
+      return sizeExpr(e2) - sizeExpr(e1);
     }
 
 }

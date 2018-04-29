@@ -24,7 +24,7 @@ public class ConstInitVisitor extends IRVisitor<Void> {
     }
 
     /** 
-     * Mapping of statements that generate constants to the pair of the temp and the constant. 
+     * Mapping of statements that generate temps to the pair of the temp and the optional constant. 
      * If the optional is empty, then the variable maps to NAC.
      * */
     Map<IRStmt, Pair<IRTemp, Optional<IRConst>>> mapping;
@@ -39,11 +39,14 @@ public class ConstInitVisitor extends IRVisitor<Void> {
      */
     
     public Void visit(IRMove m) {
-        Optional<IRConst> c = Optional.empty();
+        // Generate for x = c
         if (m.target() instanceof IRTemp && m.src() instanceof IRConst) {
-            c = Optional.of((IRConst) m.src());
+            mapping.put(m, new Pair<>((IRTemp) m.target(), Optional.of((IRConst) m.src())));
+        
+        // Move into a temp of a non constant kills by default, additional cases handled in meet
+        } else if (m.target() instanceof IRTemp) {
+            mapping.put(m, new Pair<>((IRTemp) m.target(), Optional.empty()));
         }
-        mapping.put(m, new Pair<>((IRTemp) m.target(), c));
         return null;
     }
     
