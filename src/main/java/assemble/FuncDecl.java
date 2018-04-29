@@ -71,7 +71,7 @@ public abstract class FuncDecl<A> {
             prelude.add(labelFromFn(fn));
             prelude.add(comment("Stack Setup"));
             prelude.add(pushR(Temp.RBP));
-            prelude.add(movRR(Temp.RBP, Temp.RSP));
+            prelude.add(movRR(Temp.RSP, Temp.RBP));
             prelude.add(comment("~~~Replace with subtract from %rsp here"));
 
             this.stmts = stmts;
