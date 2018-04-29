@@ -291,7 +291,7 @@ public class Tiler extends IRVisitor<Operand> {
             // Non-constant argument into something
             else {
                 Operand val = c.get(i).accept(this);
-                instrs.addAll(mov(Config.callerArg(i + callIsMultiple), val));
+                instrs.addAll(mov(val, Config.callerArg(i + callIsMultiple)));
             }
         }
 

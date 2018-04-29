@@ -10,11 +10,11 @@ main (args:int[][]) {
     f:int = foo()
     
     printint(a)
-    // printint(b)
-    // printint(c)
-    // printint(d)
-    // printint(e)
-    // printint(f)
+    printint(b)
+    printint(c)
+    printint(d)
+    printint(e)
+    printint(f)
 }
 
 foo() : int {
