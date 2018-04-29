@@ -4,8 +4,6 @@ import java.util.*;
 import org.junit.Test;
 import ir.*;
 public class ConstantFolderTest {
-    
-	
 
     IRConst c1 = new IRConst(1);
     IRConst c2 = new IRConst(2);

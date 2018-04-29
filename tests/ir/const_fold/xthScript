@@ -27,5 +27,5 @@ xic ("Test --irgen [folding constants") "--irgen" {
     bad_div_by_zero1.xi;
     bad_div_by_zero2.xi;
 
-
+    mult_by_zero1.xi;
 }
