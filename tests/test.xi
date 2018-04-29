@@ -7,16 +7,14 @@ main (args:int[][]) {
     c:int = 3
     d:int = c
     e:int = d
-    f:int = e
-
-    d = a + 1
-    e = a + 1
-    f = a + 1 + b
+    f:int = foo()
     
-    i:int = foo()
-    a = i + 1
-    b = i + 1
-    c = i + 1
+    printint(a)
+    // printint(b)
+    // printint(c)
+    // printint(d)
+    // printint(e)
+    // printint(f)
 }
 
 foo() : int {

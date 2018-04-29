@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import emit.ABIContext;
-import emit.ConstantFolder;
-import emit.Canonizer;
 import ir.IRCompUnit;
 import ir.Printer;
 import ir.*;
@@ -26,7 +24,7 @@ import xic.XicInternalException;
 
 public class CSE extends Phase {
 
-    private boolean outputCFG;
+    protected boolean outputCFG;
 
     public CSE() { kind = Phase.Kind.CSE; output = false; }
 

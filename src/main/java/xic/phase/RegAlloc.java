@@ -24,7 +24,7 @@ public class RegAlloc extends Phase {
 
         CompUnit<Temp> assembly = previous.ok().getAssembled();
 
-        // Debug
+        // Debug abstract assembly
         String out = Filename.concat(config.sink, config.unit);
         out = Filename.setExtension(out, "as.s");
         Filename.makePathTo(out);
@@ -48,14 +48,19 @@ public class RegAlloc extends Phase {
 
         // Run analyses and optimizations
 
-        // TODO: do this stuff in the allocator
+        // TODO: move this stuff to the allocator
+
+
+        out = out.substring(0, out.length() - 4);
+
         for(ASAGraph<Set<Temp>> cfg : cfgs.values()) {
             Map<Instr<Temp>, Set<Temp>> lv = LiveVariableWorklist.computeLiveVariables(cfg);
 
+            String lvOut = out + cfg.originalFn.sourceName + ".lv.s";
+
             // Debug LV
-            out = Filename.setExtension(out, "lv.s");
             try {
-                FileWriter lvw = new FileWriter(out);
+                FileWriter lvw = new FileWriter(lvOut);
 
                 FuncDecl<Temp> fn = cfg.toASA();
 
@@ -63,9 +68,6 @@ public class RegAlloc extends Phase {
                 for (Instr<Temp> i : fn.stmts) {
                     lvw.append(i + ": \n");
                     lvw.append("live: " + lv.get(i) + "\n");
-                    // lvw.append("use: " + i.use + "\n");
-                    // lvw.append("def: " + i.def + "\n");
-                    // lvw.append("out: " + i.out + "\n");
                     lvw.append("\n");
                 }
 
@@ -75,7 +77,7 @@ public class RegAlloc extends Phase {
 
         }
 
-        // Convert back to IR
+        // Convert back to ASA
         CompUnit<Temp> after = new CompUnit<>();
         for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
             after.fns.add(cfg.toASA());

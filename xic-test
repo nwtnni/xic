@@ -170,26 +170,15 @@ if [[ -f $2 ]] ; then
       fi
       ;;
     --ir)
-<<<<<<< HEAD
-      ./xic --irrun -libpath tests/libs --optir initial --optir cf --optir cse --optir final --optcfg initial --optcfg cf --optcfg cse --optcfg final $FILE
-=======
       ./xic --irrun -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
       ;;
     *)
       echo "Invalid use of xic-test"
->>>>>>> copy-prop
       ;;
   esac
 else
   gradle xic
   cmd=$1
-<<<<<<< HEAD
-  if [ -n "$cmd" ] ; then
-      build
-  fi
-
-=======
->>>>>>> copy-prop
   case $cmd in
   run)
       ./xic -target linux --irrun -libpath tests/libs $2

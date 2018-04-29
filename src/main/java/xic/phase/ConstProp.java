@@ -7,15 +7,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import emit.ABIContext;
-import emit.ConstantFolder;
-import emit.Canonizer;
 import ir.IRCompUnit;
 import ir.Printer;
 import ir.*;
 
 import optimize.graph.IRGraph;
 import optimize.graph.IRGraphFactory;
-import optimize.graph.IREdgeFactory;
 import optimize.propagate.*;
 
 import util.Filename;

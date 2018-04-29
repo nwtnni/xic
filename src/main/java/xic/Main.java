@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 
-import xic.phase.*;
 import static xic.phase.Phase.Kind;
 
 /**
