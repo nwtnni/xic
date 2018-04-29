@@ -103,7 +103,7 @@ public abstract class InstrFactory {
 
             // Otherwise commute as immR case
             } else {
-                instrs.addAll(mov(right, dest));
+                instrs.addAll(mov(right, dest, Optional.empty()));
 
                 // Shuttle left imm64
                 if (!Config.within(32, immL.get().getValue())) {
@@ -119,7 +119,7 @@ public abstract class InstrFactory {
         } else if (immR.isPresent()) {
             // r/m64 op imm
 
-            instrs.addAll(mov(left, dest));
+            instrs.addAll(mov(left, dest, Optional.empty()));
 
             // Shuttle right imm64
             if (!Config.within(32, immR.get().getValue())) {
@@ -133,7 +133,7 @@ public abstract class InstrFactory {
             }
         } else {
             // General case of r/m64 op r/m64
-            instrs.addAll(mov(left, dest));
+            instrs.addAll(mov(left, dest, Optional.empty()));
             instrs.addAll(binOp(kind, right, dest));
         }
 
@@ -151,12 +151,11 @@ public abstract class InstrFactory {
         Optional<Imm> immR
     ) {
         List<Instr<Temp>> instrs = new ArrayList<>();
-        
+        DivMul<?, Temp> op = null;
+
         // Always shuttle left into RAX
         if (immL.isPresent()) {
-            instrs.add(movIR(immL.get(), Temp.RAX));
-        } else {
-            instrs.addAll(mov(left, Operand.temp(Temp.RAX)));
+            instrs.addAll(mov(left, Operand.temp(Temp.RAX), immL));
         }
 
         // Shuttle right if imm
@@ -164,25 +163,25 @@ public abstract class InstrFactory {
             Temp shuttle = TempFactory.generate("div_mul_shuttle");
             instrs.add(movIR(immR.get(), shuttle));
 
-            DivMul<Temp, Temp> op = divMulR(kind, shuttle);
-            instrs.add(op);
-
-            return new Pair<>(Operand.temp(op.dest), instrs);
+            op = divMulR(kind, shuttle);
 
         // Can use r/m64 directly
         } else {
             // General case of r/m64 op r/m64
 
             if (right.isMem()) {
-                DivMul<Mem<Temp>, Temp> op = divMulM(kind, right.getMem());
-                instrs.add(op);
-                return new Pair<>(Operand.mem(op.src), instrs);
+                op = divMulM(kind, right.getMem());
             } else {
-                DivMul<Temp, Temp> op = divMulR(kind, right.getTemp());
-                instrs.add(op);
-                return new Pair<>(Operand.temp(op.src), instrs);
+                op = divMulR(kind, right.getTemp());
             }
         }
+
+        if (op.usesRDX()) {
+            instrs.add(cqo());
+        }
+
+        instrs.add(op);
+        return new Pair<>(Operand.temp(op.dest), instrs);
     }
 
     /*
@@ -195,7 +194,6 @@ public abstract class InstrFactory {
 
     /*
      * Cmp Factory Methods
-     * Semantics: L vs. R must be flipped before calling these factory methods due to AT&T syntax
      */
 
     // TODO: check that [left] is 32 bits or less, otherwise spill into temp in the tiler
@@ -212,25 +210,25 @@ public abstract class InstrFactory {
     }
 
     public static Cmp<Temp, Temp, Temp> cmpRR(Temp left, Temp right) {
-        return new Cmp.TRR(right, left);
+        return new Cmp.TRR(left, right);
     }
 
     public static List<Instr<Temp>> cmpII(Imm left, Imm right) {
 
         // Shuttle both into registers if left is too large
         if (!Config.within(32, left.getValue())) {
-            Temp shuttleA = TempFactory.generate("cmpII_shuttle_A");
-            Temp shuttleB = TempFactory.generate("cmpII_shuttle_B");
+            Temp shuttleL = TempFactory.generate("cmpII_shuttleL");
+            Temp shuttleR = TempFactory.generate("cmpII_shuttleR");
 
             return List.of(
-                movIR(left, shuttleA), 
-                movIR(right, shuttleB),
-                cmpRR(shuttleA, shuttleB)
+                movIR(left, shuttleL), 
+                movIR(right, shuttleR),
+                cmpRR(shuttleL, shuttleR)
             );
         }
 
         // Otherwise shuttle just right into register
-        Temp shuttle = TempFactory.generate("cmpII_shuttle");
+        Temp shuttle = TempFactory.generate("cmpII_shuttleR");
         return List.of(
             movIR(right, shuttle),
             cmpIR(left, shuttle)
@@ -248,51 +246,47 @@ public abstract class InstrFactory {
     ) {
 
         List<Instr<Temp>> instrs = new ArrayList<>();
+
+        Temp shuttle = TempFactory.generate("cmp_shuttle");
+
         // Both immediates; try to shuttle via registers
         if (immL.isPresent() && immR.isPresent()) {
 
-            instrs.addAll(cmpII(immR.get(), immL.get()));
+            instrs.addAll(cmpII(immL.get(), immR.get()));
             
-
+        // Always shuttle right imm
         } else if (immR.isPresent()) {
+            instrs.add(movIR(immR.get(), shuttle));
 
-            // Check if fits in imm32 for cmp instruction
-            if (Config.within(32, immR.get().getValue())) {
-
-                // Check what the LHS side is: either temp or mem
-                if (l.isTemp()) {
-                    instrs.add(cmpIR(immR.get(), l.getTemp()));
-                } else {
-                
-                    //Otherwise must shuttle
-                    Temp shuttle = TempFactory.generate("immR_mem_shuttle");
-                    instrs.add(movIR(immR.get(), shuttle));
-                    instrs.add(cmpRM(shuttle, l.getMem()));
-                }
-
+            if (l.isTemp()) {
+                instrs.add(cmpRR(l.getTemp(), shuttle));
             } else {
-                
-                //Otherwise shuttle
-                Temp shuttle = TempFactory.generate("immR_shuttle");
-                instrs.add(movIR(immR.get(), shuttle));
-
-                // Check what the LHS side is
-                if (l.isTemp()) {
-                    instrs.add(cmpRR(shuttle, l.getTemp()));
-                } else {
-                    instrs.add(cmpRM(shuttle, l.getMem()));
-                }
+                instrs.add(cmpMR(l.getMem(), shuttle));
             }
 
+        // Only need to shuttle left imm in certain cases
         } else if (immL.isPresent()) {
-            // Have to shuttle since only IR addressing, no RI
-            Temp shuttle = TempFactory.generate("immL_shuttle");
-            instrs.add(movIR(immL.get(), shuttle));
+            // Check if fits in imm32 for cmp instruction
+            if (Config.within(32, immL.get().getValue())) {
+                // If right is reg, don't shuttle
+                if (r.isTemp()) {
+                    instrs.add(cmpIR(immL.get(), r.getTemp()));
 
-            if (r.isTemp()) {
-                instrs.add(cmpRR(r.getTemp(), shuttle));
+                // If right is mem then shuttle
+                } else {
+                    instrs.add(movIR(immL.get(), shuttle));
+                    instrs.add(cmpRM(shuttle, r.getMem()));
+                }
+
+            // Otherwise must shuttle
             } else {
-                instrs.add(cmpMR(r.getMem(), shuttle));
+                instrs.add(movIR(immL.get(), shuttle));
+
+                if (l.isTemp()) {
+                    instrs.add(cmpRR(shuttle, r.getTemp()));
+                } else {
+                    instrs.add(cmpRM(shuttle, r.getMem()));
+                }
             }
         } else {
             // left is register, right is register
@@ -305,7 +299,6 @@ public abstract class InstrFactory {
             else if (l.isMem() && r.isTemp()) return List.of(cmpMR(l.getMem(), r.getTemp()));
 
             // Both src and dest are in memory; must shuttle one
-            Temp shuttle = TempFactory.generate("cmp_shuttle");
             return List.of(
                 movMR(l.getMem(), shuttle),
                 cmpRM(shuttle, r.getMem())
@@ -407,8 +400,23 @@ public abstract class InstrFactory {
      */
     public static List<Instr<Temp>> mov(
         Operand src,
-        Operand dest
+        Operand dest,
+        Optional<Imm> imm
     ) {
+        List<Instr<Temp>> instrs = new ArrayList<>();
+
+        if (imm.isPresent()) {
+            if (dest.isTemp()) {
+                instrs.add(movIR(imm.get(), dest.getTemp()));
+            } else if (Config.within(32, imm.get().getValue())) {
+                instrs.add(movIM(imm.get(), dest.getMem()));
+            } else {
+                Temp shuttle = TempFactory.generate("movIM_shuttle");
+                instrs.add(movIR(imm.get(), shuttle));
+                instrs.add(movRM(shuttle, dest.getMem()));
+            }
+            return instrs;
+        }
 
         // src is register, dest is register
         if (src.isTemp() && dest.isTemp()) return List.of(movRR(src.getTemp(), dest.getTemp()));
@@ -420,7 +428,7 @@ public abstract class InstrFactory {
         else if (src.isMem() && dest.isTemp()) return List.of(movMR(src.getMem(), dest.getTemp()));
 
         // Both src and dest are in memory; must shuttle one
-        Temp shuttle = TempFactory.generate("mov_shuttle");
+        Temp shuttle = TempFactory.generate("movMM_shuttle");
         return List.of(
             movMR(src.getMem(), shuttle),
             movRM(shuttle, dest.getMem())

@@ -29,6 +29,25 @@ public class TrivialAlloc extends Phase {
             CompUnit<Temp> tiled = previous.ok().getAssembled();
             CompUnit<Reg> allocated = TrivialAllocator.allocate(tiled);
 
+
+            // Debug abstract assembly
+            String outAbs = Filename.concat(config.sink, config.unit);
+            outAbs = Filename.setExtension(outAbs, "as.s");
+            Filename.makePathTo(outAbs);
+
+            try {
+                FileWriter w = new FileWriter(outAbs);
+
+                for (String i : tiled.toAssembly()) {
+                    w.append(i + "\n");
+                }
+
+                w.close();
+            } catch (IOException e) {
+            }
+
+            // End debug
+
             String out = Filename.concat(config.sink, config.unit);
             out = Filename.setExtension(out, "s");
 

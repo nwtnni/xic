@@ -239,7 +239,7 @@ public class Tiler extends IRVisitor<Operand> {
                 break;
             default:
         }
-        instrs.addAll(cmp(right, left, immR, immL));
+        instrs.addAll(cmp(left, right, immL, immR));
         // TODO: this is sub-optimal use of setcc which can use other registers
         instrs.add(movIR(new Imm(0), Temp.RAX));
         instrs.add(setcc(flag));
@@ -278,21 +278,21 @@ public class Tiler extends IRVisitor<Operand> {
             Optional<Imm> imm = checkImm(c.get(i)); 
             Operand arg = Config.callerArg(i + calleeIsMultiple);
 
-            // Constant argument into register argument
-            if (imm.isPresent() && arg.isTemp()) {
-                instrs.add(movIR(imm.get(), arg.getTemp()));
-            }
+            // // Constant argument into register argument
+            // if (imm.isPresent() && arg.isTemp()) {
+            //     instrs.add(movIR(imm.get(), arg.getTemp()));
+            // }
             
-            // Constant argument into the stack for arguments
-            else if (imm.isPresent() && arg.isMem()) {
-                instrs.add(movIM(imm.get(), arg.getMem()));
-            }
+            // // Constant argument into the stack for arguments
+            // else if (imm.isPresent() && arg.isMem()) {
+            //     instrs.add(movIM(imm.get(), arg.getMem()));
+            // }
 
-            // Non-constant argument into something
-            else {
+            // // Non-constant argument into something
+            // else {
                 Operand val = c.get(i).accept(this);
-                instrs.addAll(mov(val, Config.callerArg(i + callIsMultiple)));
-            }
+                instrs.addAll(mov(val, Config.callerArg(i + callIsMultiple), imm));
+            // }
         }
 
         instrs.add(call(target, callerNumArgs, numRets));
@@ -310,7 +310,7 @@ public class Tiler extends IRVisitor<Operand> {
             Optional<Imm> immL = checkImm(bop.left());
             Optional<Imm> immR = checkImm(bop.right());
 
-            instrs.addAll(cmp(right, left, immR, immL));
+            instrs.addAll(cmp(left, right, immL, immR));
 
             Jcc.Kind flag = null;
             switch (bop.type()) {
@@ -456,14 +456,13 @@ public class Tiler extends IRVisitor<Operand> {
             }
         }
 
+        Optional<Imm> imm = checkImm(m.expr());
+
         Temp t = TempFactory.generate();
-        instrs.addAll(mov(m.expr().accept(this), Operand.temp(t)));
+        instrs.addAll(mov(m.expr().accept(this), Operand.temp(t), imm));
         return Operand.mem(Mem.of(t));
     }
 
-    // TODO: currently assumes the dest of an IRMove is never a constant
-
-    // TODO: we are getting an assertion error here!
     public Operand visit(IRMove m) {
 
         // Must be Mem<Temp> or else IRGen has a bug
@@ -471,21 +470,21 @@ public class Tiler extends IRVisitor<Operand> {
 
         Optional<Imm> imm = checkImm(m.src());
 
-        if (imm.isPresent()) {
-            if (dest.isTemp()) {
-                instrs.add(movIR(imm.get(), dest.getTemp()));
-            } else if (Config.within(32, imm.get().getValue())) {
-                instrs.add(movIM(imm.get(), dest.getMem()));
-            } else {
-                Temp shuttle = TempFactory.generate("movIM_shuttle");
-                instrs.add(movIR(imm.get(), shuttle));
-                instrs.add(movRM(shuttle, dest.getMem()));
-            }
-            return null;
-        }
+        // if (imm.isPresent()) {
+        //     if (dest.isTemp()) {
+        //         instrs.add(movIR(imm.get(), dest.getTemp()));
+        //     } else if (Config.within(32, imm.get().getValue())) {
+        //         instrs.add(movIM(imm.get(), dest.getMem()));
+        //     } else {
+        //         Temp shuttle = TempFactory.generate("movIM_shuttle");
+        //         instrs.add(movIR(imm.get(), shuttle));
+        //         instrs.add(movRM(shuttle, dest.getMem()));
+        //     }
+        //     return null;
+        // }
 
         Operand src = m.src().accept(this);
-        instrs.addAll(mov(src, dest));
+        instrs.addAll(mov(src, dest, imm));
         return null;
     }
 
@@ -499,29 +498,30 @@ public class Tiler extends IRVisitor<Operand> {
 
             Optional<Imm> imm = checkImm(r.get(i));
 
-            // Constant return
-            if (imm.isPresent()) {
+            // // Constant return
+            // if (imm.isPresent()) {
                 
-                Operand ret = Config.calleeRet(calleeReturnAddress, i);
+            //     Operand ret = Config.calleeRet(calleeReturnAddress, i);
                 
-                // Check if return is a register or on the stack
-                if (ret.isTemp()) {
-                    instrs.add(movIR(imm.get(), ret.getTemp()));
-                } else {
-                    instrs.add(movIM(imm.get(), ret.getMem()));
-                }
+            //     // Check if return is a register or on the stack
+            //     if (ret.isTemp()) {
+            //         instrs.add(movIR(imm.get(), ret.getTemp()));
+            //     } else {
+            //         instrs.add(movIM(imm.get(), ret.getMem()));
+            //     }
 
-            }
+            // }
             
             // Otherwise temp or mem
-            else {
+            // else {
                 instrs.addAll(
                     mov(
                         r.get(i).accept(this),
-                        Config.calleeRet(calleeReturnAddress, i)
+                        Config.calleeRet(calleeReturnAddress, i),
+                        imm
                     )
                 );
-            }
+            // }
         }
 
         instrs.add(jmpFromLabel(returnLabel));
