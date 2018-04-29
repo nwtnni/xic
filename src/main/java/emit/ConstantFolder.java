@@ -122,9 +122,25 @@ public class ConstantFolder extends IRVisitor<OptionalLong> {
 
         // Constant fold one side of array
         if (ltol.isPresent()) {
-            b.left = new IRConst(ltol.getAsLong());
+            switch (b.type()) {
+                case MUL:
+                case HMUL:
+                    if (ltol.getAsLong() == 0) {
+                        return OptionalLong.of(0);
+                    }
+                default:
+                    b.left = new IRConst(ltol.getAsLong());
+            }
         } else if (rtol.isPresent()) {
-            b.right = new IRConst(rtol.getAsLong());
+            switch (b.type()) {
+                case MUL:
+                case HMUL:
+                    if (rtol.getAsLong() == 0) {
+                        return OptionalLong.of(0);
+                    }
+                default:
+                    b.right = new IRConst(rtol.getAsLong());
+            }
         }
 
         return OptionalLong.empty();

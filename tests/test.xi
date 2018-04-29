@@ -2,16 +2,14 @@ use io
 use conv
 
 main(args:int[][]) {
-    printInt((1-1)/0)
+    x:int = foo()
+    y:int = 0
+    x = x * y
+
+    z:int[5]
+    println(unparseInt(length(z)))
 }
 
-printInt(x:int) {
-    print(unparseInt(x))
-}
-
-printBool(x:bool) {
-    if x 
-        print("True")
-    else
-        print("False")
+foo() : int {
+    return 1
 }

@@ -267,15 +267,12 @@ public class Emitter extends Visitor<IRNode> {
         // Calculate size of array
         IRExpr byteSize = new IRBinOp(
             OpType.MUL,
-            new IRBinOp(OpType.ADD, length, ONE), 
-            WORD_SIZE
+            WORD_SIZE,
+            new IRBinOp(OpType.ADD, length, ONE)
         );
 
-        IRTemp size = IRTempFactory.generate("d_size");
-        fn.add(new IRMove(size, byteSize));
-
-        // Generate pointers and llocate memory
-        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
+        // Generate pointers and allocate memory
+        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), byteSize);
         IRTemp pointer = IRTempFactory.generate("d_array");
         fn.add(new IRMove(pointer, addr));
 
@@ -296,21 +293,21 @@ public class Emitter extends Visitor<IRNode> {
         IRFuncDecl fn = new IRFuncDecl(ARRAY_CONCAT, ARRAY_CONCAT);
 
         // Make copies of pointers
-        IRTemp ap = IRTempFactory.generate("a_ptr_copy");
+        IRTemp ap = IRTempFactory.generate("a");
         fn.add(new IRMove(ap, IRTempFactory.getArgument(0)));
-        IRTemp bp = IRTempFactory.generate("b_ptr_copy");
+        IRTemp bp = IRTempFactory.generate("b");
         fn.add(new IRMove(bp, IRTempFactory.getArgument(1)));
 
         // Calculate new array size
-        IRExpr aLen = IRTempFactory.generate("a_len");
+        IRExpr aLen = IRTempFactory.generate("aLen");
         fn.add(new IRMove(aLen, length(ap)));
-        IRExpr bLen = IRTempFactory.generate("b_len");
+        IRExpr bLen = IRTempFactory.generate("bLen");
         fn.add(new IRMove(bLen, length(bp)));
-        IRTemp size = IRTempFactory.generate("concat_size");
+        IRTemp size = IRTempFactory.generate("size");
         fn.add(new IRMove(size, new IRBinOp(OpType.ADD, aLen, bLen)));
 
         // Generate pointers and allocate memory
-        IRTemp pointer = IRTempFactory.generate("concat_array");
+        IRTemp pointer = IRTempFactory.generate("array");
         fn.add(new IRMove(pointer, alloc(size)));
 
         IRTemp i = IRTempFactory.generate("i");
@@ -470,22 +467,19 @@ public class Emitter extends Visitor<IRNode> {
 
     public IRNode visit(If i) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel trueL = IRLabelFactory.generate("true");
-        IRLabel falseL = IRLabelFactory.generate("false");
+        IRLabel trueL = IRLabelFactory.generate("ifT");
+        IRLabel falseL = IRLabelFactory.generate("ifF");
 
         stmts.add(makeControlFlow(i.guard, trueL, falseL));
         stmts.add(trueL);
         stmts.add((IRStmt) i.block.accept(this));
         stmts.add(falseL);
         if (i.hasElse()) {
-            IRLabel doneL = IRLabelFactory.generate("done");
+            IRLabel doneL = IRLabelFactory.generate("ifDone");
             stmts.add(stmts.size() - 1, jump(doneL));
             stmts.add((IRStmt) i.elseBlock.accept(this));
             stmts.add(doneL);
         }
-        // } else {
-        //     stmts.add(stmts.size() - 1, jump(falseL));
-        // }
         return stmts;
     }
 
@@ -503,8 +497,8 @@ public class Emitter extends Visitor<IRNode> {
     public IRNode visit(While w) throws XicException {
         IRSeq stmts = new IRSeq();
         IRLabel headL = IRLabelFactory.generate("while");
-        IRLabel trueL = IRLabelFactory.generate("true");
-        IRLabel falseL = IRLabelFactory.generate("false");
+        IRLabel trueL = IRLabelFactory.generate("whileT");
+        IRLabel falseL = IRLabelFactory.generate("whileF");
 
         stmts.add(headL);
         stmts.add(makeControlFlow(w.guard, trueL, falseL));
@@ -553,8 +547,8 @@ public class Emitter extends Visitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
             case AND:
                 IRTemp andFlag = IRTempFactory.generate("and");
-                IRLabel trueL = IRLabelFactory.generate("true");
-                IRLabel falseL = IRLabelFactory.generate("false");
+                IRLabel trueL = IRLabelFactory.generate("andT");
+                IRLabel falseL = IRLabelFactory.generate("andF");
                 return new IRESeq(
                     new IRSeq(
                         new IRMove(andFlag, new IRConst(0)),
@@ -567,8 +561,8 @@ public class Emitter extends Visitor<IRNode> {
                 );
             case OR:
                 IRTemp orFlag = IRTempFactory.generate("or");
-                trueL = IRLabelFactory.generate("true");
-                falseL = IRLabelFactory.generate("false");
+                trueL = IRLabelFactory.generate("orT");
+                falseL = IRLabelFactory.generate("orF");
                 return new IRESeq(
                     new IRSeq(
                         new IRMove(orFlag, new IRConst(1)),
@@ -608,16 +602,25 @@ public class Emitter extends Visitor<IRNode> {
         IRLabel doneL = IRLabelFactory.generate("done");
         IRExpr result = IRTempFactory.generate("result");
 
-        // Store array reference
-        IRTemp pointer = IRTempFactory.generate("array_ref");
-        stmts.add(new IRMove(pointer, (IRExpr) i.array.accept(this)));
+        // Store array reference copy if not already a temp
+        IRExpr pointer = (IRExpr) i.array.accept(this);
+        if (!(pointer instanceof IRTemp)) {
+            IRTemp temp = IRTempFactory.generate("array");
+            stmts.add(new IRMove(temp, pointer));
+            pointer = temp;
+        }
 
-        // Store index
-        IRTemp index = IRTempFactory.generate("index");
-        stmts.add(new IRMove(index, (IRExpr) i.index.accept(this)));
+        // Store index if not already a temp or constant
+        // TODO: could be improved by looking for non-mutable code
+        IRExpr index = (IRExpr) i.index.accept(this);
+        if (!(index instanceof IRTemp || index instanceof IRConst)) {
+            IRTemp temp = IRTempFactory.generate("index");
+            stmts.add(new IRMove(temp, index));
+            index = temp;
+        }
 
         // Check bounds
-        IRLabel outOfBounds = IRLabelFactory.generate("out_of_bounds");
+        IRLabel outOfBounds = IRLabelFactory.generate("outOfBounds");
         stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, ZERO), outOfBounds));
         stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, length(pointer)), outOfBounds));
         stmts.add(new IRMove(result, shiftAddr(pointer, index)));
