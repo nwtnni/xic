@@ -7,7 +7,8 @@ main (args:int[][]) {
     while i<300000000 {
         y:int = x
         if y >= 0 {
-            x = y+1
+            a:int = y+1
+            b:int = y+1
         }
         i = i+1
     }

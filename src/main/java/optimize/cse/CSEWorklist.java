@@ -89,7 +89,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
 
         // Performing kill for out
         for (IRExpr e : new HashSet<>(out.keySet())) {
-            if ((shouldDelMem && s.delMem) || kill(s.kill, e)) {
+            if ((shouldDelMem && e.delMem) || kill(s.kill, e)) {
                 out.remove(e);
             }
         }

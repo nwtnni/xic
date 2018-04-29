@@ -6,7 +6,7 @@ main (args:int[][]) {
     i:int = 0
     while i<300000000 {
         y:int = x
-        x = y+1
+        z:int = y+1
         i = i+1
     }
     println(unparseInt(x))
