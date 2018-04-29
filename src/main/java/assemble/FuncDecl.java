@@ -35,7 +35,7 @@ public abstract class FuncDecl<A> {
         }
         return instrs;
     }
-    
+
     public static class T extends FuncDecl<Temp> {
 
         /*
@@ -85,23 +85,6 @@ public abstract class FuncDecl<A> {
             epilogue.add(ret());
             epilogue.add(text(""));
         }
-        
-        public void setStackSize(int i) {
-
-            // Insert stack setup at end of prelude
-            Imm shift = new Imm(Config.WORD_SIZE * i);
-            BinOp<Imm, Temp, Temp> sub = binOpIR(BinOp.Kind.SUB, shift, Temp.RSP);
-            prelude.set(prelude.size() - 1, sub);
-
-            // Insert stack teardown at beginning of epilogue
-            BinOp<Imm, Temp, Temp> add = binOpIR(BinOp.Kind.ADD, shift, Temp.RSP);
-            epilogue.set(2, add);
-        }
-
-        public void saveRegister(Temp reg) {
-            prelude.add(prelude.size() - 1, pushR(reg));
-            epilogue.add(3, popR(reg));
-        }
     }
 
     public static class R extends FuncDecl<Reg> {
@@ -112,8 +95,8 @@ public abstract class FuncDecl<A> {
             this.args = fn.args;
             this.rets = fn.rets;
             this.returnLabel = new Label.R(fn.returnLabel);
-            this.stmts = new ArrayList<>(); 
-            this.prelude = new ArrayList<>(); 
+            this.stmts = new ArrayList<>();
+            this.prelude = new ArrayList<>();
             prelude.add(new Text.R("##########################################################################"));
             prelude.add(new Text.R(".globl " + name));
             prelude.add(new Text.R(".align 4"));
@@ -124,13 +107,30 @@ public abstract class FuncDecl<A> {
             prelude.add(new Text.R("# ~~~Replace with subtract from %rsp here"));
 
             // Function epilogue
-            this.epilogue = new ArrayList<>(); 
+            this.epilogue = new ArrayList<>();
             epilogue.add(returnLabel);
             epilogue.add(new Text.R("# Stack Teardown"));
             epilogue.add(new Text.R("# ~~~Replace with add to %rsp here:"));
             epilogue.add(new Pop.RR(Reg.RBP));
             epilogue.add(new Ret.R());
             epilogue.add(new Text.R(""));
+        }
+
+        public void setStackSize(int i) {
+
+            // Insert stack setup at end of prelude
+            Imm shift = new Imm(Config.WORD_SIZE * i);
+            BinOp<Imm, Reg, Reg> sub = new BinOp.RIR(BinOp.Kind.SUB, shift, Reg.RSP);
+            prelude.set(prelude.size() - 1, sub);
+
+            // Insert stack teardown at beginning of epilogue
+            BinOp<Imm, Reg, Reg> add = new BinOp.RIR(BinOp.Kind.ADD, shift, Reg.RSP);
+            epilogue.set(2, add);
+        }
+
+        public void saveRegister(Reg reg) {
+            prelude.add(prelude.size() - 1, new Push.RR(reg));
+            epilogue.add(3, new Pop.RR(reg));
         }
     }
 }

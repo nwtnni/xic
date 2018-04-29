@@ -185,18 +185,6 @@ public class TrivialAllocator extends Allocator {
     }
 
     /*
-     * Call Visitor
-     */
-
-    public Boolean visit(Call.T c) {
-        super.visit(c);
-        maxArgs = Math.max(maxArgs, c.numArgs);
-        maxRets = Math.max(maxRets, c.numRet);
-        return null;
-    }
-
-
-    /*
      * Lea Visitor
      */
 

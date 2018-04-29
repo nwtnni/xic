@@ -86,7 +86,7 @@ public class RegAlloc extends Phase {
             } catch (Exception e) {}
         }
 
-        // CompUnit<Reg> allocated = Allocator.allocate(after);
+        // CompUnit<Reg> allocated = ColorAllocator.allocate(after);
 
         // out = Filename.concat(config.sink, config.unit);
         // out = Filename.setExtension(out, "s");

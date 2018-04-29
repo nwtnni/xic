@@ -123,6 +123,8 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
      */
 
     public Boolean visit(Call.T c) {
+        maxArgs = Math.max(maxArgs, c.numArgs);
+        maxRets = Math.max(maxRets, c.numRet);
         instrs.add(new Call.R(c.name, c.numArgs, c.numRet));
         return true;
     }
