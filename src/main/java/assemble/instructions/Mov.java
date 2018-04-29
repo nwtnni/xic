@@ -17,6 +17,10 @@ public abstract class Mov<S, D, A> extends Instr<A> {
         return String.format("movq %s, %s", src, dest);
     }
 
+    @Override
+    public boolean isMove() {
+        return true;
+    }
 
     /*
      *
