@@ -239,7 +239,7 @@ public class Tiler extends IRVisitor<Operand> {
                 break;
             default:
         }
-        instrs.addAll(cmp(left, right));
+        instrs.addAll(cmp(right, left, immR, immL));
         // TODO: this is sub-optimal use of setcc which can use other registers
         instrs.add(movIR(new Imm(0), Temp.RAX));
         instrs.add(setcc(flag));
@@ -304,60 +304,13 @@ public class Tiler extends IRVisitor<Operand> {
         if (c.cond instanceof IRBinOp) {
             IRBinOp bop = (IRBinOp) c.cond;
 
+            Operand left = bop.left.accept(this);
+            Operand right = bop.right.accept(this);
+
             Optional<Imm> immL = checkImm(bop.left());
             Optional<Imm> immR = checkImm(bop.right());
 
-            // Both immediates; try to shuttle via registers
-            if (immL.isPresent() && immR.isPresent()) {
-
-                instrs.addAll(cmpII(immL.get(), immR.get()));
-
-            } else if (immR.isPresent()) {
-
-                Operand left = bop.left().accept(this);
-                
-                // Check if fits in imm32 for cmp instruction
-                if (Config.within(32, immR.get().getValue())) {
-
-                    // Check what the LHS side is: either temp or mem
-                    if (left.isTemp()) {
-                        instrs.add(cmpIR(immR.get(), left.getTemp()));
-                    } else {
-                    
-                        //Otherwise must shuttle
-                        Temp shuttle = TempFactory.generate("immR_mem_shuttle");
-                        instrs.add(movIR(immR.get(), shuttle));
-                        instrs.add(cmpRM(shuttle, left.getMem()));
-                    }
-
-                } else {
-                    
-                    //Otherwise shuttle
-                    Temp shuttle = TempFactory.generate("immR_shuttle");
-                    instrs.add(movIR(immR.get(), shuttle));
-
-                    // Check what the LHS side is
-                    if (left.isTemp()) {
-                        instrs.add(cmpRR(shuttle, left.getTemp()));
-                    } else {
-                        instrs.add(cmpRM(shuttle, left.getMem()));
-                    }
-                }
-
-            } else if (immL.isPresent()) {
-                
-                Operand right = bop.right().accept(this);
-
-                // Have to shuttle since only IR addressing, no RI
-                Temp shuttle = TempFactory.generate("immL_shuttle");
-                instrs.add(movIR(immL.get(), shuttle));
-
-                if (right.isTemp()) {
-                    instrs.add(cmpRR(right.getTemp(), shuttle));
-                } else {
-                    instrs.add(cmpMR(right.getMem(), shuttle));
-                }
-            }
+            instrs.addAll(cmp(right, left, immR, immL));
 
             Jcc.Kind flag = null;
             switch (bop.type()) {
@@ -391,16 +344,25 @@ public class Tiler extends IRVisitor<Operand> {
 
         Optional<Imm> imm = checkImm(c.cond);
 
-        // Immediate condition
+        // Immediate condition gets converted to jump or fall-through
         if (imm.isPresent()) {
-            instrs.addAll(cmpII(new Imm(1), imm.get()));
-            instrs.add(jcc(Jcc.Kind.Z, c.trueLabel()));
+            // Fall-through
+            if (imm.get().getValue() == 0) {
+
+            // Jmp to label
+            } else if (imm.get().getValue() == 1) {
+                Label<Temp> target = labelFromIRLabel(c.trueLabel());
+                instrs.add(jmpFromLabel(target));
+
+            // Otherwise something is broken
+            } else {
+                assert false;
+            }
             return null;
         }
 
-        // Otherwise is either a temp or mem
+        // Otherwise generic cjump expression
         Operand cond = c.cond.accept(this);
-
         if (cond.isTemp()) {
             instrs.add(cmpIR(new Imm(1), cond.getTemp()));
         } else {
@@ -409,7 +371,6 @@ public class Tiler extends IRVisitor<Operand> {
             instrs.add(movIR(new Imm(1), shuttle));
             instrs.add(cmpRM(shuttle, cond.getMem()));
         }
-
         instrs.add(jcc(Jcc.Kind.Z, c.trueLabel()));
         return null;
     }
@@ -507,15 +468,18 @@ public class Tiler extends IRVisitor<Operand> {
 
         // Must be Mem<Temp> or else IRGen has a bug
         Operand dest = m.target().accept(this);
-            
 
         Optional<Imm> imm = checkImm(m.src());
 
         if (imm.isPresent()) {
             if (dest.isTemp()) {
                 instrs.add(movIR(imm.get(), dest.getTemp()));
-            } else {
+            } else if (Config.within(32, imm.get().getValue())) {
                 instrs.add(movIM(imm.get(), dest.getMem()));
+            } else {
+                Temp shuttle = TempFactory.generate("movIM_shuttle");
+                instrs.add(movIR(imm.get(), shuttle));
+                instrs.add(movRM(shuttle, dest.getMem()));
             }
             return null;
         }
