@@ -125,8 +125,8 @@ public class TrivialAllocator extends InstrVisitor<Void> {
         allocatedFn.stmts = instrs;
         allocated.fns.add(allocatedFn);
 
-        // Calculate words to shift rsp, +1 to offset tempCounter
-        int rsp = tempCounter + maxArgs + maxRets + 1;
+        // Calculate words to shift rsp, +1 to offset tempCounter TODO
+        int rsp = tempCounter + maxArgs + maxRets;
         // 16 byte alignment
         rsp = rsp % 2 == 1 ? rsp + 1 : rsp;
         Imm shift = new Imm(normalize(rsp));

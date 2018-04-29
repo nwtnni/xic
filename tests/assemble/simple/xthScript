@@ -1,14 +1,20 @@
-xic ("Test assemble simple") "-target linux" {
+xic ("Test assemble simple") "-target linux -O" {
     simple_add1.xi;
     simple_assign1.xi;
     simple_div1.xi;
     simple_div2.xi;
+    simple_eqeq1.xi;
+    simple_eqeq2.xi;
     simple_funcs1.xi;
     simple_funcs2.xi;
     simple_funcs3.xi;
     simple_funcs4.xi;
     simple_funcs5.xi;
     simple_funcs6.xi;
+    simple_gt1.xi;
+    simple_gt2.xi;
+    simple_gte1.xi;
+    simple_gte2.xi;
     simple_highmult1.xi;
     simple_highmult2.xi;
     simple_if1.xi;
@@ -17,6 +23,10 @@ xic ("Test assemble simple") "-target linux" {
     simple_int0.xi;
     simple_int1.xi;
     simple_int-1.xi;
+    simple_lt1.xi;
+    simple_lt2.xi;
+    simple_lte1.xi;
+    simple_lte2.xi;
     simple_mod1.xi;
     simple_mod2.xi;
     simple_mod3.xi;
