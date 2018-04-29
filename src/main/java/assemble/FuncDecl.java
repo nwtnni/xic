@@ -120,7 +120,7 @@ public abstract class FuncDecl<A> {
             prelude.add(new Label.R(fn.name + ":"));
             prelude.add(new Text.R("# Stack Setup"));
             prelude.add(new Push.RR(Reg.RBP));
-            prelude.add(new Mov.RRR(Reg.RBP, Reg.RSP));
+            prelude.add(new Mov.RRR(Reg.RSP, Reg.RBP));
             prelude.add(new Text.R("# ~~~Replace with subtract from %rsp here"));
 
             // Function epilogue
