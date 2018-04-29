@@ -25,15 +25,6 @@ public abstract class Instr<A> {
         return false;
     }
 
-    /**
-     * Returns true if this instruction is a Mov.
-     *
-     * Used for move coalescing during register allocation.
-     */
-    public boolean isMove() {
-        return false;
-    }
-
     public <T> T accept(InstrVisitor<T> v) {
         return null;
     }
