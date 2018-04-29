@@ -26,6 +26,8 @@ public abstract class IRNode {
 
     public Map<IRExpr, IRStmt> CSEin;
 
+
+    /* Mostly one-node set; used to avoid dealing with nulls*/
     public Set<IRExpr> kill;
 
     public Set<IRExpr> exprs;
