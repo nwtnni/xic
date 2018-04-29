@@ -1,5 +1,7 @@
 xic ("Test assemble simple") "-target linux -O" {
     simple_add1.xi;
+    simple_and1.xi;
+    simple_and2.xi;
     simple_assign1.xi;
     simple_div1.xi;
     simple_div2.xi;
@@ -31,6 +33,10 @@ xic ("Test assemble simple") "-target linux -O" {
     simple_mod2.xi;
     simple_mod3.xi;
     simple_mult1.xi;
+    simple_neq1.xi;
+    simple_neq2.xi;
+    simple_or1.xi;
+    simple_or2.xi;
     simple_recursive_func1.xi;
     simple_sub1.xi;
     simple_while1.xi;
