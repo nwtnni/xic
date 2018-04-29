@@ -1,6 +1,7 @@
 xic ("Test assemble [assemble_specific") "-target linux -O" {
     many_args_and_returns.xi;
     many_args_and_returns2.xi;
+    many_args_and_returns3.xi;
     multiple_return1.xi;
 
     large_add1.xi;

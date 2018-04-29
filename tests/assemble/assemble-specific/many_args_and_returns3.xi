@@ -3,7 +3,7 @@ use conv
 
 main (args:int[][]) {
     x:int = foo()
-    a:int, b:int, c:int, d:int, e:int, f:int, g:int, h:int, i:int, j:int, k:int = fun(1,2,3,4,5,bar(),7,8,9,10,11)
+    a:int, b:int, c:int, d:int, e:int, f:int, g:int, h:int, i:int, j:int, k:int = fun(1,2,3,4,x,bar(),5+2,8,9,10,11)
     println(unparseInt(a))
     println(unparseInt(b))
     println(unparseInt(c))

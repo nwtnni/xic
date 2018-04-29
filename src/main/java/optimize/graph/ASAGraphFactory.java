@@ -7,17 +7,22 @@ import assemble.*;
 import assemble.instructions.*;
 import emit.IRLabelFactory;
 
+/** Factory class for generating ASAGraphs from IR. */
 public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
 
-    public ASAGraphFactory(CompUnit<Temp> compUnit, ASAEdgeFactory<E> edgeFactory) {
-        this.compUnit = compUnit;
+    /** Construct a graph factory with edges specified by the edge factory. */
+    public ASAGraphFactory(ASAEdgeFactory<E> edgeFactory) {
         this.edgeFactory = edgeFactory;
     }
 
     private enum State { IN_BLOCK, OUT_OF_BLOCK; }
 
-    /** The compilation unit to generate CFGs from. */
-    private CompUnit<Temp> compUnit;
+    /** 
+     * State is used during traversal to decide whether to inject jumps 
+     * are needed to create extended basic block in the case of 
+     * consecutive labels with no separating jump.
+     */
+    private State state;
 
     /** The edge factory used to contruct edges in the CFG */
     private ASAEdgeFactory<E> edgeFactory;
@@ -25,27 +30,25 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
     /** Current CFG being constructed. */
     private ASAGraph<E> cfg;
 
-    /** 
-     * State is used to determine whether a jump needs to be injected for
-     * a fall-through to a label.
-     */
-    private State state;
-
     /** Previous statement in the assembly. */
     private Instr<Temp> prev;
 
-    /** Returns the list of CFGs for the compilation unit. */
-    public Map<String, ASAGraph<E>> getCfgs() {
+    /** 
+     * Returns the map of function names to their corresponding CFGs 
+     * for the compilation unit. 
+     */
+    public Map<String, ASAGraph<E>> getAllCfgs(CompUnit<Temp> compUnit) {
         Map<String, ASAGraph<E>> fns = new HashMap<>();
         for (FuncDecl<Temp> fn : compUnit.fns) {
             // Generate graph
-            toCfg(fn);
+            makeCfg(fn);
             fns.put(fn.name, cfg);
         }
         return fns;
     }
 
-    public void toCfg(FuncDecl<Temp> fn) {
+    /** Returns the CFG for a single function. */
+    private ASAGraph<E> makeCfg(FuncDecl<Temp> fn) {
         state = State.IN_BLOCK;
 
         Label<Temp> start = new Label.T(IRLabelFactory.generate("START"));
@@ -61,6 +64,8 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
 
             prev = ins.accept(this);
         }
+        
+        return cfg;
     }
 
     /*

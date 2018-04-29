@@ -43,8 +43,8 @@ public class RegAlloc extends Phase {
         // End debug
 
         LVEdgeFactory ef = new LVEdgeFactory();
-        ASAGraphFactory<Set<Temp>> gf = new ASAGraphFactory<>(assembly, ef);
-        Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getCfgs();
+        ASAGraphFactory<Set<Temp>> gf = new ASAGraphFactory<>(ef);
+        Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getAllCfgs(assembly);
 
         // Run analyses and optimizations
 

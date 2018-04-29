@@ -102,8 +102,9 @@ test_ir() {
     test_ir_basic
     test_ir_const_fold
     test_ir_simple
-    test_ir_other
     test_ir_arrays
+    test_ir_other
+    test_ir_fails
 }
 
 test_assemble_simple() {
@@ -137,9 +138,9 @@ test_assemble_assemble_specific() {
 }
 
 test_assemble() {
+    test_assemble_basic
     test_assemble_simple
     test_assemble_arrays
-    test_assemble_basic
     test_assemble_ir_fails
     test_assemble_other
     test_assemble_assemble_specific

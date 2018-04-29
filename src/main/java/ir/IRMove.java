@@ -39,6 +39,14 @@ public class IRMove extends IRStmt {
         return (IRMem) target;
     }
 
+    public boolean isTemp() {
+        return target instanceof IRTemp;
+    }
+
+    public IRTemp getTemp() {
+        return (IRTemp) target;
+    }
+
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);

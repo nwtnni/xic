@@ -1,6 +1,7 @@
 package emit;
 
 import ir.*;
+import ir.IRBinOp.OpType;
 import ir.IRMem.MemType;
 
 import java.util.ArrayList;
@@ -204,13 +205,14 @@ public class Canonizer extends IRVisitor<IRNode> {
      */
     public IRNode visit(IRMem m) {
         /* Immutable is set during translation for:
-            - array constants
-            - dynamic allocation
-            - array concatenation
+            - constant array generation
+            - dynamic allocation function
+            - array concatenation function
+           Where there is a guarantee that there is no change of aliasing
         */
 
-        m.isCanonical = true;
         if (m.memType() == MemType.IMMUTABLE) {
+            m.isCanonical = true;
             return m;
         }
 
@@ -221,6 +223,7 @@ public class Canonizer extends IRVisitor<IRNode> {
             expr = t;
         }
 
+        // Mems are not canonical due to aliasing
         return new IRMem(expr);
     }
 
@@ -235,11 +238,12 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by commuting
      */
     public IRNode visit(IRMove m) {
+        // Need to check memory targets
         if (m.isMem()) {
             IRMem mem = m.getMem();
-            IRExpr dest = mem;
 
-            // Hoist all mutable mems
+            // Hoist mem expression if not certain about immutability
+            IRExpr dest = mem;
             if (mem.memType() != MemType.IMMUTABLE) {
                 IRTemp temp = IRTempFactory.generate();
                 IRExpr memExpr = (IRExpr) mem.expr().accept(this);
@@ -249,6 +253,8 @@ public class Canonizer extends IRVisitor<IRNode> {
 
             IRExpr srcExpr = (IRExpr) m.src().accept(this);
             stmts.add(new IRMove(dest, srcExpr));
+
+        // Temporary targets don't need to be hoisted
         } else {
             IRExpr srcExpr = (IRExpr) m.src().accept(this);
             stmts.add(new IRMove(m.target(), srcExpr));

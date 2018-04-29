@@ -129,15 +129,6 @@ public class Emitter extends Visitor<IRNode> {
     }
 
     /**
-     * Is the value of a expression shifted by shift * WORD_SIZE bytes.
-     */
-    private IRExpr shiftAddr(IRExpr pointer, IRExpr shift) {
-        IRExpr byteShift = new IRBinOp(OpType.MUL, shift, WORD_SIZE);
-        IRExpr addr = new IRBinOp(OpType.ADD, pointer, byteShift);
-        return addr;
-    }
-
-    /**
      * Increment pointer by WORD_SIZE bytes.
      */
     private IRStmt incrPointer(IRTemp pointer) {
@@ -176,8 +167,8 @@ public class Emitter extends Visitor<IRNode> {
             IRExpr n = (IRExpr) array.get(i);
 
             // index = j(workpointer)
-            IRConst j = new IRConst((i + 1) * WORD_SIZE.value()); 
-            IRExpr index = new IRBinOp(OpType.ADD, pointer, j);
+            IRConst offset = new IRConst((i + 1) * WORD_SIZE.value()); 
+            IRExpr index = new IRBinOp(OpType.ADD, pointer, offset);
             IRMem elem = new IRMem(index, MemType.IMMUTABLE);
             
             stmts.add(new IRMove(elem, n));
@@ -600,7 +591,6 @@ public class Emitter extends Visitor<IRNode> {
     public IRNode visit(Index i) throws XicException {
         IRSeq stmts = new IRSeq();
         IRLabel doneL = IRLabelFactory.generate("done");
-        IRExpr result = IRTempFactory.generate("result");
 
         // Store array reference copy if not already a temp
         IRExpr pointer = (IRExpr) i.array.accept(this);
@@ -611,7 +601,6 @@ public class Emitter extends Visitor<IRNode> {
         }
 
         // Store index if not already a temp or constant
-        // TODO: could be improved by looking for non-mutable code
         IRExpr index = (IRExpr) i.index.accept(this);
         if (!(index instanceof IRTemp || index instanceof IRConst)) {
             IRTemp temp = IRTempFactory.generate("index");
@@ -623,13 +612,14 @@ public class Emitter extends Visitor<IRNode> {
         IRLabel outOfBounds = IRLabelFactory.generate("outOfBounds");
         stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, ZERO), outOfBounds));
         stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, length(pointer)), outOfBounds));
-        stmts.add(new IRMove(result, shiftAddr(pointer, index)));
         stmts.add(jump(doneL));
         stmts.add(outOfBounds);
         stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
         stmts.add(doneL);
 
-        return new IRMem(new IRESeq(stmts, result));
+        IRExpr byteShift = new IRBinOp(OpType.MUL, WORD_SIZE, index);
+        IRExpr addr = new IRBinOp(OpType.ADD, pointer, byteShift);
+        return new IRMem(new IRESeq(stmts, addr));
     }
 
     public IRNode visit(Unary u) throws XicException {
