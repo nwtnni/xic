@@ -12,13 +12,9 @@ public abstract class Cmp<L, R, A> extends Instr<A> {
         this.right = right;
     }
 
-    /**
-     * Left and right semantics are inherited from the IR so
-     * left and right are flipped to comply with AT&T syntax.
-     */
     @Override
     public String toString() {
-        return String.format("cmpq %s, %s", right, left);
+        return String.format("cmpq %s, %s", left, right);
     }
 
     /*

@@ -154,9 +154,7 @@ public abstract class InstrFactory {
         DivMul<?, Temp> op = null;
 
         // Always shuttle left into RAX
-        if (immL.isPresent()) {
-            instrs.addAll(mov(left, Operand.temp(Temp.RAX), immL));
-        }
+        instrs.addAll(mov(left, Operand.temp(Temp.RAX), immL));
 
         // Shuttle right if imm
         if (immR.isPresent()) {
@@ -194,9 +192,12 @@ public abstract class InstrFactory {
 
     /*
      * Cmp Factory Methods
+     * 
+     * Left and right semantics are inherited from the IR so left and right must be 
+     * passed in flipped to comply with AT&T syntax.
      */
 
-    // TODO: check that [left] is 32 bits or less, otherwise spill into temp in the tiler
+    /** Requires that [left] is 32 bits or less, otherwise spill into temp in the tiler. */
     public static Cmp<Imm, Temp, Temp> cmpIR(Imm left, Temp right) {
         return new Cmp.TIR(left, right);
     }

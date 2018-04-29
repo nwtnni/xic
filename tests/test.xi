@@ -2,5 +2,19 @@ use io
 use conv
 
 main(args:int[][]) {
-    print(unparseInt(9223372036854775807*>>9223372036854775807)) //Two Max Ints
+    a:int[5]
+    printInt(length(a))
+}
+
+// foo():int {
+//     return bar(5)[1]
+// }
+
+// bar(x:int):int[] {
+//     y:int[] = {x,x}
+//     return y
+// }
+
+printInt(x:int) {
+    print(unparseInt(x))
 }
