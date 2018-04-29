@@ -21,14 +21,17 @@ public class CSEReplaceVisitor extends IRVisitor<IRExpr> {
         replaceExpr = null;
         newExpr = null;
     }
-
-    // TODO: add visit(IRExp e) if added to lowering
    
     public IRExpr visit(IRCJump c) {
         IRExpr n = c.cond.accept(this);
         if (n != null) {
             c.cond = n;
         }
+        return null;
+    }
+
+    public IRExpr visit(IRExp e) {
+        e.expr().accept(this);
         return null;
     }
 

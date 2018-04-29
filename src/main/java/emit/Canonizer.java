@@ -51,65 +51,89 @@ public class Canonizer extends IRVisitor<IRNode> {
      */
 
     /**
-     * Lowers an IRBinOp node by hoisting its first expression,
-     * moving the first expression to a temp, and then hoisting
-     * and evaluating the second expression.
+     * Lowers an IRBinOp node by hoisting its expressions if necessary.
      * 
-     * TODO: can be optimized by checking for commuting.
+     * TODO: can be optimized by commuting
      */
     public IRNode visit(IRBinOp b) {
         IRExpr leftExpr = (IRExpr) b.left().accept(this);
         if (!leftExpr.isCanonical) {
-            IRTemp temp = IRTempFactory.generate("H");
+            IRTemp temp = IRTempFactory.generate("binopL");
             stmts.add(new IRMove(temp, leftExpr));
             leftExpr = temp; 
         }
 
         IRExpr rightExpr = (IRExpr) b.right().accept(this);
+        if (!rightExpr.isCanonical) {
+            IRTemp temp = IRTempFactory.generate("binopR");
+            stmts.add(new IRMove(temp, rightExpr));
+            rightExpr = temp; 
+
+        }
+
+        // BinOp is does not need to be hoisted after hoisting its operands
         IRBinOp bop = new IRBinOp(b.type(), leftExpr, rightExpr);
         bop.isCanonical = true;
         return bop;
     }
     
     /**
-     * Lowers an IRCall node by hoisting each argument, storing
-     * the intermediate expressions in temps, and then calling
-     * the function with all temps.
+     * Lowers an IRCall node by hoisting each argument if necessary and storing
+     * the intermediate expression in a fresh temp before making the call.
      */
     public IRNode visit(IRCall c) {
-        List<IRExpr> temps = new ArrayList<>();
+        List<IRExpr> args = new ArrayList<>();
         
-        // TODO: can be less conservative with hoisting for arguments
         for (IRExpr arg : c.args()) {
             IRExpr argExpr = (IRExpr) arg.accept(this);
-            IRTemp temp = IRTempFactory.generate();
-            temps.add(temp);
-            stmts.add(new IRMove(temp, argExpr));
+            
+            // Only hoist if necessary
+            if (!argExpr.isCanonical) {
+                IRTemp t = IRTempFactory.generate();
+                stmts.add(new IRMove(t, argExpr));
+                argExpr = t;
+            }
+            args.add(argExpr);
         }
         
-        IRTemp result = IRTempFactory.generate();
-        stmts.add(new IRMove(result, new IRCall(c.target(), temps)));
-        return result;
+        // Call is always hoisted
+        return new IRCall(c.target(), args);
     }
 
     /**
-     * Lowers an IRCJump node by hoisting its expression.
+     * Lowers an IRCJump node by hoisting its expression if needed.
      * Requires: IRCJump only has a true label.
      */
     public IRNode visit(IRCJump c) {
-        IRExpr condExpr = (IRExpr) c.cond.accept(this);
-        stmts.add(new IRCJump(condExpr, c.trueLabel()));
+        IRExpr condition = (IRExpr) c.cond.accept(this);
+
+        // Hoist condition expression 
+        if (!condition.isCanonical) {
+            IRTemp t = IRTempFactory.generate("cjump");
+            stmts.add(new IRMove(t, condition));
+            condition = t;
+        }
+
+        stmts.add(new IRCJump(condition, c.trueLabel()));
         return null;
     }
 
     /**
-     * Lowers an IRJump node by hoisting its expression.
+     * Lowers an IRJump node by hoisting its expression if needed.
      */
     public IRNode visit(IRJump j) {
         if (j.hasLabel()) {
             stmts.add(j);
         } else {
             IRExpr targetExpr = (IRExpr) j.target().accept(this);
+
+            // Hoist target expression if needed.
+            if (!targetExpr.isCanonical) {
+                IRTemp t = IRTempFactory.generate("cjump");
+                stmts.add(new IRMove(t, targetExpr));
+                targetExpr = t;
+            }
+
             stmts.add(new IRJump(targetExpr));
         }
         return null;
@@ -138,7 +162,7 @@ public class Canonizer extends IRVisitor<IRNode> {
 
     /**
      * Lowers an IRSeq node by evaluating its statement, and then
-     * hoisting its expression.
+     * hoisting its expression and passing its result up.
      */
     public IRNode visit(IRESeq e) {
         e.stmt().accept(this); 
@@ -146,11 +170,13 @@ public class Canonizer extends IRVisitor<IRNode> {
     }
 
     /**
-     * Lowers an IRExp node by discarding its expression.
+     * Lowers an IRExp by adding it to the list of current statements.
      */
     public IRNode visit(IRExp e) {
-        // TODO: improve lowering by preserving IRExp statements
-        e.expr().accept(this);
+        IRExpr expr = (IRExpr) e.expr().accept(this);
+        if (expr instanceof IRCall) {
+            stmts.add(new IRExp(expr));
+        }
         return null;
     }
 
@@ -174,7 +200,7 @@ public class Canonizer extends IRVisitor<IRNode> {
     }
 
     /**
-     * Lowers an IRMem node by hoisting its inner expression.
+     * Lowers an IRMem node by hoisting its inner expression as needed.
      */
     public IRNode visit(IRMem m) {
         /* Immutable is set during translation for:
@@ -182,10 +208,20 @@ public class Canonizer extends IRVisitor<IRNode> {
             - dynamic allocation
             - array concatenation
         */
+
+        m.isCanonical = true;
         if (m.memType() == MemType.IMMUTABLE) {
             return m;
         }
-        return new IRMem((IRExpr) m.expr().accept(this));
+
+        IRExpr expr = (IRExpr) m.expr().accept(this);
+        if (!expr.isCanonical) {
+            IRTemp t = IRTempFactory.generate("mem");
+            stmts.add(new IRMove(t, expr));
+            expr = t;
+        }
+
+        return new IRMem(expr);
     }
 
     /**
@@ -196,14 +232,14 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Otherwise location is a temp and cannot be affected by hoisting
      * the source expression first.
      * 
-     * TODO: can be optimized by checking for commuting.
+     * TODO: can be optimized by commuting
      */
     public IRNode visit(IRMove m) {
         if (m.isMem()) {
             IRMem mem = m.getMem();
             IRExpr dest = mem;
 
-            // Only hoist when mem is not immutable
+            // Hoist all mutable mems
             if (mem.memType() != MemType.IMMUTABLE) {
                 IRTemp temp = IRTempFactory.generate();
                 IRExpr memExpr = (IRExpr) mem.expr().accept(this);
@@ -229,17 +265,23 @@ public class Canonizer extends IRVisitor<IRNode> {
     }
 
     /**
-     * Lowers an IRReturn node by hoisting each of its arguments,
-     * storing intermediate values in temps.
+     * Lowers an IRReturn node by hoisting each of its arguments if neccesary
+     * and storing the intermediate result in a temporary before the return.
      */
     public IRNode visit(IRReturn r) {
         List<IRExpr> temps = new ArrayList<>();
         
         for (IRExpr ret : r.rets()) {
             IRExpr retExpr = (IRExpr) ret.accept(this);
-            IRTemp temp = IRTempFactory.generate();
-            temps.add(temp);
-            stmts.add(new IRMove(temp, retExpr));
+
+            // Only hoist if necessary
+            if (!retExpr.isCanonical) {
+                IRTemp temp = IRTempFactory.generate();
+                stmts.add(new IRMove(temp, retExpr));
+                retExpr = temp;
+            }
+
+            temps.add(retExpr);
         }
         
         stmts.add(new IRReturn(temps));

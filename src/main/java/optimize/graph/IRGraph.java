@@ -125,7 +125,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
 
                 // Follow the fall-through trace
                 traces.push(getSuccessor(label));
-            } else if (current instanceof IRMove) {
+            } else if (current instanceof IRMove || current instanceof IRExp) {
                 body.add(current);
                 traces.push(getSuccessor(current));
             } else if (current instanceof IRReturn) {

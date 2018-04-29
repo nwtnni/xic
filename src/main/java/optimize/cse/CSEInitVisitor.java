@@ -34,13 +34,15 @@ public class CSEInitVisitor extends IRVisitor<Void> {
      * Statement nodes
      */
 
-
-    // TODO: visit(IRExp e) if added to IR lowering
-
     public Void visit(IRCJump c) {
         c.cond.accept(this);
         c.exprs = c.cond.exprs;
         c.delMem = c.cond.delMem;
+        return null;
+    }
+
+    public Void visit(IRExp e) {
+        e.expr().accept(this);
         return null;
     }
 

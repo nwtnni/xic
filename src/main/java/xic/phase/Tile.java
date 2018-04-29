@@ -4,6 +4,7 @@ import ir.IRCompUnit;
 import emit.ABIContext;
 
 import assemble.CompUnit;
+import assemble.Temp;
 import assemble.Tiler;
 
 import util.Pair;
@@ -20,7 +21,7 @@ public class Tile extends Phase {
 
         Pair<IRCompUnit, ABIContext> emitted = previous.ok().getEmitted(); 
 
-        CompUnit tiled = Tiler.tile(emitted.first, emitted.second);
+        CompUnit<Temp> tiled = Tiler.tile(emitted.first, emitted.second);
         
         return new Result<>(Product.assembled(tiled));
     }

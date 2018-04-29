@@ -321,7 +321,7 @@ public class Tiler extends IRVisitor<Operand> {
                     flag = Jcc.Kind.NE;
                     break;
                 default:
-                    throw XicInternalException.runtime("Invalid binop for CJUMP");
+                    throw XicInternalException.runtime("Invalid binop for CJUMP.");
             }
             instrs.add(jcc(flag, c.trueLabel()));
             return null;
@@ -371,13 +371,12 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRESeq e) {
-        throw XicInternalException.runtime("IRESeq is not canonical");
+        throw XicInternalException.runtime("IRESeq is not canonical.");
     }
 
     public Operand visit(IRExp e) {
-        // TODO: add tile to deal with procedure calls with no returns
-        // in the form of IRExp(IRCall(...))
-        throw XicInternalException.runtime("IRExp is not canonical");        
+        e.expr().accept(this);
+        return null;   
     }
 
     public Operand visit(IRLabel l) {
@@ -408,7 +407,7 @@ public class Tiler extends IRVisitor<Operand> {
                         Mem<Temp> mem = Mem.of(base.getTemp(), (int) offset.getValue());
                         return Operand.mem(mem);
                     } else {
-                        throw XicInternalException.runtime("Invalid IR generated for mem");
+                        throw XicInternalException.runtime("Invalid IR generated for immutable mem.");
                     }
 
                 // B + R * scale
@@ -459,7 +458,7 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRName n) {
-        throw XicInternalException.runtime("IRName not visited");
+        throw XicInternalException.runtime("IRName should not be visited during tiling.");
     }
 
     public Operand visit(IRReturn r) {

@@ -83,6 +83,27 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
         }
     }
 
+    public IRStmt visit(IRExp e) {
+        switch (state) {
+            case IN_BLOCK:
+                cfg.addVertex(e);
+                cfg.addEdge(prev, e);
+
+                // Exp continues a block
+                state = State.IN_BLOCK;
+                return e;
+
+            case OUT_OF_BLOCK:
+                // Encountered unreachable code
+                return null;
+
+            default:
+                assert false;
+                return null;
+        }
+
+    }
+
     public IRStmt visit(IRJump j) {
         switch (state) {
             case IN_BLOCK:

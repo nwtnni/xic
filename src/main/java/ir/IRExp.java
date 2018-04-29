@@ -16,7 +16,7 @@ public class IRExp extends IRStmt {
         this.expr = expr;
     }
 
-    public IRNode expr() {
+    public IRExpr expr() {
         return expr;
     }
 

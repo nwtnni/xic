@@ -8,6 +8,8 @@ import java.util.List;
 public abstract class IRExpr extends IRNode {
 
     protected List<IRNode> values;
+
+    /** Used in lowering to determine if this expression needs to be hoisted. */
     public boolean isCanonical;
 
     public IRExpr() {
