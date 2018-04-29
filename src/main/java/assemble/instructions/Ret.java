@@ -1,18 +1,19 @@
 package assemble.instructions;
 
-public class Ret extends Instr {
-    @Override
-    public String toAbstractAssembly() {
-        return toAssembly();
-    }
+import assemble.*;
+
+public abstract class Ret<A> extends Instr<A> {
+
+    private Ret() {}
 
     @Override
-    public String toAssembly() {
+    public String toString() {
         return "retq";
     }
 
-    @Override
-    public <T> T accept(InsVisitor<T> v) {
-        return v.visit(this);
+    public static class T extends Ret<Temp> {
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
+
+    public static class R extends Ret<Reg> {}
 }

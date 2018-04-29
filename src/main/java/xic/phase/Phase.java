@@ -2,7 +2,6 @@ package xic.phase;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import util.Result;
 
@@ -17,10 +16,15 @@ public abstract class Phase {
             new Fold(),
             new Canonize(),
             new Interpret(),
+            new ConstPropNoPrint(),
+            new Fold(),
+            new ConstProp(),
+            new Fold(),
             new CSE(),
             new Irgen(),
             new Tile(),
-            new RegAlloc()
+            new RegAlloc(),
+            new TrivialAlloc()
         ));
     }
 
@@ -32,11 +36,12 @@ public abstract class Phase {
         FOLD,
         CANONIZE,
         INTERPRET,
+        CONSTPROP,
         CSE,
         IRGEN,
         TILE,
         REG_ALLOC,
-        ALLOCATE,
+        ALLOCATE;
     }
     
     protected Kind kind;

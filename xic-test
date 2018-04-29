@@ -151,6 +151,7 @@ test_course() {
 }
 
 if [[ -f $2 ]] ; then
+  gradle xic
   FILE=$2
   case $1 in
     --asm)
@@ -168,19 +169,16 @@ if [[ -f $2 ]] ; then
           echo "Cannot run assembly on $platform"
       fi
       ;;
-    --irrun)
-      ./xic --irgen -libpath tests/libs --optir initial --optir cf --optir cse --optir final --optcfg initial --optcfg cf --optcfg cse --optcfg final $FILE
+    --ir)
+      ./xic --irrun -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
+      ;;
+    *)
+      echo "Invalid use of xic-test"
       ;;
   esac
 else
+  gradle xic
   cmd=$1
-  if [ "$cmd" = "--nb" ] ; then
-      echo "skipping build"
-      cmd=$2
-  elif [ -n "$cmd" ] ; then
-      build
-  fi
-
   case $cmd in
   run)
       ./xic -target linux --irrun -libpath tests/libs $2
@@ -260,9 +258,7 @@ else
   *)
       echo "Usage:"
       echo ""
-      echo "xic-test [options] [command]"
-      echo "Options:"
-      echo "  --nb:   Skips running xic-build"
+      echo "xic-test [command]"
       echo "Possible commands: "
       echo "  all r[egression] f[ails] c[ourse]"
       echo "  l[exer] p[arser] t[ype] te tv tm"
@@ -274,7 +270,7 @@ else
       echo "xic-test [output] <file>"
       echo "Output:"
       echo "  --asm:    Generate and run assembly"
-      echo "  --irgen:  Generate ir, optir and optcfg"
+      echo "  --ir:     Generate and run ir, optir and optcfg"
       ;;
   esac
 fi

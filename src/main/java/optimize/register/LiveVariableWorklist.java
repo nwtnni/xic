@@ -1,37 +1,60 @@
 package optimize.register;
 
-import java.util.Set;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import assemble.*;
 import assemble.instructions.*;
 import optimize.*;
 import optimize.graph.*;
-import util.PairEdge;
+import util.Pair;
 
 /**
  * Worklist for live variable analysis.
  */
-public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr, Set<Temp>> {
+public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr<Temp>, Set<Temp>> {
+
+
+    /**
+     * Runs the constant propagation analysis on graph [cfg] and returns the mapping of available
+     * constants at each program point.
+     */
+    public static Map<Instr<Temp>, Set<Temp>> computeLiveVariables(ASAGraph<Set<Temp>> cfg) {
+        LiveVariableWorklist wl = new LiveVariableWorklist(cfg);
+        wl.doWorklist();
+        return wl.live;
+    }
 
     /**
      * Initializes the worklist on the graph [cfg].
      * Requires that the graph is initialized to all empty sets on the edges.
-     * This ensures that old liveness information stored on the instructions
-     * will be overwritten by a fresh liveness analysis.
      */
-    public LiveVariableWorklist(ASAGraph<Set<Temp>> cfg) {
+    private LiveVariableWorklist(ASAGraph<Set<Temp>> cfg) {
         super(cfg, Direction.BACKWARDS);
-        LVInitVisitor.init(cfg.originalFn);
+        Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init = LVInitVisitor.init(cfg.vertexSet());
+        this.use = init.first;
+        this.def = init.second;
+        this.live = new HashMap<>();
     }
+
+    /** Use set at each program point. */
+    private Map<Instr<Temp>, Set<Temp>> use;
+    
+    /** Def set at each program point. */
+    private Map<Instr<Temp>, Set<Temp>> def;
+
+    /** Set of live variables (in set) for each program point. */
+    private Map<Instr<Temp>, Set<Temp>> live;
 
     /** 
      * The transfer function is use[n] union (out[n] - def[n])
      */
-    public Set<Temp> transfer(Set<Temp> m, Instr v) {
-        Set<Temp> in = new HashSet<>(v.use);
+    public Set<Temp> transfer(Set<Temp> m, Instr<Temp> v) {
+        Set<Temp> in = new HashSet<>(use.get(v));
         Set<Temp> out = new HashSet<>(m);
-        out.removeAll(v.def);
+        out.removeAll(def.get(v));
         in.addAll(out);
         return in;
     }
@@ -39,10 +62,10 @@ public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr, S
     /** 
      * The meet operation is Union(in[n'])
      */
-    public Set<Temp> meet(Set<PairEdge<Instr,Set<Temp>>> inPaths) {
+    public Set<Temp> meet(Set<Set<Temp>> inPaths) {
         Set<Temp> out = new HashSet<>();
-        for (PairEdge<Instr, Set<Temp>> path : inPaths) {
-            out.addAll(path.value);
+        for (Set<Temp> path : inPaths) {
+            out.addAll(path);
         }
         return out;
     }
@@ -52,12 +75,13 @@ public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr, S
      * (the in set defined by the applying the transfer on the meet)
      * Returns true if set of live variables has changed.
      */
-    public boolean annotate(Instr v, Set<Temp> in, Set<Temp> out) {
-        if (v.in.containsAll(in) && in.containsAll(v.in)) {
-            return false;
+    public boolean annotate(Instr<Temp> v, Set<Temp> in, Set<Temp> out) {
+        if (live.containsKey(v)) {
+            if (live.get(v).containsAll(in) && in.containsAll(live.get(v))) {
+                return false;
+            }
         }
-        v.in = in;
-        v.out = out;
+        live.put(v, in);
         return true;
     }
 }

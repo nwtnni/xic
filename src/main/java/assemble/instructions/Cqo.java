@@ -2,22 +2,18 @@ package assemble.instructions;
 
 import assemble.*;
 
-public class Cqo extends Instr {
-    public Cqo() {
-    }
+public abstract class Cqo<A> extends Instr<A> {
+
+    private Cqo() {}
 
     @Override
-    public String toAbstractAssembly() {
-        return toAssembly();
-    }
-
-    @Override
-    public String toAssembly() {
+    public String toString() {
         return "cqo";
     }
 
-    @Override
-    public <T> T accept(InsVisitor<T> v) {
-        return v.visit(this);
+    public static class T extends Cqo<Temp> {
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
+
+    public static class R extends Cqo<Reg> {}
 }

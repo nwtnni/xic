@@ -1,12 +1,13 @@
 package assemble;
 
 import java.util.List;
-
 import java.util.ArrayList;
+import java.util.Optional;
 
 import static assemble.instructions.BinOp.Kind.*;
 import static assemble.instructions.DivMul.Kind.*;
 import static assemble.instructions.Setcc.Kind.*;
+import static assemble.instructions.InstrFactory.*;
 
 import assemble.instructions.*;
 import assemble.Config;
@@ -17,28 +18,30 @@ import ir.IRBinOp.OpType;
 import ir.IRMem.MemType;
 import xic.XicInternalException;
 
-public class Tiler extends IRVisitor<Temp> {
+import util.Pair;
+
+public class Tiler extends IRVisitor<Operand> {
 
     /**
      * Returns the list of abstract assembly code given an canonical IR tree
      */
-    public static CompUnit tile(IRNode t, ABIContext c) {
+    public static CompUnit<Temp> tile(IRNode t, ABIContext c) {
         TempFactory.reset();
         Tiler tiler = new Tiler(c);
         t.accept(tiler);
         return tiler.unit;
     }
 
-    public static final boolean INCLUDE_COMMENTS = false;
+    public static final boolean INCLUDE_COMMENTS = true;
 
     // Mangled names context
     private ABIContext context;
 
     // Running list of assembly instructions
-    private CompUnit unit;
+    private CompUnit<Temp> unit;
 
     // Current list of instructions
-    List<Instr> instrs;
+    List<Instr<Temp>> instrs;
 
     // 1 if current function has multiple returns else 0
     private int calleeIsMultiple;
@@ -50,12 +53,11 @@ public class Tiler extends IRVisitor<Temp> {
     private Temp calleeReturnAddress;
 
     // Return label of current function visited
-    private Label returnLabel;
+    private Label<Temp> returnLabel;
 
     private Tiler(ABIContext c) {
         this.context = c;
-        this.unit = new CompUnit();
-
+        this.unit = new CompUnit<>();
         this.instrs = new ArrayList<>();
         this.calleeIsMultiple = 0;
         this.callerNumArgs = 0;
@@ -88,11 +90,22 @@ public class Tiler extends IRVisitor<Temp> {
         return context.getNumReturns(fn);
     }
 
+    /**
+     * Checks if this node is an IRConst, and returns the corresponding
+     * Imm if it is.
+     */
+    private Optional<Imm> checkImm(IRNode node) {
+        if (!(node instanceof IRConst)) return Optional.empty();
+
+        IRConst c = (IRConst) node;
+        return Optional.of(new Imm(c.value()));
+    }
+
     /*
      * Psuedo-visit method for visiting a list of nodes.
      */
-    public List<Temp> visit(List<IRNode> nodes) {
-        List<Temp> t = new ArrayList<>();
+    public List<Operand> visit(List<IRNode> nodes) {
+        List<Operand> t = new ArrayList<>();
         for (IRNode n : nodes) {
             t.add(n.accept(this));
         }
@@ -103,17 +116,17 @@ public class Tiler extends IRVisitor<Temp> {
      * Visitor methods ---------------------------------------------------------------------
      */
     
-    public Temp visit(IRCompUnit c) {
+    public Operand visit(IRCompUnit c) {
         for (IRFuncDecl fn : c.functions().values()) {
             fn.accept(this);
         }
         return null;
     }
 
-    public Temp visit(IRFuncDecl f) {
+    public Operand visit(IRFuncDecl f) {
+
         // Reset instance variables for each function
         instrs = new ArrayList<>();
-
         String funcName = f.name();
 
         // Set the number of returns
@@ -122,8 +135,9 @@ public class Tiler extends IRVisitor<Temp> {
         // If function has multiple returns, save return address from arg 0 to a temp
         if (returns > 2) {
             calleeIsMultiple = 1;
-            calleeReturnAddress = TempFactory.generate("RETURN");
-            instrs.add(0, new Mov(calleeReturnAddress, Temp.calleeArg(0)));
+            Temp returnAddr = Config.calleeArg(0).getTemp();
+            Temp returnTemp = TempFactory.generate("RETURN");
+            instrs.add(0, movRR(returnAddr, returnTemp));
         } else {
             calleeIsMultiple = 0;
             calleeReturnAddress = null;
@@ -133,23 +147,26 @@ public class Tiler extends IRVisitor<Temp> {
         int args = numArgs(funcName) + calleeIsMultiple;
 
         // Set return label
-        returnLabel = Label.retLabel(f);
+        returnLabel = labelFromRet(f);
 
         // Tile the function body
         f.body().accept(this);
 
 
         // Set up prologue and epilogue
-        FuncDecl fn = new FuncDecl(f, args, returns, instrs);
+        FuncDecl.T fn = new FuncDecl.T(f, args, returns, instrs);
         unit.fns.add(fn);
         
         return null;
     }
 
-    public Temp visit(IRBinOp b) {
-        Temp dest = TempFactory.generate();
-        Temp left = b.left().accept(this);
-        Temp right = b.right().accept(this);
+
+    public Operand visit(IRBinOp b) {
+        Optional<Imm> immL = checkImm(b.left());
+        Optional<Imm> immR = checkImm(b.right());
+
+        Operand left = b.left().accept(this);
+        Operand right = b.right().accept(this);
         
         BinOp.Kind bop = null;
         switch (b.type()) {
@@ -168,21 +185,13 @@ public class Tiler extends IRVisitor<Temp> {
             case XOR:
                 bop = XOR;
                 break;
-            case LSHIFT:
-                bop = LSHIFT;
-                break;
-            case RSHIFT:
-                bop = RSHIFT;
-                break;
-            case ARSHIFT:
-                bop = ARSHIFT;
-                break;
             default:
         }
+
         if (bop != null) {
-            instrs.add(new Mov(dest, left));
-            instrs.add(new BinOp(bop, dest, right));
-            return dest;
+            Pair<Operand, List<Instr<Temp>>> tiling = binOp(bop, left, right, immL, immR);
+            instrs.addAll(tiling.second);
+            return tiling.first;
         }
 
         DivMul.Kind uop = null;
@@ -201,15 +210,11 @@ public class Tiler extends IRVisitor<Temp> {
                 break;
             default:
         }
+
         if (uop != null) {
-            instrs.add(new Mov(Temp.RAX, left));
-            if (uop == DIV || uop == MOD) {
-                instrs.add(new Cqo());
-            }
-            DivMul op = new DivMul(uop, right);
-            instrs.add(op);
-            instrs.add(new Mov(dest, op.destTemp));
-            return dest;
+            Pair<Operand, List<Instr<Temp>>> tiling = divMul(uop, left, right, immL, immR);
+            instrs.addAll(tiling.second);
+            return tiling.first;
         }
             
         Setcc.Kind flag = null;
@@ -234,15 +239,16 @@ public class Tiler extends IRVisitor<Temp> {
                 break;
             default:
         }
-        instrs.add(new Cmp(right, left));
+        instrs.addAll(cmp(left, right));
         // TODO: this is sub-optimal use of setcc which can use other registers
-        instrs.add(new Mov(Temp.RAX, Temp.imm(0)));
-        instrs.add(new Setcc(flag));
-        instrs.add(new Mov(dest, Temp.RAX));
-        return dest;
+        instrs.add(movIR(new Imm(0), Temp.RAX));
+        instrs.add(setcc(flag));
+        Temp t = TempFactory.generate();
+        instrs.add(movRR(Temp.RAX, t));
+        return Operand.temp(t);
     }
     
-    public Temp visit(IRCall c) {
+    public Operand visit(IRCall c) {
         String target = c.target().name();
 
         int callIsMultiple = 0;
@@ -258,26 +264,101 @@ public class Tiler extends IRVisitor<Temp> {
 
             // CALLER defines address that is passed as CALLER_RET_ADDR
             // Address passed is the same as address to write ret2 to
-            instrs.add(new Lea(Temp.callerArg(0), Temp.callerRet(2, callerNumArgs)));
+
+            // These unwraps are guaranteed to be safe based on our stack layout
+            Temp callerArg = Config.callerArg(0).getTemp();
+            Mem<Temp> callerRet = Config.callerRet(2, callerNumArgs).getMem();
+            instrs.add(lea(callerRet, callerArg));
         }
 
         // CALLER args
         // callIsMultiple deined by this CALL
         for (int i = 0; i < c.size(); i++) {
-            Temp val = c.get(i).accept(this);
-            instrs.add(new Mov(Temp.callerArg(i + callIsMultiple), val));
+
+            Optional<Imm> imm = checkImm(c.get(i)); 
+            Operand arg = Config.callerArg(i + calleeIsMultiple);
+
+            // Constant argument into register argument
+            if (imm.isPresent() && arg.isTemp()) {
+                instrs.add(movIR(imm.get(), arg.getTemp()));
+            }
+            
+            // Constant argument into the stack for arguments
+            else if (imm.isPresent() && arg.isMem()) {
+                instrs.add(movIM(imm.get(), arg.getMem()));
+            }
+
+            // Non-constant argument into something
+            else {
+                Operand val = c.get(i).accept(this);
+                instrs.addAll(mov(val, Config.callerArg(i + callIsMultiple)));
+            }
         }
 
-        instrs.add(new Call(target, callerNumArgs, numRets));
-        return Temp.callerRet(0, callerNumArgs);
+        instrs.add(call(target, callerNumArgs, numRets));
+        return Config.callerRet(0, callerNumArgs);
     }
 
-    public Temp visit(IRCJump c) {
+    public Operand visit(IRCJump c) {
+
         if (c.cond instanceof IRBinOp) {
             IRBinOp bop = (IRBinOp) c.cond;
-            Temp left = bop.left().accept(this);
-            Temp right = bop.right().accept(this);
-            instrs.add(new Cmp(right, left));
+
+            Optional<Imm> immL = checkImm(bop.left());
+            Optional<Imm> immR = checkImm(bop.right());
+
+            // Both immediates; try to shuttle via registers
+            if (immL.isPresent() && immR.isPresent()) {
+
+                instrs.addAll(cmpII(immL.get(), immR.get()));
+
+            } else if (immR.isPresent()) {
+
+                Operand left = bop.left().accept(this);
+                
+                // Check if fits in imm32 for cmp instruction
+                if (Config.within(32, immR.get().getValue())) {
+
+                    // Check what the LHS side is: either temp or mem
+                    if (left.isTemp()) {
+                        instrs.add(cmpIR(immR.get(), left.getTemp()));
+                    } else {
+                    
+                        //Otherwise must shuttle
+                        Temp shuttle = TempFactory.generate("immR_mem_shuttle");
+                        instrs.add(movIR(immR.get(), shuttle));
+                        instrs.add(cmpRM(shuttle, left.getMem()));
+                    }
+
+                } else {
+                    
+                    //Otherwise shuttle
+                    Temp shuttle = TempFactory.generate("immR_shuttle");
+                    instrs.add(movIR(immR.get(), shuttle));
+
+                    // Check what the LHS side is
+                    if (left.isTemp()) {
+                        instrs.add(cmpRR(shuttle, left.getTemp()));
+                    } else {
+                        instrs.add(cmpRM(shuttle, left.getMem()));
+                    }
+                }
+
+            } else if (immL.isPresent()) {
+                
+                Operand right = bop.right().accept(this);
+
+                // Have to shuttle since only IR addressing, no RI
+                Temp shuttle = TempFactory.generate("immL_shuttle");
+                instrs.add(movIR(immL.get(), shuttle));
+
+                if (right.isTemp()) {
+                    instrs.add(cmpRR(right.getTemp(), shuttle));
+                } else {
+                    instrs.add(cmpMR(right.getMem(), shuttle));
+                }
+            }
+
             Jcc.Kind flag = null;
             switch (bop.type()) {
                 case EQ:
@@ -304,113 +385,193 @@ public class Tiler extends IRVisitor<Temp> {
                 default:
                     throw XicInternalException.runtime("Invalid binop for CJUMP");
             }
-            instrs.add(new Jcc(flag, c.trueLabel()));
+            instrs.add(jcc(flag, c.trueLabel()));
             return null;
         }
 
-        Temp cond = c.cond.accept(this);
-        instrs.add(new Cmp(Temp.imm(1), cond));
-        instrs.add(new Jcc(Jcc.Kind.Z, c.trueLabel()));
+        Optional<Imm> imm = checkImm(c.cond);
+
+        // Immediate condition
+        if (imm.isPresent()) {
+            instrs.addAll(cmpII(new Imm(1), imm.get()));
+            instrs.add(jcc(Jcc.Kind.Z, c.trueLabel()));
+            return null;
+        }
+
+        // Otherwise is either a temp or mem
+        Operand cond = c.cond.accept(this);
+
+        if (cond.isTemp()) {
+            instrs.add(cmpIR(new Imm(1), cond.getTemp()));
+        } else {
+            // Must shuttle due to addressing modes for cmp
+            Temp shuttle = TempFactory.generate("cond_shuttle");
+            instrs.add(movIR(new Imm(1), shuttle));
+            instrs.add(cmpRM(shuttle, cond.getMem()));
+        }
+
+        instrs.add(jcc(Jcc.Kind.Z, c.trueLabel()));
         return null;
     }
 
-    public Temp visit(IRConst c) {
-        return Temp.imm(c.value());
-    }
-
-    public Temp visit(IRJump j) {
-        instrs.add(Jmp.fromJmp(j));
+    public Operand visit(IRConst c) {
+        // TODO: make sure we catch all constants
         return null;
     }
 
-    public Temp visit(IRESeq e) {
+    public Operand visit(IRJump j) {
+        instrs.add(jmpFromIRJump(j));
+        return null;
+    }
+
+    public Operand visit(IRESeq e) {
         throw XicInternalException.runtime("IRESeq is not canonical");
     }
 
-    public Temp visit(IRExp e) {
+    public Operand visit(IRExp e) {
         // TODO: add tile to deal with procedure calls with no returns
         // in the form of IRExp(IRCall(...))
-        throw XicInternalException.runtime("IRExp is not canoncial");        
+        throw XicInternalException.runtime("IRExp is not canonical");        
     }
 
-    public Temp visit(IRLabel l) {
-        instrs.add(Label.label(l));
+    public Operand visit(IRLabel l) {
+        instrs.add(labelFromIRLabel(l));
         return null;
     }
 
-    public Temp visit(IRMem m) {
+    public Operand visit(IRMem m) {
         // Use set temporaries to make allocator use addressing modes 
         // for immutable memory accesses
         if (m.memType() == MemType.IMMUTABLE && m.expr() instanceof IRBinOp) {
+
             IRBinOp bop = (IRBinOp) m.expr();
             assert bop.type() == OpType.ADD;
+
             if (bop.left() instanceof IRTemp) { 
+
                 // B + off
                 if (bop.right() instanceof IRConst) {
-                    Temp base = bop.left().accept(this);
-                    Temp offset = bop.right().accept(this);
 
-                    // off must be within 32 bits
-                    assert Config.within(32, offset.value);
+                    Operand base = bop.left().accept(this);
+                    Imm offset = checkImm(bop.right()).get();
 
-                    return Temp.mem(base, (int) offset.value);
+                    // Off must be within 32 bits
+                    assert Config.within(32, offset.getValue());
+
+                    // B must be a temp, not nested memory access
+                    if (base.isTemp()) {
+                        Mem<Temp> mem = Mem.of(base.getTemp(), (int) offset.getValue());
+                        return Operand.mem(mem);
+                    } else {
+                        throw XicInternalException.runtime("Nested memory access");
+                    }
 
                 // B + R * scale
                 } else if (bop.right() instanceof IRBinOp) {
-                    Temp base = bop.left().accept(this);
+
+                    Operand base = bop.left().accept(this);
     
                     IRBinOp index = (IRBinOp) bop.right();
+
                     assert index.type() == OpType.MUL &&
                         index.left() instanceof IRTemp &&
                         index.right() instanceof IRConst;
                         
-                    Temp reg = index.left().accept(this);
-                    Temp scale = index.right().accept(this);
+                    Operand reg = index.left().accept(this);
+                    Imm scale = checkImm(index.right()).get();
+
+                    // Assumes no nested memory access
+                    assert base.isTemp() && reg.isTemp();
                     
-                    return Temp.mem(base, reg, 0, (int) scale.value);
+                    Mem<Temp> mem = Mem.of(
+                        base.getTemp(),
+                        reg.getTemp(),
+                        0,
+                        (int) scale.getValue()
+                    );
+
+                    return Operand.mem(mem);
                 }
             }
         }
 
         Temp t = TempFactory.generate();
-        instrs.add(new Mov(t, m.expr().accept(this)));
-        return Temp.mem(t);
+        instrs.addAll(mov(m.expr().accept(this), Operand.temp(t)));
+        return Operand.mem(Mem.of(t));
     }
 
-    public Temp visit(IRMove m) {
-        Temp src = m.src().accept(this);
-        Temp dest = m.target().accept(this);
-        if (src.isMem()) {
-            Temp t = TempFactory.generate();
-            instrs.add(new Mov(t, src));
-            src = t;
+    // TODO: currently assumes the dest of an IRMove is never a constant
+
+    // TODO: we are getting an assertion error here!
+    public Operand visit(IRMove m) {
+
+        // Must be Mem<Temp> or else IRGen has a bug
+        Operand dest = m.target().accept(this);
+            
+
+        Optional<Imm> imm = checkImm(m.src());
+
+        if (imm.isPresent()) {
+            if (dest.isTemp()) {
+                instrs.add(movIR(imm.get(), dest.getTemp()));
+            } else {
+                instrs.add(movIM(imm.get(), dest.getMem()));
+            }
+            return null;
         }
-        instrs.add(new Mov(dest, src));
+
+        Operand src = m.src().accept(this);
+        instrs.addAll(mov(src, dest));
         return null;
     }
 
-    public Temp visit(IRName n) {
+    public Operand visit(IRName n) {
         throw XicInternalException.runtime("IRName not visited");
     }
 
-    public Temp visit(IRReturn r) {
+    public Operand visit(IRReturn r) {
         // CALLEE returns (write by callee)
         for (int i = r.size() - 1; i >= 0; i--) {
-            Temp val = r.get(i).accept(this);
-            instrs.add(new Mov(Temp.calleeRet(calleeReturnAddress, i), val));
+
+            Optional<Imm> imm = checkImm(r.get(i));
+
+            // Constant return
+            if (imm.isPresent()) {
+                
+                Operand ret = Config.calleeRet(calleeReturnAddress, i);
+                
+                // Check if return is a register or on the stack
+                if (ret.isTemp()) {
+                    instrs.add(movIR(imm.get(), ret.getTemp()));
+                } else {
+                    instrs.add(movIM(imm.get(), ret.getMem()));
+                }
+
+            }
+            
+            // Otherwise temp or mem
+            else {
+                instrs.addAll(
+                    mov(
+                        r.get(i).accept(this),
+                        Config.calleeRet(calleeReturnAddress, i)
+                    )
+                );
+            }
         }
-        instrs.add(Jmp.toLabel(returnLabel));
+
+        instrs.add(jmpFromLabel(returnLabel));
         return null;
     }
 
-    public Temp visit(IRSeq s) { 
+    public Operand visit(IRSeq s) { 
         int i = 0;
         for(IRNode stmt : s.stmts()) {
             if (INCLUDE_COMMENTS) {
                 String ir = "\nStmt " + i + ": " + stmt;
                 ir = ir.replaceAll("\n\\s*", "\n# ");
                 ir = ir.substring(0, ir.length() - 3);
-                instrs.add(Text.comment(ir));
+                instrs.add(comment(ir));
             }
             stmt.accept(this);
             i++;
@@ -418,7 +579,7 @@ public class Tiler extends IRVisitor<Temp> {
         return null;
     }
 
-    public Temp visit(IRTemp t) {
+    public Operand visit(IRTemp t) {
         String name = t.name();
 
         // CALLEE args (read by callee)
@@ -426,17 +587,17 @@ public class Tiler extends IRVisitor<Temp> {
             // isMultiple defined by FUNCDECL to offset for multiple 
             // return address passed as arg0
             int num = Integer.parseInt(name.substring(4)) + calleeIsMultiple;
-            return Temp.calleeArg(num);
+            return Config.calleeArg(num);
         } 
 
         // CALLER returns (read by caller)
         if (name.matches(Configuration.ABSTRACT_RET_PREFIX + "\\d+")) {
             // callerNumArgs defined by CALL
             int num = Integer.parseInt(name.substring(4));
-            return Temp.callerRet(num, callerNumArgs);
+            return Config.callerRet(num, callerNumArgs);
         }
 
         // Default temp
-        return Temp.temp(name);
+        return Operand.temp(new Temp(name));
     }
 }

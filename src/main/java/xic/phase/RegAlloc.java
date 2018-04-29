@@ -22,9 +22,9 @@ public class RegAlloc extends Phase {
 
         if (previous.isErr()) return previous;
 
-        CompUnit assembly = previous.ok().getAssembled();
+        CompUnit<Temp> assembly = previous.ok().getAssembled();
 
-        // Debug
+        // Debug abstract assembly
         String out = Filename.concat(config.sink, config.unit);
         out = Filename.setExtension(out, "as.s");
         Filename.makePathTo(out);
@@ -32,7 +32,7 @@ public class RegAlloc extends Phase {
         try {
             FileWriter w = new FileWriter(out);
 
-            for (String i : assembly.toAbstractAssembly()) {
+            for (String i : assembly.toAssembly()) {
                 w.append(i + "\n");
             }
 
@@ -47,13 +47,38 @@ public class RegAlloc extends Phase {
         Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getCfgs();
 
         // Run analyses and optimizations
+
+        // TODO: move this stuff to the allocator
+
+
+        out = out.substring(0, out.length() - 4);
+
         for(ASAGraph<Set<Temp>> cfg : cfgs.values()) {
-            LiveVariableWorklist lv = new LiveVariableWorklist(cfg);
-            lv.doWorklist();
+            Map<Instr<Temp>, Set<Temp>> lv = LiveVariableWorklist.computeLiveVariables(cfg);
+
+            String lvOut = out + cfg.originalFn.sourceName + ".lv.s";
+
+            // Debug LV
+            try {
+                FileWriter lvw = new FileWriter(lvOut);
+
+                FuncDecl<Temp> fn = cfg.toASA();
+
+                lvw.append(fn.sourceName + "\n");
+                for (Instr<Temp> i : fn.stmts) {
+                    lvw.append(i + ": \n");
+                    lvw.append("live: " + lv.get(i) + "\n");
+                    lvw.append("\n");
+                }
+
+                lvw.close();
+            } catch (IOException e) {
+            }
+
         }
 
-        // Convert back to IR
-        CompUnit after = new CompUnit();
+        // Convert back to ASA
+        CompUnit<Temp> after = new CompUnit<>();
         for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
             after.fns.add(cfg.toASA());
             try {
@@ -61,41 +86,21 @@ public class RegAlloc extends Phase {
             } catch (Exception e) {}
         }
 
-        // Debug LV
-        out = Filename.setExtension(out, "lv.s");
-        try {
-            FileWriter lvw = new FileWriter(out);
-            for (FuncDecl fn : after.fns) {
+        // CompUnit<Reg> allocated = Allocator.allocate(after);
 
-                lvw.append(fn.sourceName + "\n");
-                for (Instr i : fn.stmts) {
-                    lvw.append(i + ": \n");
-                    lvw.append("in: " + i.in + "\n");
-                    lvw.append("use: " + i.use + "\n");
-                    lvw.append("def: " + i.def + "\n");
-                    lvw.append("out: " + i.out + "\n");
-                    lvw.append("\n");
-                }
-            }
-            lvw.close();
-        } catch (IOException e) {
-        }
+        // out = Filename.concat(config.sink, config.unit);
+        // out = Filename.setExtension(out, "s");
+        // Filename.makePathTo(out);
 
-        CompUnit allocated = Allocator.allocate(after);
+        // try {
+        //     FileWriter w = new FileWriter(out);
 
-        out = Filename.concat(config.sink, config.unit);
-        out = Filename.setExtension(out, "s");
-        Filename.makePathTo(out);
-
-        try {
-            FileWriter w = new FileWriter(out);
-
-            for (String i : allocated.toAssembly()) {
-                w.append(i + "\n");
-            }
-            w.close();
-        } catch (IOException e) {
-        }
+        //     for (String i : allocated.toAssembly()) {
+        //         w.append(i + "\n");
+        //     }
+        //     w.close();
+        // } catch (IOException e) {
+        // }
 
         return new Result<>(Product.assembled(after));
     }

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 
 import org.jgrapht.Graph;
@@ -20,14 +21,15 @@ public class InterferenceGraph {
     private Set<Temp> vertices;
     private int colors;
 
-    public InterferenceGraph(List<Instr> instructions, int colors) {
+    public InterferenceGraph(List<Instr<Temp>> instructions, Map<Instr<Temp>, Set<Temp>> liveVars, int colors) {
 
         graph = new DefaultDirectedGraph<>((a, b) -> new PairEdge<>(a, b, null));
         vertices = new HashSet<>();
     
-        for (Instr instr : instructions) {
-        
-            List<Temp> live = new ArrayList<>(instr.in);
+        for (Instr<Temp> instr : instructions) {
+            
+            // TODO: update when LV returns a map
+            List<Temp> live = new ArrayList<>(liveVars.get(instr));
             int size = live.size();
 
             for (int i = 0; i < size; i++) {

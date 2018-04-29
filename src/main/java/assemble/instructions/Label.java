@@ -1,34 +1,19 @@
 package assemble.instructions;
 
+import assemble.*;
 import ir.IRFuncDecl;
 import ir.IRLabel;
 
-public class Label extends Instr {
+public abstract class Label<A> extends Instr<A> {
+
     protected String name;
-
-    /**
-     * Generate a label from an IRLabel
-     */
-    public static Label label(IRLabel l) {
-        return new Label(l.name() + ":");
-    }
-
-    /**
-     * Generate a label from an IRLabel
-     */
-    public static Label funLabel(IRFuncDecl fn) {
-        return new Label(fn.name()+ ":");
-    }
-
-    /**
-     * Generate a label from an IRFuncDecl 
-     */
-    public static Label retLabel(IRFuncDecl fn) {
-        return new Label("_RET_" + fn.name() + ":");
-    }
 
     private Label(String name) {
         this.name = name;
+    }
+
+    private Label(IRLabel l) {
+        this.name = l.name() + ":";
     }
 
     public String name() {
@@ -53,18 +38,15 @@ public class Label extends Instr {
         return name;
     }
 
-    @Override
-    public String toAbstractAssembly() {
-        return toAssembly();
+    public static class T extends Label<Temp> {
+        public T(String name) { super(name); }
+        public T(IRLabel label) { super(label); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
-    @Override
-    public String toAssembly() {
-        return name;
-    }
-    
-    @Override
-    public <T> T accept(InsVisitor<T> v) {
-        return v.visit(this);
+    public static class R extends Label<Reg> {
+        public R(Label<Temp> label) { super(label.name() + ":"); }
+        public R(String name) { super(name); }
+        public R(IRLabel label) { super(label); }
     }
 }

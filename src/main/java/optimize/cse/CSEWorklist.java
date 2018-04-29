@@ -104,12 +104,11 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
      * Checks for equality of two expressions using the common subexpression and IRStmt that defined it
      */
     @Override
-    public Map<IRExpr, IRStmt> meet(Set<PairEdge<IRStmt, Map<IRExpr, IRStmt>>> paths) {        
+    public Map<IRExpr, IRStmt> meet(Set<Map<IRExpr, IRStmt>> paths) {        
 
         Map<IRExpr, IRStmt> in = null;
         
-        for (PairEdge<IRStmt, Map<IRExpr, IRStmt>> edge : paths) {
-            Map<IRExpr, IRStmt> s = edge.value;
+        for (Map<IRExpr, IRStmt> s : paths) {
             // only want to intersect if s has been initialized
             if (s != null) {
                 // Used to get the first set (to intersect with everything else)

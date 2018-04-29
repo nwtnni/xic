@@ -1,8 +1,10 @@
 package assemble.instructions;
 
+import assemble.*;
+
 import ir.IRLabel;
 
-public class Jcc extends Instr {
+public abstract class Jcc<A> extends Instr<A> {
 
     public enum Kind {
         E   ("e"),
@@ -19,26 +21,25 @@ public class Jcc extends Instr {
     }
 
     public Kind kind;
-    public Label target;
+    public Label<A> target;
 
-    public Jcc(Kind kind, IRLabel target) {
+    private Jcc(Kind kind, Label<A> target) {
         this.kind = kind;
-        this.target = Label.label(target);
-    }
-
-
-    @Override
-    public String toAbstractAssembly() {
-        return toAssembly();
+        this.target = target;
     }
 
     @Override
-    public String toAssembly() {
+    public String toString() {
         return String.format("j%s %s", kind.cond, target.name());
     }
 
-    @Override
-    public <T> T accept(InsVisitor<T> v) {
-        return v.visit(this);
+    public static class T extends Jcc<Temp> {
+        public T(Kind kind, IRLabel target) { super(kind, new Label.T(target)); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+    
+    public static class R extends Jcc<Reg> {
+        public R(Kind kind, IRLabel target) { super(kind, new Label.R(target)); }
+        public R(Kind kind, Label<Temp> target) { super(kind, new Label.R(target)); }
     }
 }

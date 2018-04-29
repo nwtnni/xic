@@ -14,7 +14,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 
 import assemble.Temp; 
 import assemble.CompUnit; 
-import assemble.Operand; 
+import assemble.Reg; 
 import assemble.instructions.Instr;
 
 import util.PairEdge;
@@ -23,19 +23,18 @@ public class ColorGraph {
 
     private Graph<Temp, PairEdge<Temp, Void>> graph;
     private Set<Temp> vertices;
-    private Map<Temp, Operand> coloring;
-    private Set<Operand> available;
+    private Map<Temp, Reg> coloring;
+    private Set<Reg> available;
 
-    public ColorGraph(List<Instr> instructions, Set<Operand> available) {
+    public ColorGraph(List<Instr<Temp>> instructions, Map<Instr<Temp>, Set<Temp>> liveVars, Set<Reg> available) {
 
         this.graph = new DefaultDirectedGraph<>((a, b) -> new PairEdge<>(a, b, null));
         this.vertices = new HashSet<>();
         this.coloring = new HashMap<>();
         this.available = new HashSet<>(available);
     
-        for (Instr instr : instructions) {
-        
-            List<Temp> live = new ArrayList<>(instr.in);
+        for (Instr<Temp> instr : instructions) {
+            List<Temp> live = new ArrayList<>(liveVars.get(instr));
             int size = live.size();
 
             for (int i = 0; i < size; i++) {
@@ -67,7 +66,7 @@ public class ColorGraph {
         if (isColored(t)) return true;
         
         // Copy available set
-        Set<Operand> available = new HashSet<Operand>(this.available);
+        Set<Reg> available = new HashSet<Reg>(this.available);
         
         // Disqualify all neighboring colors
         for (Temp s: Graphs.neighborListOf(graph, t)) {
@@ -78,7 +77,7 @@ public class ColorGraph {
         if (available.size() == 0) return false;
 
         // Choose any color
-        Operand color = available.stream()
+        Reg color = available.stream()
             .findAny()
             .get();
 
@@ -98,7 +97,7 @@ public class ColorGraph {
      *
      * Requires that the coloring is complete.
      */
-    public Map<Temp, Operand> getColoring() {
+    public Map<Temp, Reg> getColoring() {
         assert isDone(); 
         return coloring;
     }

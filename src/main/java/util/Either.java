@@ -8,7 +8,7 @@ public class Either<L, R> {
     private L left;
     private R right;
 
-    private Either(L left, R right) {
+    public Either(L left, R right) {
         this.kind = (left == null) ? Kind.RIGHT : Kind.LEFT;
         this.left = left; 
         this.right = right;
@@ -31,12 +31,17 @@ public class Either<L, R> {
     }
 
     public L getLeft() {
-        assert isLeft();
+        assert kind == Kind.LEFT;
         return left;
     }
 
     public R getRight() {
-        assert isRight();
+        assert kind == Kind.RIGHT;
         return right;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s of %s, %s", kind, left, right);
     }
 }

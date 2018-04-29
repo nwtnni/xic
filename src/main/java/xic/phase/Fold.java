@@ -24,7 +24,7 @@ import xic.XicInternalException;
  */
 public class Fold extends Phase {
 
-    private boolean outputCFG;
+    protected boolean outputCFG;
 
     public Fold() { kind = Phase.Kind.FOLD; }
 

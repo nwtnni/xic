@@ -7,9 +7,9 @@ import assemble.*;
 import assemble.instructions.*;
 import emit.IRLabelFactory;
 
-public class ASAGraphFactory<E> extends InsVisitor<Instr> {
+public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
 
-    public ASAGraphFactory(CompUnit compUnit, ASAEdgeFactory<E> edgeFactory) {
+    public ASAGraphFactory(CompUnit<Temp> compUnit, ASAEdgeFactory<E> edgeFactory) {
         this.compUnit = compUnit;
         this.edgeFactory = edgeFactory;
     }
@@ -17,7 +17,7 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
     private enum State { IN_BLOCK, OUT_OF_BLOCK; }
 
     /** The compilation unit to generate CFGs from. */
-    private CompUnit compUnit;
+    private CompUnit<Temp> compUnit;
 
     /** The edge factory used to contruct edges in the CFG */
     private ASAEdgeFactory<E> edgeFactory;
@@ -32,12 +32,12 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
     private State state;
 
     /** Previous statement in the assembly. */
-    private Instr prev;
+    private Instr<Temp> prev;
 
     /** Returns the list of CFGs for the compilation unit. */
     public Map<String, ASAGraph<E>> getCfgs() {
         Map<String, ASAGraph<E>> fns = new HashMap<>();
-        for (FuncDecl fn : compUnit.fns) {
+        for (FuncDecl<Temp> fn : compUnit.fns) {
             // Generate graph
             toCfg(fn);
             fns.put(fn.name, cfg);
@@ -45,14 +45,14 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
         return fns;
     }
 
-    public void toCfg(FuncDecl fn) {
+    public void toCfg(FuncDecl<Temp> fn) {
         state = State.IN_BLOCK;
 
-        Label start = Label.label(IRLabelFactory.generate("START"));
+        Label<Temp> start = new Label.T(IRLabelFactory.generate("START"));
         prev = start;
         cfg = new ASAGraph<>(fn, start, edgeFactory);
 
-        for (Instr ins : fn.stmts) {
+        for (Instr<Temp> ins : fn.stmts) {
             // Add edge if in a block and not the first node
             if (state == State.IN_BLOCK && prev != null) {
                 cfg.addVertex(ins);
@@ -63,43 +63,107 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
         }
     }
 
-    public Instr visit(BinOp i) {
+    /*
+     * BinOp Visitors
+     */
+
+    public Instr<Temp> visit(BinOp.TIR b) {
+        return b;
+    }
+
+    public Instr<Temp> visit(BinOp.TIM b) {
+        return b;
+    }
+
+    public Instr<Temp> visit(BinOp.TRM b) {
+        return b;
+    }
+
+    public Instr<Temp> visit(BinOp.TMR b) {
+        return b;
+    }
+
+    public Instr<Temp> visit(BinOp.TRR b) {
+        return b;
+    }
+
+    public Instr<Temp> visit(Call<Temp> i) {
         return i;
     }
 
-    public Instr visit(Call i) {
-        return i;
+    /*
+     * Call Visitor
+     */
+
+    public Instr<Temp> visit(Call.T c) {
+        return c;
     }
 
-    public Instr visit(Cmp i) {
-        return i;
+    /*
+     * Cmp Visitors
+     */
+
+    public Instr<Temp> visit(Cmp.TIR c) {
+        return c;
     }
 
-    public Instr visit(Cqo i) {
-        return i;
+    public Instr<Temp> visit(Cmp.TRM c) {
+        return c;
     }
 
-    public Instr visit(DivMul i) {
-        return i;
+    public Instr<Temp> visit(Cmp.TMR c) {
+        return c;
     }
 
-    public Instr visit(Jcc i) {
+    public Instr<Temp> visit(Cmp.TRR c) {
+        return c;
+    }
+
+    /*
+     * Cqo Visitor
+     */
+
+    public Instr<Temp> visit(Cqo.T c) {
+        return c;
+    }
+
+    /*
+     * DivMul Visitors
+     */
+
+    public Instr<Temp> visit(DivMul.TR d) {
+        return d;
+    }
+
+    public Instr<Temp> visit(DivMul.TM d) {
+        return d;
+    }
+
+    /*
+     * Jcc Visitor
+     */
+
+    public Instr<Temp> visit(Jcc.T j) {
         if (state == State.IN_BLOCK) {
             // Add edge to target
-            cfg.addVertex(i.target);
-            cfg.addEdge(i, i.target);
+            cfg.addVertex(j.target);
+            cfg.addEdge(j, j.target);
         }
 
         // Jcc falls through so no state change
-        return i;
+        return j;
     }
 
-    public Instr visit(Jmp i) {
+    /*
+     * Jmp Visitor
+     */
+
+    public Instr<Temp> visit(Jmp.T j) {
         if (state == State.IN_BLOCK) {
             // Add edge to jump target if not the return label
-            if (i.hasLabel() && !i.label.equals(cfg.originalFn.returnLabel)) {
-                cfg.addVertex(i.label);
-                cfg.addEdge(i, i.label);
+            if (j.hasLabel() && !j.label.equals(cfg.originalFn.returnLabel)) {
+                cfg.addVertex(j.label);
+                cfg.addEdge(j, j.label);
             }
             // TODO: add support for arbitary jumps
         }
@@ -109,50 +173,104 @@ public class ASAGraphFactory<E> extends InsVisitor<Instr> {
         return null;
     }
 
-    public Instr visit(Label i) {
+    /*
+     * Label Visitor
+     */
+
+    public Instr<Temp> visit(Label.T l) {
         if (state == State.IN_BLOCK) {
             // Remove fall-through edge to label
-            cfg.removeEdge(prev, i);
+            cfg.removeEdge(prev, l);
 
             // Inject jump between two consecutive labels
-            Jmp fallThrough = Jmp.toLabel(i);
+        Jmp<Temp> fallThrough = new Jmp.T(l);
             cfg.addVertex(fallThrough);
             cfg.addEdge(prev, fallThrough);
-            cfg.addEdge(fallThrough, i);
+            cfg.addEdge(fallThrough, l);
         }
 
         // Label starts a new block
         state = State.IN_BLOCK;
-        return i;
+        return l;
     }
 
-    public Instr visit(Lea i) {
-        return i;
+    /*
+     * Lea Visitor
+     */
+
+    public Instr<Temp> visit(Lea.T l) {
+        return l;
     }
 
-    public Instr visit(Mov i) {
-        return i;
+    /*
+     * Mov Visitors
+     */
+
+    public Instr<Temp> visit(Mov.TIR m) {
+        return m;
     }
 
-    public Instr visit(Pop i) {
-        return i;
+    public Instr<Temp> visit(Mov.TIM m) {
+        return m;
     }
 
-    public Instr visit(Push i) {
-        return i;
+    public Instr<Temp> visit(Mov.TRM m) {
+        return m;
     }
 
-    public Instr visit(Ret i) {
-        state = State.OUT_OF_BLOCK;
-        return null;
+    public Instr<Temp> visit(Mov.TMR m) {
+        return m;
     }
 
-    public Instr visit(Setcc i) {
-        return i;
+    public Instr<Temp> visit(Mov.TRR m) {
+        return m;
+    }
+    
+    /*
+     * Pop Visitors
+     */
+
+    public Instr<Temp> visit(Pop.TR p) {
+        return p;
     }
 
-    public Instr visit(Text i) {
-        return i;
+    public Instr<Temp> visit(Pop.TM p) {
+        return p;
     }
 
+    /*
+     * Push Visitors
+     */
+
+    public Instr<Temp> visit(Push.TR p) {
+        return p;
+    }
+
+    public Instr<Temp> visit(Push.TM p) {
+        return p;
+    }
+
+    /*
+     * Ret Visitor
+     */
+
+    public Instr<Temp> visit(Ret.T r) {
+        return r;
+    }
+
+    /*
+     * Setcc Visitor
+     */
+
+    public Instr<Temp> visit(Setcc.T s) {
+        return s;
+    }
+
+    /*
+     * Text Visitor
+     */
+
+    public Instr<Temp> visit(Text.T t) {
+        return t;
+    }
 }
