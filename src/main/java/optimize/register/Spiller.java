@@ -16,12 +16,7 @@ public class Spiller extends InstrVisitor<List<Instr<Temp>>> {
         List<Instr<Temp>> updated = new ArrayList<>(); 
 
         for (Instr<Temp> instr : instructions) {
-            System.out.println("\n\n--------------------------------------\n" + instr + "\n------------------------------------------\n\n");
             List<Instr<Temp>> expanded = instr.accept(this);
-            
-            for (Instr<Temp> i : expanded) {
-                System.out.println(i);
-            }
 
             updated.addAll(expanded);
         }

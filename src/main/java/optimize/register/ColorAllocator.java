@@ -88,8 +88,10 @@ public class ColorAllocator extends Allocator {
         coloring = null;
         int spillOffset = -8;
 
+        int myCounter = 0;
+
         // TODO loop and spill
-        while (coloring == null) {
+        while (coloring == null && myCounter <2) {
             ASAGraph<Set<Temp>> cfg = graphFactory.makeCfg(fn);
             fn = cfg.toASA();
 
@@ -118,6 +120,7 @@ public class ColorAllocator extends Allocator {
                 fn.stmts = spiller.spillAll(fn.stmts);
                 spillOffset = spillOffset - Config.WORD_SIZE * (spilled.size());
             }
+            myCounter ++;
         }
 
         for (Instr<Temp> i : fn.stmts) {

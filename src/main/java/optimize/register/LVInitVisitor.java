@@ -207,31 +207,30 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      * Mov Visitors
      */
 
-    public <L, R> Void visit(Mov.TIR m) {
+    public Void visit(Mov.TIR m) {
         update(m, EMPTY, Set.of(m.dest));
         return null;
     }
 
-    public <L, R> Void visit(Mov.TIM m) {
+    public Void visit(Mov.TIM m) {
         update(m, Mem.getTemps(m.dest), EMPTY);
         return null;
     }
 
-    public <L, R> Void visit(Mov.TRM m) {
+    public Void visit(Mov.TRM m) {
         Set<Temp> u = Mem.getTemps(m.dest);
         u.add(m.src);
         update(m, u, EMPTY);
         return null;
     }
 
-    public <L, R> Void visit(Mov.TMR m) {
+    public Void visit(Mov.TMR m) {
         Set<Temp> u = Mem.getTemps(m.src);
-        u.add(m.dest);
         update(m, u, Set.of(m.dest));
         return null;
     }
 
-    public <L, R> Void visit(Mov.TRR m) {
+    public Void visit(Mov.TRR m) {
         update(m, Set.of(m.src), Set.of(m.dest));
         return null;
     }

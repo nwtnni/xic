@@ -436,8 +436,8 @@ public class Tiler extends IRVisitor<Operand> {
                     Mem<Temp> mem = Mem.of(
                         base.getTemp(),
                         reg.getTemp(),
-                        0,
-                        (int) scale.getValue()
+                        (int) scale.getValue(),
+                        0
                     );
 
                     return Operand.mem(mem);
