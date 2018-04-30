@@ -93,7 +93,7 @@ public class ColorAllocator extends Allocator {
             ASAGraph<Set<Temp>> cfg = graphFactory.makeCfg(fn);
 
             // Compute use and def sets
-            Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init = LVInitVisitor.init(cfg.vertexSet());
+            Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init = LVInitVisitor.init(cfg);
             use = init.first;
             def = init.second;
 

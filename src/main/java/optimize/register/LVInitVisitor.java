@@ -16,19 +16,23 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      * Returns a pair of mappings of instructions to use/def sets for each 
      * instruction in the given set.
      */
-    public static Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init(Set<Instr<Temp>> nodes) {
-        LVInitVisitor visitor = new LVInitVisitor();
-        for (Instr<Temp> ins : nodes) {
+    public static Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init(ASAGraph<Set<Temp>> cfg) {
+        LVInitVisitor visitor = new LVInitVisitor(cfg);
+        for (Instr<Temp> ins : cfg.vertexSet()) {
             ins.accept(visitor);
         }
 
         return new Pair<>(visitor.use, visitor.def);
     }
 
-    private LVInitVisitor() {
+    private LVInitVisitor(ASAGraph<Set<Temp>> cfg) {
+        this.cfg = cfg;
         this.use = new HashMap<>();
         this.def = new HashMap<>();
     }
+
+    /** The cfg to initialize live variables on. */
+    ASAGraph<Set<Temp>> cfg;
 
     /** Set of uses at each program point. */
     private Map<Instr<Temp>, Set<Temp>> use;
@@ -169,7 +173,11 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      */
 
     public Void visit(Jmp.T j) {
-        update(j, EMPTY, EMPTY);
+        Set<Temp> use = EMPTY;
+        if (j.label.equals(cfg.originalFn.returnLabel)) {
+            use = Set.of(Temp.RAX, Temp.RDX);
+        }
+        update(j, use, EMPTY);
         return null;
     }
 
