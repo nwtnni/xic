@@ -1,9 +1,22 @@
 package optimize.register;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import assemble.*;
 import assemble.instructions.*;
 
 public class TempReplacer extends InstrVisitor<Boolean> {
+
+    public List<Instr<Temp>> replaceAll(List<Instr<Temp>> instructions) {
+        List<Instr<Temp>> updated = new ArrayList<>();
+
+        for (Instr<Temp> instr : instructions) {
+            if (replace(instr)) updated.add(instr);
+        }
+
+        return updated;
+    }
 
     private ColorGraph cg;
 

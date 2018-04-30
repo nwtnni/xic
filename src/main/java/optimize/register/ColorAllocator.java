@@ -135,14 +135,16 @@ public class ColorAllocator extends Allocator {
                 );
             ColorGraph cg = new ColorGraph(fn.stmts, liveVars, availableRegs);
             Either<Map<Temp, Reg>, Set<Temp>> result = cg.tryColor();
+            TempReplacer replacer = new TempReplacer(cg); 
 
             // If successfully colored, move on to allocating
             if (result.isLeft()) {
                 coloring = result.getLeft();
-
+                fn.stmts = replacer.replaceAll(fn.stmts);
             // Spill
             } else {
                 Set<Temp> spilled = result.getRight();
+                fn.stmts = replacer.replaceAll(fn.stmts);
                 Spiller spiller = new Spiller(spilled, spillOffset);
                 fn.stmts = spiller.spillAll(fn.stmts);
                 spillOffset = spillOffset - Config.WORD_SIZE * (spilled.size());
