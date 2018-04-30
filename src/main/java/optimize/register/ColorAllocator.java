@@ -133,7 +133,6 @@ public class ColorAllocator extends Allocator {
                         Reg.R10,
                         Reg.R11)
                 );
-            System.out.println(availableRegs);
             ColorGraph cg = new ColorGraph(fn.stmts, liveVars, availableRegs);
             Either<Map<Temp, Reg>, Set<Temp>> result = cg.tryColor();
 
