@@ -101,7 +101,8 @@ public class ColorAllocator extends Allocator {
             Map<Instr<Temp>, Set<Temp>> liveVars = LiveVariableWorklist.computeLiveVariables(cfg, use, def);
 
             // Optimistically color and coalesce
-            Either<Map<Temp, Reg>, Set<Temp>> result = ColorGraph.tryColor(fn.stmts, liveVars, availableRegs);
+            ColorGraph cg = new ColorGraph(fn.stmts, liveVars, availableRegs);
+            Either<Map<Temp, Reg>, Set<Temp>> result = cg.tryColor();
 
             // If successfully colored, move on to allocating
             if (result.isLeft()) {
@@ -115,6 +116,7 @@ public class ColorAllocator extends Allocator {
             }
 
             // Coalesce temps
+            TempReplacer.replaceAll(fn, cg);
 
         }
         

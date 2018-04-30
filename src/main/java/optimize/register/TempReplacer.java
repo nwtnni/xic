@@ -1,13 +1,33 @@
 package optimize.register;
 
+import java.util.*;
+
 import assemble.*;
 import assemble.instructions.*;
 
 public class TempReplacer extends InstrVisitor<Boolean> {
 
+    /**
+     * Coalesces temporaries in a FuncDecl fn given the analysis in ColorGraph cg.
+     */
+    public static FuncDecl<Temp> replaceAll(FuncDecl<Temp> fn, ColorGraph cg) {
+        TempReplacer t = new TempReplacer(cg);
+        List<Instr<Temp>> instrs = new ArrayList<>();
+
+        for (int i = 0; i < fn.stmts.size(); i++) {
+            Instr<Temp> ins = fn.stmts.get(i);
+            if (t.replace(ins)) {
+                instrs.add(ins);
+            }
+        }
+
+        fn.stmts = instrs;
+        return fn;
+    }
+
     private ColorGraph cg;
 
-    public TempReplacer(ColorGraph cg) {
+    private TempReplacer(ColorGraph cg) {
         this.cg = cg;
     }
 
@@ -17,7 +37,7 @@ public class TempReplacer extends InstrVisitor<Boolean> {
      * Returns true if this instruction must be kept in the list.
      * Returns false if this instruction can be deleted as a result of coalescing.
      */
-    public boolean replace(Instr<Temp> instr) {
+    private boolean replace(Instr<Temp> instr) {
         return instr.accept(this);
     }
 

@@ -25,53 +25,6 @@ import util.Pair;
 
 public class ColorGraph {
 
-    // Main register allocation function
-    public static Either<
-        Map<Temp, Reg>, // Complete coloring assignment of Temp to Register
-        Set<Temp>       // Set of spilled nodes
-    > tryColor(List<Instr<Temp>> instructions, Map<Instr<Temp>, Set<Temp>> liveVars, Set<Reg> available) {
-        
-        ColorGraph cg = new ColorGraph(instructions, liveVars, available);
-
-        while (!cg.simplifyWorklist.isEmpty()
-            && !cg.worklistMoves.isEmpty() 
-            && !cg.freezeWorklist.isEmpty()
-            && !cg.spillWorklist.isEmpty()) {
-
-            if (!cg.simplifyWorklist.isEmpty()) {
-                cg.simplify();
-            }
-            else if (!cg.worklistMoves.isEmpty()) {
-                cg.coalesce();
-            }
-            else if (!cg.freezeWorklist.isEmpty()) {
-                cg.freeze();
-            }
-            else if (!cg.spillWorklist.isEmpty()) {
-                cg.selectSpill();
-            }
-        }
-
-        if (cg.spilledNodes.isEmpty()) {
-            return Either.left(cg.color);
-        } else {
-            return Either.right(cg.spilledNodes);
-        }
-    }
-
-    /**
-     * Returns coalesced node mappings.
-     *
-     * All occurrences of Temp [n] should be replaced by Temp getAlias[n].
-     */
-    public Temp getAlias(Temp n) {
-        if (coalescedNodes.contains(n)) {
-            return getAlias(alias.get(n));
-        } else {
-            return n;
-        }
-    }
-
     private Set<Reg> available;
     private Set<Temp> initial;
 
@@ -103,7 +56,7 @@ public class ColorGraph {
     private Set<Pair<Temp, Temp>> worklistMoves;
     private Set<Pair<Temp, Temp>> activeMoves;
 
-    private ColorGraph(List<Instr<Temp>> instructions, Map<Instr<Temp>, Set<Temp>> liveVars, Set<Reg> available) {
+    public ColorGraph(List<Instr<Temp>> instructions, Map<Instr<Temp>, Set<Temp>> liveVars, Set<Reg> available) {
 
         this.available = new HashSet<>(available);
         this.alias = new HashMap<>();
@@ -181,6 +134,52 @@ public class ColorGraph {
             } else {
                 simplifyWorklist.add(t);
             }
+        }
+    }
+
+
+    /** Main register allocation function */
+    public Either<
+        Map<Temp, Reg>, // Complete coloring assignment of Temp to Register
+        Set<Temp>       // Set of spilled nodes
+    > tryColor() {
+
+        while (!this.simplifyWorklist.isEmpty()
+            && !this.worklistMoves.isEmpty() 
+            && !this.freezeWorklist.isEmpty()
+            && !this.spillWorklist.isEmpty()) {
+
+            if (!this.simplifyWorklist.isEmpty()) {
+                this.simplify();
+            }
+            else if (!this.worklistMoves.isEmpty()) {
+                this.coalesce();
+            }
+            else if (!this.freezeWorklist.isEmpty()) {
+                this.freeze();
+            }
+            else if (!this.spillWorklist.isEmpty()) {
+                this.selectSpill();
+            }
+        }
+
+        if (this.spilledNodes.isEmpty()) {
+            return Either.left(this.color);
+        } else {
+            return Either.right(this.spilledNodes);
+        }
+    }
+
+    /**
+     * Returns coalesced node mappings.
+     *
+     * All occurrences of Temp [n] should be replaced by Temp getAlias[n].
+     */
+    public Temp getAlias(Temp n) {
+        if (coalescedNodes.contains(n)) {
+            return getAlias(alias.get(n));
+        } else {
+            return n;
         }
     }
 
