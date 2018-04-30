@@ -32,7 +32,7 @@ public class Mem<T> {
     public static <A> Mem<A> of(A reg, int offset) {
         assert reg != null;
         assert offset % Config.WORD_SIZE == 0;
-        return new Mem<>(Kind.RO, null, reg, offset, 0);
+        return new Mem<>(Kind.RO, null, reg, 0, offset);
     }
 
     /**
@@ -56,11 +56,11 @@ public class Mem<T> {
      * 
      * Scale must be 1, 2, 4 or 8
      */
-    public static <A> Mem<A> of(A reg, int offset, int scale) {
+    public static <A> Mem<A> of(A reg, int scale, int offset) {
         assert reg != null;
         assert offset % Config.WORD_SIZE == 0;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
-        return new Mem<>(Kind.RSO, null, reg, offset, scale);
+        return new Mem<>(Kind.RSO, null, reg, scale, offset);
     }
 
     /**
@@ -69,11 +69,11 @@ public class Mem<T> {
      * 
      * Scale must be 1, 2, 4 or 8
      */
-    public static <A> Mem<A> of(A base, A reg, int offset, int scale) {
+    public static <A> Mem<A> of(A base, A reg, int scale, int offset) {
         assert base != null && reg != null;
         assert offset % Config.WORD_SIZE == 0;
         assert scale == 1 || scale == 2 || scale == 4 || scale == 8;
-        return new Mem<>(Kind.BRSO, base, reg, offset, scale);
+        return new Mem<>(Kind.BRSO, base, reg, scale, offset);
     }
 
     /**
@@ -81,7 +81,7 @@ public class Mem<T> {
      */
     public static Mem<Reg> allocate(Mem<Temp> mem, Reg reg) {
         assert mem.kind != Kind.BRSO;
-        return new Mem<>(mem.kind, null, reg, mem.offset, mem.scale);
+        return new Mem<>(mem.kind, null, reg, mem.scale, mem.offset);
     }
 
     /**
@@ -89,18 +89,18 @@ public class Mem<T> {
      */
     public static Mem<Reg> allocate(Mem<Temp> mem, Reg base, Reg reg) {
         assert mem.kind == Kind.BRSO;
-        return new Mem<>(mem.kind, base, reg, mem.offset, mem.scale);
+        return new Mem<>(mem.kind, base, reg, mem.scale, mem.offset);
     }
 
     /**
      * Private constructor.
      */
-    private Mem(Kind kind, T base, T reg, int offset, int scale) {
+    private Mem(Kind kind, T base, T reg, int scale, int offset) {
         this.kind = kind;
         this.base = base;
         this.reg = reg;
-        this.offset = offset;
         this.scale = scale;
+        this.offset = offset;
     }
 
     /**

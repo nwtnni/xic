@@ -90,11 +90,32 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      */
 
     public Void visit(Call.T c) {
+        int numArgs = c.numArgs;
+        Set<Temp> useTemps = new HashSet<>();
+        if (numArgs >=1) {
+            useTemps.add(Temp.RDI);
+        }
+        if (numArgs >=2) {
+            useTemps.add(Temp.RSI);
+        }
+        if (numArgs >=3) {
+            useTemps.add(Temp.R8);
+        }
+        if (numArgs >=4) {
+            useTemps.add(Temp.R9);
+        }
+        if (numArgs >=5) {
+            useTemps.add(Temp.R10);
+        }
+        if (numArgs >=6) {
+            useTemps.add(Temp.R11);
+        }
+
         update(c, 
+            useTemps,
             Set.of(Temp.RAX, Temp.RCX, Temp.RDX, 
-                    Temp.RSI, Temp.RDI, Temp.R8, 
-                    Temp.R9, Temp.R10, Temp.R11),
-            EMPTY
+            Temp.RDI, Temp.RSI, Temp.R8, 
+            Temp.R9, Temp.R10, Temp.R11)
         );
         return null;
     }
@@ -207,31 +228,30 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      * Mov Visitors
      */
 
-    public <L, R> Void visit(Mov.TIR m) {
+    public Void visit(Mov.TIR m) {
         update(m, EMPTY, Set.of(m.dest));
         return null;
     }
 
-    public <L, R> Void visit(Mov.TIM m) {
+    public Void visit(Mov.TIM m) {
         update(m, Mem.getTemps(m.dest), EMPTY);
         return null;
     }
 
-    public <L, R> Void visit(Mov.TRM m) {
+    public Void visit(Mov.TRM m) {
         Set<Temp> u = Mem.getTemps(m.dest);
         u.add(m.src);
         update(m, u, EMPTY);
         return null;
     }
 
-    public <L, R> Void visit(Mov.TMR m) {
+    public Void visit(Mov.TMR m) {
         Set<Temp> u = Mem.getTemps(m.src);
-        u.add(m.dest);
         update(m, u, Set.of(m.dest));
         return null;
     }
 
-    public <L, R> Void visit(Mov.TRR m) {
+    public Void visit(Mov.TRR m) {
         update(m, Set.of(m.src), Set.of(m.dest));
         return null;
     }
