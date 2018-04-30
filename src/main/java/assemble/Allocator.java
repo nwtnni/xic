@@ -32,6 +32,12 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
     // Required for allocator classes to overload
     protected abstract Optional<Reg> allocate(Temp t, int index); 
 
+    // Map of named temps to offset on stack
+    protected Map<String, Integer> tempStack;
+
+    // Number of temps on the stack - 1
+    protected int tempCounter;
+
     /**
      * Load the memory address corresponding to this Mem operand.
      */
@@ -57,10 +63,43 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
         return null;
     }
 
+    /**
+     * Push a named temp to the stack.
+     */
+    protected Mem<Reg> storeTemp(String name) {
+        if (tempStack.containsKey(name)) return loadTemp(name);
+
+        tempStack.put(name, tempCounter++);
+        return loadTemp(name);
+    }
+
+    /**
+     * Get the mem operand to a temp on the stack.
+     * Equivalent to -(i+1)*8(%rbp) where name -> i in the tempStack
+     * +1 to offset for saved base pointer
+     */
+    protected Mem<Reg> loadTemp(String name) {
+        if (tempStack.containsKey(name)) {
+            Mem<Temp> temp = Mem.of(Temp.RBP, -normalize(tempStack.get(name) + 1));
+            return Mem.allocate(temp, Reg.RBP);
+        } else {
+            return storeTemp(name);
+        }
+    }
+
+    /**
+     * Multiply by the word size to get offset for a memory location.
+     */
+    protected int normalize(int i) {
+        return i * Config.WORD_SIZE;
+    }
+
     protected Allocator(CompUnit<Temp> unit) {
         this.unit = unit;
         this.allocated = new CompUnit<>();
+        this.tempStack = null;
         this.instrs = null;
+        this.tempCounter = 0;
         this.maxArgs = 0;
         this.maxRets = 0;
     }
