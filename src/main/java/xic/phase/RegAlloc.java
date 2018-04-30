@@ -11,7 +11,7 @@ import optimize.graph.*;
 import optimize.register.*;
 
 import util.Result;
-import util.Filename;
+import util.*;
 
 public class RegAlloc extends Phase {
 
@@ -47,6 +47,22 @@ public class RegAlloc extends Phase {
         LVEdgeFactory ef = new LVEdgeFactory();
         ASAGraphFactory<Set<Temp>> gf = new ASAGraphFactory<>(ef);
         Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getAllCfgs(assembly);
+
+
+        // for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
+        //     Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init = LVInitVisitor.init(cfg);
+        //     Map<Instr<Temp>, Set<Temp>> liveVars = LiveVariableWorklist.computeLiveVariables(cfg, init.first, init.second);
+        
+        //     System.out.println("\n" + cfg.originalFn.sourceName);
+        //     for (Instr<Temp> ins : cfg.originalFn.stmts) {
+        //         System.out.println("instr: " + ins);
+        //         System.out.println("live " + liveVars.get(ins));
+        //         System.out.println("use " + init.first.get(ins));
+        //         System.out.println("def " + init.second.get(ins)); 
+        //     }
+        // }
+           
+
 
         // TODO: Run analyses and optimizations
 
