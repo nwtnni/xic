@@ -91,10 +91,10 @@ public class LVInitVisitor extends InstrVisitor<Void> {
 
     public Void visit(Call.T c) {
         update(c, 
+            EMPTY,
             Set.of(Temp.RAX, Temp.RCX, Temp.RDX, 
-                    Temp.RSI, Temp.RDI, Temp.R8, 
-                    Temp.R9, Temp.R10, Temp.R11),
-            EMPTY
+            Temp.RSI, Temp.RDI, Temp.R8, 
+            Temp.R9, Temp.R10, Temp.R11)
         );
         return null;
     }

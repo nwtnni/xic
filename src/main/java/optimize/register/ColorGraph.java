@@ -238,6 +238,10 @@ public class ColorGraph {
 
     private void decrementDegree(Temp m) {
 
+        if (m.isFixed()) {
+            return;
+        }
+
         Integer d = degree.get(m);
         degree.put(m, d - 1);
 

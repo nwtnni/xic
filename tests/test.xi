@@ -2,5 +2,9 @@ use io
 use conv
 
 main (args:int[][]) {
-    println("true")
+    print(unparseInt(foo(5)))
+}
+
+foo(x:int):int {
+    return x
 }
