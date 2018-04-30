@@ -79,8 +79,10 @@ public class LVInitVisitor extends InstrVisitor<Void> {
     }
 
     public Void visit(BinOp.TRR b) {
-        Set<Temp> t = Set.of(b.src, b.dest);
-        update(b, t, Set.of(b.dest));
+        Set<Temp> u = new HashSet<>();
+        u.add(b.src);
+        u.add(b.dest);
+        update(b, u, Set.of(b.dest));
         return null;
     }
 
@@ -128,7 +130,10 @@ public class LVInitVisitor extends InstrVisitor<Void> {
     }
 
     public Void visit(Cmp.TRR c) {
-        update(c, Set.of(c.left, c.right), EMPTY);
+        Set<Temp> u = new HashSet<>();
+        u.add(c.left);
+        u.add(c.right);
+        update(c, u, EMPTY);
         return null;
     }
 
@@ -146,7 +151,9 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      */
 
     public Void visit(DivMul.TR d) {
-        Set<Temp> u = new HashSet<>(Set.of(d.src, Temp.RAX));
+        Set<Temp> u = new HashSet<>();
+        u.add(d.src);
+        u.add(Temp.RAX);
         if (d.usesRDX()) {
             u.add(Temp.RDX);
         }
