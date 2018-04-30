@@ -117,7 +117,6 @@ public class ColorAllocator extends Allocator {
                 Spiller spiller = new Spiller(spilled, spillOffset);
                 fn.stmts = spiller.spillAll(fn.stmts);
                 spillOffset = spillOffset - Config.WORD_SIZE * (spilled.size());
-                break;
             }
         }
 
