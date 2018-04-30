@@ -56,8 +56,8 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
         cfg = new ASAGraph<>(fn, start, edgeFactory);
 
         for (Instr<Temp> ins : fn.stmts) {
-            // Add edge if in a block and not the first node
-            if (state == State.IN_BLOCK && prev != null) {
+            // Add edge if in a reachable block
+            if (state == State.IN_BLOCK) {
                 cfg.addVertex(ins);
                 cfg.addEdge(prev, ins);
             }
@@ -188,11 +188,14 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
             cfg.removeEdge(prev, l);
 
             // Inject jump between two consecutive labels
-        Jmp<Temp> fallThrough = new Jmp.T(l);
+            Jmp<Temp> fallThrough = new Jmp.T(l);
             cfg.addVertex(fallThrough);
             cfg.addEdge(prev, fallThrough);
             cfg.addEdge(fallThrough, l);
         }
+
+        // Always add labels as there might be jumps to them
+        cfg.addVertex(l);
 
         // Label starts a new block
         state = State.IN_BLOCK;

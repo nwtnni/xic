@@ -26,11 +26,13 @@ public class RegAlloc extends Phase {
 
         // Debug abstract assembly
         String out = Filename.concat(config.sink, config.unit);
-        out = Filename.setExtension(out, "as.s");
+
+
+        String asa = Filename.setExtension(out, "as.s");
         Filename.makePathTo(out);
 
         try {
-            FileWriter w = new FileWriter(out);
+            FileWriter w = new FileWriter(asa);
 
             for (String i : assembly.toAssembly()) {
                 w.append(i + "\n");
@@ -48,14 +50,7 @@ public class RegAlloc extends Phase {
 
         // TODO: Run analyses and optimizations
 
-        // Convert back to ASA
-        CompUnit<Temp> after = new CompUnit<>();
-        for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
-            after.fns.add(cfg.toASA());
-            try {
-                cfg.exportCfg(out, "debug");
-            } catch (Exception e) {}
-        }
+
 
         // CompUnit<Reg> allocated = ColorAllocator.allocate(after);
 
@@ -73,6 +68,15 @@ public class RegAlloc extends Phase {
         // } catch (IOException e) {
         // }
 
+
+        // Convert back to ASA to pass to TrivialAlloc for debug
+        CompUnit<Temp> after = new CompUnit<>();
+        for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
+            after.fns.add(cfg.toASA());
+            try {
+                cfg.exportCfg(out, "debug");
+            } catch (Exception e) {}
+        }
         return new Result<>(Product.assembled(after));
     }
 }

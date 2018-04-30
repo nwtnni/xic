@@ -2,18 +2,11 @@ use io
 use conv
 
 main (args:int[][]) {
-    x:int = foo()
-    y:int = bar()
-    z:int = x * y * 0
-    println(unparseInt(x))
-    println(unparseInt(y))
-    println(unparseInt(z))
+    i:int = 0
+    if (i < 1) {
+        println(unparseInt(1))
+    }
+    println(unparseInt(2))
 }
 
-foo() : int {
-    return 5
-}
 
-bar() : int {
-    return 6
-}
