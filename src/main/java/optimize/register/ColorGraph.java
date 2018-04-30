@@ -166,7 +166,6 @@ public class ColorGraph {
                 this.freeze();
             }
             else if (!this.spillWorklist.isEmpty()) {
-                // System.out.println("Spilling");
                 this.selectSpill();
             }
         }
@@ -371,8 +370,11 @@ public class ColorGraph {
         // TODO: replace with heuristic?
         Temp m = spillWorklist
             .stream()
-            .findAny()
+            .filter(n -> !n.isFixed() && degree.containsKey(n))
+            .sorted((a, b) -> degree.get(b) - degree.get(a))
+            .findFirst()
             .get();
+        System.out.println(degree.get(m));
 
         spillWorklist.remove(m);
         simplifyWorklist.add(m);
