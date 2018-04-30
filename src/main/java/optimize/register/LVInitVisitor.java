@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import assemble.*;
 import assemble.instructions.*;
 import optimize.graph.ASAGraph;
@@ -91,24 +90,10 @@ public class LVInitVisitor extends InstrVisitor<Void> {
 
     public Void visit(Call.T c) {
         int numArgs = c.numArgs;
+
         Set<Temp> useTemps = new HashSet<>();
-        if (numArgs >=1) {
-            useTemps.add(Temp.RDI);
-        }
-        if (numArgs >=2) {
-            useTemps.add(Temp.RSI);
-        }
-        if (numArgs >=3) {
-            useTemps.add(Temp.R8);
-        }
-        if (numArgs >=4) {
-            useTemps.add(Temp.R9);
-        }
-        if (numArgs >=5) {
-            useTemps.add(Temp.R10);
-        }
-        if (numArgs >=6) {
-            useTemps.add(Temp.R11);
+        for (int i = 0; i < Math.min(numArgs, 6); i++) {
+            useTemps.add(Config.getArg(i));
         }
 
         update(c, 
