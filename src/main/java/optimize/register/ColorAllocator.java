@@ -114,6 +114,7 @@ public class ColorAllocator extends Allocator {
                 Set<Temp> spilled = result.getRight();
                 
                 // call spill clean up
+                assert false;
 
                 spillOffset = spillOffset - Config.WORD_SIZE * (spilled.size());
             }
