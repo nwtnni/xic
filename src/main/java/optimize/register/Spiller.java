@@ -6,7 +6,7 @@ import assemble.*;
 import assemble.instructions.*;
 import util.*;
 
-public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Temp>>>> {
+public class Spiller extends InstrVisitor<List<Instr<Temp>>> {
 
     /**
      * Takes a list of instructions and spills all temps in the spilled set.
@@ -37,6 +37,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
     public Spiller(Set<Temp> spilled, int offset) {
         this.spilled = spilled;
         this.offset = offset;
+        this.location = new HashMap<>();
     }
 
     private Mem<Temp> load(Temp t) {
@@ -67,18 +68,20 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * BinOp Visitors
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TIR b) {
+    public List<Instr<Temp>> visit(BinOp.TIR b) {
         if (spilled.contains(b.dest)) {
-            List<Instr<Temp>> after = List.of(
-                new Mov.TRM(b.dest, load(b.dest))
+            Temp t = TempFactory.generate();
+            Mem<Temp> m = load(b.dest);
+            return List.of(
+                new Mov.TMR(m, t),
+                new BinOp.TIR(b.kind, b.src, t),
+                new Mov.TRM(t, m)
             );
-
-            return new Pair<>(null, after);
         }
         return null;
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TIM b) {
+    public List<Instr<Temp>> visit(BinOp.TIM b) {
         Map<Temp, Mem<Temp>> mems = load(b.dest);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -90,7 +93,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return new Pair<>(before, after);
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TRM b) {
+    public List<Instr<Temp>> visit(BinOp.TRM b) {
         Map<Temp, Mem<Temp>> mems = load(b.dest);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -106,7 +109,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return new Pair<>(before, after);
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TMR b) {
+    public List<Instr<Temp>> visit(BinOp.TMR b) {
         Map<Temp, Mem<Temp>> mems = load(b.src);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -123,7 +126,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return new Pair<>(before, after);
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TRR b) {
+    public List<Instr<Temp>> visit(BinOp.TRR b) {
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
 
@@ -143,7 +146,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Call Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Call.T c) {
+    public List<Instr<Temp>> visit(Call.T c) {
         return null;
     }
 
@@ -151,7 +154,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Cmp Visitors
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cmp.TIR c) {
+    public List<Instr<Temp>> visit(Cmp.TIR c) {
         if (spilled.contains(c.right)) {
             return new Pair<>(
                 List.of(new Mov.TMR(load(c.right), c.right)), 
@@ -161,7 +164,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return null;
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cmp.TRM c) {
+    public List<Instr<Temp>> visit(Cmp.TRM c) {
         Map<Temp, Mem<Temp>> mems = load(c.right);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -177,7 +180,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return new Pair<>(before, after);
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cmp.TMR c) {
+    public List<Instr<Temp>> visit(Cmp.TMR c) {
         Map<Temp, Mem<Temp>> mems = load(c.left);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -194,7 +197,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return new Pair<>(before, after);
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cmp.TRR c) {
+    public List<Instr<Temp>> visit(Cmp.TRR c) {
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
 
@@ -213,7 +216,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Cqo Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cqo.T c) {
+    public List<Instr<Temp>> visit(Cqo.T c) {
         return null;
     }
 
@@ -221,7 +224,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * DivMul Visitors
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(DivMul.TR d) {
+    public List<Instr<Temp>> visit(DivMul.TR d) {
         if (spilled.contains(d.src)) {
             return new Pair<>(
                 List.of(new Mov.TMR(load(d.src), d.src)),
@@ -232,7 +235,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return null;
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(DivMul.TM d) {
+    public List<Instr<Temp>> visit(DivMul.TM d) {
         Map<Temp, Mem<Temp>> mems = load(d.src);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -248,7 +251,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Jcc Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Jcc.T j) {
+    public List<Instr<Temp>> visit(Jcc.T j) {
         return null;
     }
 
@@ -256,7 +259,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Jmp Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Jmp.T j) {
+    public List<Instr<Temp>> visit(Jmp.T j) {
         return null;
     }
 
@@ -264,7 +267,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Label Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Label.T l) {
+    public List<Instr<Temp>> visit(Label.T l) {
         return null;
     }
 
@@ -272,7 +275,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Lea Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Lea.T l) {
+    public List<Instr<Temp>> visit(Lea.T l) {
         return null;
     }
 
@@ -280,7 +283,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Mov Visitors
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TIR m) {
+    public List<Instr<Temp>> visit(Mov.TIR m) {
         if (spilled.contains(m.dest)) {
             return new Pair<>(
                 null,
@@ -290,11 +293,11 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return null;
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TIM m) {
+    public List<Instr<Temp>> visit(Mov.TIM m) {
         return null;
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TRM m) {
+    public List<Instr<Temp>> visit(Mov.TRM m) {
         Map<Temp, Mem<Temp>> mems = load(m.dest);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -310,7 +313,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return new Pair<>(before, after);
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TMR m) {
+    public List<Instr<Temp>> visit(Mov.TMR m) {
         Map<Temp, Mem<Temp>> mems = load(m.src);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -327,7 +330,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return new Pair<>(before, after);
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TRR m) {
+    public List<Instr<Temp>> visit(Mov.TRR m) {
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
 
@@ -347,7 +350,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Pop Visitors
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Pop.TR p) {
+    public List<Instr<Temp>> visit(Pop.TR p) {
         if (spilled.contains(p.dest)) {
             return new Pair<>(
                 null,
@@ -357,7 +360,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return null;
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Pop.TM p) {
+    public List<Instr<Temp>> visit(Pop.TM p) {
         Map<Temp, Mem<Temp>> mems = load(p.dest);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -373,7 +376,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Push Visitors
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Push.TR p) {
+    public List<Instr<Temp>> visit(Push.TR p) {
         if (spilled.contains(p.src)) {
             return new Pair<>(
                 List.of(new Mov.TRM(p.src, load(p.src))),
@@ -383,7 +386,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
         return null;
     }
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Push.TM p) {
+    public List<Instr<Temp>> visit(Push.TM p) {
         Map<Temp, Mem<Temp>> mems = load(p.src);
         List<Instr<Temp>> before = new ArrayList<>();
         List<Instr<Temp>> after = new ArrayList<>();
@@ -399,7 +402,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Ret Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Ret.T r) {
+    public List<Instr<Temp>> visit(Ret.T r) {
         return null;
     }
 
@@ -407,7 +410,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Setcc Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Setcc.T s) {
+    public List<Instr<Temp>> visit(Setcc.T s) {
         if (spilled.contains(s.dest)) {
             return new Pair<>(
                 null,
@@ -418,10 +421,10 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
     }
 
     /*
-     * Pair<List<Instr<Temp>>, List<Instr<Temp>>>ext Visitor
+     * List<Instr<Temp>>ext Visitor
      */
 
-    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Text.T t) {
+    public List<Instr<Temp>> visit(Text.T t) {
         return null;
     }
 }
