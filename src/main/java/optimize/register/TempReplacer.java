@@ -230,7 +230,6 @@ public class TempReplacer extends InstrVisitor<Boolean> {
     public Boolean visit(Mov.TRR m) {
         m.src = cg.getAlias(m.src);
         m.dest = cg.getAlias(m.dest);
-        System.out.println(m.src + "=?" + m.dest);
         return !m.src.equals(m.dest);
     }
     

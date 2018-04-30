@@ -24,6 +24,8 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
             calleeRegs.addAll(gcr.getCalleeRegs(ins));
         }
 
+        calleeRegs.remove(Reg.RSP);
+        calleeRegs.remove(Reg.RBP);
         return calleeRegs;
     }
 
