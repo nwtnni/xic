@@ -1,10 +1,14 @@
 use io
 use conv
 
-main (args:int[][]) {
-    print(unparseInt(foo(5)))
+main(args:int[][]) {
+    print(unparseInt(foo()))
 }
 
-foo(x:int):int {
+foo():int {
+    return bar(5)
+}
+
+bar(x:int):int {
     return x
 }

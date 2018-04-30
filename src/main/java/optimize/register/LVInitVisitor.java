@@ -90,10 +90,31 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      */
 
     public Void visit(Call.T c) {
+        int numArgs = c.numArgs;
+        Set<Temp> useTemps = new HashSet<>();
+        if (numArgs >=1) {
+            useTemps.add(Temp.RDI);
+        }
+        if (numArgs >=2) {
+            useTemps.add(Temp.RSI);
+        }
+        if (numArgs >=3) {
+            useTemps.add(Temp.R8);
+        }
+        if (numArgs >=4) {
+            useTemps.add(Temp.R9);
+        }
+        if (numArgs >=5) {
+            useTemps.add(Temp.R10);
+        }
+        if (numArgs >=6) {
+            useTemps.add(Temp.R11);
+        }
+
         update(c, 
-            EMPTY,
+            useTemps,
             Set.of(Temp.RAX, Temp.RCX, Temp.RDX, 
-            Temp.RSI, Temp.RDI, Temp.R8, 
+            Temp.RDI, Temp.RSI, Temp.R8, 
             Temp.R9, Temp.R10, Temp.R11)
         );
         return null;
