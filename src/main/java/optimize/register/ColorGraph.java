@@ -121,8 +121,12 @@ public class ColorGraph {
         }
 
         // Initialize degree set
-        for (Temp t : initial) {
-            degree.put(t, interfere.degreeOf(t));
+        for (Temp t : interfere.vertexSet()) {
+            if (t.isFixed()) {
+                degree.put(t, Integer.MAX_VALUE);
+            } else {
+                degree.put(t, interfere.degreeOf(t));
+            }
         }
 
         // Make worklist
@@ -145,20 +149,24 @@ public class ColorGraph {
     > tryColor() {
 
         while (!this.simplifyWorklist.isEmpty()
-            && !this.worklistMoves.isEmpty() 
-            && !this.freezeWorklist.isEmpty()
-            && !this.spillWorklist.isEmpty()) {
+            || !this.worklistMoves.isEmpty()
+            || !this.freezeWorklist.isEmpty()
+            || !this.spillWorklist.isEmpty()) {
 
             if (!this.simplifyWorklist.isEmpty()) {
+                // System.out.println("Simplifying");
                 this.simplify();
             }
             else if (!this.worklistMoves.isEmpty()) {
+                // System.out.println("Coalescing");
                 this.coalesce();
             }
             else if (!this.freezeWorklist.isEmpty()) {
+                // System.out.println("Freezing");
                 this.freeze();
             }
             else if (!this.spillWorklist.isEmpty()) {
+                // System.out.println("Spilling");
                 this.selectSpill();
             }
         }
@@ -185,7 +193,7 @@ public class ColorGraph {
 
     private void addEdge(Temp u, Temp v) {
         if (!(interfere.containsEdge(u, v) || interfere.containsEdge(v, u)) && !u.equals(v)) {
-            interfere.addEdge(u, v);  
+            interfere.addEdge(u, v);
             if (!u.isFixed()) degree.put(u, degree.get(u) + 1);
             if (!v.isFixed()) degree.put(v, degree.get(v) + 1);
         }
@@ -210,15 +218,17 @@ public class ColorGraph {
     }
 
     private Set<Temp> adjacent(Temp n) {
+        if (!interfere.containsVertex(n)) return new HashSet<>();
         return difference(Graphs.neighborListOf(interfere, n), union(selectStack, coalescedNodes));
-    } 
+    }
 
     private Set<Pair<Temp, Temp>> nodeMoves(Temp t) {
+        if (!moveList.containsKey(t)) moveList.put(t, new HashSet<>());
         return intersect(moveList.get(t), (union(activeMoves, worklistMoves)));
     }
 
     private void decrementDegree(Temp m) {
-        
+
         Integer d = degree.get(m);
         degree.put(m, d - 1);
 
@@ -227,7 +237,7 @@ public class ColorGraph {
             enable.add(m);
             enableMoves(enable);
             spillWorklist.remove(m);
-            
+
             if (moveRelated(m)) {
                 freezeWorklist.add(m);
             } else {
@@ -276,7 +286,7 @@ public class ColorGraph {
             .get();
 
         worklistMoves.remove(m);
-        
+
         Temp x = getAlias(m.first);
         Temp y = getAlias(m.second);
 
@@ -287,7 +297,7 @@ public class ColorGraph {
             coalescedMoves.add(m);
             addWorkList(u);
         } else if (v.isFixed() || interfere.containsEdge(u, v) || interfere.containsEdge(v, u)) {
-            constrainedMoves.add(m); 
+            constrainedMoves.add(m);
             addWorkList(u);
             addWorkList(v);
         } else if ((u.isFixed() && adjacent(v).stream().allMatch(t -> ok(t, u)))
@@ -301,6 +311,7 @@ public class ColorGraph {
     }
 
     private void combine(Temp u, Temp v) {
+        if (!interfere.containsVertex(u) || !interfere.containsVertex(v)) return;
 
         if (freezeWorklist.contains(v)) {
             freezeWorklist.remove(v);
@@ -314,8 +325,10 @@ public class ColorGraph {
         enableMoves(Set.of(v));
 
         for (Temp t : adjacent(v)) {
-            addEdge(t, u); 
-            decrementDegree(t);
+            if (interfere.containsVertex(t)) {
+                addEdge(t, u);
+                decrementDegree(t);
+            }
         }
 
         if (degree.get(u) >= colors && freezeWorklist.contains(u)) {
@@ -339,7 +352,7 @@ public class ColorGraph {
         for (Pair<Temp, Temp> m : nodeMoves(u)) {
             Temp v = null;
             if (getAlias(m.second).equals(getAlias(u))) {
-                v = getAlias(m.first); 
+                v = getAlias(m.first);
             } else {
                 v = getAlias(m.second);
             }
@@ -366,12 +379,12 @@ public class ColorGraph {
 
     private void assignColors() {
         while (!selectStack.empty()) {
-            Temp n = selectStack.pop(); 
+            Temp n = selectStack.pop();
 
             Set<Reg> okColors = new HashSet<>(available);
             for (Temp w : Graphs.neighborListOf(interfere, n)) {
 
-                Temp alias = getAlias(w); 
+                Temp alias = getAlias(w);
 
                 if (alias.isFixed() || coloredNodes.contains(alias)) {
                     okColors.remove(color.get(alias));
@@ -382,7 +395,7 @@ public class ColorGraph {
                 spilledNodes.add(n);
             } else {
                 coloredNodes.add(n);
-                
+
                 Reg reg = okColors
                     .stream()
                     .findAny()

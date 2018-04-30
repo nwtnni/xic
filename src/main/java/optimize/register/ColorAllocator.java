@@ -76,7 +76,7 @@ public class ColorAllocator extends Allocator {
         for (FuncDecl<Temp> fn : unit.fns) {
             allocate(fn);
         }
-        return null;
+        return allocated;
     }
 
     private void allocate(FuncDecl<Temp> fn) {
@@ -91,6 +91,7 @@ public class ColorAllocator extends Allocator {
         // TODO loop and spill
         while (coloring == null) {
             ASAGraph<Set<Temp>> cfg = graphFactory.makeCfg(fn);
+            fn = cfg.toASA();
 
             // Compute use and def sets
             Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init = LVInitVisitor.init(cfg.vertexSet());
@@ -111,13 +112,12 @@ public class ColorAllocator extends Allocator {
             // Spill and 
             } else {
                 Set<Temp> spilled = result.getRight();
-                
+                assert false;
 
             }
 
             // Coalesce temps
             TempReplacer.replaceAll(fn, cg);
-
         }
         
         for (Reg reg : coloring.values()) {
@@ -127,7 +127,9 @@ public class ColorAllocator extends Allocator {
             }
         }
 
-        for (Instr<Temp> i : fn.stmts) i.accept(this);
+        for (Instr<Temp> i : fn.stmts) {
+            i.accept(this);
+        }
         allocatedFn.stmts = instrs;
         allocated.fns.add(allocatedFn);
 

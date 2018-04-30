@@ -52,21 +52,21 @@ public class RegAlloc extends Phase {
 
 
 
-        // CompUnit<Reg> allocated = ColorAllocator.allocate(after);
+        CompUnit<Reg> allocated = ColorAllocator.allocate(assembly);
 
-        // out = Filename.concat(config.sink, config.unit);
-        // out = Filename.setExtension(out, "s");
-        // Filename.makePathTo(out);
+        out = Filename.concat(config.sink, config.unit);
+        out = Filename.setExtension(out, "s");
+        Filename.makePathTo(out);
 
-        // try {
-        //     FileWriter w = new FileWriter(out);
+        try {
+            FileWriter w = new FileWriter(out);
 
-        //     for (String i : allocated.toAssembly()) {
-        //         w.append(i + "\n");
-        //     }
-        //     w.close();
-        // } catch (IOException e) {
-        // }
+            for (String i : allocated.toAssembly()) {
+                w.append(i + "\n");
+            }
+            w.close();
+        } catch (IOException e) {
+        }
 
 
         // Convert back to ASA to pass to TrivialAlloc for debug
