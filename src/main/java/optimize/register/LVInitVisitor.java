@@ -173,9 +173,13 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      */
 
     public Void visit(Jmp.T j) {
-        Set<Temp> use = EMPTY;
+        // Add %rax and %rdx to use set if jump to return
+        Set<Temp> use = new HashSet<>();
         if (j.label.equals(cfg.originalFn.returnLabel)) {
-            use = Set.of(Temp.RAX, Temp.RDX);
+            if (cfg.originalFn.rets > 0)
+                use.add(Temp.RAX);
+            if (cfg.originalFn.rets > 1)
+                use.add(Temp.RDX);
         }
         update(j, use, EMPTY);
         return null;
