@@ -171,6 +171,8 @@ public class ColorGraph {
             }
         }
 
+        assignColors();
+
         if (this.spilledNodes.isEmpty()) {
             return Either.left(this.color);
         } else {
