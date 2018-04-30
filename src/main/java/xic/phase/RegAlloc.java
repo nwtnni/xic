@@ -49,6 +49,7 @@ public class RegAlloc extends Phase {
         Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getAllCfgs(assembly);
 
 
+        // LV debug
         // for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
         //     Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init = LVInitVisitor.init(cfg);
         //     Map<Instr<Temp>, Set<Temp>> liveVars = LiveVariableWorklist.computeLiveVariables(cfg, init.first, init.second);
@@ -61,7 +62,6 @@ public class RegAlloc extends Phase {
         //         System.out.println("def " + init.second.get(ins)); 
         //     }
         // }
-           
 
 
         // TODO: Run analyses and optimizations
