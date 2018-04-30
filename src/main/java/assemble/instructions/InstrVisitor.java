@@ -112,23 +112,23 @@ public abstract class InstrVisitor<T> {
      * Mov Visitors
      */
 
-    public <L, R> T visit(Mov.TIR m) {
+    public T visit(Mov.TIR m) {
         return null;
     }
 
-    public <L, R> T visit(Mov.TIM m) {
+    public T visit(Mov.TIM m) {
         return null;
     }
 
-    public <L, R> T visit(Mov.TRM m) {
+    public T visit(Mov.TRM m) {
         return null;
     }
 
-    public <L, R> T visit(Mov.TMR m) {
+    public T visit(Mov.TMR m) {
         return null;
     }
 
-    public <L, R> T visit(Mov.TRR m) {
+    public T visit(Mov.TRR m) {
         return null;
     }
     

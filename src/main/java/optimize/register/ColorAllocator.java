@@ -121,20 +121,29 @@ public class ColorAllocator extends Allocator {
 
 
             // Optimistically color and coalesce
+            availableRegs = GetCalleeRegs.getCalleeRegs(fn);
+            availableRegs.addAll(
+                Set.of( Reg.RAX,
+                        Reg.RCX,
+                        Reg.RDX,
+                        Reg.RSI,
+                        Reg.RDI,
+                        Reg.R8,
+                        Reg.R9,
+                        Reg.R10,
+                        Reg.R11)
+                );
+            System.out.println(availableRegs);
             ColorGraph cg = new ColorGraph(fn.stmts, liveVars, availableRegs);
             Either<Map<Temp, Reg>, Set<Temp>> result = cg.tryColor();
 
             // If successfully colored, move on to allocating
             if (result.isLeft()) {
                 coloring = result.getLeft();
-                availableRegs.removeAll(TempReplacer.replaceAll(fn, cg));
-
-                System.out.println(availableRegs);
 
             // Spill
             } else {
                 Set<Temp> spilled = result.getRight();
-                availableRegs.removeAll(TempReplacer.replaceAll(fn, cg));
                 Spiller spiller = new Spiller(spilled, spillOffset);
                 fn.stmts = spiller.spillAll(fn.stmts);
                 spillOffset = spillOffset - Config.WORD_SIZE * (spilled.size());

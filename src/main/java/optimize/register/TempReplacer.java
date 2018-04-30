@@ -1,50 +1,13 @@
 package optimize.register;
 
-import java.util.*;
-
 import assemble.*;
 import assemble.instructions.*;
 
-public class TempReplacer extends InstrVisitor<Set<Temp>> {
-
-    /**
-     * Coalesces temporaries in a FuncDecl fn given the analysis in ColorGraph cg.
-     * 
-     * Returns the set of of callee saved registers that have been coalesced and
-     * are no longer available for coloring.
-     */
-    public static Set<Reg> replaceAll(FuncDecl<Temp> fn, ColorGraph cg) {
-        TempReplacer t = new TempReplacer(cg);
-        List<Instr<Temp>> instrs = new ArrayList<>();
-        Set<Reg> calleeCoalesced = new HashSet<>();
-
-        for (int i = 0; i < fn.stmts.size(); i++) {
-            Instr<Temp> ins = fn.stmts.get(i);
-            Set<Temp> replaced = t.replace(ins);
-            if (replaced.isEmpty()) {
-                instrs.add(ins);
-
-            // For moves
-            } else {
-                // check for callee
-                Temp temp = replaced.stream().findAny().get();
-                if (temp.isFixed() && temp.getRegister().isCalleeSaved()) {
-                    calleeCoalesced.add(temp.getRegister());
-                }
-            }
-        }
-
-        System.out.println(calleeCoalesced);
-
-        fn.stmts = instrs;
-        return calleeCoalesced;
-    }
+public class TempReplacer extends InstrVisitor<Boolean> {
 
     private ColorGraph cg;
 
-    private final static Set<Temp> EMPTY = Set.of();
-
-    private TempReplacer(ColorGraph cg) {
+    public TempReplacer(ColorGraph cg) {
         this.cg = cg;
     }
 
@@ -54,7 +17,7 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      * Returns true if this instruction must be kept in the list.
      * Returns false if this instruction can be deleted as a result of coalescing.
      */
-    private Set<Temp> replace(Instr<Temp> instr) {
+    public boolean replace(Instr<Temp> instr) {
         return instr.accept(this);
     }
 
@@ -75,36 +38,36 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(BinOp.TIR b) {
+    public Boolean visit(BinOp.TIR b) {
         b.dest = cg.getAlias(b.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(BinOp.TIM b) {
+    public Boolean visit(BinOp.TIM b) {
         replace(b.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(BinOp.TRM b) {
+    public Boolean visit(BinOp.TRM b) {
         b.src = cg.getAlias(b.src);
         replace(b.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(BinOp.TMR b) {
+    public Boolean visit(BinOp.TMR b) {
         replace(b.src);
         b.dest = cg.getAlias(b.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(BinOp.TRR b) {
+    public Boolean visit(BinOp.TRR b) {
         b.src = cg.getAlias(b.src);
         b.dest = cg.getAlias(b.dest);
-        return EMPTY;
+        return true;
     }
 
     /*
@@ -112,8 +75,8 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Call.T c) {
-        return EMPTY;
+    public Boolean visit(Call.T c) {
+        return true;
     }
 
     /*
@@ -121,30 +84,30 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Cmp.TIR c) {
+    public Boolean visit(Cmp.TIR c) {
         c.right = cg.getAlias(c.right);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Cmp.TRM c) {
+    public Boolean visit(Cmp.TRM c) {
         c.left = cg.getAlias(c.left);
         replace(c.right);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Cmp.TMR c) {
+    public Boolean visit(Cmp.TMR c) {
         replace(c.left);
         c.right = cg.getAlias(c.right);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Cmp.TRR c) {
+    public Boolean visit(Cmp.TRR c) {
         c.left = cg.getAlias(c.left);
         c.right = cg.getAlias(c.right);
-        return EMPTY;
+        return true;
     }
 
     /*
@@ -152,8 +115,8 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Cqo.T c) {
-        return EMPTY;
+    public Boolean visit(Cqo.T c) {
+        return true;
     }
 
     /*
@@ -161,25 +124,25 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(DivMul.TR d) {
+    public Boolean visit(DivMul.TR d) {
         d.src = cg.getAlias(d.src);
         if (!cg.getAlias(d.dest).equals(d.dest)) {
             // Error in register allocation
             // Can't alias fixed register dest
             assert false;
         }
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(DivMul.TM d) {
+    public Boolean visit(DivMul.TM d) {
         replace(d.src);
         if (!cg.getAlias(d.dest).equals(d.dest)) {
             // Error in register allocation
             // Can't alias fixed register dest
             assert false;
         }
-        return EMPTY;
+        return true;
     }
 
     /*
@@ -187,8 +150,8 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Jcc.T j) {
-        return EMPTY;
+    public Boolean visit(Jcc.T j) {
+        return true;
     }
 
     /*
@@ -196,8 +159,8 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Jmp.T j) {
-        return EMPTY;
+    public Boolean visit(Jmp.T j) {
+        return true;
     }
 
     /*
@@ -205,8 +168,8 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Label.T l) {
-        return EMPTY;
+    public Boolean visit(Label.T l) {
+        return true;
     }
 
     /*
@@ -214,10 +177,10 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Lea.T l) {
+    public Boolean visit(Lea.T l) {
         replace(l.src);
         l.dest = cg.getAlias(l.dest);
-        return EMPTY;
+        return true;
     }
 
     /*
@@ -225,41 +188,37 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Mov.TIR m) {
+    public Boolean visit(Mov.TIR m) {
         m.dest = cg.getAlias(m.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Mov.TIM m) {
+    public Boolean visit(Mov.TIM m) {
         replace(m.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Mov.TRM m) {
+    public Boolean visit(Mov.TRM m) {
         m.src = cg.getAlias(m.src);
         replace(m.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Mov.TMR m) {
+    public Boolean visit(Mov.TMR m) {
         replace(m.src);
         m.dest = cg.getAlias(m.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Mov.TRR m) {
+    public Boolean visit(Mov.TRR m) {
         m.src = cg.getAlias(m.src);
         m.dest = cg.getAlias(m.dest);
-
-        if (m.src.equals(m.dest)) {
-            return Set.of(m.src);
-        } else {
-            return EMPTY;
-        }
+        System.out.println(m.src + "=?" + m.dest);
+        return !m.src.equals(m.dest);
     }
     
     /*
@@ -267,15 +226,15 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Pop.TR p) {
+    public Boolean visit(Pop.TR p) {
         p.dest = cg.getAlias(p.dest);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Pop.TM p) {
+    public Boolean visit(Pop.TM p) {
         replace(p.dest);
-        return EMPTY;
+        return true;
     }
 
     /*
@@ -283,15 +242,15 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Push.TR p) {
+    public Boolean visit(Push.TR p) {
         p.src = cg.getAlias(p.src);
-        return EMPTY;
+        return true;
     }
 
     @Override
-    public Set<Temp> visit(Push.TM p) {
+    public Boolean visit(Push.TM p) {
         replace(p.src);
-        return EMPTY;
+        return true;
     }
 
     /*
@@ -299,8 +258,8 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Ret.T r) {
-        return EMPTY;
+    public Boolean visit(Ret.T r) {
+        return true;
     }
 
     /*
@@ -308,21 +267,21 @@ public class TempReplacer extends InstrVisitor<Set<Temp>> {
      */
 
     @Override
-    public Set<Temp> visit(Setcc.T s) {
+    public Boolean visit(Setcc.T s) {
         if (!cg.getAlias(s.dest).equals(s.dest)) {
             // Error in register allocation
             // Fixed register can't be alias
             assert false;
         }
-        return EMPTY;
+        return true;
     }
 
     /*
-     * Set<Temp>ext Visitor
+     * Booleanext Visitor
      */
 
     @Override
-    public Set<Temp> visit(Text.T t) {
-        return EMPTY;
+    public Boolean visit(Text.T t) {
+        return true;
     }
 }
