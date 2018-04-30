@@ -32,7 +32,7 @@ public class Mem<T> {
     public static <A> Mem<A> of(A reg, int offset) {
         assert reg != null;
         assert offset % Config.WORD_SIZE == 0;
-        return new Mem<>(Kind.RO, null, reg, offset, 0);
+        return new Mem<>(Kind.RO, null, reg, 0, offset);
     }
 
     /**
