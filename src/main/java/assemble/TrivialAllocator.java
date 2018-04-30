@@ -65,61 +65,9 @@ public class TrivialAllocator extends Allocator {
         instrs.add(new Mov.RRM(Reg.R11, loadTemp(t.name)));
     }
 
-    // Map of named temps to offset on stack
-    private Map<String, Integer> tempStack;
-
-    // Number of temps on the stack - 1
-    private int tempCounter;
-
-    // Number of words to subtract from base pointer to get location
-    // in stack where multiple returns > 2 must be written by callee.
-    private Mem<Reg> calleeReturnAddr;
-
-    // Caller saved registers - not required for trivial allocation
-    // private Operand r10;
-    // private Operand r11;
-
     private TrivialAllocator(CompUnit<Temp> unit) {
         super(unit);
-        this.tempStack = null;
-        this.tempCounter = 0;
-        this.maxArgs = 0;
-        this.maxRets = 0;
-        this.calleeReturnAddr = null;
     }
-
-    /**
-     * Push a named temp to the stack.
-     */
-    private Mem<Reg> storeTemp(String name) {
-        if (tempStack.containsKey(name)) return loadTemp(name);
-
-        tempStack.put(name, tempCounter++);
-        return loadTemp(name);
-    }
-
-    /**
-     * Get the mem operand to a temp on the stack.
-     * Equivalent to -(i+1)*8(%rbp) where name -> i in the tempStack
-     * +1 to offset for saved base pointer
-     */
-    private Mem<Reg> loadTemp(String name) {
-        if (tempStack.containsKey(name)) {
-            Mem<Temp> temp = Mem.of(Temp.RBP, -normalize(tempStack.get(name) + 1));
-            return Mem.allocate(temp, Reg.RBP);
-        } else {
-            return storeTemp(name);
-        }
-    }
-
-    /**
-     * Multiply by the word size to get offset for a memory location.
-     */
-    private int normalize(int i) {
-        return i * Config.WORD_SIZE;
-    }
-
-    /* Recursive descent visitors */
 
     private CompUnit<Reg> allocate() {
         for (FuncDecl<Temp> fn : unit.fns) {
@@ -129,18 +77,12 @@ public class TrivialAllocator extends Allocator {
     }
 
     private void allocate(FuncDecl<Temp> fn) {
-        FuncDecl<Reg> allocatedFn = new FuncDecl.R(fn);
+        FuncDecl.R allocatedFn = new FuncDecl.R(fn);
         instrs = new ArrayList<>();
         tempStack = new HashMap<>();
         tempCounter = 0;
         maxArgs = 0;
         maxRets = 0;
-        calleeReturnAddr = null;
-
-        // Set CALLEE_RET_ADDR to a temp on stack
-        if (fn.rets > 2) {
-            calleeReturnAddr = storeTemp("CALLEE_RET_ADDR");
-        }
 
         for (Instr<Temp> i : fn.stmts) {
             i.accept(this);
@@ -149,19 +91,11 @@ public class TrivialAllocator extends Allocator {
         allocatedFn.stmts = instrs;
         allocated.fns.add(allocatedFn);
 
-        // Calculate words to shift rsp, +1 to offset tempCounter TODO
+        // Calculate number of words to shift %rsp
         int rsp = tempCounter + maxArgs + maxRets;
-        // 16 byte alignment
+        // 16 byte alignment if needed
         rsp = rsp % 2 == 1 ? rsp + 1 : rsp;
-        Imm shift = new Imm(normalize(rsp));
-
-        // Insert stack setup
-        BinOp.RIR sub = new BinOp.RIR(Kind.SUB, shift, Reg.RSP);
-        allocatedFn.prelude.set(allocatedFn.prelude.size() - 1, sub);
-
-        // Insert stack teardown
-        BinOp.RIR add = new BinOp.RIR(Kind.ADD, shift, Reg.RSP);
-        allocatedFn.epilogue.set(2, add);
+        allocatedFn.setStackSize(rsp);
     }
 
     /*
@@ -191,7 +125,6 @@ public class TrivialAllocator extends Allocator {
      */
 
     public Boolean visit(Lea.T l) {
-        // Load into register destination
         super.visit(l);
         store(l.dest);
         return null;
@@ -202,14 +135,12 @@ public class TrivialAllocator extends Allocator {
      */
 
     public Boolean visit(Mov.TIR m) {
-        // Move immediate into register
         super.visit(m);
         store(m.dest);
         return null;
     }
 
     public Boolean visit(Mov.TMR m) {
-        // Move memory into register
         super.visit(m);
         store(m.dest);
         return null;

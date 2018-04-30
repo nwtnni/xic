@@ -152,6 +152,12 @@ public class Tiler extends IRVisitor<Operand> {
         // Tile the function body
         f.body().accept(this);
 
+        // Spill callee saved registers
+        instrs.add(0, movRR(Temp.RBX, new Temp("_STORE_RBX")));
+        instrs.add(0, movRR(Temp.R12, new Temp("_STORE_R12")));
+        instrs.add(0, movRR(Temp.R13, new Temp("_STORE_R13")));
+        instrs.add(0, movRR(Temp.R14, new Temp("_STORE_R14")));
+        instrs.add(0, movRR(Temp.R15, new Temp("_STORE_R15")));
 
         // Set up prologue and epilogue
         FuncDecl.T fn = new FuncDecl.T(f, args, returns, instrs);
@@ -474,6 +480,13 @@ public class Tiler extends IRVisitor<Operand> {
             );
         }
 
+        // Restore callee saved registers
+        instrs.add(movRR(new Temp("_STORE_RBX"), Temp.RBX));
+        instrs.add(movRR(new Temp("_STORE_R12"), Temp.R12));
+        instrs.add(movRR(new Temp("_STORE_R13"), Temp.R13));
+        instrs.add(movRR(new Temp("_STORE_R14"), Temp.R14));
+        instrs.add(movRR(new Temp("_STORE_R15"), Temp.R15));
+        
         instrs.add(jmpFromLabel(returnLabel));
         return null;
     }

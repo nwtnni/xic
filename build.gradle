@@ -61,6 +61,7 @@ test {
 task zip(type: Zip) {
     archiveName = 'xic.zip'
     from(projectDir) {
+        include 'benchmark/'
         include 'buildSrc/'
         include 'gradle/'
         include 'libs/'

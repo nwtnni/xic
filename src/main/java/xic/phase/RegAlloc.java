@@ -11,7 +11,7 @@ import optimize.graph.*;
 import optimize.register.*;
 
 import util.Result;
-import util.Filename;
+import util.*;
 
 public class RegAlloc extends Phase {
 
@@ -26,11 +26,13 @@ public class RegAlloc extends Phase {
 
         // Debug abstract assembly
         String out = Filename.concat(config.sink, config.unit);
-        out = Filename.setExtension(out, "as.s");
+
+
+        String asa = Filename.setExtension(out, "as.s");
         Filename.makePathTo(out);
 
         try {
-            FileWriter w = new FileWriter(out);
+            FileWriter w = new FileWriter(asa);
 
             for (String i : assembly.toAssembly()) {
                 w.append(i + "\n");
@@ -46,38 +48,44 @@ public class RegAlloc extends Phase {
         ASAGraphFactory<Set<Temp>> gf = new ASAGraphFactory<>(ef);
         Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getAllCfgs(assembly);
 
-        // Run analyses and optimizations
 
-        // TODO: move this stuff to the allocator
+        // LV debug
+        // for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
+        //     Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init = LVInitVisitor.init(cfg);
+        //     Map<Instr<Temp>, Set<Temp>> liveVars = LiveVariableWorklist.computeLiveVariables(cfg, init.first, init.second);
+        
+        //     System.out.println("\n" + cfg.originalFn.sourceName);
+        //     for (Instr<Temp> ins : cfg.originalFn.stmts) {
+        //         System.out.println("instr: " + ins);
+        //         System.out.println("live " + liveVars.get(ins));
+        //         System.out.println("use " + init.first.get(ins));
+        //         System.out.println("def " + init.second.get(ins)); 
+        //     }
+        // }
 
 
-        out = out.substring(0, out.length() - 4);
+        // TODO: Run analyses and optimizations
 
-        for(ASAGraph<Set<Temp>> cfg : cfgs.values()) {
-            Map<Instr<Temp>, Set<Temp>> lv = LiveVariableWorklist.computeLiveVariables(cfg);
 
-            String lvOut = out + cfg.originalFn.sourceName + ".lv.s";
 
-            // Debug LV
-            try {
-                FileWriter lvw = new FileWriter(lvOut);
+        CompUnit<Reg> allocated = ColorAllocator.allocate(assembly);
 
-                FuncDecl<Temp> fn = cfg.toASA();
+        out = Filename.concat(config.sink, config.unit);
+        out = Filename.setExtension(out, "s");
+        Filename.makePathTo(out);
 
-                lvw.append(fn.sourceName + "\n");
-                for (Instr<Temp> i : fn.stmts) {
-                    lvw.append(i + ": \n");
-                    lvw.append("live: " + lv.get(i) + "\n");
-                    lvw.append("\n");
-                }
+        try {
+            FileWriter w = new FileWriter(out);
 
-                lvw.close();
-            } catch (IOException e) {
+            for (String i : allocated.toAssembly()) {
+                w.append(i + "\n");
             }
-
+            w.close();
+        } catch (IOException e) {
         }
 
-        // Convert back to ASA
+
+        // Convert back to ASA to pass to TrivialAlloc for debug
         CompUnit<Temp> after = new CompUnit<>();
         for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
             after.fns.add(cfg.toASA());
@@ -85,23 +93,6 @@ public class RegAlloc extends Phase {
                 cfg.exportCfg(out, "debug");
             } catch (Exception e) {}
         }
-
-        // CompUnit<Reg> allocated = ColorAllocator.allocate(after);
-
-        // out = Filename.concat(config.sink, config.unit);
-        // out = Filename.setExtension(out, "s");
-        // Filename.makePathTo(out);
-
-        // try {
-        //     FileWriter w = new FileWriter(out);
-
-        //     for (String i : allocated.toAssembly()) {
-        //         w.append(i + "\n");
-        //     }
-        //     w.close();
-        // } catch (IOException e) {
-        // }
-
         return new Result<>(Product.assembled(after));
     }
 }

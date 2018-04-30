@@ -49,7 +49,8 @@ public class Mem<T> {
         return temps;
     }
 
-    /**
+    /*
+     *
      * A memory access [(reg * scale) + offset]
      * In the form offset(reg,scale)
      * 

@@ -139,6 +139,7 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
                 cfg.addEdge(fallThrough, l);
 
             case OUT_OF_BLOCK:
+                // Always add label in case there is a jump to it
                 cfg.addVertex(l);
 
                 // Label always starts a block

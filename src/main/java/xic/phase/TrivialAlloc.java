@@ -2,6 +2,8 @@ package xic.phase;
 
 import java.io.IOException;
 import java.io.FileWriter;
+import java.util.Set;
+import java.util.Map;
 
 import assemble.CompUnit;
 import assemble.Temp;
@@ -11,6 +13,9 @@ import assemble.TrivialAllocator;
 import util.Filename;
 import util.Pair;
 import util.Result;
+
+import optimize.graph.*;
+import optimize.register.*;
 
 import xic.XicException;
 import xic.XicInternalException;
@@ -27,6 +32,25 @@ public class TrivialAlloc extends Phase {
             if (previous.isErr()) return previous;
 
             CompUnit<Temp> tiled = previous.ok().getAssembled();
+
+            LVEdgeFactory ef = new LVEdgeFactory();
+            ASAGraphFactory<Set<Temp>> gf = new ASAGraphFactory<>(ef);
+            Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getAllCfgs(tiled);
+
+            // TODO: Run analyses and optimizations
+
+            // Convert back to ASA
+            String out = Filename.concat(config.sink, config.unit);
+            out = Filename.setExtension(out, "as.s");
+            Filename.makePathTo(out);
+            CompUnit<Temp> after = new CompUnit<>();
+            for (ASAGraph<Set<Temp>> cfg : cfgs.values()) {
+                after.fns.add(cfg.toASA());
+                try {
+                    cfg.exportCfg(out, "debug");
+                } catch (Exception e) {}
+            }
+
             CompUnit<Reg> allocated = TrivialAllocator.allocate(tiled);
 
 
@@ -48,7 +72,7 @@ public class TrivialAlloc extends Phase {
 
             // End debug
 
-            String out = Filename.concat(config.sink, config.unit);
+            out = Filename.concat(config.sink, config.unit);
             out = Filename.setExtension(out, "s");
 
             Filename.makePathTo(out);

@@ -116,6 +116,10 @@ public abstract class FuncDecl<A> {
             epilogue.add(new Text.R(""));
         }
 
+        /** 
+         * Shift the stack pointer by i words. 
+         * (i is multiplyed by the word size in this function)
+         */
         public void setStackSize(int i) {
 
             // Insert stack setup at end of prelude
@@ -128,9 +132,5 @@ public abstract class FuncDecl<A> {
             epilogue.set(2, add);
         }
 
-        public void saveRegister(Reg reg) {
-            prelude.add(prelude.size() - 1, new Push.RR(reg));
-            epilogue.add(3, new Pop.RR(reg));
-        }
     }
 }
