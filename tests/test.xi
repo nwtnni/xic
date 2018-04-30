@@ -2,13 +2,16 @@ use io
 use conv
 
 main(args:int[][]) {
-    print(unparseInt(foo()))
+    printInt(factorial(5))
 }
 
-foo():int {
-    return bar(5)
+factorial(n:int):int {
+    if n <= 1 {
+        return 1
+    }
+    return n*factorial(n-1)
 }
 
-bar(x:int):int {
-    return x
+printInt(x:int) {
+    print(unparseInt(x))
 }

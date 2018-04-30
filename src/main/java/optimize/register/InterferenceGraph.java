@@ -14,10 +14,10 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import util.PairEdge;
 import util.Pair;
 
-import assemble.Temp;
-import assemble.CompUnit;
-import assemble.instructions.Instr;
+import assemble.*;
+import assemble.instructions.*;
 
+@Deprecated
 public class InterferenceGraph {
 
     private Graph<Temp, PairEdge<Temp, Void>> graph;
@@ -33,6 +33,15 @@ public class InterferenceGraph {
 
             // TODO: update when LV returns a map
             List<Temp> live = new ArrayList<>(liveVars.get(instr));
+
+            // Inject caller saved registers at call instructions
+            if (instr instanceof Call<?>) {
+                live.addAll(
+                    Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RDI, Temp.RSI, 
+                            Temp.R8, Temp.R9, Temp.R10, Temp.R11)
+                );
+            }
+
             int size = live.size();
 
             for (int i = 0; i < size; i++) {

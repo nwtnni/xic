@@ -28,7 +28,7 @@ public class ColorAllocator extends Allocator {
         return allocator.allocate();
     }
 
-    private static final Set<Reg> availableRegs = Set.of(
+    private static Set<Reg> availableRegs = new HashSet<>(Set.of(
         Reg.RAX,
         Reg.RBX,
         Reg.RCX,
@@ -43,7 +43,7 @@ public class ColorAllocator extends Allocator {
         Reg.R13,
         Reg.R14,
         Reg.R15
-    );
+    ));
 
     /**
      * Result of register allocation using graph coloring.
@@ -88,7 +88,9 @@ public class ColorAllocator extends Allocator {
         coloring = null;
         int spillOffset = -8;
 
-        // TODO loop and spill
+        // DEBUG
+        // int iter = 0;
+
         while (coloring == null) {
             ASAGraph<Set<Temp>> cfg = graphFactory.makeCfg(fn);
             fn = cfg.toASA();
@@ -101,6 +103,23 @@ public class ColorAllocator extends Allocator {
             // Compute live variables set
             Map<Instr<Temp>, Set<Temp>> liveVars = LiveVariableWorklist.computeLiveVariables(cfg, use, def);
 
+            // DEBUG LIVE VAR
+            // System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" + cfg.originalFn.sourceName);
+            // for (Instr<Temp> ins : cfg.originalFn.stmts) {
+            //     System.out.println("instr: " + ins);
+            //     System.out.println("live " + liveVars.get(ins));
+            //     System.out.println("use " + init.first.get(ins));
+            //     System.out.println("def " + init.second.get(ins)); 
+            //     System.out.println();
+            // }
+
+            // iter++;
+            // System.out.println("~~~~~~~~~~~~~~" + iter + "~~~~~~~~~~~~~~~~~");
+            // for (String s : fn.toAssembly()) {
+            //     System.out.println(s);
+            // }
+
+
             // Optimistically color and coalesce
             ColorGraph cg = new ColorGraph(fn.stmts, liveVars, availableRegs);
             Either<Map<Temp, Reg>, Set<Temp>> result = cg.tryColor();
@@ -108,17 +127,25 @@ public class ColorAllocator extends Allocator {
             // If successfully colored, move on to allocating
             if (result.isLeft()) {
                 coloring = result.getLeft();
-                TempReplacer.replaceAll(fn, cg);
+                availableRegs.removeAll(TempReplacer.replaceAll(fn, cg));
 
-            // Spill and 
+                System.out.println(availableRegs);
+
+            // Spill
             } else {
                 Set<Temp> spilled = result.getRight();
-                TempReplacer.replaceAll(fn, cg);
+                availableRegs.removeAll(TempReplacer.replaceAll(fn, cg));
                 Spiller spiller = new Spiller(spilled, spillOffset);
                 fn.stmts = spiller.spillAll(fn.stmts);
                 spillOffset = spillOffset - Config.WORD_SIZE * (spilled.size());
             }
         }
+
+
+        // System.out.println("~~~~~~~~~~~~~~FINAL~~~~~~~~~~~~~~~~~");
+        // for (String s : fn.toAssembly()) {
+        //     System.out.println(s);
+        // }
 
         for (Instr<Temp> i : fn.stmts) {
             i.accept(this);
@@ -131,7 +158,7 @@ public class ColorAllocator extends Allocator {
 
         // Calculate number of words to shift %rsp
         // TODO: add in result of spilling temps
-        int rsp = maxArgs + maxRets;
+        int rsp = maxArgs + maxRets + spillOffset / (-8);
 
         // 16 byte alignment if needed
         // TODO: account for pushed callee registers (misaligned if # of callee regs pushed is odd)

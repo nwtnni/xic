@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
@@ -16,8 +17,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 
 import assemble.Temp;
 import assemble.Reg;
-import assemble.instructions.Instr;
-import assemble.instructions.Mov;
+import assemble.instructions.*;
 
 import util.PairEdge;
 import util.Either;
@@ -28,9 +28,12 @@ public class ColorGraph {
     private Set<Reg> available;
     private Set<Temp> initial;
 
+
+    // TODO: public for debug
+
     // Interference graph
-    private Graph<Temp, PairEdge<Temp, Void>> interfere;
-    private Map<Temp, Integer> degree;
+    public Graph<Temp, PairEdge<Temp, Void>> interfere;
+    public Map<Temp, Integer> degree;
 
     // Temp related sets
     private Set<Temp> simplifyWorklist;
@@ -86,6 +89,15 @@ public class ColorGraph {
         for (Instr<Temp> instr : instructions) {
 
             List<Temp> live = new ArrayList<>(liveVars.get(instr));
+
+            // Inject caller saved registers at call instructions
+            if (instr instanceof Call<?>) {
+                live.addAll(
+                    Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RDI, Temp.RSI, 
+                            Temp.R8, Temp.R9, Temp.R10, Temp.R11)
+                );
+            }
+
             int size = live.size();
 
             for (int i = 0; i < size; i++) {
@@ -169,6 +181,12 @@ public class ColorGraph {
         }
 
         assignColors();
+
+        // for (Temp t: this.spilledNodes) {
+        //     System.out.println(t + ": " + degree.get(t));
+        //     System.out.println(new HashSet<Temp>(Graphs.neighborListOf(interfere, t)));
+        // }
+
 
         if (this.spilledNodes.isEmpty()) {
             return Either.left(this.color);

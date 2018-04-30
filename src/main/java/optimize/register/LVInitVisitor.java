@@ -91,17 +91,16 @@ public class LVInitVisitor extends InstrVisitor<Void> {
     public Void visit(Call.T c) {
         int numArgs = c.numArgs;
 
-        Set<Temp> useTemps = new HashSet<>();
+        // Args in registers must be live if call uses them
+        Set<Temp> use = new HashSet<>();
         for (int i = 0; i < Math.min(numArgs, 6); i++) {
-            useTemps.add(Config.getArg(i));
+            use.add(Config.getArg(i));
         }
 
-        update(c, 
-            useTemps,
-            Set.of(Temp.RAX, Temp.RCX, Temp.RDX, 
-            Temp.RDI, Temp.RSI, Temp.R8, 
-            Temp.R9, Temp.R10, Temp.R11)
-        );
+        // All caller saved registers are killed
+        Set<Temp> def = Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RDI, Temp.RSI, Temp.R8, Temp.R9, Temp.R10, Temp.R11);
+
+        update(c, use, def);
         return null;
     }
 
@@ -180,7 +179,7 @@ public class LVInitVisitor extends InstrVisitor<Void> {
 
     public Void visit(Jmp.T j) {
         // Add %rax and %rdx to use set if jump to return
-        Set<Temp> use = new HashSet<>(Set.of(Temp.RBX, Temp.R12, Temp.R13, Temp.R14, Temp.R15));
+        Set<Temp> use = new HashSet<>();
         if (j.label.equals(cfg.originalFn.returnLabel)) {
             if (cfg.originalFn.rets > 0)
                 use.add(Temp.RAX);

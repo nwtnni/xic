@@ -1,4 +1,4 @@
-xic ("Test assemble [assemble_specific") "-target linux -O" {
+xic ("Test assemble [assemble_specific") "-target linux" {
     many_args_and_returns.xi;
     many_args_and_returns2.xi;
     many_args_and_returns3.xi;
