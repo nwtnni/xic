@@ -108,19 +108,16 @@ public class ColorAllocator extends Allocator {
             // If successfully colored, move on to allocating
             if (result.isLeft()) {
                 coloring = result.getLeft();
+                TempReplacer.replaceAll(fn, cg);
 
             // Spill and 
             } else {
                 Set<Temp> spilled = result.getRight();
-                
-                // call spill clean up
-                assert false;
-
+                TempReplacer.replaceAll(fn, cg);
+                Spiller spiller = new Spiller(spilled, spillOffset);
+                fn.stmts = spiller.spillAll(fn.stmts);
                 spillOffset = spillOffset - Config.WORD_SIZE * (spilled.size());
             }
-
-            // Coalesce temps
-            TempReplacer.replaceAll(fn, cg);
         }
         
 
