@@ -132,9 +132,5 @@ public abstract class FuncDecl<A> {
             epilogue.set(2, add);
         }
 
-        public void saveRegister(Reg reg) {
-            prelude.add(prelude.size() - 1, new Push.RR(reg));
-            epilogue.add(3, new Pop.RR(reg));
-        }
     }
 }

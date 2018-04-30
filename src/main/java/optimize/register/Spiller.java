@@ -41,7 +41,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      */
 
     public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TIR b) {
-
+        return null;
     }
 
     public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TIM b) {

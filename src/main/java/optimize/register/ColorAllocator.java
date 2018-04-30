@@ -83,10 +83,10 @@ public class ColorAllocator extends Allocator {
 
         FuncDecl.R allocatedFn = new FuncDecl.R(fn);
         instrs = new ArrayList<>();
-        Set<Reg> saved = new HashSet<>();
         maxArgs = 0;
         maxRets = 0;
         coloring = null;
+        int spillOffset = -8;
 
         // TODO loop and spill
         while (coloring == null) {
@@ -112,20 +112,16 @@ public class ColorAllocator extends Allocator {
             // Spill and 
             } else {
                 Set<Temp> spilled = result.getRight();
-                System.out.println(spilled);
-                assert false;
+                
+                // call spill clean up
+
+                spillOffset = spillOffset - Config.WORD_SIZE * (spilled.size());
             }
 
             // Coalesce temps
             TempReplacer.replaceAll(fn, cg);
         }
         
-        for (Reg reg : coloring.values()) {
-            if (reg.isCalleeSaved() && !saved.contains(reg)) {
-                saved.add(reg);
-                allocatedFn.saveRegister(reg);
-            }
-        }
 
         for (Instr<Temp> i : fn.stmts) {
             i.accept(this);
