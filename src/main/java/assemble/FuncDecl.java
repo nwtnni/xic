@@ -116,6 +116,10 @@ public abstract class FuncDecl<A> {
             epilogue.add(new Text.R(""));
         }
 
+        /** 
+         * Shift the stack pointer by i words. 
+         * (i is multiplyed by the word size in this function)
+         */
         public void setStackSize(int i) {
 
             // Insert stack setup at end of prelude

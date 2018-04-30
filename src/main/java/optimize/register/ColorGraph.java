@@ -15,7 +15,6 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 import assemble.Temp;
-import assemble.CompUnit;
 import assemble.Reg;
 import assemble.instructions.Instr;
 import assemble.instructions.Mov;

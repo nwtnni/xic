@@ -46,36 +46,7 @@ public class RegAlloc extends Phase {
         ASAGraphFactory<Set<Temp>> gf = new ASAGraphFactory<>(ef);
         Map<String, ASAGraph<Set<Temp>>> cfgs = gf.getAllCfgs(assembly);
 
-        // Run analyses and optimizations
-
-        // TODO: move this stuff to the allocator
-
-
-        out = out.substring(0, out.length() - 4);
-
-        for(ASAGraph<Set<Temp>> cfg : cfgs.values()) {
-            Map<Instr<Temp>, Set<Temp>> lv = LiveVariableWorklist.computeLiveVariables(cfg);
-
-            String lvOut = out + cfg.originalFn.sourceName + ".lv.s";
-
-            // Debug LV
-            try {
-                FileWriter lvw = new FileWriter(lvOut);
-
-                FuncDecl<Temp> fn = cfg.toASA();
-
-                lvw.append(fn.sourceName + "\n");
-                for (Instr<Temp> i : fn.stmts) {
-                    lvw.append(i + ": \n");
-                    lvw.append("live: " + lv.get(i) + "\n");
-                    lvw.append("\n");
-                }
-
-                lvw.close();
-            } catch (IOException e) {
-            }
-
-        }
+        // TODO: Run analyses and optimizations
 
         // Convert back to ASA
         CompUnit<Temp> after = new CompUnit<>();

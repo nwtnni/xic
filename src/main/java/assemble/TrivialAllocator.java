@@ -77,7 +77,7 @@ public class TrivialAllocator extends Allocator {
     }
 
     private void allocate(FuncDecl<Temp> fn) {
-        FuncDecl<Reg> allocatedFn = new FuncDecl.R(fn);
+        FuncDecl.R allocatedFn = new FuncDecl.R(fn);
         instrs = new ArrayList<>();
         tempStack = new HashMap<>();
         tempCounter = 0;
@@ -91,19 +91,11 @@ public class TrivialAllocator extends Allocator {
         allocatedFn.stmts = instrs;
         allocated.fns.add(allocatedFn);
 
-        // Calculate words to shift rsp, +1 to offset tempCounter TODO
+        // Calculate number of words to shift %rsp
         int rsp = tempCounter + maxArgs + maxRets;
-        // 16 byte alignment
+        // 16 byte alignment if needed
         rsp = rsp % 2 == 1 ? rsp + 1 : rsp;
-        Imm shift = new Imm(normalize(rsp));
-
-        // Insert stack setup
-        BinOp.RIR sub = new BinOp.RIR(Kind.SUB, shift, Reg.RSP);
-        allocatedFn.prelude.set(allocatedFn.prelude.size() - 1, sub);
-
-        // Insert stack teardown
-        BinOp.RIR add = new BinOp.RIR(Kind.ADD, shift, Reg.RSP);
-        allocatedFn.epilogue.set(2, add);
+        allocatedFn.setStackSize(rsp);
     }
 
     /*

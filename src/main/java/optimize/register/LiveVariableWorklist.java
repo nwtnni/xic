@@ -21,8 +21,8 @@ public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr<Te
      * Runs the constant propagation analysis on graph [cfg] and returns the mapping of available
      * constants at each program point.
      */
-    public static Map<Instr<Temp>, Set<Temp>> computeLiveVariables(ASAGraph<Set<Temp>> cfg) {
-        LiveVariableWorklist wl = new LiveVariableWorklist(cfg);
+    public static Map<Instr<Temp>, Set<Temp>> computeLiveVariables(ASAGraph<Set<Temp>> cfg, Map<Instr<Temp>, Set<Temp>> use, Map<Instr<Temp>, Set<Temp>> def) {
+        LiveVariableWorklist wl = new LiveVariableWorklist(cfg, use, def);
         wl.doWorklist();
         return wl.live;
     }
@@ -31,11 +31,10 @@ public class LiveVariableWorklist extends Worklist<ASAGraph<Set<Temp>>, Instr<Te
      * Initializes the worklist on the graph [cfg].
      * Requires that the graph is initialized to all empty sets on the edges.
      */
-    private LiveVariableWorklist(ASAGraph<Set<Temp>> cfg) {
+    private LiveVariableWorklist(ASAGraph<Set<Temp>> cfg, Map<Instr<Temp>, Set<Temp>> use, Map<Instr<Temp>, Set<Temp>> def) {
         super(cfg, Direction.BACKWARDS);
-        Pair<Map<Instr<Temp>, Set<Temp>>, Map<Instr<Temp>, Set<Temp>>> init = LVInitVisitor.init(cfg.vertexSet());
-        this.use = init.first;
-        this.def = init.second;
+        this.use = use;
+        this.def = def;
         this.live = new HashMap<>();
     }
 

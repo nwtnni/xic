@@ -48,7 +48,7 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
     }
 
     /** Returns the CFG for a single function. */
-    private ASAGraph<E> makeCfg(FuncDecl<Temp> fn) {
+    public ASAGraph<E> makeCfg(FuncDecl<Temp> fn) {
         state = State.IN_BLOCK;
 
         Label<Temp> start = new Label.T(IRLabelFactory.generate("START"));
