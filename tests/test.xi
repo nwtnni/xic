@@ -2,10 +2,5 @@ use io
 use conv
 
 main (args:int[][]) {
-    i:int = foo(1)
+    println("true")
 }
-
-foo(x:int) : int {
-    return x
-}
-
