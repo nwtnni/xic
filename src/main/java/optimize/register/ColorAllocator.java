@@ -112,8 +112,8 @@ public class ColorAllocator extends Allocator {
             // Spill and 
             } else {
                 Set<Temp> spilled = result.getRight();
+                System.out.println(spilled);
                 assert false;
-
             }
 
             // Coalesce temps

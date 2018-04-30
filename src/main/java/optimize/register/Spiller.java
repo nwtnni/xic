@@ -7,28 +7,56 @@ import assemble.instructions.*;
 import util.*;
 
 public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Temp>>>> {
+
+    /**
+     * Takes a list of instructions and spills all temps in the spilled set.
+     */
+    public List<Instr<Temp>> spillAll(List<Instr<Temp>> instructions) {
+
+        List<Instr<Temp>> updated = new ArrayList<>(); 
+
+        for (Instr<Temp> instr : instructions) {
+            Pair<List<Instr<Temp>>, List<Instr<Temp>>> spills = instr.accept(this);
+
+            if (spills != null) {
+                if (spills.first != null) updated.addAll(spills.first);
+                updated.add(instr);
+                if (spills.second != null) updated.addAll(spills.second);
+            } else {
+                updated.add(instr);
+            }
+        }
+
+        return updated;
+    }
+
+    private Set<Temp> spilled;
+
+    public Spiller(Set<Temp> spilled) {
+        this.spilled = spilled;
+    }
     
     /*
      * BinOp Visitors
      */
 
-    public T visit(BinOp.TIR b) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TIR b) {
+
+    }
+
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TIM b) {
         return null;
     }
 
-    public T visit(BinOp.TIM b) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TRM b) {
         return null;
     }
 
-    public T visit(BinOp.TRM b) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TMR b) {
         return null;
     }
 
-    public T visit(BinOp.TMR b) {
-        return null;
-    }
-
-    public T visit(BinOp.TRR b) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(BinOp.TRR b) {
         return null;
     }
 
@@ -36,7 +64,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Call Visitor
      */
 
-    public T visit(Call.T c) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Call.T c) {
         return null;
     }
 
@@ -44,19 +72,19 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Cmp Visitors
      */
 
-    public T visit(Cmp.TIR c) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cmp.TIR c) {
         return null;
     }
 
-    public T visit(Cmp.TRM c) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cmp.TRM c) {
         return null;
     }
 
-    public T visit(Cmp.TMR c) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cmp.TMR c) {
         return null;
     }
 
-    public T visit(Cmp.TRR c) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cmp.TRR c) {
         return null;
     }
 
@@ -64,7 +92,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Cqo Visitor
      */
 
-    public T visit(Cqo.T c) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Cqo.T c) {
         return null;
     }
 
@@ -72,11 +100,11 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * DivMul Visitors
      */
 
-    public T visit(DivMul.TR d) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(DivMul.TR d) {
         return null;
     }
 
-    public T visit(DivMul.TM d) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(DivMul.TM d) {
         return null;
     }
 
@@ -84,7 +112,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Jcc Visitor
      */
 
-    public T visit(Jcc.T j) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Jcc.T j) {
         return null;
     }
 
@@ -92,7 +120,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Jmp Visitor
      */
 
-    public T visit(Jmp.T j) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Jmp.T j) {
         return null;
     }
 
@@ -100,7 +128,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Label Visitor
      */
 
-    public T visit(Label.T l) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Label.T l) {
         return null;
     }
 
@@ -108,7 +136,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Lea Visitor
      */
 
-    public T visit(Lea.T l) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Lea.T l) {
         return null;
     }
 
@@ -116,23 +144,23 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Mov Visitors
      */
 
-    public <L, R> T visit(Mov.TIR m) {
+    public <L, R> Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TIR m) {
         return null;
     }
 
-    public <L, R> T visit(Mov.TIM m) {
+    public <L, R> Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TIM m) {
         return null;
     }
 
-    public <L, R> T visit(Mov.TRM m) {
+    public <L, R> Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TRM m) {
         return null;
     }
 
-    public <L, R> T visit(Mov.TMR m) {
+    public <L, R> Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TMR m) {
         return null;
     }
 
-    public <L, R> T visit(Mov.TRR m) {
+    public <L, R> Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Mov.TRR m) {
         return null;
     }
     
@@ -140,11 +168,11 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Pop Visitors
      */
 
-    public T visit(Pop.TR p) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Pop.TR p) {
         return null;
     }
 
-    public T visit(Pop.TM p) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Pop.TM p) {
         return null;
     }
 
@@ -152,11 +180,11 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Push Visitors
      */
 
-    public T visit(Push.TR p) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Push.TR p) {
         return null;
     }
 
-    public T visit(Push.TM p) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Push.TM p) {
         return null;
     }
 
@@ -164,7 +192,7 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Ret Visitor
      */
 
-    public T visit(Ret.T r) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Ret.T r) {
         return null;
     }
 
@@ -172,15 +200,15 @@ public class Spiller extends InstrVisitor<Pair<List<Instr<Temp>>, List<Instr<Tem
      * Setcc Visitor
      */
 
-    public T visit(Setcc.T s) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Setcc.T s) {
         return null;
     }
 
     /*
-     * Text Visitor
+     * Pair<List<Instr<Temp>>, List<Instr<Temp>>>ext Visitor
      */
 
-    public T visit(Text.T t) {
+    public Pair<List<Instr<Temp>>, List<Instr<Temp>>> visit(Text.T t) {
         return null;
     }
 
