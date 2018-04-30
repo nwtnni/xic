@@ -27,8 +27,10 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         super(cfg, Direction.FORWARD);
     }
 
-    /*
+    /**
      * Helper method to return boolean if IRExpr contains a IRTemp from kill set
+     * @param killSet set of IRExprs that a IRStmt kills; normally a set of one IRTemp
+     * @param e IRExpr is an expression recursively searched for the presence of a nested IRExpr in the killSet
      */
     
     public boolean kill(Set<IRExpr> killSet, IRExpr e) {
@@ -43,9 +45,10 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
     } 
 
     // TODO: remove this as this should be unnecessary with lowered IR?
-    /*
+    /**
      * Helper method to determine if expression contains a call
      * Used to determine if IRMems should be removed from "out"
+     * @param e IRExpr being recursively searched for an IRCall
      */
     public boolean containsCall(IRExpr e) {
         if (e instanceof IRCall) {
@@ -64,9 +67,11 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         return false;
     }
 
-    /*
+    /**
      * Given an IR statement, calculate the corresponding out
      * using transfer function for CSE analysis
+     * @param in map for the CSEin of a node that maps expressions of that node to the statement it was generated
+     * @param s IRStmt the node of the graph where in = CSEin
      */
     @Override
     public Map<IRExpr, IRStmt> transfer(Map<IRExpr, IRStmt> in, IRStmt s) {
@@ -97,11 +102,12 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         return out;
     }
 
-    /*
+    /**
      * Perform the meet of all outs of a node's predecessors 
      * which is the intersection of these sets
      *
      * Checks for equality of two expressions using the common subexpression and IRStmt that defined it
+     * @param paths Set for all the maps on the edges going into a node of the graph; used to perform the meet for a node
      */
     @Override
     public Map<IRExpr, IRStmt> meet(Set<Map<IRExpr, IRStmt>> paths) {        
@@ -141,6 +147,9 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
 
     /**
      * Annotates the node with the updated in set of available expressions.
+     * @param v IRStmt that will be annotated with the new in map 
+     * @param in map is the newly calculated in set for v
+     * @param out map 
      */
     @Override
     public boolean annotate(IRStmt v, Map<IRExpr, IRStmt> in, Map<IRExpr, IRStmt> out) {
@@ -167,7 +176,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
     }
 
     /*
-     * Run the CSE optimization on graph [g]
+     * Run the CSE optimization on graph from superclass Worklist
      */
     public void runCSE() {
 
