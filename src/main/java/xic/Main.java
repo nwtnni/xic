@@ -26,6 +26,7 @@ public class Main {
         String targetOS = "linux";
         boolean targetFlag = false;
 
+        opts.add(Kind.ALLOCATE);
         opts.add(Kind.INTERPRET);
         state = State.NONE;
 
@@ -71,8 +72,7 @@ public class Main {
                     xic.setOutput(Kind.IRGEN);
                     break;
                 default:
-                    // TODO: check this
-                    System.out.println("Error: ignoring unknown phase for output.");
+                    System.out.println("Error: ignoring unknown phase " + args[i] + "for output.");
                 }
                 break;
             case "--optcfg":
@@ -93,8 +93,7 @@ public class Main {
                     xic.setOutputCFG(Kind.IRGEN);
                     break;
                 default:
-                    // TODO: check this
-                    System.out.println("Error: ignoring unknown phase for output.");
+                    System.out.println("Error: ignoring unknown phase " + args[i] + "for output.");
                 }
                 break;
             case "--help":
@@ -116,6 +115,7 @@ public class Main {
                 if (state != State.NONE && state != State.DISABLE_ALL) {
                     System.out.println("Error: ignoring conflicting flag -O.");
                 } else {
+                    opts.remove(Kind.ALLOCATE);
                     opts.addAll(Set.of(Kind.FOLD, Kind.CONSTPROP, Kind.CSE, Kind.REG_ALLOC, Kind.MC));
                     state = State.DISABLE_ALL;
                 }
@@ -180,9 +180,23 @@ public class Main {
         case "-Ocse":
         case "-Oreg":
         case "-Omc":
-            if (state == State.NONE || state == State.ENABLE) {
+            if (state == State.NONE) {
+                opts.addAll(Set.of(Kind.FOLD, Kind.CONSTPROP, Kind.CSE, Kind.REG_ALLOC, Kind.MC));
                 opts.remove(optToPhase(opt));
                 state = State.ENABLE;
+
+                // Disable trivial allocation
+                if (optToPhase(opt) == Kind.REG_ALLOC || optToPhase(opt) == Kind.MC) {
+                    opts.add(Kind.ALLOCATE);
+                }
+            } else if (state == State.ENABLE) {
+                opts.remove(optToPhase(opt));
+                state = State.ENABLE;
+
+                // Disable trivial allocation
+                if (optToPhase(opt) == Kind.REG_ALLOC || optToPhase(opt) == Kind.MC) {
+                    opts.add(Kind.ALLOCATE);
+                }
             } else {
                 System.out.println("Error: ignoring conflicting flag " + opt + ".");
             }
@@ -195,6 +209,11 @@ public class Main {
             if (state == State.NONE || state == State.DISABLE) {
                 opts.add((optToPhase(opt)));
                 state = State.DISABLE;
+
+                // Enable trivial allocation
+                if (optToPhase(opt) == Kind.REG_ALLOC || optToPhase(opt) == Kind.MC) {
+                    opts.remove(Kind.ALLOCATE);
+                }
             } else {
                 System.out.println("Error: ignoring conflicting flag " + opt + ".");
             }
@@ -209,7 +228,7 @@ public class Main {
      */
     private static void displayHelp() {
         System.out.println("-------------------------------------------------------------------------------------");
-        System.out.println("Usage: xic <OPTION>* <OPERATION>+ <FILE>+                                            ");
+        System.out.println("Usage: xic <OPTION>* <OPERATION>* <FILE>+                                            ");
         System.out.println("-------------------------------------------------------------------------------------");
         System.out.println("Where <OPTION> is zero or more of:                                                   ");
         System.out.println("  --help                  : Print synopsis of options                                ");
@@ -221,9 +240,9 @@ public class Main {
         System.out.println("  -target     <OS>        : Specify the OS for which to generate code                ");
         System.out.println("  --optir     <PHASE>     : Generate .ir file for phase <PHASE>                      ");
         System.out.println("  --optcfg    <PHASE>     : Generate .dot file for phase <PHASE>                     ");
-        System.out.println("  -O<opt>                 : Enable optimization <opt>                                ");
-        System.out.println("  -O-no-<opt>             : Disable optimization <opt>                               ");
-        System.out.println("  -O                      : Disable optimizations, redundant if -O<opt> passed       ");
+        System.out.println("  -O<OPT>                 : Enable optimization <OPT>                                ");
+        System.out.println("  -O-no-<OPT>             : Disable optimization <OPT>                               ");
+        System.out.println("  -O                      : Disable optimizations, redundant if -O<OPT> passed       ");
         System.out.println("-------------------------------------------------------------------------------------");
         System.out.println("Where <OPERATION> is one or more of:                                                 ");
         System.out.println("  --lex                   : For each f.(i)xi, generate lex diagnostic file f.lexed   ");
@@ -239,9 +258,16 @@ public class Main {
         System.out.println("  cf      : Constant folding                                                         ");
         System.out.println("  cp      : Constant propagation                                                     ");
         System.out.println("  cse     : Common subexpression elimination                                         ");
-        // System.out.println("  reg     : Register allocation                                                      ");
-        // System.out.println("  mc      : Move coalescing                                                          ");
+        System.out.println("  reg     : Register allocation                                                      ");
+        System.out.println("  mc      : Move coalescing                                                          ");
         System.out.println("  final   : After all optimizations                                                  ");
+        System.out.println("-------------------------------------------------------------------------------------");
+        System.out.println("Where <OPT> is exactly one of:                                                       ");
+        System.out.println("  cf      : Constant folding                                                         ");
+        System.out.println("  cp      : Constant propagation                                                     ");
+        System.out.println("  cse     : Common subexpression elimination                                         ");
+        System.out.println("  reg     : Register allocation                                                      ");
+        System.out.println("  mc      : Move coalescing                                                          ");
         System.out.println("-------------------------------------------------------------------------------------");
     }
 

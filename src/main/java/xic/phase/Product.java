@@ -11,6 +11,12 @@ import type.FnContext;
 import util.Pair;
 import xic.XicInternalException;
 
+/**
+ * Internal variant class representing an intermediate compiler product.
+ *
+ * Used to transport intermediates between various compiler
+ * phases.
+ */
 public class Product {
 
     private final XiLexer lexed;
