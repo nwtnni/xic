@@ -1,8 +1,3 @@
-// Keywords
-this
-class
-new
-extends
-break
-test.method()
-null
+test() {
+  return new Point
+}

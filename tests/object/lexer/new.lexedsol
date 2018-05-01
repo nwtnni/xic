@@ -1,11 +1,8 @@
-2:1 this
-3:1 class
-4:1 new
-5:1 extends
-6:1 break
-7:1 id test
-7:5 .
-7:6 id method
-7:12 (
-7:13 )
-8:1 null
+1:1 id test
+1:5 (
+1:6 )
+1:8 {
+2:3 return
+2:10 new
+2:14 id Point
+3:1 }

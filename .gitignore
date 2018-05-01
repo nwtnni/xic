@@ -23,6 +23,7 @@ src/main/java/parse/IXiSymbol.java
 # Test files
 # xth/
 xth.tar.gz
+/test.xi
 
 # xic output
 *.lexed

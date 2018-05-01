@@ -1,4 +1,7 @@
 xic ("Test oXi --lex") "--lex" {
+  updates.xi;
+  break.xi;
   new.xi;
-
+  class.xi;
+  method.xi; 
 }
