@@ -11,9 +11,17 @@ import parse.*;
 import xic.XicException;
 import util.Filename;
 import util.Pair;
+
+
+// for tests
+import java.util.Map;
+import optimize.*;
+import optimize.graph.*;
+
 /**
  * Convenience class to write the result of a lexing run to file.
- */
+*/
+@Deprecated
 public class Printer {
 
     /**
@@ -26,56 +34,69 @@ public class Printer {
      * @param opt Boolean to determine whether to run optimizations
      * @throws XicException if the Printer was unable to write to the given file
      */
-    public static void print(String source, String sink, String lib, String unit, boolean opt) throws XicException {
-        String output = Filename.concat(sink, Filename.removeExtension(unit));
-        output = Filename.setExtension(output, "s");
+    // public static void print(String source, String sink, String lib, String unit, boolean opt) throws XicException {
+    //     String output = Filename.concat(sink, Filename.removeExtension(unit));
 
-        IRCompUnit comp = null;
-        FileWriter writer = null;
+    //     IRCompUnit comp = null;
+    //     FileWriter writer = null;
 
-        try {
-            Filename.makePathTo(output);
-            writer = new FileWriter(output);
-            try {
-                Node ast = XiParser.from(source, unit);
-                FnContext context = TypeChecker.check(lib, ast);
-                Pair<IRCompUnit, ABIContext> ir = Emitter.emitIR((Program) ast, context);
+    //     try {
+    //         Filename.makePathTo(output);
+    //         writer = new FileWriter(output + ".s");
+    //         try {
+    //             Node ast = XiParser.from(source, unit);
+    //             FnContext context = TypeChecker.check(lib, ast);
+    //             Pair<IRCompUnit, ABIContext> ir = Emitter.emitIR((Program) ast, context);
 
-                comp = ir.first;
-                ABIContext mangled = ir.second;
+    //             comp = ir.first;
+    //             ABIContext mangled = ir.second;
 
-                if (opt) {
-                    ConstantFolder.constantFold(comp);
-                }
+    //             if (opt) {
+    //                 ConstantFolder.constantFold(comp);
+    //             }
                 
-                comp = (IRCompUnit) Canonizer.canonize(comp);
-                
-                // Reference assembly from Aaron
-                // String cmds = Assembler.assemble(comp, mangled);
-                // FileWriter ref = new FileWriter(output + ".ref.s");
-                // ref.write(cmds);
-                // ref.close();
+    //             comp = (IRCompUnit) Canonizer.canonize(comp);
 
-                CompUnit u = Tiler.tile(comp, mangled);
+    //             CompUnit<Temp> u = Tiler.tile(comp, mangled);
 
-                // for (String i : u.toAbstractAssembly()) {
-                //     System.out.println(i);
-                // }
+    //             // Begin ASA graph test
 
-                u = TrivialAllocator.allocate(u);
+    //             ASAEdgeFactory<Void> aef = new ASAEdgeFactory<>();
+    //             ASAGraphFactory<Void> agf = new ASAGraphFactory<>(u, aef);
+
+    //             Map<String, ASAGraph<Void>> acfgs = agf.getCfgs();
+
+    //             CompUnit<Temp> aAfter = new CompUnit<>();
+    //             for (ASAGraph<Void> c : acfgs.values()) {
+    //                 c.exportCfg(output, "initial");
+    //                 aAfter.fns.add(c.toASA());
+    //             }
+
+    //             u = aAfter;
+
+    //             // end test
+
+    //             // For debug:
+    //             FileWriter debug = new FileWriter(output + ".asa.s");
+    //             for (String i : u.toAssembly()) {
+    //                 debug.append(i + "\n");
+    //             }
+    //             debug.close();
+
+    //             u = TrivialAllocator.allocate(u);
                 
-                for (String i : u.toAssembly()) {
-                    writer.append(i + "\n");
-                }
-                writer.close();
+    //             for (String i : u.toAssembly()) {
+    //                 writer.append(i + "\n");
+    //             }
+    //             writer.close();
                 
-            } catch (XicException xic) {
-                writer.close();
-                throw xic;
-            }
-        } catch (IOException io) {
-            throw XicException.write(output);
-        }
-    }
+    //         } catch (XicException xic) {
+    //             writer.close();
+    //             throw xic;
+    //         }
+    //     } catch (IOException io) {
+    //         throw XicException.write(output);
+    //     }
+    // }
 
 }

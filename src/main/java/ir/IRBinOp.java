@@ -59,24 +59,24 @@ public class IRBinOp extends IRExpr {
         }
     };
 
-    public OpType type;
-    public IRNode left, right;
+    private OpType type;
+    public IRExpr left, right;
 
-    public IRBinOp(OpType type, IRNode left, IRNode right) {
+    public IRBinOp(OpType type, IRExpr left, IRExpr right) {
         this.type = type;
         this.left = left;
         this.right = right;
     }
 
-    public OpType opType() {
+    public OpType type() {
         return type;
     }
 
-    public IRNode left() {
+    public IRExpr left() {
         return left;
     }
 
-    public IRNode right() {
+    public IRExpr right() {
         return right;
     }
 
@@ -88,5 +88,22 @@ public class IRBinOp extends IRExpr {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return 1013 * (left.hashCode()) ^ 1009 * (right.hashCode()) ^ 47 * (type.hashCode());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof IRBinOp)) {
+            return false;
+        }
+
+        IRBinOp op = (IRBinOp) obj;
+        return op.type.equals(this.type) 
+            && op.left.equals(this.left)
+            && op.right.equals(this.right);
     }
 }

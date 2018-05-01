@@ -5,7 +5,7 @@ package ir;
  * NAME(n)
  */
 public class IRName extends IRExpr {
-    public String name;
+    private String name;
 
     /**
      *
@@ -13,6 +13,10 @@ public class IRName extends IRExpr {
      */
     public IRName(String name) {
         this.name = name;
+    }
+
+    public IRName(IRLabel l) {
+        this.name = l.name();
     }
 
     public String name() {
@@ -27,5 +31,10 @@ public class IRName extends IRExpr {
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof IRName && name.equals(((IRName) obj).name);
     }
 }

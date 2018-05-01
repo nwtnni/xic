@@ -1,39 +1,31 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.ArrayList;
+import assemble.Temp;
+import assemble.Reg;
 
-public class Call extends Instr {
+public abstract class Call<A> extends Instr<A> {
 
     public String name;
-    public List<Instr> args;
     public int numArgs;
     public int numRet;
 
-    public Call(String name, List<Instr> args, int numRet) {
+    private Call(String name, int numArgs, int numRet) {
         this.name = name;
-        this.args = args;
-        this.numArgs = args.size();
+        this.numArgs = numArgs;
         this.numRet = numRet;
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        List<String> instrs = new ArrayList<>();
-        for (Instr i : args) {
-            instrs.addAll(i.toAbstractAssembly());
-        }
-        instrs.add("callq " + name);
-        return instrs;
+    public String toString() {
+        return "callq " + name;
     }
 
-    @Override
-    public List<String> toAssembly() {
-        List<String> instrs = new ArrayList<>();
-        for (Instr i : args) {
-            instrs.addAll(i.toAssembly());
-        }
-        instrs.add("callq " + name);
-        return instrs;
+    public static class T extends Call<Temp> {
+        public T(String name, int args, int rets) { super(name, args, rets); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+
+    public static class R extends Call<Reg> {
+        public R(String name, int args, int rets) { super(name, args, rets); }
     }
 }

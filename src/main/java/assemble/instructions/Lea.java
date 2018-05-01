@@ -1,29 +1,28 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
-
 import assemble.*;
 
-public class Lea extends Instr {
-    public Temp destTemp;
-    public Temp srcTemp;
+public abstract class Lea<A> extends Instr<A> {
 
-    public Operand dest;
-    public Operand src;
+    public Mem<A> src;
+    public A dest;
 
-    public Lea(Temp destTemp, Temp srcTemp) {
-        this.destTemp = destTemp;
-        this.srcTemp = srcTemp;
+    private Lea(Mem<A> src, A dest) {
+        this.src = src;
+        this.dest = dest;
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return Arrays.asList(String.format("leaq %s, %s", srcTemp, destTemp));
+    public String toString() {
+        return String.format("leaq %s, %s", src, dest);
     }
 
-    @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("leaq %s, %s", src, dest));
+    public static class T extends Lea<Temp> {
+        public T(Mem<Temp> src, Temp dest) { super(src, dest); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+
+    public static class R extends Lea<Reg> {
+        public R(Mem<Reg> src, Reg dest) { super(src, dest); }
     }
 }

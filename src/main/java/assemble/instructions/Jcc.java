@@ -1,9 +1,10 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
+import assemble.*;
 
-public class Jcc extends Instr {
+import ir.IRLabel;
+
+public abstract class Jcc<A> extends Instr<A> {
 
     public enum Kind {
         E   ("e"),
@@ -20,21 +21,25 @@ public class Jcc extends Instr {
     }
 
     public Kind kind;
-    public String target;
+    public Label<A> target;
 
-    public Jcc(Kind kind, String target) {
+    private Jcc(Kind kind, Label<A> target) {
         this.kind = kind;
         this.target = target;
     }
 
-
     @Override
-    public List<String> toAbstractAssembly() {
-        return toAssembly();
+    public String toString() {
+        return String.format("j%s %s", kind.cond, target.name());
     }
 
-    @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(String.format("j%s %s", kind.cond, target));
+    public static class T extends Jcc<Temp> {
+        public T(Kind kind, IRLabel target) { super(kind, new Label.T(target)); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+    
+    public static class R extends Jcc<Reg> {
+        public R(Kind kind, IRLabel target) { super(kind, new Label.R(target)); }
+        public R(Kind kind, Label<Temp> target) { super(kind, new Label.R(target)); }
     }
 }

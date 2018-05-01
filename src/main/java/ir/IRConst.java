@@ -5,7 +5,7 @@ package ir;
  * CONST(n)
  */
 public class IRConst extends IRExpr {
-    public long value;
+    private long value;
 
     /**
      *
@@ -25,17 +25,17 @@ public class IRConst extends IRExpr {
     }
 
     @Override
-    public boolean isConstant() {
-        return true;
-    }
-
-    @Override
-    public long constant() {
-        return value;
-    }
-
-    @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (value ^ (value >>> 32));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof IRConst && value == ((IRConst) obj).value;
     }
 }

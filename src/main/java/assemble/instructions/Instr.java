@@ -1,9 +1,31 @@
 package assemble.instructions;
 
-import java.util.List;
+import java.util.UUID;
 
-public abstract class Instr {
-    public abstract List<String> toAbstractAssembly();
-    
-    public abstract List<String> toAssembly();
+import assemble.*;
+
+public abstract class Instr<A> {
+
+    public Instr() {
+        this.id = UUID.randomUUID();
+    }
+
+    public UUID id;
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof Instr) {
+            return id.equals(((Instr) o).id);
+        }
+        return false;
+    }
+
+    public <T> T accept(InstrVisitor<T> v) {
+        return null;
+    }
 }

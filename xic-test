@@ -102,8 +102,9 @@ test_ir() {
     test_ir_basic
     test_ir_const_fold
     test_ir_simple
-    test_ir_other
     test_ir_arrays
+    test_ir_other
+    test_ir_fails
 }
 
 test_assemble_simple() {
@@ -137,9 +138,9 @@ test_assemble_assemble_specific() {
 }
 
 test_assemble() {
+    test_assemble_basic
     test_assemble_simple
     test_assemble_arrays
-    test_assemble_basic
     test_assemble_ir_fails
     test_assemble_other
     test_assemble_assemble_specific
@@ -150,17 +151,37 @@ test_course() {
     printf "\n========================================\n\n" 
 }
 
-if [[ -f $1 ]] ; then
-  ./xic -target linux -libpath tests/libs $1
+if [[ -f $2 ]] ; then
+  gradle xic
+  FILE=$2
+  case $1 in
+    --asm)
+      ./xic -target linux -libpath tests/libs $FILE
+      asm="${FILE%.*}.s"
+      base=$(basename -- "$FILE")
+      name="${base%.*}.s"
+      cp $asm "runtime/tests/$name"
+      platform=`uname`
+      if [ "$platform" = "Linux" ]; then
+          pushd "runtime"
+          echo "running assembly:"
+          echo ""
+          time ./run_test "tests/$name"
+          popd
+      else
+          echo "Cannot run assembly on $platform"
+      fi
+      ;;
+    --ir)
+      ./xic --irgen -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
+      ;;
+    *)
+      echo "Invalid use of xic-test"
+      ;;
+  esac
 else
+  gradle xic
   cmd=$1
-  if [ "$cmd" = "--nb" ] ; then
-      echo "skipping build"
-      cmd=$2
-  elif [ -n "$cmd" ] ; then
-      build
-  fi
-
   case $cmd in
   run)
       ./xic -target linux --irrun -libpath tests/libs $2
@@ -238,12 +259,21 @@ else
       test_course
       ;;
   *)
-      echo "Usage: xic-test [options] <command>"
-      echo "  --nb:   Skips running xic-build"
-      echo "  Possible commands: all r[egression] f[ails] c[ourse]"
+      echo "Usage:"
+      echo ""
+      echo "xic-test [command]"
+      echo "Possible commands: "
+      echo "  all r[egression] f[ails] c[ourse]"
       echo "  l[exer] p[arser] t[ype] te tv tm"
       echo "  i[r, b, c, s, o, a, f]"
       echo "  a[ssemble] as aa ab airf ao aas"
+      echo ""
+      echo "OR"
+      echo ""
+      echo "xic-test [output] <file>"
+      echo "Output:"
+      echo "  --asm:    Generate and run assembly"
+      echo "  --ir:     Generate and run ir, optir and optcfg"
       ;;
   esac
 fi

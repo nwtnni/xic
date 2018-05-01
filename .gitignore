@@ -33,6 +33,8 @@ xth.tar.gz
 *.S
 *.s
 *.results
+*.dot
+*.pdf
 
 # VS Code generated nonsense
 .classpath

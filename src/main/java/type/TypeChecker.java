@@ -124,7 +124,7 @@ public class TypeChecker extends Visitor<Type> {
         FnType fnType = fns.lookup(f.id);
         if (fnType == null) {
             // Internal error occurred; should never happen
-            throw XicInternalException.internal("Function not found. Fix Importer.");
+            throw XicInternalException.runtime("Function not found. Fix Importer.");
         }
 
         visit(f.args);

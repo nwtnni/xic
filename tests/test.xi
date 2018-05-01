@@ -2,25 +2,17 @@ use io
 use conv
 
 main(args:int[][]) {
-    a:int[foo()]
+    a:int[5]
+    b:int[] = "Hello"
 
     x:int = 0
     while (x < length(a)) {
-        a[x] = fib(x)
+        a[x] = b[x]
         printInt(a[x])
         x = x + 1
     }
-}
-
-foo() : int {
-    return 40
-}
-
-fib(n:int) : int {
-    if (n <= 2) {
-        return 1
-    }
-    return fib(n-1) + fib(n-2)
+    println(a)
+    println(b)
 }
 
 printInt(x:int) {

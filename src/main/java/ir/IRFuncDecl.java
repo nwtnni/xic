@@ -1,21 +1,64 @@
 package ir;
 
+import java.util.List;
+
 /** An IR function declaration */
 public class IRFuncDecl extends IRNode {
-    public String name;
-    public IRNode body;
+    /** The original function name from source. */
+    private String sourceName;
 
-    public IRFuncDecl(String name, IRNode body) {
+    /** The mangled function name. */
+    private String name;
+
+    /** The function body. */
+    private IRSeq body;
+
+    public IRFuncDecl(String sourceName, String name) {
+        this.sourceName = sourceName;
+        this.name = name;
+        this.body = new IRSeq();
+    }
+
+    public IRFuncDecl(String sourceName, String name, IRSeq body) {
+        this.sourceName = sourceName;
         this.name = name;
         this.body = body;
+    }
+
+    public String sourceName() {
+        return sourceName;
     }
 
     public String name() {
         return name;
     }
 
-    public IRNode body() {
+    public IRSeq body() {
         return body;
+    }
+
+    public List<IRStmt> setBody(List<IRStmt> s) {
+        return body.setStmts(s);
+    }
+
+    public boolean add(IRStmt s) {
+        return body.add(s);
+    }
+
+    public void add(int index, IRStmt s) {
+        body.add(index, s);
+    }
+
+    public IRStmt set(int index, IRStmt s) {
+        return body.set(index, s);
+    }
+
+    public IRStmt get(int index) {
+        return body.get(index);
+    }
+
+    public int size() {
+        return body.size();
     }
 
     @Override
@@ -23,33 +66,6 @@ public class IRFuncDecl extends IRNode {
         return "FUNC " + name;
     }
 
-    // @Override
-    // public IRNode visitChildren(IRVisitor v) {
-    //     IRStmt stmt = (IRStmt) v.visit(this, body);
-
-    //     if (stmt != body) return v.nodeFactory().IRFuncDecl(name, stmt);
-
-    //     return this;
-    // }
-
-    // @Override
-    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
-    //     T result = v.unit();
-    //     result = v.bind(result, v.visit(body));
-    //     return result;
-    // }
-
-    // @Override
-    // public InsnMapsBuilder buildInsnMapsEnter(InsnMapsBuilder v) {
-    //     v.addNameToCurrentIndex(name);
-    //     v.addInsn(this);
-    //     return v;
-    // }
-
-    // @Override
-    // public IRNode buildInsnMaps(InsnMapsBuilder v) {
-    //     return this;
-    // }
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);

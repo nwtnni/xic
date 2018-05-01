@@ -1,5 +1,6 @@
 package ir;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,13 +9,13 @@ import java.util.List;
  * SEQ(s1,...,sn)
  */
 public class IRSeq extends IRStmt {
-    public List<IRNode> stmts;
+    private List<IRStmt> stmts;
 
     /**
      * @param stmts the statements
      */
-    public IRSeq(IRNode... stmts) {
-        this(Arrays.asList(stmts));
+    public IRSeq(IRStmt... stmts) {
+        this(new ArrayList<>(Arrays.asList(stmts)));
     }
 
     /**
@@ -22,53 +23,50 @@ public class IRSeq extends IRStmt {
      * The list should not be modified subsequently.
      * @param stmts the sequence of statements
      */
-    public IRSeq(List<IRNode> stmts) {
+    public IRSeq(List<IRStmt> stmts) {
         this.stmts = stmts;
     }
 
-    public List<IRNode> stmts() {
+    /* Public interface for sequence. */
+
+    public List<IRStmt> stmts() {
         return stmts;
+    }
+
+    public List<IRStmt> setStmts(List<IRStmt> s) {
+        List<IRStmt> old = stmts;
+        stmts = s;
+        return old;
+    }
+
+    public boolean add(IRStmt s) {
+        return stmts.add(s);
+    }
+
+    public void add(int index, IRStmt s) {
+        stmts.add(index, s);
+    }
+
+    public IRStmt set(int index, IRStmt s) {
+        return stmts.set(index, s);
+    }
+
+    public IRStmt remove(int index) {
+        return stmts.remove(index);
+    }
+
+    public IRStmt get(int index) {
+        return stmts.get(index);
+    }
+
+    public int size() {
+        return stmts.size();
     }
 
     @Override
     public String label() {
         return "SEQ";
     }
-
-    // @Override
-    // public IRNode visitChildren(IRVisitor v) {
-    //     boolean modified = false;
-
-    //     List<IRStmt> results = new ArrayList<>(stmts.size());
-    //     for (IRStmt stmt : stmts) {
-    //         IRStmt newStmt = (IRStmt) v.visit(this, stmt);
-    //         if (newStmt != stmt) modified = true;
-    //         results.add(newStmt);
-    //     }
-
-    //     if (modified) return v.nodeFactory().IRSeq(results);
-
-    //     return this;
-    // }
-
-    // @Override
-    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
-    //     T result = v.unit();
-    //     for (IRStmt stmt : stmts)
-    //         result = v.bind(result, v.visit(stmt));
-    //     return result;
-    // }
-
-    // @Override
-    // public CheckCanonicalIRVisitor checkCanonicalEnter(
-    //         CheckCanonicalIRVisitor v) {
-    //     return v.enterSeq();
-    // }
-
-    // @Override
-    // public boolean isCanonical(CheckCanonicalIRVisitor v) {
-    //     return !v.inSeq();
-    // }
 
     @Override
     public <T> T accept(IRVisitor<T> v) {

@@ -1,25 +1,61 @@
 package assemble.instructions;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 import assemble.*;
 
-public class Pop extends Instr {
-    public Operand operand;
+public abstract class Pop<D, A> extends Instr<A> {
 
-    public Pop(Operand o) {
-        assert (o.kind != Operand.Kind.MEM);
-        operand = o;
+    public D dest;
+
+    private Pop(D dest) {
+        this.dest = dest;
     }
 
     @Override
-    public List<String> toAbstractAssembly() {
-        return toAssembly();
+    public String toString() {
+        return "popq " + dest;
     }
 
-    @Override
-    public List<String> toAssembly() {
-        return Arrays.asList("popq " + operand);
+    /**
+     *
+     * Abstract Assembly Instructions
+     *
+     */
+
+    /**
+     * Abstract register source addressing mode.
+     */
+    public static class TR extends Pop<Temp, Temp> {
+        public TR(Temp dest) { super(dest); } 
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+
+    /**
+     * Abstract memory source addressing mode.
+     */
+    public static class TM extends Pop<Mem<Temp>, Temp> {
+        public TM(Mem<Temp> dest) { super(dest); } 
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+
+    /*
+     *
+     * Assembly Instructions
+     *
+     */
+
+    /**
+     * Register source addressing mode.
+     */
+    public static class RR extends Pop<Reg, Reg> {
+        public RR(Reg dest) { super(dest); } 
+    }
+
+    /**
+     * Memory source addressing mode.
+     */
+    public static class RM extends Pop<Mem<Reg>, Reg> {
+        public RM(Mem<Reg> dest) { super(dest); } 
     }
 }

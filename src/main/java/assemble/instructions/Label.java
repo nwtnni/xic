@@ -1,38 +1,19 @@
 package assemble.instructions;
 
-import java.util.List;
-
+import assemble.*;
 import ir.IRFuncDecl;
 import ir.IRLabel;
 
-import java.util.Arrays;
+public abstract class Label<A> extends Instr<A> {
 
-public class Label extends Instr {
     protected String name;
-
-    /**
-     * Generate a label from an IRLabel
-     */
-    public static Label label(IRLabel l) {
-        return new Label(l.name + ":");
-    }
-
-    /**
-     * Generate a label from an IRLabel
-     */
-    public static Label label(IRFuncDecl fn) {
-        return new Label(fn.name + ":");
-    }
-
-    /**
-     * Generate a label from an IRFuncDecl 
-     */
-    public static Label retLabel(IRFuncDecl f) {
-        return new Label("_RET_" + f.name + ":");
-    }
 
     private Label(String name) {
         this.name = name;
+    }
+
+    private Label(IRLabel l) {
+        this.name = l.name() + ":";
     }
 
     public String name() {
@@ -40,17 +21,32 @@ public class Label extends Instr {
     }
 
     @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    /**
+     * All labels with same name are equal.
+     */
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Label && name.equals(((Label) o).name);
+    }
+
+    @Override
     public String toString() {
         return name;
     }
 
-    @Override
-    public List<String> toAbstractAssembly() {
-        return toAssembly();
+    public static class T extends Label<Temp> {
+        public T(String name) { super(name); }
+        public T(IRLabel label) { super(label); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
-    @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(name);
+    public static class R extends Label<Reg> {
+        public R(Label<Temp> label) { super(label.name() + ":"); }
+        public R(String name) { super(name); }
+        public R(IRLabel label) { super(label); }
     }
 }

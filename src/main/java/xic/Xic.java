@@ -1,166 +1,83 @@
 package xic;
 
-import ast.Invariant;
-import ast.Node;
-import lex.XiLexer;
-import parse.IXiParser;
-import parse.XiParser;
-import type.TypeChecker;
-import util.Filename;
+import java.util.List;
+import java.util.ArrayList;
+
+import xic.phase.Config;
+import xic.phase.Phase;
+import xic.phase.Product;
+
+import util.Result;
 
 /**
  * Main compiler class. Wraps around and provides convenience methods
  * for every phase of compilation.
  */
 public class Xic {
-    
-    /**
-     * The source path associated with this compiler, i.e. where it will
-     * look for source files.
-     */
+
     private String source;
-    
-    /**
-     * The sink path associated with this compiler, i.e. where it will
-     * output diagnostic files.
-     */
+
     private String sink;
-    
-    /**
-     * The lib path associated with this compiler, i.e. where it will
-     * look for interface files.
-     */
+
+    private String asm;
+
     private String lib;
-    
-    /**
-     * Creates a new compiler instance which will read from the given
-     * file paths.
-     * 
-     * @param source Where to look for source files
-     * @param sink Where to output diagnostic files
-     * @param lib Where to look for interface files
-     */
-    public Xic(String source, String sink, String lib) {
-        this.source = source;
-        this.sink = sink;
-        this.lib = lib;
+
+    private List<String> units;
+
+    private List<Phase> phases;
+
+    public Xic() {
+        source = ""; 
+        sink = "";
+        asm = "";
+        lib = "";
+        units = new ArrayList<>();
+        phases = Phase.complete();
     }
 
-    /**
-     * Creates a {@link lex.XiLexer} which reads the input file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @return A XiLexer instance which will read the input file
-     * @throws XicException if lexing failed
-     */
-    public XiLexer lex(String unit) throws XicException {
-        switch (Filename.getExtension(unit)) {
-            case "xi":
-            case "ixi":
-                return XiLexer.from(source, unit);
-            default:
-                throw XicException.unsupported(unit);
+    public void setSource(String source) { this.source = source; }
+
+    public void setSink(String sink) { this.sink = sink; }
+
+    public void setAsm(String asm) { this.asm = asm; }
+
+    public void setLib(String lib) { this.lib = lib; }
+
+    public void addUnit(String unit) { this.units.add(unit); }
+
+    public void removePhase(Phase.Kind kind) {
+        phases.removeIf(phase -> phase.matches(kind));
+    }
+
+    public void setOutput(Phase.Kind kind) {
+        for (Phase phase : phases) {
+            if (phase.matches(kind)) phase.setOutput();
         }
     }
 
-    /**
-     * Returns the AST associated with the input file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @return The AST of the input file
-     * @throws XicException if lexing or parsing failed
-     */
-    public Node parse(String unit) throws XicException {
-        Node ast = null;
-        
-        switch (Filename.getExtension(unit)) {
-            case "xi":
-                ast = XiParser.from(source, unit);
-                break;
-            case "ixi":
-                ast = IXiParser.from(source, unit);
-                break;
-            default:
-                throw XicException.unsupported(unit);
+    public void setOutputCFG(Phase.Kind kind) {
+        for (Phase phase : phases) {
+            if (phase.matches(kind)) phase.setOutputCFG();
         }
-        
-        Invariant.check(ast);
-        return ast;
-    }
-    
-    /**
-     * Returns the decorated AST (i.e. with type annotations) 
-     * associated with the input file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @return The decorated AST of the input file
-     * @throws XicException if lexing, parsing, or typechecking failed
-     */
-    public Node typeCheck(String unit) throws XicException {
-        Node ast = parse(unit);
-        TypeChecker.check(lib, ast);
-        return ast;
-    }
-    
-    /**
-     * Prints and writes diagnostics for the lexed input file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @throws XicException if lexing failed
-     */
-    public void printLexed(String unit) throws XicException {
-        lex.Printer.print(source, sink, unit);
-    }
-    
-    /**
-     * Prints and writes diagnostics for the lexed and parsed input file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @throws XicException if lexing or parsing failed
-     */
-    public void printParsed(String unit) throws XicException {
-        parse.Printer.print(source, sink, unit);
     }
 
-    /**
-     * Prints and writes diagnostics for the lexed, parsed, and typechecked input
-     * file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @throws XicException if lexing, parsing, or typechecking failed
-     */
-    public void printTyped(String unit) throws XicException {
-        type.Printer.print(source, sink, lib, unit);
-    }
+    public void run() {
 
-    /**
-     * Prints and writes diagnostics for the lexed, parsed, and typechecked input
-     * file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @param run Run IR interpreter on generated IR code
-     * @param opt enable optimizations if true 
-     * @throws XicException if lexing, parsing, or typechecking failed
-     */
-    public void printIR(String unit, boolean run, boolean opt) throws XicException {
-        ir.Printer.print(source, sink, lib, unit, run, opt);
-    }
+        Config config = new Config(source, sink, asm, lib);
 
-    /**
-     * Prints and writes diagnostics for the lexed, parsed, and typechecked input
-     * file.
-     * 
-     * @param unit The path to the input file, relative to source
-     * @param opt enable optimzations if true
-     * @param aFlag If true, -d flag was specified
-     * @param aSink Where to place generated assembly files if aFlag is true
-     * @throws XicException if lexing, parsing, or typechecking failed
-     */
-    public void printAssembly(String unit, boolean opt, boolean assemblyFlag, String assemblySink) throws XicException {
-        if (assemblyFlag) {
-            assemble.Printer.print(source, assemblySink, lib, unit, opt);
-        } else {
-            assemble.Printer.print(source, sink, lib, unit, opt);
+        for (String unit : units) {
+
+            config.setUnit(unit);
+            Result<Product> product = new Result<>(Product.empty());
+
+            for (Phase phase : phases) {
+                product = phase.process(config, product);
+            }
+
+            if (product.isErr()) {
+                System.out.println(product.err().toPrint());
+            }
         }
     }
 }

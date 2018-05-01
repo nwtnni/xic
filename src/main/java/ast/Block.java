@@ -1,9 +1,10 @@
 package ast;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java_cup.runtime.ComplexSymbolFactory.Location;
+import java.util.List;
 
+import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 
@@ -19,7 +20,7 @@ public class Block extends Node {
 
     public Block(Location location, Node... statements) {
         this.location = location;
-        this.statements = Arrays.asList(statements);
+        this.statements = new ArrayList<>(Arrays.asList(statements));
     }
     
     public Block(List<Node> statements) {

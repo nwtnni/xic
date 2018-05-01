@@ -1,28 +1,14 @@
 package assemble;
 
-/** Some special stack-related names that are used in the 
+import assemble.instructions.InstrFactory.*;
+
+import util.Either;
+
+/** 
+ * Some special stack-related names that are used in the 
  * IR to assembly transation 
  */
 public class Config {
-
-    /** Prefix for argument registers */
-    // public static final String ABSTRACT_ARG_PREFIX = "_ARG";
-
-    // /** Prefix for return registers */
-    // public static final String CALLER_RET_PREFIX = "_RET";
-    
-    // /** Prefix for callee return registers */
-    // public static final String CALLEE_RET_PREFIX = "_CRET";
-
-    // /** 
-    //  * Name of the callee temp for address to put multiple returns > 2
-    //  */
-    // public static final Temp CALLEE_MULT_RETURN = Temp.temp("_CALLEE_RET_ADDR");
-
-    // /** 
-    //  * Name of the caller temp for address to receive multiple returns > 2
-    //  */
-    // public static final Temp CALLER_MULT_RETURN = Temp.temp("_CALLER_RET_ADDR");
 
     /** Word size; assumes a 64-bit architecture */
     public static final int WORD_SIZE = 8;
@@ -33,26 +19,116 @@ public class Config {
     /** _xi_out_of_bounds function name */
     public static final String XI_OUT_OF_BOUNDS = "_xi_out_of_bounds";
 
-    /**
-     * Get the register for args 0-5 on System V.
-     */
-    public static Operand getArg(int i) {
+    /** Get the register for args 0-5 on System V. */
+    public static Temp getArg(int i) {
         switch (i) {
             case 0:
-                return Operand.RDI;
+                return Temp.RDI;
             case 1:
-                return Operand.RSI;
+                return Temp.RSI;
             case 2:
-                return Operand.RDX;
+                return Temp.RDX;
             case 3:
-                return Operand.RCX;
+                return Temp.RCX;
             case 4:
-                return Operand.R8;
+                return Temp.R8;
             case 5:
-                return Operand.R9;
+                return Temp.R9;
         }
         assert false;
         return null;
+    }
+
+    /** Get the register for returns 0-1 on System V. */
+    public static Temp getRet(int i) {
+        if (i == 0) {
+            return Temp.RAX;
+        } else if (i == 1) {
+            return Temp.RDX;
+        }
+        assert false;
+        return null;
+    }
+
+    /** 
+     * Temp for callee args (reading args)
+     * Fixed offset from %rbp:
+     *      movq %rdi, a0
+     *      movq %rsi, a1
+     *      ...
+     *      movq 8(%rbp), a6
+     *      movq 16(%rbp), a7
+     *      ...
+     *      movq [8*(n-5)], an
+     */
+    protected static Operand calleeArg(int i) {
+
+        if (i < 6) return Operand.temp(getArg(i));
+
+        // Args 6+ read in reverse order from stack starting at 16(%rbp)
+        // +1 for stored BP, +1 for stored PC
+        Mem<Temp> mem = Mem.of(Temp.RBP, Config.WORD_SIZE * (i - 6 + 2));
+        return Operand.mem(mem);
+    }
+
+    /** 
+     * Temp for caller args (writing args)
+     * Fixed offset from %rsp:
+     *      movq a0, %rdi
+     *      movq a1, %rsi
+     *      ...
+     *      movq a6, 0(%rsp)
+     *      movq a7, 8(%rsp)
+     *      ...
+     *      movq an, [8*(n-6)](%rsp)
+     */
+    protected static Operand callerArg(int i) {
+        if (i < 6) return Operand.temp(getArg(i));
+
+        // Args 6+ pushed in reverse order to stack starting at (%rsp)
+        Mem<Temp> mem = Mem.of(Temp.RSP, Config.WORD_SIZE * (i - 6));
+        return Operand.mem(mem);
+    }
+
+    /** 
+     * Temp for callee returns (writing returns)
+     * Writing returns is something like
+     *      movq r0, %rax
+     *      movq r1, %rdx
+     *      movq r2, 0(%RET_ADDR)
+     *      movq r3, 8(%RET_ADDR)
+     *      ...
+     *      movq rn, [8*(n-2)](%RET_ADDR)
+     * 
+     * RET_ADDR is passed in as arg0 and will be decided at alloc
+     */
+    protected static Operand calleeRet(Temp addr, int i) {
+
+        if (i < 2) return Operand.temp(getRet(i));
+
+        // Rets 2+ written in reverse order to offset(ret_addr)
+        Mem<Temp> mem = Mem.of(addr, WORD_SIZE * (i - 2));
+        return Operand.mem(mem);
+    }
+
+    /**
+     * Temp for caller returns (read returns)
+     * Fixed offset from %rsp based on number of args:
+     * movq %rax, r0
+     * movq %rdx, r1
+     * movq off(%rsp), r2
+     * move [off + 8](%rsp), r3
+     * ...
+     * mov [off + 8*(n-2)](%rsp), rn
+     */
+    protected static Operand callerRet(int i, int numArgs) {
+
+        if (i < 2) return Operand.temp(getRet(i));
+
+        // Rets 2+ read in reverse order from offset(%rsp)
+        int offset = Config.WORD_SIZE * (i - 2 + Math.max(numArgs - 6, 0));
+        Mem<Temp> mem = Mem.of(Temp.RSP, offset);
+        return Operand.mem(mem);
     }
 
     /**

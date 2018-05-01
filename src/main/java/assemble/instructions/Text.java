@@ -1,34 +1,26 @@
 package assemble.instructions;
 
-import java.util.List;
-import java.util.Arrays;
+import assemble.*;
 
-public class Text extends Instr {
-    protected String text;
+public abstract class Text<A> extends Instr<A> {
 
-    public static Text comment(String c) {
-        return new Text("# " + c);
-    }
-
-    public static Text text(String t) {
-        return new Text(t);
-    }
-
-    public static Text label(String l) {
-        return new Text(l + ":");
-    }
+    public String text;
 
     private Text(String text) {
         this.text = text;
     }
-    
-    @Override
-    public List<String> toAbstractAssembly() {
-        return toAssembly();
-    }
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList(text);
+    public String toString() {
+        return text;
+    }
+
+    public static class T extends Text<Temp> {
+        public T(String text) { super(text); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+
+    public static class R extends Text<Reg> {
+        public R(String text) { super(text); }
     }
 }

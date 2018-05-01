@@ -1,16 +1,19 @@
 package assemble.instructions;
 
-import java.util.Arrays;
-import java.util.List;
+import assemble.*;
 
-public class Cqo extends Instr {
-    @Override
-    public List<String> toAbstractAssembly() {
-        return toAssembly();
-    }
+public abstract class Cqo<A> extends Instr<A> {
+
+    private Cqo() {}
 
     @Override
-    public List<String> toAssembly() {
-        return Arrays.asList("cqo");
+    public String toString() {
+        return "cqo";
     }
+
+    public static class T extends Cqo<Temp> {
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+
+    public static class R extends Cqo<Reg> {}
 }
