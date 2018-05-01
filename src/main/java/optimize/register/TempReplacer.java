@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import assemble.*;
 import assemble.instructions.*;
 
+/**
+ * Replaces temps that are aliased to other temporaries and coalesces moves.
+ */
 public class TempReplacer extends InstrVisitor<Boolean> {
 
     public List<Instr<Temp>> replaceAll(List<Instr<Temp>> instructions) {

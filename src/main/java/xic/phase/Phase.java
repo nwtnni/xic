@@ -5,6 +5,9 @@ import java.util.ArrayList;
 
 import util.Result;
 
+/**
+ * The superclass of all compilation phases in the pipeline.
+ */
 public abstract class Phase {
 
     public static List<Phase> complete() {

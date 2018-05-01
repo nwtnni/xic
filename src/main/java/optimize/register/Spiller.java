@@ -6,6 +6,9 @@ import assemble.*;
 import assemble.instructions.*;
 import util.*;
 
+/**
+ * Rewrites code for spills.
+ */
 public class Spiller extends InstrVisitor<List<Instr<Temp>>> {
 
     /**

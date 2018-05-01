@@ -6,6 +6,7 @@ import java.util.Optional;
 import ir.*;
 import optimize.graph.*;
 
+/** Main class for the constant propagation optimization. */
 public class ConstPropagator extends IRVisitor<Optional<IRConst>> {
 
     /**

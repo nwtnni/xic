@@ -3,10 +3,10 @@ package optimize.graph;
 import java.util.HashMap;
 import java.util.Map;
 
-import assemble.instructions.Label;
 import emit.IRLabelFactory;
 import ir.*;
 
+/** Factory class for making IR CFGs. */
 public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
 
     public IRGraphFactory(IRCompUnit compUnit, IREdgeFactory<E> edgeFactory) {

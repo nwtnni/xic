@@ -3,6 +3,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.*;
 import org.junit.Test;
 import ir.*;
+
 public class ConstantFolderTest {
 
     IRConst c1 = new IRConst(1);

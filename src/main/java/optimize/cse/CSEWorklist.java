@@ -17,7 +17,7 @@ import util.PairEdge;
 import util.Pair;
 
 /** 
- * Worklist for available expressions analysis and perform CSE.
+ * Worklist for available expressions analysis and perform CSE optimization.
  */
 public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, Map<IRExpr, IRStmt>> {
 

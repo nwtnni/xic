@@ -9,6 +9,9 @@ import assemble.instructions.*;
 import optimize.graph.ASAGraph;
 import util.Pair;
 
+/** 
+ * Utility visitor for generating def and use sets for live variable analysis. 
+ */
 public class LVInitVisitor extends InstrVisitor<Void> {
 
     /**

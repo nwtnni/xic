@@ -2,16 +2,19 @@ use io
 use conv
 
 main(args:int[][]) {
-    printInt(factorial(5))
-}
+    a:int[5]
+    b:int[] = "Hello"
 
-factorial(n:int):int {
-    if n <= 1 {
-        return 1
+    x:int = 0
+    while (x < length(a)) {
+        a[x] = b[x]
+        printInt(a[x])
+        x = x + 1
     }
-    return n*factorial(n-1)
+    println(a)
+    println(b)
 }
 
 printInt(x:int) {
-    print(unparseInt(x))
+    println(unparseInt(x))
 }

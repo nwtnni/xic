@@ -1,10 +1,8 @@
 package optimize.cse;
 
-
 import ir.*;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.HashSet;
 
 /*
  * Visitor for finding the IRExpr to replace with the IRTemp generated

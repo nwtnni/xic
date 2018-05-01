@@ -1,25 +1,22 @@
 package optimize.register;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Stack;
 
 import java.util.Optional;
 
 import assemble.*;
 import assemble.instructions.*;
-import assemble.instructions.BinOp.Kind;
 
 import optimize.graph.*;
 
 import util.*;
 
-import xic.XicInternalException;
-
+/**
+ * Allocates registers through graph coloring as per the Appel pseudocode.
+ */
 public class ColorAllocator extends Allocator {
 
     /** Allocates registers for all the functions in the compliation unit. */
@@ -28,6 +25,7 @@ public class ColorAllocator extends Allocator {
         return allocator.allocate();
     }
 
+    /** The initial set of registers available for coloring. */
     private static Set<Reg> availableRegs = new HashSet<>(Set.of(
         Reg.RAX,
         Reg.RBX,
@@ -88,9 +86,6 @@ public class ColorAllocator extends Allocator {
         coloring = null;
         int spillOffset = -8;
 
-        // DEBUG
-        // int iter = 0;
-
         while (coloring == null) {
             ASAGraph<Set<Temp>> cfg = graphFactory.makeCfg(fn);
             fn = cfg.toASA();
@@ -103,24 +98,7 @@ public class ColorAllocator extends Allocator {
             // Compute live variables set
             Map<Instr<Temp>, Set<Temp>> liveVars = LiveVariableWorklist.computeLiveVariables(cfg, use, def);
 
-            // DEBUG LIVE VAR
-            // System.out.println("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" + cfg.originalFn.sourceName);
-            // for (Instr<Temp> ins : cfg.originalFn.stmts) {
-            //     System.out.println("instr: " + ins);
-            //     System.out.println("live " + liveVars.get(ins));
-            //     System.out.println("use " + init.first.get(ins));
-            //     System.out.println("def " + init.second.get(ins)); 
-            //     System.out.println();
-            // }
-
-            // iter++;
-            // System.out.println("~~~~~~~~~~~~~~" + iter + "~~~~~~~~~~~~~~~~~");
-            // for (String s : fn.toAssembly()) {
-            //     System.out.println(s);
-            // }
-
-
-            // Optimistically color and coalesce
+            // Remove callee args that have been move coalesced
             availableRegs = GetCalleeRegs.getCalleeRegs(fn);
             availableRegs.addAll(
                 Set.of( Reg.RAX,
@@ -133,6 +111,8 @@ public class ColorAllocator extends Allocator {
                         Reg.R10,
                         Reg.R11)
                 );
+            
+            // Optimistically color and coalesce
             ColorGraph cg = new ColorGraph(fn.stmts, liveVars, availableRegs);
             Either<Map<Temp, Reg>, Set<Temp>> result = cg.tryColor();
             TempReplacer replacer = new TempReplacer(cg); 
@@ -151,27 +131,16 @@ public class ColorAllocator extends Allocator {
             }
         }
 
-
-        // System.out.println("~~~~~~~~~~~~~~FINAL~~~~~~~~~~~~~~~~~");
-        // for (String s : fn.toAssembly()) {
-        //     System.out.println(s);
-        // }
-
         for (Instr<Temp> i : fn.stmts) {
             i.accept(this);
         }
         allocatedFn.stmts = instrs;
         allocated.fns.add(allocatedFn);
 
-
-        // TODO: push callee saved
-
         // Calculate number of words to shift %rsp
-        // TODO: add in result of spilling temps
         int rsp = maxArgs + maxRets + spillOffset / (-8);
 
         // 16 byte alignment if needed
-        // TODO: account for pushed callee registers (misaligned if # of callee regs pushed is odd)
         rsp = rsp % 2 == 1 ? rsp + 1 : rsp;
         allocatedFn.setStackSize(rsp);
     }

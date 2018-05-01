@@ -20,6 +20,9 @@ import xic.XicInternalException;
 
 import util.Pair;
 
+/**
+ * Converts IR into abstract assembly.
+ */
 public class Tiler extends IRVisitor<Operand> {
 
     /**

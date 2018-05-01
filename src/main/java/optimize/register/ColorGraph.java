@@ -6,10 +6,8 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.Stack;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
@@ -23,17 +21,17 @@ import util.PairEdge;
 import util.Either;
 import util.Pair;
 
+/**
+ * Interference graph for register allocation through graph coloring.
+ */
 public class ColorGraph {
 
     private Set<Reg> available;
     private Set<Temp> initial;
 
-
-    // TODO: public for debug
-
     // Interference graph
-    public Graph<Temp, PairEdge<Temp, Void>> interfere;
-    public Map<Temp, Integer> degree;
+    private Graph<Temp, PairEdge<Temp, Void>> interfere;
+    private Map<Temp, Integer> degree;
 
     // Temp related sets
     private Set<Temp> simplifyWorklist;

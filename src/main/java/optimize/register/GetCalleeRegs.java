@@ -5,6 +5,10 @@ import java.util.*;
 import assemble.*;
 import assemble.instructions.*;
 
+/** 
+ * Utility visitor for extracting the set of callee registers that have been 
+ * coalesced and are no longer available for later iterations of coloring.
+ */
 public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
 
     /**
@@ -15,7 +19,6 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
      */
     public static Set<Reg> getCalleeRegs(FuncDecl<Temp> fn) {
         GetCalleeRegs gcr = new GetCalleeRegs();
-        List<Instr<Temp>> instrs = new ArrayList<>();
         Set<Reg> calleeRegs = new HashSet<>();
 
 
