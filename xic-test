@@ -8,6 +8,7 @@ build() {
 test_all() {
   test_reg
   test_course
+  test_object
 }
 
 test_reg() {
@@ -18,6 +19,7 @@ test_reg() {
     test_type
     test_ir
     test_ir_fails
+    test_assemble
 }
 
 test_fails() {
@@ -151,6 +153,15 @@ test_course() {
     printf "\n========================================\n\n" 
 }
 
+test_object() {
+  test_object_lex
+}
+
+test_object_lex() {
+    xth/xth -compilerpath . -workpath tests/object/lexer -testpath tests/object/lexer tests/object/lexer/xthScript     
+    printf "\n========================================\n\n" 
+}
+
 if [[ -f $2 ]] ; then
   gradle xic
   FILE=$2
@@ -257,6 +268,12 @@ else
       ;;
   c|course)
       test_course
+      ;;
+  o)
+      test_object
+      ;;
+  ol)
+      test_object_lex
       ;;
   *)
       echo "Usage:"

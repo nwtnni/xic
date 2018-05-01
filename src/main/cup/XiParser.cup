@@ -75,13 +75,15 @@ parser code {:
 scan with {: return lexer.nextToken(); :};
 
 /* Terminals (tokens returned by the scanner). */
-terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
+terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH, BREAK;     // New for PA7: BREAK
 terminal                    INT, BOOL;
 terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
 terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
 terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
-terminal    Boolean         TRUE, FALSE; 
+terminal                    EQ, COLON, SEMICOLON, COMMA, DOT, UNDERSCORE;     // New for PA7: DOT
+terminal                    THIS, CLASS, EXTENDS, NEW;                        // New for PA7: THIS, CLASS, EXTENDS, NEW
+terminal    Void            NULL;                                             // New for PA7: NULL
+terminal    Boolean         TRUE, FALSE;
 terminal    String          IDENTIFIER;
 terminal    String          INTEGER;
 terminal    CharWrapper     CHAR;

@@ -1,0 +1,4 @@
+xic ("Test oXi --lex") "--lex" {
+  new.xi;
+
+}

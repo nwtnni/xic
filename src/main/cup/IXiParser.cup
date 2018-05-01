@@ -51,6 +51,7 @@ scan with {: return lexer.nextToken(); :};
 terminal                    USE;
 terminal                    INT, BOOL;
 terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                    CLASS, EXTENDS;                                 // New for PA7: CLASS, EXTENDS
 terminal                    COLON, COMMA;
 terminal    String          IDENTIFIER;
 
