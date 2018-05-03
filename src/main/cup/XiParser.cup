@@ -88,7 +88,7 @@ terminal    String          IDENTIFIER;
 terminal    String          INTEGER;
 terminal    CharWrapper     CHAR;
 terminal    StringWrapper   STRING;
-terminal                    FUNCTIONCALL, ARRAYCALL; //TODO ARRAYCALL is implemented via LBRACK
+terminal                    FUNCTIONCALL;
 
 /* Non terminals */
 non terminal    Node            Expr;
@@ -114,9 +114,16 @@ non terminal    Node            UseDeclr;
 non terminal    List<Node>      UseDeclarations, FnDeclarations;
 non terminal    Node            Program;
 non terminal                    OptSemicolon;
-non terminal    List<Node>      ProgramBody;    // PA7
-non terminal    Node            ClassDeclr;     // PA7
-non terminal    List<Node>      ClassDef;       // PA7
+non terminal    List<Node>      ProgramBody;            // PA7
+non terminal    Node            GlobalVar;              // PA7
+non terminal    Node            GlobalVarType;          // PA7
+non terminal    Node            GlobalTypeIndexList;    // PA7
+non terminal    Node            FGlobalTypeIndexList;   // PA7   
+non terminal    Node            ClassDeclr;             // PA7
+non terminal    List<Node>      ClassDef;               // PA7
+non terminal    Node            WhileBlock;             // PA7
+non terminal    Node            WhileBlockStmts;        // PA7
+non terminal    List<Node>      VarList;                // PA7
 
 /* Precedences */
 precedence nonassoc     ELSE;
@@ -139,10 +146,11 @@ OptSemicolon ::=
     | SEMICOLON
     ;
 
-// Program
-Program ::= UseDeclarations:uds FnDeclr:f FnDeclarations:fds
+// Program PA7 UPDATE
+// Design choices? Allow for empty program body? Allow for no functions? TODO
+Program ::= UseDeclarations:uds ProgramBody:fds
     {:
-        fds.add(0,f);
+        // fds.add(0,f);
         RESULT = new Program(udsxleft, uds, fds);
     :}
     ;
@@ -178,28 +186,73 @@ ProgramBody ::=
         pb.add(0,f);
         RESULT = pb;
     :}
-    | VarDeclr:v ProgramBody:pb
+    | GlobalVar:v ProgramBody:pb
     {:
         pb.add(0,v);
-        RESULT = pb;
-    :}
-    | Assign:a ProgramBody:pb
-    {:
-        pb.add(0,a);
         RESULT = pb;
     :} 
     | ClassDeclr:c ProgramBody:pb
     {:
         pb.add(0,c);
         RESULT = pb;
+    :} 
+    ;
+
+// Global Variables PA7 TODO
+GlobalVar ::=
+    IDENTIFIER COLON GlobalVarType
+    {:
+    :}
+    | IDENTIFIER COMMA IDENTIFIER VarList COLON GlobalVarType
+    {:
+    :}
+    | IDENTIFIER COLON INT EQ INTEGER
+    {:
+    :}
+    | IDENTIFIER COLON BOOL EQ TRUE
+    {:
+    :}
+    | IDENTIFIER COLON BOOL EQ FALSE
+    {:
+    :}
+    ;
+
+GlobalVarType ::=
+    KeyType:type GlobalTypeIndexList
+    {:
+    :}
+    ;
+
+GlobalTypeIndexList ::=
+    {:
+    :}
+    | LBRACK INTEGER RBRACK FGlobalTypeIndexList
+    {:
+    :}
+    | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
+    {:
+    :}
+    ;
+
+FGlobalTypeIndexList ::=
+    {:
+    :}
+    | LBRACK INTEGER RBRACK FGlobalTypeIndexList
+    {:
+    :}
+    | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
+    {:
     :}
     ;
 
 // Class Declarations PA7 TODO
 ClassDeclr ::= 
-    CLASS:c IDENTIFIER LBRACE ClassDef:cd RBRACE
+    CLASS:c IDENTIFIER:id LBRACE ClassDef:cd RBRACE
     {:
-        // RESULT = new Class(cxdleft, cd);
+        // RESULT = new Class(cxdleft, id, cd);
+    :}
+    | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER LBRACE ClassDef:cd RBRACE
+    {:
     :}
     ;
 
@@ -212,29 +265,22 @@ ClassDef ::=
         cd.add(0,f);
         RESULT = cd;
     :}
-    | VarDeclr:v ClassDef:cd
+    | GlobalVar ClassDef    // TODO design choice
     {:
-        cd.add(0,v);
-        RESULT = cd;
     :}
-    | Assign:a ClassDef:cd
-    {:
-        cd.add(0,a);
-        RESULT = cd;
-    :} 
     ;
 
-// Functions
-FnDeclarations ::= 
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | FnDeclr:f FnDeclarations:fds
-    {:
-        fds.add(0, f);
-        RESULT = fds;
-    :}
-    ;
+// Functions DEPRECATED
+// FnDeclarations ::= 
+//     {:
+//         RESULT = new ArrayList<Node>();
+//     :}
+//     | FnDeclr:f FnDeclarations:fds
+//     {:
+//         fds.add(0, f);
+//         RESULT = fds;
+//     :}
+//     ;
 
 // Function and Procedure Declaration
 FnDeclr ::= 
@@ -323,9 +369,6 @@ BlockOptBraces ::=
     :}
     | SingleStmtNoReturn:ssnr
     {:
-        // ArrayList<Node> block = new ArrayList<>();
-        // block.add(ssnr);
-        // RESULT = new Block(ssnrxleft, block);
         RESULT = ssnr;
     :}
     ;
@@ -510,12 +553,24 @@ FArrayElems ::=
     :}
     ;
 
-// Var Declaration
+// Var Declaration PA7 TODO
 VarDeclr ::= 
     IDENTIFIER:id COLON VarType:type
     {:
         RESULT = new Declare(idxleft, id, type);
-    :};
+    :}
+    IDENTIFIER VarList COLON VarType
+    {:
+    :}
+    ;
+
+VarList ::=
+    {:
+    :}
+    | COMMA IDENTIFIER VarList
+    {:
+    :}
+    ;
 
 
 VarType ::= 
@@ -560,6 +615,7 @@ VarTypeIndexListNoExpr ::=
     :}
     ;
 
+// PA 7 TODO
 KeyType ::= 
     INT:i
     {:
@@ -568,6 +624,9 @@ KeyType ::=
     | BOOL:b
     {:
         RESULT = new XiType(bxleft, "bool");
+    :}
+    | IDENTIFIER:i
+    {:
     :}
     ;
 
@@ -658,9 +717,26 @@ AssignVarType ::=
 
 
 // While Statement
-WhileStmt ::= WHILE:w Expr:e BlockOptBraces:block
+WhileStmt ::= WHILE:w Expr:e WhileBlock:block
     {:
         RESULT = new While(wxleft, evalExpr(e), block);
+    :}
+    ;
+
+// Block for while loops PA7 TODO 
+WhileBlock ::= 
+    LBRACE:l WhileBlockStmts:wbs RBRACE
+    {:
+        wbs.location = lxleft;
+        RESULT = wbs;
+    :}
+    | SingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    | BREAK:b
+    {:
+        // RESULT = new Break(bxleft);
     :}
     ;
 
@@ -795,8 +871,20 @@ Expr ::=
         {:
             RESULT = new Var(idxleft, id);
         :}
-    | NULL:n    //PA7 TODO
+    | NULL:n    // PA7 TODO
         {:
-
+            // RESULT = new Null(nxleft);
+        :}
+    | THIS:t    // PA7 TODO
+        {:
+            // RESULT = new This(txleft);
+        :}
+    | Expr:e1 DOT Expr:e2   // PA7 TODO
+        {:
+            // RESULT new Dot(e1xleft, e1, e2);
+        :}
+    | NEW:n IDENTIFIER:id //PA7 TODO
+        {:
+            // RESULT = new New(nxleft, id);
         :}
     ;
