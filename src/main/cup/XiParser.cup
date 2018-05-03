@@ -661,7 +661,8 @@ AssignVarType ::=
 WhileStmt ::= WHILE:w Expr:e BlockOptBraces:block
     {:
         RESULT = new While(wxleft, evalExpr(e), block);
-    :};
+    :}
+    ;
 
 // If Statement
 IfStmt ::= IF:i Expr:e BlockOptBraces:block ElseStmt:el
@@ -793,5 +794,9 @@ Expr ::=
     | IDENTIFIER:id
         {:
             RESULT = new Var(idxleft, id);
+        :}
+    | NULL:n    //PA7 TODO
+        {:
+
         :}
     ;
