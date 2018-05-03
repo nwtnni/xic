@@ -114,6 +114,9 @@ non terminal    Node            UseDeclr;
 non terminal    List<Node>      UseDeclarations, FnDeclarations;
 non terminal    Node            Program;
 non terminal                    OptSemicolon;
+non terminal    List<Node>      ProgramBody;    // PA7
+non terminal    Node            ClassDeclr;     // PA7
+non terminal    List<Node>      ClassDef;       // PA7
 
 /* Precedences */
 precedence nonassoc     ELSE;
@@ -125,6 +128,8 @@ precedence left         ADD, MINUS;
 precedence left         MULT, HMULT, DIV, MOD;
 precedence right        UMINUS, LNEG;
 precedence left         FUNCTIONCALL, LBRACK; //TODO LBRACK is hack to make arraycall precedence work
+precedence left         NEW;
+precedence left         DOT;
 
 /* The grammar rules */
 start with      Program;
@@ -160,6 +165,63 @@ UseDeclr ::=
     {:
         RESULT = new Use(uxleft, id);
     :}
+    ;
+
+// Body of Program after use statements PA7 TODO
+// Should we wrap global variables into a nonterminal?
+ProgramBody ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FnDeclr:f ProgramBody:pb
+    {:
+        pb.add(0,f);
+        RESULT = pb;
+    :}
+    | VarDeclr:v ProgramBody:pb
+    {:
+        pb.add(0,v);
+        RESULT = pb;
+    :}
+    | Assign:a ProgramBody:pb
+    {:
+        pb.add(0,a);
+        RESULT = pb;
+    :} 
+    | ClassDeclr:c ProgramBody:pb
+    {:
+        pb.add(0,c);
+        RESULT = pb;
+    :}
+    ;
+
+// Class Declarations PA7 TODO
+ClassDeclr ::= 
+    CLASS:c IDENTIFIER LBRACE ClassDef:cd RBRACE
+    {:
+        // RESULT = new Class(cxdleft, cd);
+    :}
+    ;
+
+ClassDef ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FnDeclr:f ClassDef:cd
+    {:
+        cd.add(0,f);
+        RESULT = cd;
+    :}
+    | VarDeclr:v ClassDef:cd
+    {:
+        cd.add(0,v);
+        RESULT = cd;
+    :}
+    | Assign:a ClassDef:cd
+    {:
+        cd.add(0,a);
+        RESULT = cd;
+    :} 
     ;
 
 // Functions
