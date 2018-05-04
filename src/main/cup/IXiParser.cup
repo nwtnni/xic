@@ -63,6 +63,12 @@ non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
 non terminal    Node            FnType;
 non terminal    Node            UseDeclr;               // PA7
 non terminal    List<Node>      UseDeclarationList;     // PA7
+
+non terminal    Node            GlobalVar;              // PA7
+non terminal    Node            GlobalVarType;          // PA7
+non terminal    Node            GlobalTypeIndexList;    // PA7
+non terminal    Node            FGlobalTypeIndexList;   // PA7   
+
 non terminal    Node            ClassDeclr;             // PA7
 non terminal    List<Node>      ClassDef;               // PA7
 non terminal    List<Node>      InterfaceBody;          // PA7
@@ -146,6 +152,50 @@ ClassDef ::=
 
 // TODO: port class variables to interfaces 
 // Need to choose between using global or a different non-terminal
+
+// Global Variables PA7 TODO
+GlobalVar ::=
+    IDENTIFIER COLON GlobalVarType
+    {:
+    :}
+    | IDENTIFIER COMMA IDENTIFIER VarList COLON GlobalVarType
+    {:
+    :}
+    | IDENTIFIER COLON INT
+    {:
+    :}
+    | IDENTIFIER COLON BOOL
+    {:
+    :}
+    ;
+
+GlobalVarType ::=
+    KeyType:type GlobalTypeIndexList
+    {:
+    :}
+    ;
+
+GlobalTypeIndexList ::=
+    {:
+    :}
+    | LBRACK INTEGER RBRACK FGlobalTypeIndexList
+    {:
+    :}
+    | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
+    {:
+    :}
+    ;
+
+FGlobalTypeIndexList ::=
+    {:
+    :}
+    | LBRACK INTEGER RBRACK FGlobalTypeIndexList
+    {:
+    :}
+    | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
+    {:
+    :}
+    ;
 
 // Function Definitions
 FnDefinition ::= 
