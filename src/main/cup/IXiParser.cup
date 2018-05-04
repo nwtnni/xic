@@ -56,18 +56,49 @@ terminal                    COLON, COMMA;
 terminal    String          IDENTIFIER;
 
 /* Non terminals */
-non terminal    Node            FnDef;
-non terminal    List<Node>      FnDefList;
+non terminal    Node            FnDefinition;
+// non terminal    List<Node>      FnDefinitionList;
 non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
 non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
 non terminal    Node            FnType;
-non terminal    Node            Interface;
+non terminal    Node            UseDeclr;               // PA7
+non terminal    List<Node>      UseDeclarationList;     // PA7
+non terminal    List<Node>      InterfaceBody;          // PA7
+non terminal    Node            Interface; 
+non terminal    Node            ClassDeclr;             // PA7
+non terminal    List<Node>      ClassDef;               // PA7
 
 /* The grammar rules */
 start with      Interface;
 
+// Class Declarations PA7 TODO
+ClassDeclr ::= 
+    CLASS:c IDENTIFIER:id LBRACE ClassDef:cd RBRACE
+    {:
+        // RESULT = new Class(cxdleft, id, cd);
+    :}
+    | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER LBRACE ClassDef:cd RBRACE
+    {:
+    :}
+    ;
+
+ClassDef ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FnDefinition:f ClassDef:cd
+    {:
+        cd.add(0,f);
+        RESULT = cd;
+    :}
+    // TODO: design choice for variables
+    | GlobalVar ClassDef    // TODO design choice
+    {:
+    :}
+    ;
+
 // Function Definitions
-FnDef ::= 
+FnDefinition ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
         RESULT = new Fn(idxleft, id, atl, rtl);
@@ -119,6 +150,7 @@ FReturnTypeList ::=
         :}
     ;
 
+// TODO: extend type
 FnType ::= 
     INT:i
         {:
@@ -134,21 +166,68 @@ FnType ::=
         :}
     ;
 
-// Interface
-FnDefList ::= 
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
-    | FnDefList:fdl FnDef:f
-        {:
-            fdl.add(f);
-            RESULT = fdl;
-        :}
+// DEPRECATED
+// FnDefinitionList ::= 
+//         {:
+//             RESULT = new ArrayList<Node>();
+//         :}
+//     | FnDefinitionList:fdl FnDefinition:f
+//         {:
+//             fdl.add(f);
+//             RESULT = fdl;
+//         :}
+//     ;
+
+// DEPRECATED
+// Interface ::= FnDefinitionList:fdl FnDefinition:f
+//         {:
+//             fdl.add(f);
+//             RESULT = new Program(fdlxleft, fdl);
+//         :}
+//     ;
+
+// PA 7 adds use declarations to interfaces
+// Uses
+UseDeclarationList ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | UseDeclarationList:uds UseDeclr:u
+    {:
+        uds.add(u);
+        RESULT = uds;
+    :}
     ;
 
-Interface ::= FnDefList:fdl FnDef:f
-        {:
-            fdl.add(f);
-            RESULT = new Program(fdlxleft, fdl);
-        :}
+// Use Declaration
+UseDeclr ::= 
+    USE:u IDENTIFIER:id OptSemicolon
+    {:
+        RESULT = new Use(uxleft, id);
+    :}
+    ;
+
+// PA7
+InterfaceBody ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FnDefinition:f InterfaceBody:pb
+    {:
+        pb.add(0,f);
+        RESULT = pb;
+    :}
+    | ClassDeclr:c InterfaceBody:pb
+    {:
+        pb.add(0,c);
+        RESULT = pb;
+    :} 
+    ;
+
+// PA7
+// TODO: do we need to type interfaces differently from programs?
+Interface ::= UseDeclarationList:uses InterfaceBody:body
+    {:
+        RESULT = new Program(usesxleft, uses, body);
+    :}
     ;
