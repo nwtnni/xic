@@ -134,9 +134,9 @@ precedence left         LTE, LT, GTE, GT;
 precedence left         ADD, MINUS;
 precedence left         MULT, HMULT, DIV, MOD;
 precedence right        UMINUS, LNEG;
-precedence left         FUNCTIONCALL, LBRACK; //TODO LBRACK is hack to make arraycall precedence work
+precedence left         FUNCTIONCALL, LBRACK;   // TODO LBRACK is hack to make arraycall precedence work
 precedence left         NEW;
-precedence left         DOT;
+precedence left         DOT;                    // PA7
 
 /* The grammar rules */
 start with      Program;
@@ -181,16 +181,16 @@ ProgramBody ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | FnDeclr:f ProgramBody:pb
-    {:
-        pb.add(0,f);
-        RESULT = pb;
-    :}
     | GlobalVar:v ProgramBody:pb
     {:
         pb.add(0,v);
         RESULT = pb;
     :} 
+    | FnDeclr:f ProgramBody:pb
+    {:
+        pb.add(0,f);
+        RESULT = pb;
+    :}
     | ClassDeclr:c ProgramBody:pb
     {:
         pb.add(0,c);
@@ -267,6 +267,7 @@ ClassDef ::=
     :}
     | GlobalVar ClassDef    // TODO design choice
     {:
+        // Do we treat instance variables lexically the same as global variables?
     :}
     ;
 
@@ -449,7 +450,7 @@ StmtListNoReturn ::=
 StmtNoReturn ::= 
     LBRACE:l BlockStmts:block RBRACE OptSemicolon
     {:
-        //TODO because only 1 lookahead--is it possible to refactor?
+        // TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
 
         RESULT = block;
@@ -561,6 +562,7 @@ VarDeclr ::=
     :}
     IDENTIFIER VarList COLON VarType
     {:
+
     :}
     ;
 
@@ -627,6 +629,7 @@ KeyType ::=
     :}
     | IDENTIFIER:i
     {:
+
     :}
     ;
 
