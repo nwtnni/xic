@@ -771,6 +771,8 @@ ArrayCall ::=
             RESULT = index;
         :}
     ;
+    // TODO: should we allow access off a string? example: "abc"[0] = e
+    // seems kinda dumb
 
 // List of expressions for indices in an array access
 IndexList ::=
