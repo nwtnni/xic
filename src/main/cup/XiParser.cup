@@ -91,41 +91,71 @@ terminal    StringWrapper   STRING;
 terminal                    FUNCTIONCALL;
 
 /* Non terminals */
-non terminal    Node            Expr;
-non terminal    List<Node>      ExprList, FExprList;
-non terminal    Node            FnCall;
-non terminal    List<Node>      Args, FArgs; 
-non terminal    Node            ArrayCall;
-non terminal    List<Node>      IndexList;
-non terminal    List<Node>      ArrayElems, FArrayElems;
-non terminal    Node            VarDeclr, VarType, KeyType;
-non terminal    List<Node>      VarTypeIndexList, VarTypeIndexListNoExpr;
-non terminal    Node            Assign, SingleAssignName, MultiAssignName;
-non terminal    Node            AssignVarDeclr, AssignVarType;
-non terminal    List<Node>      IDList, FIDList;
-non terminal    Node            WhileStmt, IfStmt, ElseStmt;
+
+// Top level
+non terminal    Node            Program;
+non terminal    List<Node>      UseDeclarations;
+
+// Block statements
 non terminal    Node            BlockOptBraces, BlockStmts;
 non terminal    Node            SingleStmtNoReturn, StmtNoReturn;
 non terminal    List<Node>      StmtListNoReturn;
+
+// Function calls
+non terminal    Node            FnCall;
+non terminal    List<Node>      Args, FArgs;
+
+// Array access
+non terminal    Node            ArrayCall;
+non terminal    List<Node>      IndexList;
+
+// Variable declarations
+non terminal    Node            VarDeclr, VarType, KeyType;
+non terminal    List<Node>      VarTypeIndexList, VarTypeIndexListNoExpr;
+
+// Assignment
+non terminal    Node            Assign, SingleAssignName, MultiAssignName;
+non terminal    Node            AssignVarDeclr, AssignVarType;
+non terminal    List<Node>      IDList, FIDList;
+
+// while, if, else
+non terminal    Node            WhileStmt, IfStmt, ElseStmt;
+
+// Functions
 non terminal    Node            FnDeclr, FnDef;
-non terminal    List<Node>      ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
+non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
+non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
 non terminal    Node            FnType;
+
+// Use statements
 non terminal    Node            UseDeclr;
-non terminal    List<Node>      UseDeclarations, FnDeclarations;
-non terminal    Node            Program;
+
+// Expressions
+non terminal    Node            Expr;
+non terminal    List<Node>      ExprList, FExprList;
+
+// Array literals
+non terminal    List<Node>      ArrayElems, FArrayElems;
+
 non terminal                    OptSemicolon;
+
+// TODO: PA7 organize these
 non terminal    List<Node>      ProgramBody;            // PA7
+
+non terminal    Node            ClassDeclr;             // PA7
+non terminal    List<Node>      ClassDef;               // PA7
+
 non terminal    Node            GlobalVar;              // PA7
 non terminal    Node            GlobalVarType;          // PA7
 non terminal    Node            GlobalTypeIndexList;    // PA7
-non terminal    Node            FGlobalTypeIndexList;   // PA7   
-non terminal    Node            ClassDeclr;             // PA7
-non terminal    List<Node>      ClassDef;               // PA7
-non terminal    Node            WhileBlock;             // PA7
-non terminal    Node            WhileBlockStmts;        // PA7
+non terminal    Node            FGlobalTypeIndexList;   // PA7
+
 non terminal    List<Node>      VarList;                // PA7
 
-/* Precedences */
+non terminal    Node            WhileBlock;             // PA7
+non terminal    List<Node>      WhileBlockStmts;        // PA7
+
+/* --- Precedences --- */
 precedence nonassoc     ELSE;
 precedence left         LOR;
 precedence left         LAND;
@@ -134,11 +164,11 @@ precedence left         LTE, LT, GTE, GT;
 precedence left         ADD, MINUS;
 precedence left         MULT, HMULT, DIV, MOD;
 precedence right        UMINUS, LNEG;
-precedence left         FUNCTIONCALL, LBRACK;   // TODO LBRACK is hack to make arraycall precedence work
+precedence left         FUNCTIONCALL, LBRACK;   // LBRACK precedence is set to make ArrayCall precedence work
 precedence left         NEW;
 precedence left         DOT;                    // PA7
 
-/* The grammar rules */
+/* --- The grammar rules --- */
 start with      Program;
 
 // Optional Semicolon
@@ -146,16 +176,16 @@ OptSemicolon ::=
     | SEMICOLON
     ;
 
-// Program PA7 UPDATE
-// Design choices? Allow for empty program body? Allow for no functions? TODO
-Program ::= UseDeclarations:uds ProgramBody:fds
+// Top level for program
+// TODO: PA7
+// Design choices? Allow for empty program body? Allow for no functions?
+Program ::= UseDeclarations:uds ProgramBody:body
     {:
-        // fds.add(0,f);
-        RESULT = new Program(udsxleft, uds, fds);
+        RESULT = new Program(udsxleft, uds, body);
     :}
     ;
 
-// Uses
+// Use statements
 UseDeclarations ::= 
     {:
         RESULT = new ArrayList<Node>();
@@ -167,7 +197,7 @@ UseDeclarations ::=
     :}
     ;
 
-// Use Declaration
+// Single use declaration
 UseDeclr ::= 
     USE:u IDENTIFIER:id OptSemicolon
     {:
@@ -175,8 +205,8 @@ UseDeclr ::=
     :}
     ;
 
-// Body of Program after use statements PA7 TODO
-// Should we wrap global variables into a nonterminal?
+// Body of program after use statements 
+// TODO: PA7 Should we wrap global variables into a nonterminal?
 ProgramBody ::=
     {:
         RESULT = new ArrayList<Node>();
@@ -198,66 +228,86 @@ ProgramBody ::=
     :} 
     ;
 
-// Global Variables PA7 TODO
+// Global Variables
+// TODO: PA7
+// TODO: do we need to differentiate the LHS from normal var declaration/assignment?
+// TODO: are we missing global arrays intialized to literals?
 GlobalVar ::=
     IDENTIFIER COLON GlobalVarType
     {:
+
     :}
     | IDENTIFIER COMMA IDENTIFIER VarList COLON GlobalVarType
     {:
+
     :}
     | IDENTIFIER COLON INT EQ INTEGER
     {:
+
     :}
     | IDENTIFIER COLON BOOL EQ TRUE
     {:
+
     :}
     | IDENTIFIER COLON BOOL EQ FALSE
     {:
+
     :}
     ;
 
-// TODO: are we missing global arrays intialized to literals?
-
+// Global variable type
 GlobalVarType ::=
     KeyType:type GlobalTypeIndexList
     {:
+        // TODO: construct
     :}
     ;
 
+// TODO: are we missing global arrays with no initialization? 
+// TODO: is this necessary to differentiate this from normal var declaration
 GlobalTypeIndexList ::=
     {:
+
     :}
     | LBRACK INTEGER RBRACK FGlobalTypeIndexList
     {:
+
     :}
     | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
     {:
+
     :}
     ;
 
 FGlobalTypeIndexList ::=
     {:
+
     :}
     | LBRACK INTEGER RBRACK FGlobalTypeIndexList
     {:
+
     :}
     | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
     {:
+
     :}
     ;
 
-// Class Declarations PA7 TODO
+// Class Declarations 
+// TODO: PA7
 ClassDeclr ::= 
     CLASS:c IDENTIFIER:id LBRACE ClassDef:cd RBRACE
     {:
+        // TODO: construct class
         // RESULT = new Class(cxdleft, id, cd);
     :}
     | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER LBRACE ClassDef:cd RBRACE
     {:
+        // TODO: construct class
     :}
     ;
 
+// Class definition
 ClassDef ::= 
     {:
         RESULT = new ArrayList<Node>();
@@ -267,25 +317,16 @@ ClassDef ::=
         cd.add(0,f);
         RESULT = cd;
     :}
-    | GlobalVar ClassDef    // TODO design choice
+    | GlobalVar ClassDef    
     {:
-        // Do we treat instance variables lexically the same as global variables?
+        // TODO design choice
+        // Do we treat instance variables syntactically the same as global variables?
     :}
     ;
 
-// Functions DEPRECATED
-// FnDeclarations ::= 
-//     {:
-//         RESULT = new ArrayList<Node>();
-//     :}
-//     | FnDeclr:f FnDeclarations:fds
-//     {:
-//         fds.add(0, f);
-//         RESULT = fds;
-//     :}
-//     ;
+/* --- Function and procedure declaration --- */
 
-// Function and Procedure Declaration
+// Function declaration
 FnDeclr ::= 
     FnDef:def LBRACE:l BlockStmts:block RBRACE
     {:
@@ -296,6 +337,7 @@ FnDeclr ::=
     :}
     ;
 
+// Function body
 FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
@@ -307,6 +349,7 @@ FnDef ::=
     :}
     ;
 
+// Function arguments list
 ArgsTypeList ::= 
     {:
         RESULT = new ArrayList<Node>();
@@ -329,6 +372,7 @@ FArgsTypeList ::=
     :}
     ;
 
+// Function return type list
 ReturnTypeList ::= 
     FnType:type FReturnTypeList:frtl
     {:
@@ -348,6 +392,8 @@ FReturnTypeList ::=
     :}
     ;
 
+// Types in function signature
+// TODO: PA7 update to KeyType
 FnType ::= 
     INT:i
     {:
@@ -363,6 +409,8 @@ FnType ::=
     :}
     ;
 
+/* --- Blocks --- */
+
 // Block with braces OR single non-return statement
 BlockOptBraces ::=
     LBRACE:l BlockStmts:bs RBRACE
@@ -377,6 +425,8 @@ BlockOptBraces ::=
     ;
 
 // Block of statements with possible return at the end
+// Constructs a return based on the number of expressions 
+// associated with that return statement
 BlockStmts ::= 
     StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
     {:
@@ -393,6 +443,58 @@ BlockStmts ::=
     :}
     ;
 
+// List of statements without break/return
+StmtListNoReturn ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | StmtNoReturn:snr StmtListNoReturn:slnr
+    {:
+        slnr.add(0, snr);
+        RESULT = slnr;
+    :}
+    ;
+
+// Block of statements or single statement excluding break/return 
+// with optional semicolon after block/statement.
+StmtNoReturn ::= 
+    LBRACE:l BlockStmts:block RBRACE OptSemicolon
+    {:
+        block.location = lxleft;
+        RESULT = block;
+    :}
+    | SingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    ;
+
+// Single statement excluding break/return
+SingleStmtNoReturn ::= 
+    VarDeclr:v OptSemicolon
+    {:
+        RESULT = v;
+    :}
+    | Assign:a OptSemicolon
+    {:
+        RESULT = a;
+    :}
+    | IfStmt:i
+    {:
+        RESULT = i;
+    :}
+    | WhileStmt:w
+    {:
+        RESULT = w;
+    :}
+    | FnCall:p OptSemicolon
+    {:
+        // Procedure calls are syntactically the same as function calls
+        RESULT = p;
+    :}
+    ;
+
+// Expression list for returns
 ExprList ::= 
     {:
         RESULT = new ArrayList<Node>();
@@ -415,55 +517,11 @@ FExprList ::=
     :}
     ;
 
-SingleStmtNoReturn ::= 
-    Assign:a OptSemicolon
-    {:
-        RESULT = a;
-    :}
-    | IfStmt:i
-    {:
-        RESULT = i;
-    :}
-    | WhileStmt:w 
-    {:
-        RESULT = w;
-    :}
-    | FnCall:p OptSemicolon // Procedure
-    {:
-        RESULT = p;
-    :}
-    | VarDeclr:v OptSemicolon
-    {:
-        RESULT = v;
-    :}
-    ;
 
-StmtListNoReturn ::= 
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | StmtNoReturn:snr StmtListNoReturn:slnr
-    {:
-        slnr.add(0, snr);
-        RESULT = slnr;
-    :}
-    ;
+/* --- Function calls --- */
+// Parser does not differentiate between procedures and functions
 
-StmtNoReturn ::= 
-    LBRACE:l BlockStmts:block RBRACE OptSemicolon
-    {:
-        // TODO because only 1 lookahead--is it possible to refactor?
-        block.location = lxleft;
-
-        RESULT = block;
-    :}
-    | SingleStmtNoReturn:ssnr
-    {:
-        RESULT = ssnr;
-    :}
-    ;
-
-// Function Calls
+// Top level function call production
 FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
@@ -472,15 +530,16 @@ FnCall ::=
         %prec FUNCTIONCALL
     ;
 
+// List of expressions that are the arguments in a function call
 Args ::= 
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
     | Expr:e FArgs:fargs
-        {:  
-            fargs.add(0, evalExpr(e));
-            RESULT = fargs;
-        :}
+    {:  
+        fargs.add(0, evalExpr(e));
+        RESULT = fargs;
+    :}
     ;
 
 FArgs ::=
@@ -488,75 +547,16 @@ FArgs ::=
         RESULT = new ArrayList<Node>();
     :} 
     | COMMA Expr:e FArgs:fargs
-        {:
-            fargs.add(0, evalExpr(e));
-            RESULT = fargs;
-        :}
-    ;
-
-// Array Calls for LHS of assignment
-ArrayCall ::= 
-    FnCall:fc LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            Index index = new Index(fcxleft, fc, il.get(0));
-            for(int i =1; i<il.size(); i++) {
-                Node n = il.get(i);
-                index = new Index(n.location, index, n);
-            }
-            RESULT = index;
-        :}
-    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            Index index = new Index(idxleft, new Var(idxleft, id), il.get(0));
-            for(int i =1; i<il.size(); i++) {
-                Node n = il.get(i);
-                index = new Index(n.location, index, n);
-            }
-            RESULT = index;
-        :}
-    ;
-
-IndexList ::=
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
-    | LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            RESULT = il;
-        :}
-    ;
-
-// Array List
-ArrayElems ::= 
     {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | Expr:e FArrayElems:fae
-    {:
-        fae.add(0, evalExpr(e));
-        RESULT = fae;
+        fargs.add(0, evalExpr(e));
+        RESULT = fargs;
     :}
     ;
 
-FArrayElems ::= 
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | COMMA
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | COMMA Expr:e FArrayElems:fae
-    {:
-        fae.add(0, evalExpr(e));
-        RESULT = fae;
-    :}
-    ;
 
-// Var Declaration PA7 TODO
+/* --- Variable declaration statements --- */
+
+// Top level variable declaration production
 VarDeclr ::= 
     IDENTIFIER:id COLON VarType:type
     {:
@@ -564,19 +564,23 @@ VarDeclr ::=
     :}
     IDENTIFIER VarList COLON VarType
     {:
-
+        // TODO: PA7 multiple variable declarations
     :}
     ;
 
+// For multiple variable declarations of the same type
 VarList ::=
     {:
+        // TODO: PA7 start empty array
     :}
     | COMMA IDENTIFIER VarList
     {:
+        // TODO: PA7 build list of variables
     :}
     ;
 
-
+// Types for declarations
+// Constructs array types recursively
 VarType ::= 
     KeyType:type VarTypeIndexList:vtil
     {:
@@ -592,6 +596,23 @@ VarType ::=
     :}
     ;
 
+// Primitive and class types
+KeyType ::= 
+    INT:i
+    {:
+        RESULT = new XiType(ixleft, "int");
+    :}
+    | BOOL:b
+    {:
+        RESULT = new XiType(bxleft, "bool");
+    :}
+    | IDENTIFIER:i
+    {:
+        // TODO: PA7 construct class types
+    :}
+    ;
+
+// List of expressions for array types with dimensions
 VarTypeIndexList ::=
     {:
         RESULT = new ArrayList<Node>();
@@ -608,6 +629,7 @@ VarTypeIndexList ::=
     :}
     ;
 
+// List of empty (null) values for array types
 VarTypeIndexListNoExpr ::=
     {:
         RESULT = new ArrayList<Node>();
@@ -619,23 +641,10 @@ VarTypeIndexListNoExpr ::=
     :}
     ;
 
-// PA 7 TODO
-KeyType ::= 
-    INT:i
-    {:
-        RESULT = new XiType(ixleft, "int");
-    :}
-    | BOOL:b
-    {:
-        RESULT = new XiType(bxleft, "bool");
-    :}
-    | IDENTIFIER:i
-    {:
 
-    :}
-    ;
+/* --- Assignment statements --- */
 
-// Assignment
+// Top level assignment production
 Assign ::= 
     IDList:il EQ Expr:e
     {:
@@ -647,6 +656,7 @@ Assign ::=
     :}
     ;
 
+// LHS of multiple assignment
 IDList ::= 
     MultiAssignName:an COMMA MultiAssignName:bn FIDList:fl
     {:
@@ -666,7 +676,7 @@ FIDList ::=
     :}
     ;
 
-// LHS of multiple assignment
+// A single identifier on the LHS of a multiple assignment
 MultiAssignName ::=
     UNDERSCORE:u
     {:
@@ -698,6 +708,45 @@ SingleAssignName ::=
     :}
     ;
 
+// Array access for LHS of assignment
+ArrayCall ::= 
+    FnCall:fc LBRACK Expr:e RBRACK IndexList:il
+        {:
+            il.add(0, evalExpr(e));
+            Index index = new Index(fcxleft, fc, il.get(0));
+            for(int i =1; i<il.size(); i++) {
+                Node n = il.get(i);
+                index = new Index(n.location, index, n);
+            }
+            RESULT = index;
+        :}
+    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+        {:
+            il.add(0, evalExpr(e));
+            Index index = new Index(idxleft, new Var(idxleft, id), il.get(0));
+            for(int i =1; i<il.size(); i++) {
+                Node n = il.get(i);
+                index = new Index(n.location, index, n);
+            }
+            RESULT = index;
+        :}
+    ;
+
+// List of expressions for indices in an array access
+IndexList ::=
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | LBRACK Expr:e RBRACK IndexList:il
+        {:
+            il.add(0, evalExpr(e));
+            RESULT = il;
+        :}
+    ;
+
+// Variable declaration on LHS of assignment
+// Needed as certain declarations (arrays with dimensions)
+// are not allowed by the Xi language specification
 AssignVarDeclr ::= 
     IDENTIFIER:id COLON AssignVarType:type 
     {:
@@ -705,6 +754,9 @@ AssignVarDeclr ::=
     :}
     ;
 
+// Variable type on LHS of assignment
+// Constructs array types recursively
+// Restricts array types to dimensionless ones
 AssignVarType ::=
     KeyType:type VarTypeIndexListNoExpr:vtilne
     {:
@@ -721,31 +773,37 @@ AssignVarType ::=
     ;
 
 
-// While Statement
+/* --- Control flow statements --- */
+
+// While statement
 WhileStmt ::= WHILE:w Expr:e WhileBlock:block
     {:
         RESULT = new While(wxleft, evalExpr(e), block);
     :}
     ;
 
-// Block for while loops PA7 TODO 
+// Block for while loops
 WhileBlock ::= 
     LBRACE:l WhileBlockStmts:wbs RBRACE
     {:
-        wbs.location = lxleft;
-        RESULT = wbs;
+        // TODO: PA7 decide what do do with while block statements
+        // wbs.location = lxleft;
+        // RESULT = wbs;
     :}
     | SingleStmtNoReturn:ssnr
     {:
         RESULT = ssnr;
     :}
-    | BREAK:b
+    | BREAK:b   
     {:
-        // RESULT = new Break(bxleft);
+        // TODO: this seems to be in the wrong place
+        // TODO: RESULT = new Break(bxleft);
     :}
     ;
 
-// If Statement
+// TODO: PA7 define WhileBlockStmts
+
+// If statement
 IfStmt ::= IF:i Expr:e BlockOptBraces:block ElseStmt:el
     {:
         If node = (el == null) ? new If(ixleft, evalExpr(e), block) : new If(ixleft, evalExpr(e), block, el);
@@ -753,6 +811,7 @@ IfStmt ::= IF:i Expr:e BlockOptBraces:block ElseStmt:el
     :}
     ;
 
+// Optional else statement
 ElseStmt ::= 
     {: 
         RESULT = null;
@@ -763,7 +822,9 @@ ElseStmt ::=
     :}
     ;
 
-// Expressions
+
+/* --- Expressions --- */
+
 Expr ::= 
     LPAREN Expr:e RPAREN
         {:
@@ -876,20 +937,47 @@ Expr ::=
         {:
             RESULT = new Var(idxleft, id);
         :}
-    | NULL:n    // PA7 TODO
+    | NULL:n    // TOD): PA7
         {:
             // RESULT = new Null(nxleft);
         :}
-    | THIS:t    // PA7 TODO
+    | THIS:t    // TODO: PA7
         {:
             // RESULT = new This(txleft);
         :}
-    | Expr:e1 DOT Expr:e2   // PA7 TODO
+    | Expr:e1 DOT Expr:e2   // TODO: PA7
         {:
             // RESULT new Dot(e1xleft, e1, e2);
         :}
-    | NEW:n IDENTIFIER:id //PA7 TODO
+    | NEW:n IDENTIFIER:id // TODO: PA7
         {:
             // RESULT = new New(nxleft, id);
         :}
+    ;
+
+// List of exprssions for array literals
+ArrayElems ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | Expr:e FArrayElems:fae
+    {:
+        fae.add(0, evalExpr(e));
+        RESULT = fae;
+    :}
+    ;
+
+FArrayElems ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA Expr:e FArrayElems:fae
+    {:
+        fae.add(0, evalExpr(e));
+        RESULT = fae;
+    :}
     ;
