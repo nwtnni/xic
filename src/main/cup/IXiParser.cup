@@ -51,154 +51,23 @@ scan with {: return lexer.nextToken(); :};
 terminal                    USE;
 terminal                    INT, BOOL;
 terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                    CLASS, EXTENDS;                                 // PA7
 terminal                    COLON, COMMA;
 terminal    String          IDENTIFIER;
+terminal                    CLASS, EXTENDS;                        // New for PA7: THIS, CLASS, EXTENDS, NEW
 
 /* Non terminals */
-non terminal    Node            FnDefinition;
-// non terminal    List<Node>      FnDefinitionList;    // Deprecated PA7
+non terminal    Node            FnDef;
+non terminal    List<Node>      FnDefList;
 non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
 non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
 non terminal    Node            FnType;
-non terminal    Node            UseDeclr;               // PA7
-non terminal    List<Node>      UseDeclarationList;     // PA7
-
-non terminal    Node            GlobalVar;              // PA7
-non terminal    Node            GlobalVarType;          // PA7
-non terminal    Node            GlobalTypeIndexList;    // PA7
-non terminal    Node            FGlobalTypeIndexList;   // PA7   
-
-non terminal    Node            ClassDeclr;             // PA7
-non terminal    List<Node>      ClassDef;               // PA7
-non terminal    List<Node>      InterfaceBody;          // PA7
-non terminal    Node            Interface; 
+non terminal    Node            Interface;
 
 /* The grammar rules */
 start with      Interface;
 
-// PA7
-// TODO: do we need to type interfaces differently from programs?
-Interface ::= UseDeclarationList:uses InterfaceBody:body
-    {:
-        RESULT = new Program(usesxleft, uses, body);
-    :}
-    ;
-
-// PA 7 adds use declarations to interfaces
-// Uses
-UseDeclarationList ::= 
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | UseDeclarationList:uds UseDeclr:u
-    {:
-        uds.add(u);
-        RESULT = uds;
-    :}
-    ;
-
-// Use Declaration
-UseDeclr ::= 
-    USE:u IDENTIFIER:id OptSemicolon
-    {:
-        RESULT = new Use(uxleft, id);
-    :}
-    ;
-
-// PA7
-InterfaceBody ::=
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | FnDefinition:f InterfaceBody:body
-    {:
-        body.add(0,f);
-        RESULT = body;
-    :}
-    | ClassDeclr:c InterfaceBody:body
-    {:
-        body.add(0,c);
-        RESULT = body;
-    :} 
-    ;
-
-// Class Declarations PA7 TODO
-ClassDeclr ::= 
-    CLASS:cls IDENTIFIER:id LBRACE ClassDef:cd RBRACE
-    {:
-        // RESULT = new Class(cxdleft, id, cd);
-    :}
-    | CLASS:cls IDENTIFIER:id EXTENDS IDENTIFIER LBRACE ClassDef:cd RBRACE
-    {:
-    :}
-    ;
-
-ClassDef ::= 
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | FnDefinition:f ClassDef:cd
-    {:
-        cd.add(0,f);
-        RESULT = cd;
-    :}
-    // TODO: design choice for variables
-    | GlobalVar ClassDef
-    {:
-        // Do we treat instance variables lexically the same as global variables?
-    :}
-    ;
-
-// TODO: port class variables to interfaces 
-// Need to choose between using global or a different non-terminal
-
-// Global Variables PA7 TODO
-GlobalVar ::=
-    IDENTIFIER COLON GlobalVarType
-    {:
-    :}
-    | IDENTIFIER COMMA IDENTIFIER VarList COLON GlobalVarType
-    {:
-    :}
-    | IDENTIFIER COLON INT
-    {:
-    :}
-    | IDENTIFIER COLON BOOL
-    {:
-    :}
-    ;
-
-GlobalVarType ::=
-    KeyType:type GlobalTypeIndexList
-    {:
-    :}
-    ;
-
-GlobalTypeIndexList ::=
-    {:
-    :}
-    | LBRACK INTEGER RBRACK FGlobalTypeIndexList
-    {:
-    :}
-    | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
-    {:
-    :}
-    ;
-
-FGlobalTypeIndexList ::=
-    {:
-    :}
-    | LBRACK INTEGER RBRACK FGlobalTypeIndexList
-    {:
-    :}
-    | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
-    {:
-    :}
-    ;
-
 // Function Definitions
-FnDefinition ::= 
+FnDef ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
         RESULT = new Fn(idxleft, id, atl, rtl);
@@ -250,7 +119,6 @@ FReturnTypeList ::=
         :}
     ;
 
-// TODO: extend type
 FnType ::= 
     INT:i
         {:
@@ -266,23 +134,21 @@ FnType ::=
         :}
     ;
 
-// DEPRECATED
-// FnDefinitionList ::= 
-//         {:
-//             RESULT = new ArrayList<Node>();
-//         :}
-//     | FnDefinitionList:fdl FnDefinition:f
-//         {:
-//             fdl.add(f);
-//             RESULT = fdl;
-//         :}
-//     ;
+// Interface
+FnDefList ::= 
+        {:
+            RESULT = new ArrayList<Node>();
+        :}
+    | FnDefList:fdl FnDef:f
+        {:
+            fdl.add(f);
+            RESULT = fdl;
+        :}
+    ;
 
-// DEPRECATED
-// Interface ::= FnDefinitionList:fdl FnDefinition:f
-//         {:
-//             fdl.add(f);
-//             RESULT = new Program(fdlxleft, fdl);
-//         :}
-//     ;
-
+Interface ::= FnDefList:fdl FnDef:f
+        {:
+            fdl.add(f);
+            RESULT = new Program(fdlxleft, fdl);
+        :}
+    ;
