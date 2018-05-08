@@ -182,6 +182,7 @@ if [[ -f $2 ]] ; then
       else
           echo "Cannot run assembly on $platform"
       fi
+      rm "runtime/tests/$name"
       ;;
     --ir)
       ./xic --irgen -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
