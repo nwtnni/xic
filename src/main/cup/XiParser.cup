@@ -153,7 +153,7 @@ non terminal    Node            FGlobalTypeIndexList;   // PA7
 non terminal    List<Node>      VarList;                // PA7
 
 non terminal    Node            WhileBlock;             // PA7
-non terminal    List<Node>      WhileBlockStmts;        // PA7
+non terminal    Node            WhileBlockStmts;        // PA7
 
 /* --- Precedences --- */
 precedence nonassoc     ELSE;
@@ -330,9 +330,8 @@ ClassDef ::=
 FnDeclr ::= 
     FnDef:def LBRACE:l BlockStmts:block RBRACE
     {:
-        //TODO because only 1 lookahead--is it possible to refactor?
+        // TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
-
         RESULT = new Fn(defxleft, (Fn) def, block);
     :}
     ;
@@ -411,7 +410,7 @@ FnType ::=
 
 /* --- Blocks --- */
 
-// Block with braces OR single non-return statement
+// Block with braces OR single statement (excluding break/return)
 BlockOptBraces ::=
     LBRACE:l BlockStmts:bs RBRACE
     {:
@@ -460,6 +459,7 @@ StmtListNoReturn ::=
 StmtNoReturn ::= 
     LBRACE:l BlockStmts:block RBRACE OptSemicolon
     {:
+        // TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
         RESULT = block;
     :}
@@ -471,19 +471,15 @@ StmtNoReturn ::=
 
 // Single statement excluding break/return
 SingleStmtNoReturn ::= 
-    VarDeclr:v OptSemicolon
-    {:
-        RESULT = v;
-    :}
-    | Assign:a OptSemicolon
+    Assign:a OptSemicolon
     {:
         RESULT = a;
     :}
-    | IfStmt:i
+    | IfStmt:i 
     {:
         RESULT = i;
     :}
-    | WhileStmt:w
+    | WhileStmt:w 
     {:
         RESULT = w;
     :}
@@ -491,6 +487,10 @@ SingleStmtNoReturn ::=
     {:
         // Procedure calls are syntactically the same as function calls
         RESULT = p;
+    :}
+    | VarDeclr:v OptSemicolon
+    {:
+        RESULT = v;
     :}
     ;
 
@@ -584,11 +584,10 @@ VarList ::=
 VarType ::= 
     KeyType:type VarTypeIndexList:vtil
     {:
-        for(int i=vtil.size()-1; i>=0; i--) {
-            if(vtil.get(i) == null){
+        for (int i=vtil.size()-1; i>=0; i--) {
+            if (vtil.get(i) == null) {
                 type = new XiType(typexleft,type);
-            }
-            else {
+            } else {
                 type = new XiType(typexleft, type, vtil.get(i));
             }
         }
@@ -619,12 +618,12 @@ VarTypeIndexList ::=
     :}
     | LBRACK Expr:e RBRACK VarTypeIndexList:vtil
     {:
-        vtil.add(0,evalExpr(e));
+        vtil.add(0, evalExpr(e));
         RESULT = vtil;
     :}
     | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
     {:
-        vtilne.add(0,null);
+        vtilne.add(0, null);
         RESULT = vtilne;
     :}
     ;
@@ -636,7 +635,7 @@ VarTypeIndexListNoExpr ::=
     :}
     | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
     {:
-        vtilne.add(0,null);
+        vtilne.add(0, null);
         RESULT = vtilne;
     :}
     ;
@@ -731,6 +730,7 @@ ArrayCall ::=
             RESULT = index;
         :}
     ;
+    // TODO: add array call on array literals
 
 // List of expressions for indices in an array access
 IndexList ::=
@@ -760,11 +760,10 @@ AssignVarDeclr ::=
 AssignVarType ::=
     KeyType:type VarTypeIndexListNoExpr:vtilne
     {:
-        for(int i=vtilne.size()-1; i>=0; i--) {
-            if(vtilne.get(i) == null){
+        for (int i=vtilne.size()-1; i>=0; i--) {
+            if (vtilne.get(i) == null) {
                 type = new XiType(typexleft, type);
-            }
-            else {
+            } else {
                 type = new XiType(typexleft, type, vtilne.get(i));
             }
         }
@@ -776,38 +775,65 @@ AssignVarType ::=
 /* --- Control flow statements --- */
 
 // While statement
-WhileStmt ::= WHILE:w Expr:e WhileBlock:block
+WhileStmt ::= 
+    WHILE:w Expr:e WhileBlock:block
     {:
         RESULT = new While(wxleft, evalExpr(e), block);
     :}
     ;
 
-// Block for while loops
+// Block for while
+// While statements have one of the following:
+// - A block
+// - A single statement excluding return
 WhileBlock ::= 
     LBRACE:l WhileBlockStmts:wbs RBRACE
     {:
         // TODO: PA7 decide what do do with while block statements
-        // wbs.location = lxleft;
-        // RESULT = wbs;
+        wbs.location = lxleft;
+        RESULT = wbs;
     :}
     | SingleStmtNoReturn:ssnr
     {:
         RESULT = ssnr;
     :}
-    | BREAK:b   
+    | BREAK:b OptSemicolon
     {:
-        // TODO: this seems to be in the wrong place
         // TODO: RESULT = new Break(bxleft);
     :}
     ;
 
-// TODO: PA7 define WhileBlockStmts
+// Block of statements ending with return or break
+WhileBlockStmts ::=
+    StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
+    {:
+        if (el.size() == 0) {
+        	slnr.add(new Return(rxleft));
+        } else {
+            slnr.add(new Return(rxleft, el));
+        }
+        RESULT = new Block(slnr);
+    :}
+    | StmtListNoReturn:slnr BREAK:b OptSemicolon
+    {:
+        // TODO: slnr.add(new Break(bxleft));
+        RESULT = new Block(slnr);
+    :}
+    | StmtListNoReturn:slnr
+    {:
+        RESULT = new Block(slnr);
+    :}
+    ;
 
 // If statement
-IfStmt ::= IF:i Expr:e BlockOptBraces:block ElseStmt:el
+IfStmt ::= 
+    IF:i Expr:e BlockOptBraces:block ElseStmt:elseBlock
     {:
-        If node = (el == null) ? new If(ixleft, evalExpr(e), block) : new If(ixleft, evalExpr(e), block, el);
-        RESULT = node;
+        if (elseBlock == null) {
+            RESULT = new If(ixleft, evalExpr(e), block);
+        } else {
+            RESULT = new If(ixleft, evalExpr(e), block, elseBlock);
+        }
     :}
     ;
 
