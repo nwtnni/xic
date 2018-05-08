@@ -228,6 +228,8 @@ ProgramBody ::=
     :} 
     ;
 
+/* --- Global variables --- */
+
 // Global Variables
 // TODO: PA7
 // TODO: do we need to differentiate the LHS from normal var declaration/assignment?
@@ -256,10 +258,11 @@ GlobalVar ::=
     ;
 
 // Global variable type
+// TODO: PA7
 GlobalVarType ::=
     KeyType:type GlobalTypeIndexList
     {:
-        // TODO: construct
+        
     :}
     ;
 
@@ -293,6 +296,8 @@ FGlobalTypeIndexList ::=
     :}
     ;
 
+/* --- Class declarations --- */
+
 // Class Declarations 
 // TODO: PA7
 ClassDeclr ::= 
@@ -308,6 +313,8 @@ ClassDeclr ::=
     ;
 
 // Class definition
+// TODO: rename this symbol as FnDef is used for the signature of a function
+// so ClassDef should not be the class body
 ClassDef ::= 
     {:
         RESULT = new ArrayList<Node>();
@@ -442,33 +449,6 @@ BlockStmts ::=
     :}
     ;
 
-// List of statements without break/return
-StmtListNoReturn ::= 
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | StmtNoReturn:snr StmtListNoReturn:slnr
-    {:
-        slnr.add(0, snr);
-        RESULT = slnr;
-    :}
-    ;
-
-// Block of statements or single statement excluding break/return 
-// with optional semicolon after block/statement.
-StmtNoReturn ::= 
-    LBRACE:l BlockStmts:block RBRACE OptSemicolon
-    {:
-        // TODO because only 1 lookahead--is it possible to refactor?
-        block.location = lxleft;
-        RESULT = block;
-    :}
-    | SingleStmtNoReturn:ssnr
-    {:
-        RESULT = ssnr;
-    :}
-    ;
-
 // Single statement excluding break/return
 SingleStmtNoReturn ::= 
     Assign:a OptSemicolon
@@ -517,6 +497,33 @@ FExprList ::=
     :}
     ;
 
+// List of statements without break/return
+StmtListNoReturn ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | StmtNoReturn:snr StmtListNoReturn:slnr
+    {:
+        slnr.add(0, snr);
+        RESULT = slnr;
+    :}
+    ;
+
+// Block of statements or single statement excluding break/return 
+// with optional semicolon after block/statement.
+StmtNoReturn ::= 
+    LBRACE:l BlockStmts:block RBRACE OptSemicolon
+    {:
+        // TODO because only 1 lookahead--is it possible to refactor?
+        block.location = lxleft;
+        RESULT = block;
+    :}
+    | SingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    ;
+
 
 /* --- Function calls --- */
 // Parser does not differentiate between procedures and functions
@@ -562,10 +569,11 @@ VarDeclr ::=
     {:
         RESULT = new Declare(idxleft, id, type);
     :}
-    IDENTIFIER VarList COLON VarType
-    {:
-        // TODO: PA7 multiple variable declarations
-    :}
+    // TODO: this breaks many many things right now
+    // IDENTIFIER VarList COLON VarType
+    // {:
+    //     // TODO: PA7 multiple variable declarations
+    // :}
     ;
 
 // For multiple variable declarations of the same type

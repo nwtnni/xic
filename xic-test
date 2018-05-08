@@ -186,6 +186,9 @@ if [[ -f $2 ]] ; then
     --ir)
       ./xic --irgen -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
       ;;
+    --irrun)
+    ./xic --irrun -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
+    ;;
     *)
       echo "Invalid use of xic-test"
       ;;
