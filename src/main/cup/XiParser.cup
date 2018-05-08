@@ -96,6 +96,15 @@ terminal                    FUNCTIONCALL;
 non terminal    Node            Program;
 non terminal    List<Node>      UseDeclarations;
 
+// Use statements
+non terminal    Node            UseDeclr;
+
+// Functions
+non terminal    Node            FnDeclr, FnDef;
+non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
+non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
+non terminal    Node            FnType;
+
 // Block statements
 non terminal    Node            BlockOptBraces, BlockStmts;
 non terminal    Node            SingleStmtNoReturn, StmtNoReturn;
@@ -105,30 +114,21 @@ non terminal    List<Node>      StmtListNoReturn;
 non terminal    Node            FnCall;
 non terminal    List<Node>      Args, FArgs;
 
-// Array access
-non terminal    Node            ArrayCall;
-non terminal    List<Node>      IndexList;
-
 // Variable declarations
 non terminal    Node            VarDeclr, VarType, KeyType;
 non terminal    List<Node>      VarTypeIndexList, VarTypeIndexListNoExpr;
 
 // Assignment
-non terminal    Node            Assign, SingleAssignName, MultiAssignName;
+non terminal    Node            Assign, SingleAssignTarget, MultiAssignTarget;
 non terminal    Node            AssignVarDeclr, AssignVarType;
-non terminal    List<Node>      IDList, FIDList;
+non terminal    List<Node>      AssignTargetList, FAssignTargetList;
 
-// while, if, else
+// Array targets for assignment
+non terminal    Node            ArrayCall;
+non terminal    List<Node>      IndexList;
+
+// Control flow statements
 non terminal    Node            WhileStmt, IfStmt, ElseStmt;
-
-// Functions
-non terminal    Node            FnDeclr, FnDef;
-non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
-non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
-non terminal    Node            FnType;
-
-// Use statements
-non terminal    Node            UseDeclr;
 
 // Expressions
 non terminal    Node            Expr;
@@ -140,20 +140,20 @@ non terminal    List<Node>      ArrayElems, FArrayElems;
 non terminal                    OptSemicolon;
 
 // TODO: PA7 organize these
-non terminal    List<Node>      ProgramBody;            // PA7
+non terminal    List<Node>      ProgramBody;                        // PA7
 
-non terminal    Node            ClassDeclr;             // PA7
-non terminal    List<Node>      ClassDef;               // PA7
+non terminal    Node            ClassDeclr;                         // PA7
+non terminal    List<Node>      ClassDef;                           // PA7
 
-non terminal    Node            GlobalVar;              // PA7
-non terminal    Node            GlobalVarType;          // PA7
-non terminal    Node            GlobalTypeIndexList;    // PA7
-non terminal    Node            FGlobalTypeIndexList;   // PA7
+non terminal    Node            GlobalVar;                          // PA7
+non terminal    Node            GlobalVarType;                      // PA7
+non terminal    Node            GlobalTypeIndexList;                // PA7
+non terminal    Node            FGlobalTypeIndexList;               // PA7
 
-non terminal    List<Node>      VarList;                // PA7
+non terminal    List<Node>      VarDeclrList, FVarDeclrList;        // PA7
 
-non terminal    Node            WhileBlock;             // PA7
-non terminal    Node            WhileBlockStmts;        // PA7
+non terminal    Node            WhileBlock;                         // PA7
+non terminal    Node            WhileBlockStmts;                    // PA7
 
 /* --- Precedences --- */
 precedence nonassoc     ELSE;
@@ -239,7 +239,7 @@ GlobalVar ::=
     {:
 
     :}
-    | IDENTIFIER COMMA IDENTIFIER VarList COLON GlobalVarType
+    | VarDeclrList COLON GlobalVarType
     {:
 
     :}
@@ -569,25 +569,33 @@ VarDeclr ::=
     {:
         RESULT = new Declare(idxleft, id, type);
     :}
-    // TODO: this breaks many many things right now
-    // IDENTIFIER VarList COLON VarType
-    // {:
-    //     // TODO: PA7 multiple variable declarations
-    // :}
+    | VarDeclrList COLON VarType
+    {:
+        // TODO: PA7 multiple variable declarations
+    :}
     ;
 
 // For multiple variable declarations of the same type
-VarList ::=
+VarDeclrList ::=
+    IDENTIFIER:a COMMA IDENTIFIER:b FVarDeclrList:idList
     {:
-        // TODO: PA7 start empty array
-    :}
-    | COMMA IDENTIFIER VarList
-    {:
-        // TODO: PA7 build list of variables
+        idList.add(0, new Declare(bxleft, b, null));
+        idList.add(0, new Declare(axleft, a, null));
+        RESULT = idList;
     :}
     ;
 
-// Types for declarations
+FVarDeclrList ::=
+    {:
+        RESULT = new ArrayList<>();
+    :}
+    | COMMA IDENTIFIER:id FVarDeclrList:idList
+    {:
+        idList.add(new Declare(idxleft, id, null));
+    :}
+    ;
+
+// Types for variable declarations
 // Constructs array types recursively
 VarType ::= 
     KeyType:type VarTypeIndexList:vtil
@@ -653,30 +661,30 @@ VarTypeIndexListNoExpr ::=
 
 // Top level assignment production
 Assign ::= 
-    IDList:il EQ Expr:e
+    AssignTargetList:il EQ Expr:e
     {:
         RESULT = new Assign(ilxleft, il, evalExpr(e));
     :}
-    | SingleAssignName:san EQ Expr:e
+    | SingleAssignTarget:san EQ Expr:e
     {:
         RESULT = new Assign(sanxleft, san, evalExpr(e));
     :}
     ;
 
 // LHS of multiple assignment
-IDList ::= 
-    MultiAssignName:an COMMA MultiAssignName:bn FIDList:fl
+AssignTargetList ::= 
+    MultiAssignTarget:an COMMA MultiAssignTarget:bn FAssignTargetList:fl
     {:
         fl.add(0, bn);
         fl.add(0, an);
         RESULT = fl;
     :};
 
-FIDList ::= 
+FAssignTargetList ::= 
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA MultiAssignName:an FIDList:fl
+    | COMMA MultiAssignTarget:an FAssignTargetList:fl
     {:
         fl.add(0, an);
         RESULT = fl;
@@ -684,7 +692,7 @@ FIDList ::=
     ;
 
 // A single identifier on the LHS of a multiple assignment
-MultiAssignName ::=
+MultiAssignTarget ::=
     UNDERSCORE:u
     {:
         RESULT = new Declare(uxleft);
@@ -696,7 +704,7 @@ MultiAssignName ::=
     ;
 
 // LHS of single assignment
-SingleAssignName ::= 
+SingleAssignTarget ::= 
     UNDERSCORE:u
     {:
         RESULT = new Declare(uxleft);
@@ -715,13 +723,38 @@ SingleAssignName ::=
     :}
     ;
 
+// Variable declaration on LHS of assignment
+AssignVarDeclr ::= 
+    IDENTIFIER:id COLON AssignVarType:type 
+    {:
+        RESULT = new Declare(idxleft, id, type);
+    :}
+    ;
+
+// Variable type on LHS of assignment
+// Constructs array types recursively
+// Restricts array types to dimensionless ones
+AssignVarType ::=
+    KeyType:type VarTypeIndexListNoExpr:vtilne
+    {:
+        for (int i = vtilne.size()-1; i >= 0; i--) {
+            if (vtilne.get(i) == null) {
+                type = new XiType(typexleft, type);
+            } else {
+                type = new XiType(typexleft, type, vtilne.get(i));
+            }
+        }
+        RESULT = type;
+    :}
+    ;
+
 // Array access for LHS of assignment
 ArrayCall ::= 
     FnCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
             il.add(0, evalExpr(e));
             Index index = new Index(fcxleft, fc, il.get(0));
-            for(int i =1; i<il.size(); i++) {
+            for (int i = 1; i < il.size(); i++) {
                 Node n = il.get(i);
                 index = new Index(n.location, index, n);
             }
@@ -731,7 +764,7 @@ ArrayCall ::=
         {:
             il.add(0, evalExpr(e));
             Index index = new Index(idxleft, new Var(idxleft, id), il.get(0));
-            for(int i =1; i<il.size(); i++) {
+            for (int i = 1; i < il.size(); i++) {
                 Node n = il.get(i);
                 index = new Index(n.location, index, n);
             }
@@ -750,33 +783,6 @@ IndexList ::=
             il.add(0, evalExpr(e));
             RESULT = il;
         :}
-    ;
-
-// Variable declaration on LHS of assignment
-// Needed as certain declarations (arrays with dimensions)
-// are not allowed by the Xi language specification
-AssignVarDeclr ::= 
-    IDENTIFIER:id COLON AssignVarType:type 
-    {:
-        RESULT = new Declare(idxleft, id, type);
-    :}
-    ;
-
-// Variable type on LHS of assignment
-// Constructs array types recursively
-// Restricts array types to dimensionless ones
-AssignVarType ::=
-    KeyType:type VarTypeIndexListNoExpr:vtilne
-    {:
-        for (int i=vtilne.size()-1; i>=0; i--) {
-            if (vtilne.get(i) == null) {
-                type = new XiType(typexleft, type);
-            } else {
-                type = new XiType(typexleft, type, vtilne.get(i));
-            }
-        }
-        RESULT = type;
-    :}
     ;
 
 
