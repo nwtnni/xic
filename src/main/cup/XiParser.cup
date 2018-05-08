@@ -266,7 +266,7 @@ GlobalVarType ::=
     :}
     ;
 
-// TODO: are we missing global arrays with no initialization? 
+// TODO: are we missing global arrays with no dimensions? 
 // TODO: is this necessary to differentiate this from normal var declaration
 GlobalTypeIndexList ::=
     {:
@@ -771,7 +771,6 @@ ArrayCall ::=
             RESULT = index;
         :}
     ;
-    // TODO: add array call on array literals
 
 // List of expressions for indices in an array access
 IndexList ::=
