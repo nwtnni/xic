@@ -11,6 +11,11 @@ test_all() {
   test_object
 }
 
+test_course() {
+    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
+    printf "\n========================================\n\n" 
+}
+
 test_reg() {
     test_lex
     test_lex_fails
@@ -53,7 +58,6 @@ test_type() {
     test_type_valid
     test_type_man
 }
-
 
 test_type_valid() {
     xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
@@ -148,8 +152,12 @@ test_assemble() {
     test_assemble_assemble_specific
 }
 
-test_course() {
-    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
+test_optimize() {
+    test_opt_fail
+}
+
+test_opt_fail() {
+    xth/xth -compilerpath . -workpath tests/optimize/failed -testpath tests/optimize/failed tests/optimize/failed/xthScript     
     printf "\n========================================\n\n" 
 }
 
@@ -167,7 +175,7 @@ if [[ -f $2 ]] ; then
   FILE=$2
   case $1 in
     --asm)
-      ./xic -target linux -libpath tests/libs $FILE
+      ./xic -target linux -libpath tests/libs -Oreg $FILE
       asm="${FILE%.*}.s"
       base=$(basename -- "$FILE")
       name="${base%.*}.s"
@@ -273,7 +281,10 @@ else
   c|course)
       test_course
       ;;
-  o)
+  opt|optimize)
+      test_optimize
+      ;;
+  o|object)
       test_object
       ;;
   ol)
@@ -288,6 +299,8 @@ else
       echo "  l[exer] p[arser] t[ype] te tv tm"
       echo "  i[r, b, c, s, o, a, f]"
       echo "  a[ssemble] as aa ab airf ao aas"
+      echo "  opt[imize]"
+      echo "  o[bject, l]"
       echo ""
       echo "OR"
       echo ""

@@ -49,7 +49,7 @@ public abstract class Phase {
     }
     
     // Public for debug purposes
-    public Kind kind;
+    protected Kind kind;
 
     protected boolean output;
 

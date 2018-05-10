@@ -74,7 +74,6 @@ public class Xic {
             int i = 0;
             for (Phase phase : phases) {
                 i++;
-                System.out.println(i + ": " + phase.kind);
                 product = phase.process(config, product);
             }
 
