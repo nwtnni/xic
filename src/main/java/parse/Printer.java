@@ -1,11 +1,9 @@
 package parse;
 
-import java.util.List;
 import java.io.*;
 
 import edu.cornell.cs.cs4120.util.*;
 import polyglot.util.OptimalCodeWriter;
-import util.Filename;
 import ast.*;
 import xic.XicException;
 
@@ -15,7 +13,7 @@ import xic.XicException;
  */
 public class Printer extends Visitor<Void> {
 
-    private static final int WIDTH = 80;
+    private static final int WIDTH = 200;
     private SExpPrinter printer;
 
     public Printer(OutputStream stream) {
