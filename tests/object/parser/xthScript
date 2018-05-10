@@ -1,0 +1,7 @@
+xic ("Test oXi --parse") "--parse" {
+  updates.xi;
+  break.xi;
+  new.xi;
+  class.xi;
+  method.xi; 
+}
