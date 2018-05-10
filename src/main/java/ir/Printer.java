@@ -1,31 +1,12 @@
 package ir;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import ast.Node;
-import ast.Program;
 import edu.cornell.cs.cs4120.util.CodeWriterSExpPrinter;
 import edu.cornell.cs.cs4120.util.SExpPrinter;
-import emit.Canonizer;
-import emit.ConstantFolder;
-import emit.Emitter;
-import interpret.IRSimulator;
-import interpret.IRSimulator.Trap;
-import parse.XiParser;
 import polyglot.util.OptimalCodeWriter;
-import type.FnContext;
-import type.TypeChecker;
-import util.Filename;
-import xic.XicException;
-
-// for tests
-import java.util.Map;
-import optimize.*;
-import optimize.graph.*;
 
 public class Printer extends IRVisitor<Void> {
 
@@ -42,7 +23,7 @@ public class Printer extends IRVisitor<Void> {
         return sw.toString();
     }
 
-    private final int WIDTH = 80;
+    private final int WIDTH = 200;
     public SExpPrinter printer;
 
     public Printer(OutputStream stream) {

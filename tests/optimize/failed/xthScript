@@ -1,0 +1,39 @@
+xic ("xi [-Oreg]") "-target linux --optir initial --optir final -Oreg" {
+    # Timeout
+    group_of_anonymous01__reg_loop.xi;
+
+    # Syntax
+    # TODO: issue #126
+    group_of_anonymous05__regBenchmark3.xi;
+
+    # Real bugs
+    # TODO: issue #128
+    group_of_anonymous01__reg_weird.xi;
+    group_of_anonymous07__reg_bench1.xi;
+    group_of_anonymous11__reg-3.xi;
+    group_of_anonymous15__mc3.xi;
+}
+
+xic ("xi [-Ocse]") "-target linux --optir initial --optir final -Oreg -Ocse" {
+    # Timeout
+    group_of_anonymous03__cse3.xi;          # TODO: issue #127
+    group_of_anonymous05__cseBenchmark1.xi;
+
+    # Tiler nullpointer
+    group_of_anonymous10__cse2.xi;
+}
+
+xic ("xi [-Ocf]") "-target linux --optir initial --optir final -Oreg -Ocf" {
+    # Timeout
+    group_of_anonymous15__cf1.xi;
+
+    # Tiler nullpointer
+    group_of_anonymous10__cf2.xi;
+
+}
+
+xic ("xi [-Ocp]") "-target linux --optir initial --optir final -Oreg -Ocp" {
+    # Tiler nullpointer
+    group_of_anonymous10__cp2.xi;
+    group_of_anonymous10__cp3.xi;
+}

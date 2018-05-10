@@ -294,7 +294,6 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRCJump c) {
-
         if (c.cond instanceof IRBinOp) {
             IRBinOp bop = (IRBinOp) c.cond;
 

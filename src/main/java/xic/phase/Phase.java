@@ -48,7 +48,8 @@ public abstract class Phase {
         ALLOCATE;
     }
     
-    public Kind kind;
+    // Public for debug purposes
+    protected Kind kind;
 
     protected boolean output;
 
