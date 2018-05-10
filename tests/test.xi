@@ -1,3 +1,6 @@
+// ~~~~~~~~~~~~~~~~~~~~~~
+// xic timeout test cases
+
 // use io
 // use conv
 
@@ -39,20 +42,20 @@
 // }
 
 // group_of_anonymous03__cse3
-use io use conv
-main(args:int[][]) {
-    x:int[] = {1, 2, 3, 4, 5, 6}
-    i:int = 0
-    y:int = x[0] + x[1] + x[2] + x[3] + x[4] + x[5]
-    while (i < 3000000) {
-        z:int[3]
-        z[0] = x[0] + x[1] + x[2] + x[3] + x[4] + x[5] 
-        z[1] = x[0] + x[1] + x[2] + x[3] + x[4] + x[5] 
-        z[2] = x[0] + x[1] + x[2] + x[3] + x[4] + x[5] 
-        i = i + 1
-    }
-    println("finished")
-}
+// use io use conv
+// main(args:int[][]) {
+//     x:int[] = {1, 2, 3, 4, 5, 6}
+//     i:int = 0
+//     y:int = x[0] + x[1] + x[2] + x[3] + x[4] + x[5]
+//     while (i < 3000000) {
+//         z:int[3]
+//         z[0] = x[0] + x[1] + x[2] + x[3] + x[4] + x[5] 
+//         z[1] = x[0] + x[1] + x[2] + x[3] + x[4] + x[5] 
+//         z[2] = x[0] + x[1] + x[2] + x[3] + x[4] + x[5] 
+//         i = i + 1
+//     }
+//     println("finished")
+// }
 
 // group_of_anonymous05__cseBenchmark1
 // use conv use io
@@ -92,3 +95,61 @@ main(args:int[][]) {
 //         i = i + 1
 //     }
 // }
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Tiler nullpointer test cases
+
+// group_of_anonymous10__cse2
+// use io
+// use conv
+// main(args:int[][]) {
+//     c:int = 50
+//     d:int = 100
+//     x:int = c + d + c + d + c + d * c * d * c
+//     j:int = 0
+//     while (j < 1000000000000000) {
+//         j = j + d * c * d * c
+//     }
+//     println(unparseInt(j)) 
+// }
+
+// group_of_anonymous10__cf2
+// use io
+// use conv
+// main(args:int[][]) {
+//     q:int = 0
+//     while (q < 100000000000) {
+//         x:int = 0 y:int = 0 z:int = 0 d:int = 0 g:int = 1 + z f:int = d + g + z
+//         e:int = 10 h:int = 50 b:int = 900 m:int = 70 n:int = 50 l:int = 23
+//         b = 0 + 0 + 0 + 0 + 1 + 0 + 10 + 50 + 900 + 70 + 50 + 23
+//         q=q+ b
+//     }
+//     println(unparseInt(q))
+//  }
+
+// group_of_anonymous10__cp2
+// use io
+// use conv
+// main(args:int[][]) {
+//     q:int = 0
+//     while (q < 10000000000) {
+//         x:int = 0 y:int = 0 z:int = 0 d:int = 0 g:int = 1 + z f:int = d + g + z
+//         e:int = 10 h:int = 50 b:int = 900 m:int = 70 n:int = 50 l:int = 23
+//         b = x + y + z + d + g + f + e + h+b+m+n+l
+//         q=q+ b
+//     }
+//     println(unparseInt(q))
+// }
+
+// group_of_anonymous10__cp3
+use io
+use conv
+main(args:int[][]) { 
+    c:int = 50
+    while (c < 400000000000000) {
+        d:int = 50
+        c = c + d * d * d * d + (4000000000000000000 *>> 400)
+    }
+    println(unparseInt(c)) 
+}

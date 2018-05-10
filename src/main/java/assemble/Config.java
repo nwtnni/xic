@@ -136,6 +136,6 @@ public class Config {
      * Loses MIN_INT for each n bits for simplicity
      */
     public static boolean within(int bits, long value) {
-        return Math.abs(value) < Math.pow(2, bits - 1) - 1;
+        return Double.compare(Math.abs((double) value), Math.pow(2, bits - 1) - 1) < 0;
     }
 }

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import assemble.*;
-import assemble.instructions.Cqo.R;
 import ir.*;
 import util.Pair;
 
@@ -245,7 +244,6 @@ public abstract class InstrFactory {
         Optional<Imm> immL,
         Optional<Imm> immR
     ) {
-
         List<Instr<Temp>> instrs = new ArrayList<>();
 
         Temp shuttle = TempFactory.generate("cmp_shuttle");
@@ -267,8 +265,10 @@ public abstract class InstrFactory {
 
         // Only need to shuttle left imm in certain cases
         } else if (immL.isPresent()) {
+
             // Check if fits in imm32 for cmp instruction
             if (Config.within(32, immL.get().getValue())) {
+
                 // If right is reg, don't shuttle
                 if (r.isTemp()) {
                     instrs.add(cmpIR(immL.get(), r.getTemp()));
@@ -283,7 +283,7 @@ public abstract class InstrFactory {
             } else {
                 instrs.add(movIR(immL.get(), shuttle));
 
-                if (l.isTemp()) {
+                if (r.isTemp()) {
                     instrs.add(cmpRR(shuttle, r.getTemp()));
                 } else {
                     instrs.add(cmpRM(shuttle, r.getMem()));
