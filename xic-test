@@ -170,6 +170,11 @@ test_object_lex() {
     printf "\n========================================\n\n" 
 }
 
+test_object_parse() {
+    xth/xth -compilerpath . -workpath tests/object/parser -testpath tests/object/parser tests/object/parser/xthScript     
+    printf "\n========================================\n\n" 
+}
+
 if [[ -f $2 ]] ; then
   gradle xic
   FILE=$2
@@ -289,6 +294,9 @@ else
       ;;
   ol)
       test_object_lex
+      ;;
+  op)
+      test_object_parse
       ;;
   *)
       echo "Usage:"
