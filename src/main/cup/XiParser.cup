@@ -100,7 +100,7 @@ non terminal    List<Node>      UseDeclarations;
 non terminal    Node            UseDeclr;
 
 // Functions
-non terminal    Node            FnDeclr, FnDef;
+non terminal    Node            FnDeclr, FnSig;
 non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
 non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
 non terminal    Node            FnType;
@@ -142,13 +142,15 @@ non terminal                    OptSemicolon;
 // TODO: PA7 organize these
 non terminal    List<Node>      ProgramBody;                        // PA7
 
-non terminal    Node            ClassDeclr;                         // PA7
-non terminal    List<Node>      ClassDef;                           // PA7
-
 non terminal    Node            GlobalVar;                          // PA7
-non terminal    Node            GlobalVarType;                      // PA7
-non terminal    Node            GlobalTypeIndexList;                // PA7
-non terminal    Node            FGlobalTypeIndexList;               // PA7
+non terminal    Node            GVType;                             // PA7
+non terminal    Node            GVTypeLiteral;                      // PA7
+non terminal    List<Node>      GVTypeIndexList;                    // PA7
+
+non terminal    Node            ClassDeclr;                         // PA7
+non terminal    List<Node>      ClassBody;                           // PA7
+non terminal    Node            Field;                              // PA7
+non terminal    Node            FieldType;                          // PA7
 
 non terminal    List<Node>      VarDeclrList, FVarDeclrList;        // PA7
 
@@ -206,7 +208,6 @@ UseDeclr ::=
     ;
 
 // Body of program after use statements 
-// TODO: PA7 Should we wrap global variables into a nonterminal?
 ProgramBody ::=
     {:
         RESULT = new ArrayList<Node>();
@@ -231,15 +232,15 @@ ProgramBody ::=
 /* --- Global variables --- */
 
 // Global Variables
+// Globals can be any primitive, uninitialized object/array
+// or an array initialized to default values (0)
 // TODO: PA7
-// TODO: do we need to differentiate the LHS from normal var declaration/assignment?
-// TODO: are we missing global arrays intialized to literals?
 GlobalVar ::=
-    IDENTIFIER COLON GlobalVarType
+    VarDeclrList COLON GVType
     {:
 
     :}
-    | VarDeclrList COLON GlobalVarType
+    | IDENTIFIER COLON GVType
     {:
 
     :}
@@ -257,40 +258,38 @@ GlobalVar ::=
     :}
     ;
 
-// Global variable type
+// Type constructor for global variables
 // TODO: PA7
-GlobalVarType ::=
-    KeyType:type GlobalTypeIndexList
+GVType ::=
+    KeyType:type GVTypeIndexList
     {:
         
     :}
     ;
 
-// TODO: are we missing global arrays with no dimensions? 
-// TODO: is this necessary to differentiate this from normal var declaration
-GlobalTypeIndexList ::=
+// List of expressions for index values for global array types
+GVTypeIndexList ::=
     {:
 
     :}
-    | LBRACK INTEGER RBRACK FGlobalTypeIndexList
+    | LBRACK GVTypeLiteral:index RBRACK GVTypeIndexList:list
     {:
 
     :}
-    | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
+    | LBRACK RBRACK VarTypeIndexListNoExpr:list
     {:
 
     :}
     ;
 
-FGlobalTypeIndexList ::=
+// Valid initializer for global array dimensions are integers
+// and other global identifiers (checked at typechecking)
+GVTypeLiteral ::=
+    INTEGER:i
     {:
 
     :}
-    | LBRACK INTEGER RBRACK FGlobalTypeIndexList
-    {:
-
-    :}
-    | LBRACK IDENTIFIER RBRACK FGlobalTypeIndexList
+    | IDENTIFIER:id
     {:
 
     :}
@@ -301,41 +300,66 @@ FGlobalTypeIndexList ::=
 // Class Declarations 
 // TODO: PA7
 ClassDeclr ::= 
-    CLASS:c IDENTIFIER:id LBRACE ClassDef:cd RBRACE
+    CLASS:c IDENTIFIER:id LBRACE ClassBody:cd RBRACE
     {:
         // TODO: construct class
         // RESULT = new Class(cxdleft, id, cd);
     :}
-    | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER LBRACE ClassDef:cd RBRACE
+    | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER LBRACE ClassBody:cd RBRACE
     {:
         // TODO: construct class
     :}
     ;
 
 // Class definition
-// TODO: rename this symbol as FnDef is used for the signature of a function
-// so ClassDef should not be the class body
-ClassDef ::= 
+// TODO: PA7
+ClassBody ::= 
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | FnDeclr:f ClassDef:cd
+    | FnDeclr:f ClassBody:cd
     {:
         cd.add(0,f);
         RESULT = cd;
     :}
-    | GlobalVar ClassDef    
+    | Field ClassBody    
     {:
-        // TODO design choice
-        // Do we treat instance variables syntactically the same as global variables?
+        // TODO: PA7
+        // Do we want to enforce ordering of elements in classes?
     :}
     ;
+
+/* --- Field variables --- */
+
+// Fields
+// TODO: PA7
+Field ::=
+    VarDeclrList COLON FieldType
+    {:
+
+    :}
+    | IDENTIFIER COLON FieldType
+    {:
+
+    :}
+    ;
+
+// Type constructor for field variables
+// Fields can be any primitive or an uninitialized object/array type
+// TODO: PA7
+FieldType ::=
+    KeyType:type VarTypeIndexListNoExpr
+    {:
+        
+    :}
+    ;
+
 
 /* --- Function and procedure declaration --- */
 
 // Function declaration
 FnDeclr ::= 
-    FnDef:def LBRACE:l BlockStmts:block RBRACE
+    FnSig:def LBRACE:l BlockStmts:block RBRACE
     {:
         // TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
@@ -343,8 +367,8 @@ FnDeclr ::=
     :}
     ;
 
-// Function body
-FnDef ::= 
+// Function signature
+FnSig ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
         RESULT = new Fn(idxleft, id, atl, rtl);
@@ -595,8 +619,7 @@ FVarDeclrList ::=
     :}
     ;
 
-// Types for variable declarations
-// Constructs array types recursively
+// Type constructor for variable declarations
 VarType ::= 
     KeyType:type VarTypeIndexList:vtil
     {:
@@ -627,7 +650,7 @@ KeyType ::=
     :}
     ;
 
-// List of expressions for array types with dimensions
+// List of expressions for index values for array types
 VarTypeIndexList ::=
     {:
         RESULT = new ArrayList<Node>();
@@ -644,7 +667,7 @@ VarTypeIndexList ::=
     :}
     ;
 
-// List of empty (null) values for array types
+// List of empty index values for array types
 VarTypeIndexListNoExpr ::=
     {:
         RESULT = new ArrayList<Node>();
@@ -731,9 +754,8 @@ AssignVarDeclr ::=
     :}
     ;
 
-// Variable type on LHS of assignment
-// Constructs array types recursively
-// Restricts array types to dimensionless ones
+// Variable type constructor on LHS of assignment
+// Does not allow for arrays with initialized dimensions
 AssignVarType ::=
     KeyType:type VarTypeIndexListNoExpr:vtilne
     {:
@@ -772,7 +794,6 @@ ArrayCall ::=
         :}
     ;
     // TODO: should we allow access off a string? example: "abc"[0] = e
-    // seems kinda dumb
 
 // List of expressions for indices in an array access
 IndexList ::=
@@ -1001,10 +1022,10 @@ ArrayElems ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | Expr:e FArrayElems:fae
+    | Expr:e FArrayElems:exprs
     {:
-        fae.add(0, evalExpr(e));
-        RESULT = fae;
+        exprs.add(0, evalExpr(e));
+        RESULT = exprs;
     :}
     ;
 
@@ -1016,9 +1037,9 @@ FArrayElems ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA Expr:e FArrayElems:fae
+    | COMMA Expr:e FArrayElems:exprs
     {:
-        fae.add(0, evalExpr(e));
-        RESULT = fae;
+        exprs.add(0, evalExpr(e));
+        RESULT = exprs;
     :}
     ;
