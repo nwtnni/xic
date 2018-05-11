@@ -56,8 +56,8 @@ terminal    String          IDENTIFIER;
 terminal                    CLASS, EXTENDS;                        // New for PA7: THIS, CLASS, EXTENDS, NEW
 
 /* Non terminals */
-non terminal    Node            FnDef;
-non terminal    List<Node>      FnDefList;
+non terminal    Node            FnSig;
+non terminal    List<Node>      FnSigList;
 non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
 non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
 non terminal    Node            FnType;
@@ -66,8 +66,30 @@ non terminal    Node            Interface;
 /* The grammar rules */
 start with      Interface;
 
-// Function Definitions
-FnDef ::= 
+// Top level for interface
+Interface ::= 
+    FnSigList:fdl FnSig:f
+    {:
+        fdl.add(f);
+        RESULT = new Program(fdlxleft, fdl);
+    :}
+    ;
+
+FnSigList ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FnSigList:fdl FnSig:f
+        {:
+            fdl.add(f);
+            RESULT = fdl;
+        :}
+    ;
+
+/* --- Function and procedure declaration --- */
+
+// Function Declarations
+FnSig ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
         RESULT = new Fn(idxleft, id, atl, rtl);
@@ -131,24 +153,5 @@ FnType ::=
     | FnType:type LBRACK RBRACK
         {:
             RESULT = new XiType(typexleft, type);
-        :}
-    ;
-
-// Interface
-FnDefList ::= 
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
-    | FnDefList:fdl FnDef:f
-        {:
-            fdl.add(f);
-            RESULT = fdl;
-        :}
-    ;
-
-Interface ::= FnDefList:fdl FnDef:f
-        {:
-            fdl.add(f);
-            RESULT = new Program(fdlxleft, fdl);
         :}
     ;
