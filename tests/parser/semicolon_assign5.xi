@@ -1,3 +1,3 @@
 foo() {
-    x:bool[] = {true, false, true};,
+    x:bool[] = {true, false, true};
 }

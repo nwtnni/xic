@@ -3,5 +3,95 @@ xic ("Test oXi --parse") "--parse" {
   break.xi;
   new.xi;
   class.xi;
-  method.xi; 
+  method.xi;
+
+  break01.xi;
+  break02.xi;
+  break03.xi;
+  break04.xi;
+  break05.xi;
+  break06.xi;
+  break07.xi;
+  break08.xi;
+  break09.xi;
+  break10.xi;
+  
+  class01.xi;
+  class02.xi;
+  class03.xi;
+  class04.xi;
+  class05.xi;
+  class06.xi;
+  class07.xi;
+  class08.xi;
+
+  classVars01.xi;
+  classVars02.xi;
+  classVars03.xi;
+  classVars04.xi;
+  classVars05.xi;
+  classVars06.xi;
+  classVars07.xi;
+  classVars08.xi;
+  
+  dot01.xi;
+  dot02.xi;
+  dot03.xi;
+  dot04.xi;
+  dot05.xi;
+  dot06.xi;
+  dot07.xi;
+  dot08.xi;
+  dot09.xi;
+
+  extends01.xi;
+  extends02.xi;
+  extends03.xi;
+  extends04.xi;
+  extends05.xi;
+  extends06.xi;
+
+  global01.xi;
+  global02.xi;
+  global03.xi;
+  global04.xi;
+  global05.xi;
+  global06.xi;
+  global07.xi;
+  global08.xi;
+  global08.xi;
+  global09.xi;
+  global10.xi;
+  global11.xi;
+
+  new01.xi;
+  new02.xi;
+  new03.xi;
+
+  null01.xi;
+  null02.xi;
+  null03.xi;
+  null04.xi;
+  null05.xi;
+  null06.xi;
+  null07.xi;
+  null08.xi;
+  null09.xi;
+
+  this01.xi;
+  this02.xi;
+  this03.xi;
+  this04.xi;
+  this05.xi;
+  this06.xi;
+  this07.xi;
+  this08.xi;
+  this09.xi;
+  this10.xi;
+  this11.xi;
+  this12.xi;
+  this13.xi;
+  this14.xi;
+  this15.xi;
+  
 }
