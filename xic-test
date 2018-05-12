@@ -166,12 +166,12 @@ test_object() {
 }
 
 test_object_lex() {
-    xth/xth -compilerpath . -workpath tests/object/lexer -testpath tests/object/lexer tests/object/lexer/xthScript     
+    xth/xth -compilerpath . -workpath tests/object/1_lexer -testpath tests/object/1_lexer tests/object/1_lexer/xthScript     
     printf "\n========================================\n\n" 
 }
 
 test_object_parse() {
-    xth/xth -compilerpath . -workpath tests/object/parser -testpath tests/object/parser tests/object/parser/xthScript     
+    xth/xth -compilerpath . -workpath tests/object/2_parser -testpath tests/object/2_parser tests/object/2_parser/xthScript     
     printf "\n========================================\n\n" 
 }
 
