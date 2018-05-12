@@ -13,7 +13,7 @@ public class Use extends Node {
         this.file = file; 
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

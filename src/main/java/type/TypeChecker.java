@@ -14,7 +14,7 @@ import xic.XicInternalException;
  * Specification. This implementation mutates the provided AST, decorating
  * each node with a Type field.
  */
-public class TypeChecker extends Visitor<Type> {
+public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * Factory method to type check the given AST and return the 
@@ -104,7 +104,7 @@ public class TypeChecker extends Visitor<Type> {
      * @throws XicException if program has semantic errors
      */
     public Type visit(Program p) throws XicException {
-        for (Node fn : p.fns) {
+        for (Node fn : p.body) {
             fn.accept(this);
         }
         p.type = Type.UNIT;

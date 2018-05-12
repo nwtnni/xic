@@ -1,21 +1,22 @@
 package ast;
 
 import xic.XicException;
+import xic.XicInternalException;
 
 /* Visits a constructed AST and checks all node invariants.
  * 
  * Note: must run with the -ea flag to enable assertions.
  */
-public class Invariant extends Visitor<Void> {
+public class InvariantChecker extends ASTVisitor<Void> {
 
-    public static final Invariant CHECKER = new Invariant();
+    public static final InvariantChecker CHECKER = new InvariantChecker();
 
     public static void check(Node ast) {
         try {
             ast.accept(CHECKER);
         } catch (Exception e) {
-            // TODO what should we do here?
             e.printStackTrace();
+            throw XicInternalException.runtime("violated ast invariant");
         }
     }
 
@@ -36,8 +37,8 @@ public class Invariant extends Visitor<Void> {
         } else {
             assert p.uses == null; 
         }
-        assert p.fns != null;
-        for (Node f : p.fns) {
+        assert p.body != null;
+        for (Node f : p.body) {
             assert f instanceof Fn;
             f.accept(this);
         }

@@ -44,7 +44,7 @@ public class Binary extends Node {
         this.rhs = rhs;
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
 

@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import xic.XicException;
 
 // Boilerplate code to implement the visitor pattern
-public abstract class Visitor<T> {
+public abstract class ASTVisitor<T> {
 
     /*
      * Psuedo-visit method for visiting a list of nodes.

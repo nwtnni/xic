@@ -17,7 +17,7 @@ import util.Pair;
  * Main decorated AST to IR translation implementation. Recursively 
  * traverses the AST and constructs a new IR tree that represents the AST.
  */
-public class Emitter extends Visitor<IRNode> {
+public class Emitter extends ASTVisitor<IRNode> {
 
     /**
      * Factory method to generate IR from the given AST.
@@ -363,7 +363,7 @@ public class Emitter extends Visitor<IRNode> {
             program.appendFunc(xiDynamicAlloc());
         }
 
-        for (Node n : p.fns) {
+        for (Node n : p.body) {
             IRFuncDecl f = (IRFuncDecl) n.accept(this);
             program.appendFunc(f);
         }

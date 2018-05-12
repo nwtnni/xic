@@ -13,7 +13,7 @@ public class TempInt extends Node {
         this.literal = literal; 
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         // Should never appear in an AST
         assert false;
         return null;

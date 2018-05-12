@@ -14,27 +14,27 @@ public class Program extends Node {
 
     public Kind kind;
     public List<Node> uses;
-    public List<Node> fns;
+    public List<Node> body;
 
     public Program(Location location, List<Node> uses, List<Node> fns) {
         this.kind = Kind.PROGRAM;
         this.location = location;
         this.uses = uses;
-        this.fns = fns;
+        this.body = fns;
     }
 
     public Program(Location location, List<Node> fns) {
         this.kind = Kind.INTERFACE;
         this.location = location;
         this.uses = null;
-        this.fns = fns;
+        this.body = fns;
     }
 
     public boolean isProgram() {
         return kind == Kind.PROGRAM; 
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

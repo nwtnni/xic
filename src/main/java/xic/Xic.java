@@ -71,9 +71,7 @@ public class Xic {
             config.setUnit(unit);
             Result<Product> product = new Result<>(Product.empty());
 
-            int i = 0;
             for (Phase phase : phases) {
-                i++;
                 product = phase.process(config, product);
             }
 

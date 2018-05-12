@@ -31,7 +31,7 @@ public class Return extends Node {
         return kind == Kind.VALUE; 
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

@@ -15,9 +15,9 @@ import xic.XicException;
  * in order to do its conversions.
  * 
  * @see Type
- * @see ast.Visitor
+ * @see ASTVisitor
  */
-public class FnType extends Visitor<Type> {
+public class FnType extends ASTVisitor<Type> {
 
     /**
      * Convenience factory method to create a FnType from a Fn.

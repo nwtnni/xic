@@ -11,7 +11,7 @@ import xic.XicException;
  * Recursively traverses a parsed AST and writes a pretty-printed
  * version to file.
  */
-public class Printer extends Visitor<Void> {
+public class Printer extends ASTVisitor<Void> {
 
     private static final int WIDTH = 200;
     private SExpPrinter printer;
@@ -39,7 +39,7 @@ public class Printer extends Visitor<Void> {
 
         // Fn declarations
         printer.startUnifiedList();
-        visit(p.fns);
+        visit(p.body);
         printer.endList();
 
         printer.endList();

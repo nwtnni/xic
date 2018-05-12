@@ -30,7 +30,7 @@ public class Unary extends Node {
         this.child = child;
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
 

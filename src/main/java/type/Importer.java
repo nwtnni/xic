@@ -68,14 +68,14 @@ public class Importer extends TypeChecker {
     @Override
     public Type visit(Program p) throws XicException {
         // First pass: populate top-level environment with function IDs
-        for (Node fn : p.fns) {
+        for (Node fn : p.body) {
             fn.accept(this);
         }
         
         populate = false;
         
         // Second pass: check for shadowed arguments against top-level
-        for (Node fn : p.fns) {
+        for (Node fn : p.body) {
             vars.push();
             fn.accept(this);
             vars.pop();
