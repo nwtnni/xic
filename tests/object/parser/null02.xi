@@ -1,0 +1,5 @@
+foo():A {
+    if null == null {
+        return null
+    }
+}

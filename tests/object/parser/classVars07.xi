@@ -1,0 +1,6 @@
+class A {
+    x:A
+    foo(y:A):bool {
+        return x == y
+    }
+}

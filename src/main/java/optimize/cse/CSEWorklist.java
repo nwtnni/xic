@@ -89,7 +89,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         // Kill mems if moving into mem or calling a function
         boolean shouldDelMem = false;
         if (s instanceof IRMove && ((((IRMove) s).target instanceof IRMem) || containsCall(((IRMove) s).src))) {
-            shouldDelMem = true;        
+            shouldDelMem = true;
         }
 
         // Performing kill for out
@@ -179,6 +179,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
      * Run the CSE optimization on graph from superclass Worklist
      */
     public void runCSE() {
+        // System.out.println("Run CSE");
 
         doWorklist();   // Run available expressions analysis
 
@@ -197,6 +198,8 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
         // Iterate to mark nodes for replacement
         q.add(graph.start);
         seen.add(graph.start);
+
+        // System.out.println("Iterating through queue");
 
         while (!q.isEmpty()) {
             IRStmt s = q.poll();
@@ -248,6 +251,8 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
             }
         }
 
+        // System.out.println("Finished Queue");
+
         // Flip the stmtToExpr map to go from expr to a list of stmts
         Map<Pair<IRExpr, IRStmt>, List<IRStmt>> exprToStmts = new HashMap<>();
         for(IRStmt s:stmtToExpr.keySet()) {
@@ -261,6 +266,8 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
 
             exprToStmts.get(e).add(s);  // Add s to the list of statments corresponding to e
         }
+
+        // System.out.println("Replacing exprs");
 
         // Iterate over potential exprs to replace in the IRStmts
         for (Pair<IRExpr, IRStmt> curPair: exprToStmts.keySet()) {
@@ -296,5 +303,7 @@ public class CSEWorklist extends Worklist<IRGraph<Map<IRExpr, IRStmt>>, IRStmt, 
                 }
             }
         }
+
+        // System.out.println("Finished");
     }
 }
