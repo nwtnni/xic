@@ -444,7 +444,7 @@ FnType ::=
 
 // Block with braces OR single statement (excluding break/return)
 BlockOptBraces ::=
-    LBRACE:l BlockStmts:bs RBRACE
+    LBRACE:l BlockStmts:bs RBRACE OptSemicolon
     {:
         bs.location = lxleft;
         RESULT = bs;
@@ -824,7 +824,7 @@ WhileStmt ::=
 // - A block
 // - A single statement excluding return
 WhileBlock ::= 
-    LBRACE:l WhileBlockStmts:wbs RBRACE
+    LBRACE:l WhileBlockStmts:wbs RBRACE OptSemicolon
     {:
         // TODO: PA7 decide what do do with while block statements
         wbs.location = lxleft;
