@@ -6,11 +6,11 @@ import xic.XicException;
 
 // A AST global variable declaration node.
 public class XiGlobal extends TopDeclr {
-    public XiDeclr declr;
+    public Stmt declr;
 
     public XiGlobal(Location location, Node declr) {
         this.location = location;
-        this.declr = (XiDeclr) declr;
+        this.declr = (Stmt) declr;
     }
 
     public <T> T accept(ASTVisitor<T> v) throws XicException {

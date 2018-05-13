@@ -12,13 +12,13 @@ public class XiDeclr extends Stmt {
 
     private Kind kind;
     public String id;
-    public Node xiType;
+    public XiType xiType;
 
     public XiDeclr(Location location, String id, Node type) {
         this.kind = Kind.VAR;
         this.location = location;
         this.id = id; 
-        this.xiType = type;
+        this.xiType = (XiType) type;
     }
 
     // Used for underscores

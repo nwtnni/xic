@@ -71,6 +71,10 @@ public abstract class ASTVisitor<T> {
         return null;
     }
 
+    public T visit(XiSeq s) throws XicException {
+        return null;
+    }
+
     public T visit(XiWhile w) throws XicException {
         return null;
     }

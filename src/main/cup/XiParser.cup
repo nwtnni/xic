@@ -142,7 +142,7 @@ non terminal                    OptSemicolon;
 // TODO: PA7 organize these
 non terminal    List<Node>      ProgramBody;                        // PA7
 
-non terminal    Node            GlobalVar;                          // PA7
+non terminal    XiGlobal        GlobalVar;                          // PA7
 non terminal    Node            GVType;                             // PA7
 non terminal    Node            GVTypeLiteral;                      // PA7
 non terminal    List<Node>      GVTypeIndexList;                    // PA7
@@ -232,51 +232,66 @@ ProgramBody ::=
 // Global Variables
 // Globals can be any primitive, uninitialized object/array
 // or an array initialized to default values (0)
-// TODO: PA7
 GlobalVar ::=
-    VarDeclrList COLON GVType
+    VarDeclrList:list COLON GVType:type
     {:
-
+        for (Node n : list) {
+            XiDeclr d = (XiDeclr) n;
+            d.xiType = (XiType) type;
+        }
+        RESULT = new XiGlobal(listxleft, new XiSeq(listxleft, list));
     :}
-    | IDENTIFIER:id COLON GVType
+    | IDENTIFIER:id COLON GVType:type
     {:
-
+        RESULT = new XiGlobal(idxleft, new XiDeclr(idxleft, id, type));
     :}
-    | IDENTIFIER:id COLON INT EQ INTEGER
+    | IDENTIFIER:id COLON INT EQ INTEGER:i
     {:
-
+        RESULT = new XiGlobal(idxleft, new XiAssign(idxleft, new XiVar(idxleft, id), new XiInt(ixleft, Long.valueOf(i), i, false)));
     :}
-    | IDENTIFIER:id COLON BOOL EQ TRUE
+    | IDENTIFIER:id COLON INT EQ MINUS INTEGER:i
     {:
-
+        RESULT = new XiGlobal(idxleft, new XiAssign(idxleft, new XiVar(idxleft, id), new XiInt(ixleft, Long.valueOf("-" + i), i, true)));
     :}
-    | IDENTIFIER:id COLON BOOL EQ FALSE
+    | IDENTIFIER:id COLON BOOL EQ TRUE:t
     {:
-
+        RESULT = new XiGlobal(idxleft, new XiAssign(idxleft, new XiVar(idxleft, id), new XiBool(txleft, true)));
+    :}
+    | IDENTIFIER:id COLON BOOL EQ FALSE:f
+    {:
+        RESULT = new XiGlobal(idxleft, new XiAssign(idxleft, new XiVar(idxleft, id), new XiBool(fxleft, false)));
     :}
     ;
 
 // Type constructor for global variables
-// TODO: PA7
 GVType ::=
-    KeyType:type GVTypeIndexList
+    KeyType:type GVTypeIndexList:list
     {:
-        
+        for (int i = list.size() - 1; i >= 0; i--) {
+            if (list.get(i) == null) {
+                type = new XiType(typexleft, type);
+            } else {
+                type = new XiType(typexleft, type, list.get(i));
+            }
+        }
+        RESULT = type;
     :}
     ;
 
 // List of expressions for index values for global array types
 GVTypeIndexList ::=
     {:
-
+        RESULT = new ArrayList<Node>();
     :}
     | LBRACK GVTypeLiteral:index RBRACK GVTypeIndexList:list
     {:
-
+        list.add(0, index);
+        RESULT = list;
     :}
     | LBRACK RBRACK VarTypeIndexListNoExpr:list
     {:
-
+        list.add(0, null);
+        RESULT = list;
     :}
     ;
 
@@ -285,70 +300,73 @@ GVTypeIndexList ::=
 GVTypeLiteral ::=
     INTEGER:i
     {:
-
+        RESULT = new XiInt(ixleft, Long.valueOf(i), i, false);
     :}
     | IDENTIFIER:id
     {:
-
+        RESULT = new XiVar(idxleft, id);
     :}
     ;
 
 /* --- Class declarations --- */
 
-// Class Declarations 
-// TODO: PA7
+// Class Declarations
 ClassDeclr ::= 
-    CLASS:c IDENTIFIER:id LBRACE ClassBody:cd RBRACE
+    CLASS:c IDENTIFIER:id LBRACE ClassBody:body RBRACE
     {:
-        // TODO: construct class
-        // RESULT = new Class(cxdleft, id, cd);
+        RESULT = new XiClass(cxleft, id, body);
     :}
-    | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER LBRACE ClassBody:cd RBRACE
+    | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER:parent LBRACE ClassBody:body RBRACE
     {:
-        // TODO: construct class
+        RESULT = new XiClass(cxleft, id, parent, body);
     :}
     ;
 
 // Class definition
-// TODO: PA7
 ClassBody ::= 
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | FnDeclr:f ClassBody:cd
+    | FnDeclr:f ClassBody:body
     {:
-        cd.add(0, f);
-        RESULT = cd;
+        body.add(0, f);
+        RESULT = body;
     :}
-    | Field ClassBody    
+    | Field:f ClassBody:body
     {:
-        // TODO: PA7
-        // Do we want to enforce ordering of elements in classes?
+        body.add(0, f);
+        RESULT = body;
     :}
     ;
 
 /* --- Field variables --- */
 
 // Fields
-// TODO: PA7
 Field ::=
-    VarDeclrList COLON FieldType
+    VarDeclrList:list COLON FieldType:type
     {:
-
+        for (Node n : list) {
+            XiDeclr d = (XiDeclr) n;
+            d.xiType = (XiType) type;
+        }
+        RESULT = new XiSeq(listxleft, list);
     :}
-    | IDENTIFIER COLON FieldType
+    | IDENTIFIER:id COLON FieldType:type
     {:
-
+        RESULT = new XiDeclr(idxleft, id, type);
     :}
     ;
 
 // Type constructor for field variables
 // Fields can be any primitive or an uninitialized object/array type
-// TODO: PA7
 FieldType ::=
-    KeyType:type VarTypeIndexListNoExpr
+    KeyType:type
     {:
-        
+        RESULT = type;
+    :}
+    | FieldType:type LBRACK RBRACK
+    {:
+        RESULT = new XiType(typexleft, type);
     :}
     ;
 
@@ -359,7 +377,6 @@ FieldType ::=
 FnDeclr ::= 
     FnSig:def LBRACE:l BlockStmts:block RBRACE
     {:
-        // TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
         RESULT = new XiFn(defxleft, (XiFn) def, block);
     :}
@@ -421,15 +438,10 @@ FReturnTypeList ::=
     ;
 
 // Types in function signature
-// TODO: PA7 update to KeyType
 FnType ::= 
-    INT:i
+    KeyType:type
     {:
-        RESULT = new XiType(ixleft, "int");
-    :}
-    | BOOL:b
-    {:
-        RESULT = new XiType(bxleft, "bool");
+        RESULT = type;
     :}
     | FnType:type LBRACK RBRACK
     {:
@@ -536,7 +548,6 @@ StmtListNoReturn ::=
 StmtNoReturn ::= 
     LBRACE:l BlockStmts:block RBRACE OptSemicolon
     {:
-        // TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
         RESULT = block;
     :}
@@ -591,9 +602,13 @@ VarDeclr ::=
     {:
         RESULT = new XiDeclr(idxleft, id, type);
     :}
-    | VarDeclrList COLON VarType
+    | VarDeclrList:list COLON VarType:type
     {:
-        // TODO: PA7 multiple variable declarations
+        for (Node n : list) {
+            XiDeclr d = (XiDeclr) n;
+            d.xiType = (XiType) type;
+        }
+        RESULT = new XiSeq(listxleft, list);
     :}
     ;
 
@@ -621,7 +636,7 @@ FVarDeclrList ::=
 VarType ::= 
     KeyType:type VarTypeIndexList:vtil
     {:
-        for (int i=vtil.size()-1; i>=0; i--) {
+        for (int i=vtil.size() - 1; i>=0; i--) {
             if (vtil.get(i) == null) {
                 type = new XiType(typexleft,type);
             } else {
@@ -644,11 +659,13 @@ KeyType ::=
     :}
     | IDENTIFIER:i
     {:
-        // TODO: PA7 construct class types
+        RESULT = new XiType(ixleft, i);
     :}
     ;
 
 // List of expressions for index values for array types
+// The head of this list may be a continuous subsequence of
+// empty index values
 VarTypeIndexList ::=
     {:
         RESULT = new ArrayList<Node>();
@@ -1006,7 +1023,7 @@ Expr ::=
         :}
     | Expr:e1 DOT Expr:e2
         {:
-            RESULT new XiDot(e1xleft, e1, e2);
+            RESULT = new XiDot(e1xleft, e1, e2);
         :}
     | NEW:n Expr:e
         {:
