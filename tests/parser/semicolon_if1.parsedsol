@@ -1,1 +1,1 @@
-2:16 error: Unexpected token ;
+(() ((foo () () ((if true ())))))

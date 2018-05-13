@@ -1,1 +1,1 @@
-2:29 error: Unexpected token ;
+(() ((foo () () ((while false ((= (x int) 5)))))))
