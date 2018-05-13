@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // An Xi integer
-public class XiInt extends Node {
+public class XiInt extends Expr {
 
     public long value;
     public String literal;

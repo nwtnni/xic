@@ -5,7 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import ast.Program;
+import ast.XiProgram;
 import type.FnContext;
 
 import emit.ABIContext;
@@ -38,7 +38,7 @@ public class Emit extends Phase {
 
         if (previous.isErr()) return previous;
         
-        Pair<Program, FnContext> typed = previous.ok().getTyped();
+        Pair<XiProgram, FnContext> typed = previous.ok().getTyped();
         Pair<IRCompUnit, ABIContext> emitted = Emitter.emitIR(typed.first, typed.second);
         
         if (!(output || outputCFG)) return new Result<>(Product.emitted(emitted));

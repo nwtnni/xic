@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // Binary Operation
-public class Binary extends Node {
+public class XiBinary extends Expr {
 
     public enum Kind {
         TIMES("*"),
@@ -37,7 +37,7 @@ public class Binary extends Node {
     public Node lhs;
     public Node rhs;
 
-    public Binary(Location location, Kind kind, Node lhs, Node rhs) {
+    public XiBinary(Location location, Kind kind, Node lhs, Node rhs) {
         this.location = location;
         this.kind = kind;
         this.lhs = lhs;

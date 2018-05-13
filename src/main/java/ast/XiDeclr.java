@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // A Variable Declaration
-public class Declare extends Node {
+public class XiDeclr extends Stmt {
 
     public enum Kind {
         VAR, UNDERSCORE 
@@ -14,7 +14,7 @@ public class Declare extends Node {
     public String id;
     public Node xiType;
 
-    public Declare(Location location, String id, Node type) {
+    public XiDeclr(Location location, String id, Node type) {
         this.kind = Kind.VAR;
         this.location = location;
         this.id = id; 
@@ -22,7 +22,7 @@ public class Declare extends Node {
     }
 
     // Used for underscores
-    public Declare(Location location) {
+    public XiDeclr(Location location) {
         this.kind = Kind.UNDERSCORE;
         this.location = location;
         this.id = null;

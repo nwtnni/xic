@@ -3,19 +3,18 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
-import java.util.List;
+// A unary operator
+public class XiNew extends Expr {
 
-// A Xi array
-public class XiArray extends Expr {
+    public Node expr; 
 
-    public List<Node> values;
-
-    public XiArray(Location location, List<Node> values) {
+    public XiNew(Location location, Node expr) {
         this.location = location;
-        this.values = values;
+        this.expr = expr;
     }
 
     public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
+
 }

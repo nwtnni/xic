@@ -4,11 +4,11 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // A variable identifier
-public class Var extends Node {
+public class XiVar extends Expr {
     
     public String id;
 
-    public Var(Location location, String id) {
+    public XiVar(Location location, String id) {
         this.location = location;
         this.id = id; 
     }

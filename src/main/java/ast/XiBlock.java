@@ -9,21 +9,21 @@ import xic.XicException;
 
 
 // A Block of statements
-public class Block extends Node {
+public class XiBlock extends Stmt {
 
     public List<Node> statements;
 
-    public Block(Location location, List<Node> statements) {
+    public XiBlock(Location location, List<Node> statements) {
         this.location = location;
         this.statements = statements;
     }
 
-    public Block(Location location, Node... statements) {
+    public XiBlock(Location location, Node... statements) {
         this.location = location;
         this.statements = new ArrayList<>(Arrays.asList(statements));
     }
     
-    public Block(List<Node> statements) {
+    public XiBlock(List<Node> statements) {
         this.statements = statements;
     }
 

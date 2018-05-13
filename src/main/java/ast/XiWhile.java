@@ -4,12 +4,12 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // A while statement
-public class While extends Node {
+public class XiWhile extends Stmt {
 
     public Node guard;
     public Node block;
 
-    public While(Location location, Node guard, Node block) {
+    public XiWhile(Location location, Node guard, Node block) {
         this.location = location;
         this.guard = guard;
         this.block = block;

@@ -105,17 +105,6 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     /*
-     * Psuedo-visit method for visiting a list of nodes.
-     */
-    public List<Operand> visit(List<IRNode> nodes) {
-        List<Operand> t = new ArrayList<>();
-        for (IRNode n : nodes) {
-            t.add(n.accept(this));
-        }
-        return t;
-    }
-
-    /*
      * Visitor methods ---------------------------------------------------------------------
      */
     

@@ -14,7 +14,7 @@ public abstract class Phase {
         return new ArrayList<>(List.of(
             new Lex(),
             new Parse(),
-            new Type(),
+            new TypeCheck(),
             new Emit(),
             new Fold(),
             new Canonize(),

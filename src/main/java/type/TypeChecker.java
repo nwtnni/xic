@@ -100,10 +100,10 @@ public class TypeChecker extends ASTVisitor<Type> {
      * are checked by {@link Importer},
      * while function bodies are checked by this class.
      * 
-     * @returns {@link Type.UNIT} if program is valid
+     * @returns {@link TypeCheck.UNIT} if program is valid
      * @throws XicException if program has semantic errors
      */
-    public Type visit(Program p) throws XicException {
+    public Type visit(XiProgram p) throws XicException {
         for (Node fn : p.body) {
             fn.accept(this);
         }
@@ -116,10 +116,10 @@ public class TypeChecker extends ASTVisitor<Type> {
      * shadow anything in the context, and its block is
      * void if it has return types.
      * 
-     * @returns {@link Type.UNIT} is function is valid
+     * @returns {@link TypeCheck.UNIT} is function is valid
      * @throws XicException if function has semantic errors
      */
-    public Type visit(Fn f) throws XicException {
+    public Type visit(XiFn f) throws XicException {
         vars.push();
         FnType fnType = fns.lookup(f.id);
         if (fnType == null) {
@@ -150,7 +150,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns typeof(declaration) if valid
      * @throws XicException if a conflict was found
      */
-    public Type visit(Declare d) throws XicException {
+    public Type visit(XiDeclr d) throws XicException {
         if (d.isUnderscore()) {
             d.type = Type.UNIT;
         } else if (vars.contains(d.id) || fns.contains(d.id)) {
@@ -169,10 +169,10 @@ public class TypeChecker extends ASTVisitor<Type> {
      * Additionally, a procedure cannot be assigned to anything, and only
      * function calls can have wildcards on the LHS.
      * 
-     * @returns {@link Type.UNIT} if valid
+     * @returns {@link TypeCheck.UNIT} if valid
      * @throws XicException if invalid assignment
      */
-    public Type visit(Assign a) throws XicException {
+    public Type visit(XiAssign a) throws XicException {
         Type rt = a.rhs.accept(this);
         Type lt = Type.tupleFromList(visit(a.lhs));
 
@@ -180,7 +180,7 @@ public class TypeChecker extends ASTVisitor<Type> {
             throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
         }
 
-        if (lt.equals(Type.UNIT) && !(a.rhs instanceof Call)) {
+        if (lt.equals(Type.UNIT) && !(a.rhs instanceof XiCall)) {
             throw new TypeException(Kind.INVALID_WILDCARD, a.location);
         }
 
@@ -191,14 +191,14 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * A return is valid if its type matches {@link TypeChecker#returns}
      * 
-     * @returns {@link Type.VOID} if return type matches {@link TypeChecker#returns}
+     * @returns {@link TypeCheck.VOID} if return type matches {@link TypeChecker#returns}
      * @throws XicException if return type doesn't match
      */
-    public Type visit(Return r) throws XicException {
+    public Type visit(XiReturn r) throws XicException {
         if (r.hasValues()) {
             Type value = Type.tupleFromList(visit(r.values));
             for (Node n : r.values) {
-                if (n instanceof Call) {
+                if (n instanceof XiCall) {
                     if (n.type.kind.equals(Type.Kind.TUPLE)) {
                         throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
                     }
@@ -217,12 +217,12 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A block is valid if each statement is valid, and no statement before the
-     * last one is type {@link Type.VOID}.
+     * last one is type {@link TypeCheck.VOID}.
      * 
      * @returns The type of the last statement
      * @throws XicException if invalid
      */
-    public Type visit(Block b) throws XicException {
+    public Type visit(XiBlock b) throws XicException {
         b.type = Type.UNIT;
         vars.push();
         int size = b.statements.size();
@@ -233,7 +233,7 @@ public class TypeChecker extends ASTVisitor<Type> {
             Type st = s.accept(this);
 
             // Unused function result
-            if (!st.equals(Type.VOID) && !st.equals(Type.UNIT) && s instanceof Call) {
+            if (!st.equals(Type.VOID) && !st.equals(Type.UNIT) && s instanceof XiCall) {
                 throw new TypeException(Kind.UNUSED_FUNCTION, b.statements.get(i).location);
             }
 
@@ -249,26 +249,26 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     /**
-     * An if statement is valid if its guard is {@link Type.BOOL} and its block is valid.
+     * An if statement is valid if its guard is {@link TypeCheck.BOOL} and its block is valid.
      * 
-     * @returns If both blocks are {@link Type.VOID}, then Type.VOID, otherwise Type.UNIT
+     * @returns If both blocks are {@link TypeCheck.VOID}, then Type.VOID, otherwise Type.UNIT
      * @throws XicException if invalid
      */
-    public Type visit(If i) throws XicException {
+    public Type visit(XiIf i) throws XicException {
         if (!i.guard.accept(this).equals(Type.BOOL)) {
             throw new TypeException(Kind.INVALID_GUARD, i.guard.location);
         }
 
         // Check if the statement is followed by a single statement
-        if (!(i.block instanceof Block)) {
-            i.block = new Block(i.block.location, i.block);
+        if (!(i.block instanceof XiBlock)) {
+            i.block = new XiBlock(i.block.location, i.block);
         }
         Type it = i.block.accept(this);
         
         Type et = null;
         if (i.hasElse()) {
-            if (!(i.elseBlock instanceof Block)) {
-                i.elseBlock = new Block(i.elseBlock.location, i.elseBlock);
+            if (!(i.elseBlock instanceof XiBlock)) {
+                i.elseBlock = new XiBlock(i.elseBlock.location, i.elseBlock);
             }
             et = i.elseBlock.accept(this);
         }
@@ -282,18 +282,18 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     /**
-     * A while statement is valid if its guard is {@link Type.BOOL} and its block is valid.
+     * A while statement is valid if its guard is {@link TypeCheck.BOOL} and its block is valid.
      * 
-     * @returns {@link Type.UNIT} if valid
+     * @returns {@link TypeCheck.UNIT} if valid
      * @throws XicException if invalid
      */
-    public Type visit(While w) throws XicException {
+    public Type visit(XiWhile w) throws XicException {
         if (!w.guard.accept(this).equals(Type.BOOL)) {
             throw new TypeException(Kind.INVALID_GUARD, w.guard.location);
         }
 
-        if (!(w.block instanceof Block)) {
-            w.block = new Block(w.block.location, w.block);
+        if (!(w.block instanceof XiBlock)) {
+            w.block = new XiBlock(w.block.location, w.block);
         }
         w.block.accept(this);
         w.type = Type.UNIT;
@@ -307,7 +307,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * A function call is valid if the arguments match the function's arguments.
      */
-    public Type visit(Call c) throws XicException {
+    public Type visit(XiCall c) throws XicException {
         if (c.id.equals("length")) {
             Type arg = c.args.get(0).accept(this);
             if (!arg.isArray()) {
@@ -334,7 +334,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * A binary operation is valid if the types of the operands and the operator match.
      */
-    public Type visit(Binary b) throws XicException {
+    public Type visit(XiBinary b) throws XicException {
         Type lt = b.lhs.accept(this);
         Type rt = b.rhs.accept(this);
 
@@ -368,7 +368,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns The type of the operator if valid
      * @throws XicException if operator mismatch
      */
-    public Type visit(Unary u) throws XicException {
+    public Type visit(XiUnary u) throws XicException {
         Type ut = u.child.accept(this);
         if (u.isLogical()) {
             if (ut.equals(Type.BOOL)) {
@@ -392,7 +392,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns typeof(variable) if valid
      * @throws XicException if invalid
      */
-    public Type visit(Var v) throws XicException {
+    public Type visit(XiVar v) throws XicException {
         v.type = vars.lookup(v.id);
         if (v.type == null) {
             throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
@@ -401,10 +401,10 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     /**
-     * An array index is valid if the array child is {@link Type.Kind.ARRAY}, and the
-     * index child is {@link Type.INT}
+     * An array index is valid if the array child is {@link TypeCheck.Kind.ARRAY}, and the
+     * index child is {@link TypeCheck.INT}
      */
-    public Type visit(Index i) throws XicException {
+    public Type visit(XiIndex i) throws XicException {
         Type it = i.index.accept(this);
         Type at = i.array.accept(this);
 
@@ -419,9 +419,9 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     /**
-     * A XiInt is always {@link Type.INT}
+     * A XiInt is always {@link TypeCheck.INT}
      * 
-     * @returns {@link Type.INT}
+     * @returns {@link TypeCheck.INT}
      */
     public Type visit(XiInt i) {
         i.type = Type.INT;
@@ -429,9 +429,9 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     /**
-     * A XiBool is always {@link Type.BOOL}
+     * A XiBool is always {@link TypeCheck.BOOL}
      * 
-     * @returns {@link Type.BOOL}
+     * @returns {@link TypeCheck.BOOL}
      */
     public Type visit(XiBool b) {
         b.type = Type.BOOL;
@@ -439,9 +439,9 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     /**
-     * A XiChar is always {@link Type.INT}
+     * A XiChar is always {@link TypeCheck.INT}
      * 
-     * @returns {@link Type.INT}
+     * @returns {@link TypeCheck.INT}
      */
     public Type visit(XiChar c) {
         c.type = Type.INT;
@@ -449,9 +449,9 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     /**
-     * A XiString is always a {@link Type.Kind.ARRAY} of {@link Type.INT}
+     * A XiString is always a {@link TypeCheck.Kind.ARRAY} of {@link TypeCheck.INT}
      * 
-     * @returns Array of {@link Type.INT}
+     * @returns Array of {@link TypeCheck.INT}
      */
     public Type visit(XiString s) {
         s.type = new Type(Type.INT);
@@ -461,7 +461,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * A XiArray is valid if its children are the same type.
      * 
-     * The 0-length array is polymorphic and has special type {@link Type.POLY},
+     * The 0-length array is polymorphic and has special type {@link TypeCheck.POLY},
      * which is equal to all array types.
      * 
      * @returns Array of child types

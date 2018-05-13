@@ -11,7 +11,7 @@ import xic.XicException;
  * Represents a function type as defined the Xi Type Specification.
  * 
  * Functions can have any number of argument and return types. This
- * class visits a {@link ast.Fn} node and its {@link ast.XiType} children
+ * class visits a {@link XiFn} node and its {@link ast.XiType} children
  * in order to do its conversions.
  * 
  * @see Type
@@ -25,7 +25,7 @@ public class FnType extends ASTVisitor<Type> {
      * @param f Fn node to convert
      * @return FnType corresponding to Fn f
      */
-    public static FnType from(Fn f) {
+    public static FnType from(XiFn f) {
         FnType type = new FnType();
         try {
             type.visit(f);
@@ -81,7 +81,7 @@ public class FnType extends ASTVisitor<Type> {
     /**
      * Visits a Fn and populates the fields of this FnType.
      */
-    public Type visit(Fn f) throws XicException {
+    public Type visit(XiFn f) throws XicException {
         location = f.location;
         args = Type.listFromList(visit(f.args));
         returns = Type.tupleFromList(visit(f.returns));
@@ -91,7 +91,7 @@ public class FnType extends ASTVisitor<Type> {
     /**
      * Visits a Declare node and returns its type.
      */
-    public Type visit(Declare d) throws XicException {
+    public Type visit(XiDeclr d) throws XicException {
         return d.xiType.accept(this);
     }
 

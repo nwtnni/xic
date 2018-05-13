@@ -71,7 +71,7 @@ Interface ::=
     FnSigList:fdl FnSig:f
     {:
         fdl.add(f);
-        RESULT = new Program(fdlxleft, fdl);
+        RESULT = new XiProgram(fdlxleft, fdl);
     :}
     ;
 
@@ -92,11 +92,11 @@ FnSigList ::=
 FnSig ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-        RESULT = new Fn(idxleft, id, atl, rtl);
+        RESULT = new XiFn(idxleft, id, atl, rtl);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        RESULT = new Fn(idxleft, id, atl);
+        RESULT = new XiFn(idxleft, id, atl);
     :}
     ;
 
@@ -106,7 +106,7 @@ ArgsTypeList ::=
         :}
     | IDENTIFIER:id COLON FnType:type FArgsTypeList:atl
         {:
-            atl.add(0, new Declare(idxleft, id, type));
+            atl.add(0, new XiDeclr(idxleft, id, type));
             RESULT = atl;
         :}
     ;
@@ -117,7 +117,7 @@ FArgsTypeList ::=
         :} 
     | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:atl
         {:
-            atl.add(0, new Declare(idxleft, id, type));
+            atl.add(0, new XiDeclr(idxleft, id, type));
             RESULT = atl;
         :}
     ;

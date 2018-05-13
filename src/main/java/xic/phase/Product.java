@@ -3,7 +3,7 @@ package xic.phase;
 import assemble.CompUnit;
 import assemble.Reg;
 import assemble.Temp;
-import ast.Program;
+import ast.XiProgram;
 import emit.ABIContext;
 import ir.IRCompUnit;
 import lex.XiLexer;
@@ -20,13 +20,13 @@ import xic.XicInternalException;
 public class Product {
 
     private final XiLexer lexed;
-    private final Program parsed;
-    private final Pair<Program, FnContext> typed;
+    private final XiProgram parsed;
+    private final Pair<XiProgram, FnContext> typed;
     private final Pair<IRCompUnit, ABIContext> emitted;
     private final CompUnit<Temp> assembled;
     private final CompUnit<Reg> allocated;
 
-    private Product (XiLexer l, Program p, Pair<Program, FnContext> t, Pair<IRCompUnit, ABIContext> e, CompUnit<Temp> a, CompUnit<Reg> r) {
+    private Product (XiLexer l, XiProgram p, Pair<XiProgram, FnContext> t, Pair<IRCompUnit, ABIContext> e, CompUnit<Temp> a, CompUnit<Reg> r) {
         lexed = l; 
         parsed = p;
         typed = t;
@@ -39,9 +39,9 @@ public class Product {
 
     public static Product lexed(XiLexer l) { return new Product(l, null, null, null, null, null); }
 
-    public static Product parsed(Program p) { return new Product(null, p, null, null, null, null); }
+    public static Product parsed(XiProgram p) { return new Product(null, p, null, null, null, null); }
 
-    public static Product typed(Pair<Program, FnContext> t) { return new Product(null, null, t, null, null, null); }
+    public static Product typed(Pair<XiProgram, FnContext> t) { return new Product(null, null, t, null, null, null); }
 
     public static Product emitted(Pair<IRCompUnit, ABIContext> e) { return new Product(null, null, null, e, null, null); }
 
@@ -56,14 +56,14 @@ public class Product {
         return lexed;
     }
 
-    public Program getParsed() {
+    public XiProgram getParsed() {
         if (parsed == null) {
             throw XicInternalException.runtime("Could not retrieve AST from intermediate.");
         }
         return parsed;
     }
 
-    public Pair<Program, FnContext> getTyped() {
+    public Pair<XiProgram, FnContext> getTyped() {
         if (typed == null) {
             throw XicInternalException.runtime("Could not retrieve typed AST from intermediate.");
         }

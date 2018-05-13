@@ -24,7 +24,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * @param ast AST to generate into IR
      * @param context function context corresponding to the AST
      */
-    public static Pair<IRCompUnit, ABIContext> emitIR(Program ast, FnContext context) {
+    public static Pair<IRCompUnit, ABIContext> emitIR(XiProgram ast, FnContext context) {
         IRTempFactory.reset();
         Emitter e = new Emitter(context);
         try {
@@ -78,8 +78,8 @@ public class Emitter extends ASTVisitor<IRNode> {
             } else {
                 return jump(falseL);
             }
-        } else if (n instanceof Binary) {
-            Binary b = (Binary) n;
+        } else if (n instanceof XiBinary) {
+            XiBinary b = (XiBinary) n;
             switch (b.kind) {
                 case AND:
                     IRLabel andL = IRLabelFactory.generate("and");
@@ -97,8 +97,8 @@ public class Emitter extends ASTVisitor<IRNode> {
                     );
                 default:
             }
-        } else if (n instanceof Unary) {
-            Unary u = (Unary) n;
+        } else if (n instanceof XiUnary) {
+            XiUnary u = (XiUnary) n;
             if (u.isLogical()) {
                 makeControlFlow(u.child, falseL, trueL);
             }
@@ -355,7 +355,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Top-level AST nodes
      */
 
-    public IRNode visit(Program p) throws XicException {
+    public IRNode visit(XiProgram p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
 
         if (INCLUDE_LIB) {
@@ -371,7 +371,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return program;
     }
 
-    public IRNode visit(Fn f) throws XicException {
+    public IRNode visit(XiFn f) throws XicException {
         IRSeq body = (IRSeq) f.block.accept(this);
 
         // Bind arguments to temps
@@ -392,7 +392,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Statement nodes
      */
 
-    public IRNode visit(Assign a) throws XicException {
+    public IRNode visit(XiAssign a) throws XicException {
         List<IRNode> lhs = visit(a.lhs);
         IRExpr rhs = (IRExpr) a.rhs.accept(this);
 
@@ -423,7 +423,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return stmts;
     }
 
-    public IRNode visit(Block b) throws XicException {
+    public IRNode visit(XiBlock b) throws XicException {
         IRSeq stmts = new IRSeq();
         for (Node n : b.statements) {
             IRNode stmt = n.accept(this);
@@ -438,7 +438,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return stmts;
     }
 
-    public IRNode visit(Declare d) throws XicException {
+    public IRNode visit(XiDeclr d) throws XicException {
         if (d.isUnderscore()) {
             return null;
         }
@@ -456,7 +456,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return var;
     }
 
-    public IRNode visit(If i) throws XicException {
+    public IRNode visit(XiIf i) throws XicException {
         IRSeq stmts = new IRSeq();
         IRLabel trueL = IRLabelFactory.generate("ifT");
         IRLabel falseL = IRLabelFactory.generate("ifF");
@@ -474,7 +474,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return stmts;
     }
 
-    public IRNode visit(Return r) throws XicException {
+    public IRNode visit(XiReturn r) throws XicException {
         if (r.hasValues()) {
             List<IRExpr> values = new ArrayList<>();
             for (Node n : r.values) {
@@ -485,7 +485,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return new IRReturn();
     }
 
-    public IRNode visit(While w) throws XicException {
+    public IRNode visit(XiWhile w) throws XicException {
         IRSeq stmts = new IRSeq();
         IRLabel headL = IRLabelFactory.generate("while");
         IRLabel trueL = IRLabelFactory.generate("whileT");
@@ -505,7 +505,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Expression nodes
      */
 
-    public IRNode visit(Binary b) throws XicException {
+    public IRNode visit(XiBinary b) throws XicException {
         IRExpr left = (IRExpr) b.lhs.accept(this);
         IRExpr right = (IRExpr) b.rhs.accept(this);
         switch (b.kind) {
@@ -570,7 +570,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return null;
     }
 
-    public IRNode visit(Call c) throws XicException {
+    public IRNode visit(XiCall c) throws XicException {
         if (c.id.equals("length")) {
             return length((IRExpr) c.args.get(0).accept(this));
         }
@@ -588,7 +588,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      *  - containing the memory address for an array access on LHS.
      *  - the value at the memory address for an array access on RHS.
      */ 
-    public IRNode visit(Index i) throws XicException {
+    public IRNode visit(XiIndex i) throws XicException {
         IRSeq stmts = new IRSeq();
         IRLabel doneL = IRLabelFactory.generate("done");
 
@@ -622,7 +622,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return new IRMem(new IRESeq(stmts, addr));
     }
 
-    public IRNode visit(Unary u) throws XicException {
+    public IRNode visit(XiUnary u) throws XicException {
         IRExpr child = (IRExpr) u.child.accept(this);
         if (u.isLogical()) {
             return new IRBinOp(IRBinOp.OpType.XOR, new IRConst(1), child);
@@ -631,7 +631,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
     }
 
-    public IRNode visit(Var v) throws XicException {
+    public IRNode visit(XiVar v) throws XicException {
         return new IRTemp(v.id);
     }
 

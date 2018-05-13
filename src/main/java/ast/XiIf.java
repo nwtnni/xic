@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // If Statement
-public class If extends Node {
+public class XiIf extends Stmt {
 
     public enum Kind {
         IF, IF_ELSE 
@@ -15,7 +15,7 @@ public class If extends Node {
     public Node block;
     public Node elseBlock;
 
-    public If(Location location, Node guard, Node block) {
+    public XiIf(Location location, Node guard, Node block) {
         this.kind = Kind.IF;
         this.location = location;
         this.guard = guard; 
@@ -23,7 +23,7 @@ public class If extends Node {
         this.elseBlock = null; 
     }
 
-    public If(Location location, Node guard, Node block, Node elseBlock) {
+    public XiIf(Location location, Node guard, Node block, Node elseBlock) {
         this.kind = Kind.IF_ELSE;
         this.location = location;
         this.guard = guard; 

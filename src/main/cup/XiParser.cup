@@ -12,7 +12,6 @@ parser code {:
 
     /* Exposed Interface */
 
-    //TODO: throw XicException
     public static Node from(String source, String unit) throws XicException {
         XiLexer lexer = XiLexer.from(source, unit);
         XiParser parser = new XiParser(lexer);
@@ -67,7 +66,7 @@ parser code {:
             expr.location = l;
             return evalInt((TempInt) expr, true);
         }
-        return new Unary(l, Unary.Kind.INEGATE, expr);
+        return new XiUnary(l, XiUnary.Kind.INEGATE, expr);
     }
 
 :};
@@ -180,11 +179,9 @@ OptSemicolon ::=
     ;
 
 // Top level for program
-// TODO: PA7
-// Design choices? Allow for empty program body? Allow for no functions?
 Program ::= UseDeclarations:uds ProgramBody:body
     {:
-        RESULT = new Program(udsxleft, uds, body);
+        RESULT = new XiProgram(udsxleft, uds, body);
     :}
     ;
 
@@ -204,7 +201,7 @@ UseDeclarations ::=
 UseDeclr ::= 
     USE:u IDENTIFIER:id OptSemicolon
     {:
-        RESULT = new Use(uxleft, id);
+        RESULT = new XiUse(uxleft, id);
     :}
     ;
 
@@ -215,17 +212,17 @@ ProgramBody ::=
     :}
     | GlobalVar:v ProgramBody:pb
     {:
-        pb.add(0,v);
+        pb.add(0, v);
         RESULT = pb;
     :} 
     | FnDeclr:f ProgramBody:pb
     {:
-        pb.add(0,f);
+        pb.add(0, f);
         RESULT = pb;
     :}
     | ClassDeclr:c ProgramBody:pb
     {:
-        pb.add(0,c);
+        pb.add(0, c);
         RESULT = pb;
     :} 
     ;
@@ -241,19 +238,19 @@ GlobalVar ::=
     {:
 
     :}
-    | IDENTIFIER COLON GVType
+    | IDENTIFIER:id COLON GVType
     {:
 
     :}
-    | IDENTIFIER COLON INT EQ INTEGER
+    | IDENTIFIER:id COLON INT EQ INTEGER
     {:
 
     :}
-    | IDENTIFIER COLON BOOL EQ TRUE
+    | IDENTIFIER:id COLON BOOL EQ TRUE
     {:
 
     :}
-    | IDENTIFIER COLON BOOL EQ FALSE
+    | IDENTIFIER:id COLON BOOL EQ FALSE
     {:
 
     :}
@@ -320,7 +317,7 @@ ClassBody ::=
     :}
     | FnDeclr:f ClassBody:cd
     {:
-        cd.add(0,f);
+        cd.add(0, f);
         RESULT = cd;
     :}
     | Field ClassBody    
@@ -364,7 +361,7 @@ FnDeclr ::=
     {:
         // TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
-        RESULT = new Fn(defxleft, (Fn) def, block);
+        RESULT = new XiFn(defxleft, (XiFn) def, block);
     :}
     ;
 
@@ -372,11 +369,11 @@ FnDeclr ::=
 FnSig ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-        RESULT = new Fn(idxleft, id, atl, rtl);
+        RESULT = new XiFn(idxleft, id, atl, rtl);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        RESULT = new Fn(idxleft, id, atl);
+        RESULT = new XiFn(idxleft, id, atl);
     :}
     ;
 
@@ -387,7 +384,7 @@ ArgsTypeList ::=
     :}
     | IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft, id, type));
+        fatl.add(0, new XiDeclr(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -398,7 +395,7 @@ FArgsTypeList ::=
     :}
     | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft, id, type));
+        fatl.add(0, new XiDeclr(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -462,15 +459,15 @@ BlockStmts ::=
     StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
     {:
         if (el.size() == 0) {
-        	slnr.add(new Return(rxleft));
+        	slnr.add(new XiReturn(rxleft));
         } else {
-            slnr.add(new Return(rxleft, el));
+            slnr.add(new XiReturn(rxleft, el));
         }
-        RESULT = new Block(slnr);
+        RESULT = new XiBlock(slnr);
     :}
     | StmtListNoReturn:slnr
     {:
-        RESULT = new Block(slnr);
+        RESULT = new XiBlock(slnr);
     :}
     ;
 
@@ -557,7 +554,7 @@ StmtNoReturn ::=
 FnCall ::= 
     IDENTIFIER:id LPAREN Args:args RPAREN
         {:
-            RESULT = new Call(idxleft, id, args);
+            RESULT = new XiCall(idxleft, id, args);
         :}
         %prec FUNCTIONCALL
     ;
@@ -592,7 +589,7 @@ FArgs ::=
 VarDeclr ::= 
     IDENTIFIER:id COLON VarType:type
     {:
-        RESULT = new Declare(idxleft, id, type);
+        RESULT = new XiDeclr(idxleft, id, type);
     :}
     | VarDeclrList COLON VarType
     {:
@@ -604,8 +601,8 @@ VarDeclr ::=
 VarDeclrList ::=
     IDENTIFIER:a COMMA IDENTIFIER:b FVarDeclrList:idList
     {:
-        idList.add(0, new Declare(bxleft, b, null));
-        idList.add(0, new Declare(axleft, a, null));
+        idList.add(0, new XiDeclr(bxleft, b, null));
+        idList.add(0, new XiDeclr(axleft, a, null));
         RESULT = idList;
     :}
     ;
@@ -616,7 +613,7 @@ FVarDeclrList ::=
     :}
     | COMMA IDENTIFIER:id FVarDeclrList:idList
     {:
-        idList.add(new Declare(idxleft, id, null));
+        idList.add(new XiDeclr(idxleft, id, null));
     :}
     ;
 
@@ -687,11 +684,11 @@ VarTypeIndexListNoExpr ::=
 Assign ::= 
     AssignTargetList:il EQ Expr:e
     {:
-        RESULT = new Assign(ilxleft, il, evalExpr(e));
+        RESULT = new XiAssign(ilxleft, il, evalExpr(e));
     :}
     | SingleAssignTarget:san EQ Expr:e
     {:
-        RESULT = new Assign(sanxleft, san, evalExpr(e));
+        RESULT = new XiAssign(sanxleft, san, evalExpr(e));
     :}
     ;
 
@@ -719,7 +716,7 @@ FAssignTargetList ::=
 MultiAssignTarget ::=
     UNDERSCORE:u
     {:
-        RESULT = new Declare(uxleft);
+        RESULT = new XiDeclr(uxleft);
     :}
     | AssignVarDeclr:v
     {:
@@ -731,11 +728,11 @@ MultiAssignTarget ::=
 SingleAssignTarget ::= 
     UNDERSCORE:u
     {:
-        RESULT = new Declare(uxleft);
+        RESULT = new XiDeclr(uxleft);
     :}
     | IDENTIFIER:id
     {:
-        RESULT = new Var(idxleft, id);
+        RESULT = new XiVar(idxleft, id);
     :}
     | ArrayCall:a
     {:
@@ -751,7 +748,7 @@ SingleAssignTarget ::=
 AssignVarDeclr ::= 
     IDENTIFIER:id COLON AssignVarType:type 
     {:
-        RESULT = new Declare(idxleft, id, type);
+        RESULT = new XiDeclr(idxleft, id, type);
     :}
     ;
 
@@ -776,25 +773,24 @@ ArrayCall ::=
     FnCall:fc LBRACK Expr:e RBRACK IndexList:il
         {:
             il.add(0, evalExpr(e));
-            Index index = new Index(fcxleft, fc, il.get(0));
+            XiIndex index = new XiIndex(fcxleft, fc, il.get(0));
             for (int i = 1; i < il.size(); i++) {
                 Node n = il.get(i);
-                index = new Index(n.location, index, n);
+                index = new XiIndex(n.location, index, n);
             }
             RESULT = index;
         :}
     | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
         {:
             il.add(0, evalExpr(e));
-            Index index = new Index(idxleft, new Var(idxleft, id), il.get(0));
+            XiIndex index = new XiIndex(idxleft, new XiVar(idxleft, id), il.get(0));
             for (int i = 1; i < il.size(); i++) {
                 Node n = il.get(i);
-                index = new Index(n.location, index, n);
+                index = new XiIndex(n.location, index, n);
             }
             RESULT = index;
         :}
     ;
-    // TODO: should we allow access off a string? example: "abc"[0] = e
 
 // List of expressions for indices in an array access
 IndexList ::=
@@ -815,7 +811,7 @@ IndexList ::=
 WhileStmt ::= 
     WHILE:w Expr:e WhileBlock:block
     {:
-        RESULT = new While(wxleft, evalExpr(e), block);
+        RESULT = new XiWhile(wxleft, evalExpr(e), block);
     :}
     ;
 
@@ -836,7 +832,7 @@ WhileBlock ::=
     :}
     | BREAK:b OptSemicolon
     {:
-        // TODO: RESULT = new Break(bxleft);
+        RESULT = new XiBreak(bxleft);
     :}
     ;
 
@@ -845,20 +841,20 @@ WhileBlockStmts ::=
     StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
     {:
         if (el.size() == 0) {
-        	slnr.add(new Return(rxleft));
+        	slnr.add(new XiReturn(rxleft));
         } else {
-            slnr.add(new Return(rxleft, el));
+            slnr.add(new XiReturn(rxleft, el));
         }
-        RESULT = new Block(slnr);
+        RESULT = new XiBlock(slnr);
     :}
     | StmtListNoReturn:slnr BREAK:b OptSemicolon
     {:
-        // TODO: slnr.add(new Break(bxleft));
-        RESULT = new Block(slnr);
+        slnr.add(new XiBreak(bxleft));
+        RESULT = new XiBlock(slnr);
     :}
     | StmtListNoReturn:slnr
     {:
-        RESULT = new Block(slnr);
+        RESULT = new XiBlock(slnr);
     :}
     ;
 
@@ -867,9 +863,9 @@ IfStmt ::=
     IF:i Expr:e BlockOptBraces:block ElseStmt:elseBlock
     {:
         if (elseBlock == null) {
-            RESULT = new If(ixleft, evalExpr(e), block);
+            RESULT = new XiIf(ixleft, evalExpr(e), block);
         } else {
-            RESULT = new If(ixleft, evalExpr(e), block, elseBlock);
+            RESULT = new XiIf(ixleft, evalExpr(e), block, elseBlock);
         }
     :}
     ;
@@ -895,7 +891,7 @@ Expr ::=
         :}
     | LNEG:l Expr:e
         {:
-            RESULT = new Unary(lxleft, Unary.Kind.LNEGATE, evalExpr(e));
+            RESULT = new XiUnary(lxleft, XiUnary.Kind.LNEGATE, evalExpr(e));
         :}
     | MINUS:m Expr:e
         {:
@@ -904,72 +900,72 @@ Expr ::=
         %prec UMINUS
     | Expr:e1 MULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 HMULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.HIGH_TIMES, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.HIGH_TIMES, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 DIV:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.DIVISION, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.DIVISION, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 MOD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.MODULO, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.MODULO, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 ADD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.PLUS, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.PLUS, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 MINUS:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.MINUS, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.MINUS, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.LE, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.LE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.LT, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.LT, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 GTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.GE, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.GE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 GT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.GT, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.GT, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 EQEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.EQ, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.EQ, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 NEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.NE, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.NE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LAND:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.AND, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.AND, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LOR:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.OR, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.OR, evalExpr(e1), evalExpr(e2));
         :}
-    | FnCall:fc
+    | FnCall:call
         {:
-            RESULT = fc;
+            RESULT = call;
         :}
     | LENGTH:l LPAREN Expr:e RPAREN
         {:
-            RESULT = new Call(lxleft, "length", evalExpr(e));
+            RESULT = new XiCall(lxleft, "length", evalExpr(e));
         :}
         %prec FUNCTIONCALL
     | Expr:e1 LBRACK Expr:e2 RBRACK
         {:
-            Index index = new Index(e1xleft, evalExpr(e1), evalExpr(e2));
+            XiIndex index = new XiIndex(e1xleft, evalExpr(e1), evalExpr(e2));
             RESULT = index;
         :}
     | LBRACE ArrayElems:ae RBRACE
@@ -998,23 +994,23 @@ Expr ::=
         :}
     | IDENTIFIER:id
         {:
-            RESULT = new Var(idxleft, id);
+            RESULT = new XiVar(idxleft, id);
         :}
-    | NULL:n    // TOD): PA7
+    | NULL:n
         {:
-            // RESULT = new Null(nxleft);
+            RESULT = new XiNull(nxleft);
         :}
-    | THIS:t    // TODO: PA7
+    | THIS:t
         {:
-            // RESULT = new This(txleft);
+            RESULT = new XiThis(txleft);
         :}
-    | Expr:e1 DOT Expr:e2   // TODO: PA7
+    | Expr:e1 DOT Expr:e2
         {:
-            // RESULT new Dot(e1xleft, e1, e2);
+            RESULT new XiDot(e1xleft, e1, e2);
         :}
-    | NEW:n IDENTIFIER:id // TODO: PA7
+    | NEW:n Expr:e
         {:
-            // RESULT = new New(nxleft, id);
+            RESULT = new XiNew(nxleft, e);
         :}
     ;
 

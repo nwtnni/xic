@@ -62,11 +62,11 @@ public class Importer extends TypeChecker {
     }
     
     /**
-     * Visit a {@link ast.Program} and extract its top-level function
+     * Visit a {@link ast.XiProgram} and extract its top-level function
      * declarations into a {@link FnContext}
      */
     @Override
-    public Type visit(Program p) throws XicException {
+    public Type visit(XiProgram p) throws XicException {
         // First pass: populate top-level environment with function IDs
         for (Node fn : p.body) {
             fn.accept(this);
@@ -94,7 +94,7 @@ public class Importer extends TypeChecker {
      * Recursively visit dependencies.
      */
     @Override
-    public Type visit(Use u) throws XicException {
+    public Type visit(XiUse u) throws XicException {
         Node ast = IXiParser.from(lib, u.file + ".ixi");
         fns.merge(Importer.resolve(lib, ast));
         return null;
@@ -104,7 +104,7 @@ public class Importer extends TypeChecker {
      * Add function type information to top-level context.
      */
     @Override
-    public Type visit(Fn f) throws XicException {
+    public Type visit(XiFn f) throws XicException {
         if (!populate) {
             visit(f.args);
             visit(f.returns);

@@ -8,7 +8,7 @@ import xic.XicException;
 import xic.XicInternalException;
 
 // Function Declaration
-public class Fn extends Node {
+public class XiFn extends TopDeclr {
     
     public enum Kind {
         FN, FN_HEADER,
@@ -21,7 +21,7 @@ public class Fn extends Node {
     public List<Node> returns;
     public Node block;
 
-    public Fn(Location location, String id, List<Node> args, List<Node> returns) {
+    public XiFn(Location location, String id, List<Node> args, List<Node> returns) {
         this.kind = Kind.FN_HEADER;
         this.location = location;
         this.id = id;  
@@ -30,7 +30,7 @@ public class Fn extends Node {
         this.block = null;
     }
 
-    public Fn(Location location, String id, List<Node> args) {
+    public XiFn(Location location, String id, List<Node> args) {
         this.kind = Kind.PROC_HEADER; 
         this.location = location;
         this.id = id; 
@@ -39,7 +39,7 @@ public class Fn extends Node {
         this.block = null;
     }
 
-    public Fn(Location location, Fn f, Node block) {
+    public XiFn(Location location, XiFn f, Node block) {
         switch (f.kind) {
             case FN_HEADER:
                 this.kind = Kind.FN;

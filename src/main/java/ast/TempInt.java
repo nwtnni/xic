@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // An temporary node to hold an integer literal 
-public class TempInt extends Node {
+public class TempInt extends Expr {
 
     public String literal;
 

@@ -27,7 +27,7 @@ public class Printer extends ASTVisitor<Void> {
     /*
      * Top-level AST nodes
      */
-    public Void visit(Program p) throws XicException{
+    public Void visit(XiProgram p) throws XicException{
         printer.startUnifiedList();
         
         // Use statements
@@ -47,7 +47,7 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(Use u) throws XicException{
+    public Void visit(XiUse u) throws XicException{
         printer.startList();
 
         printer.printAtom("use");
@@ -57,7 +57,7 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(Fn f) throws XicException{
+    public Void visit(XiFn f) throws XicException{
         printer.startList();
 
         // Fn name
@@ -85,7 +85,7 @@ public class Printer extends ASTVisitor<Void> {
     /*
      * Statement nodes
      */
-    public Void visit(Declare d) throws XicException{
+    public Void visit(XiDeclr d) throws XicException{
         if (d.isUnderscore()) {
             printer.printAtom("_");
         }
@@ -98,7 +98,7 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(Assign a) throws XicException{
+    public Void visit(XiAssign a) throws XicException{
         printer.startList();
 
         printer.printAtom("=");
@@ -115,7 +115,7 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(Return r) throws XicException{
+    public Void visit(XiReturn r) throws XicException{
         printer.startList();
 
         printer.printAtom("return");
@@ -128,14 +128,14 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(Block b) throws XicException{
+    public Void visit(XiBlock b) throws XicException{
         printer.startUnifiedList();
         visit(b.statements);
         printer.endList();
         return null;
     }
 
-    public Void visit(If i) throws XicException{
+    public Void visit(XiIf i) throws XicException{
         printer.startUnifiedList();
 
         printer.printAtom("if");
@@ -151,7 +151,7 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(While w) throws XicException{
+    public Void visit(XiWhile w) throws XicException{
         printer.startUnifiedList();
 
         printer.printAtom("while");
@@ -165,7 +165,7 @@ public class Printer extends ASTVisitor<Void> {
     /*
      * Expression nodes
      */
-    public Void visit(Call c) throws XicException{
+    public Void visit(XiCall c) throws XicException{
         printer.startList();
 
         printer.printAtom(c.id);
@@ -174,7 +174,7 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(Binary b) throws XicException{
+    public Void visit(XiBinary b) throws XicException{
         printer.startList();
 
         printer.printAtom(b.kind.toString());
@@ -185,7 +185,7 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(Unary u) throws XicException{
+    public Void visit(XiUnary u) throws XicException{
         printer.startList();
 
         printer.printAtom(u.kind.toString());
@@ -195,12 +195,12 @@ public class Printer extends ASTVisitor<Void> {
         return null;
     }
 
-    public Void visit(Var v) throws XicException{
+    public Void visit(XiVar v) throws XicException{
         printer.printAtom(v.id);
         return null;
     }
 
-    public Void visit(Index i) throws XicException{
+    public Void visit(XiIndex i) throws XicException{
         printer.startList();
 
         printer.printAtom("[]");

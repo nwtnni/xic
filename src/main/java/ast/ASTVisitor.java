@@ -22,15 +22,24 @@ public abstract class ASTVisitor<T> {
     /*
      * Top-level AST nodes
      */
-    public T visit(Program p) throws XicException {
+    
+    public T visit(XiProgram p) throws XicException {
         return null;
     }
 
-    public T visit(Use u) throws XicException {
+    public T visit(XiUse u) throws XicException {
         return null;
     }
 
-    public T visit(Fn f) throws XicException {
+    public T visit(XiClass c) throws XicException {
+        return null;
+    }
+
+    public T visit(XiFn f) throws XicException {
+        return null;
+    }
+
+    public T visit(XiGlobal g) throws XicException {
         return null;
     }
 
@@ -38,27 +47,31 @@ public abstract class ASTVisitor<T> {
      * Statement nodes
      */
 
-    public T visit(Assign a) throws XicException {
+    public T visit(XiAssign a) throws XicException {
         return null;
     }
 
-    public T visit(Block b) throws XicException {
+    public T visit(XiBlock b) throws XicException {
         return null;
     }
 
-    public T visit(Declare d) throws XicException {
+    public T visit(XiBreak b) throws XicException {
         return null;
     }
 
-    public T visit(If i) throws XicException {
+    public T visit(XiDeclr d) throws XicException {
         return null;
     }
 
-    public T visit(Return r) throws XicException {
+    public T visit(XiIf i) throws XicException {
         return null;
     }
 
-    public T visit(While w) throws XicException {
+    public T visit(XiReturn r) throws XicException {
+        return null;
+    }
+
+    public T visit(XiWhile w) throws XicException {
         return null;
     }
 
@@ -66,23 +79,39 @@ public abstract class ASTVisitor<T> {
      * Expression nodes
      */
 
-    public T visit(Binary b) throws XicException {
+    public T visit(XiBinary b) throws XicException {
         return null;
     }
 
-    public T visit(Call c) throws XicException {
+    public T visit(XiCall c) throws XicException {
         return null;
     }
 
-    public T visit(Index i) throws XicException {
+    public T visit(XiDot d) throws XicException {
         return null;
     }
 
-    public T visit(Unary u) throws XicException {
+    public T visit(XiExprStmt e) throws XicException {
         return null;
     }
 
-    public T visit(Var v) throws XicException {
+    public T visit(XiIndex i) throws XicException {
+        return null;
+    }
+
+    public T visit(XiNew n) throws XicException {
+        return null;
+    }
+
+    public T visit(XiThis u) throws XicException {
+        return null;
+    }
+
+    public T visit(XiUnary u) throws XicException {
+        return null;
+    }
+
+    public T visit(XiVar v) throws XicException {
         return null;
     }
 
@@ -103,6 +132,10 @@ public abstract class ASTVisitor<T> {
     }
 
     public T visit(XiInt i) throws XicException {
+        return null;
+    }
+
+    public T visit(XiNull n) throws XicException {
         return null;
     }
 

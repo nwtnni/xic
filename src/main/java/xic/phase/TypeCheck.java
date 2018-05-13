@@ -3,7 +3,7 @@ package xic.phase;
 import java.io.IOException;
 import java.io.FileWriter;
 
-import ast.Program;
+import ast.XiProgram;
 import type.TypeChecker;
 import type.FnContext;
 
@@ -14,9 +14,9 @@ import util.Result;
 import xic.XicException;
 import xic.XicInternalException;
 
-public class Type extends Phase {
+public class TypeCheck extends Phase {
 
-    public Type() { kind = Phase.Kind.TYPE; }
+    public TypeCheck() { kind = Phase.Kind.TYPE; }
 
     @Override
     public Result<Product> process(Config config, Result<Product> previous) {
@@ -32,7 +32,7 @@ public class Type extends Phase {
 
                 if (!ext.equals("xi")) throw XicException.unsupported(config.unit);
 
-                Program ast = previous.ok().getParsed();
+                XiProgram ast = previous.ok().getParsed();
 
                 FnContext context = TypeChecker.check(config.lib, ast);
 

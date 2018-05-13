@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // An Xi character
-public class XiChar extends Node {
+public class XiChar extends Expr {
 
     public String escaped;
     public long value;

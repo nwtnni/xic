@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import ast.Program;
+import ast.XiProgram;
 import parse.XiParser;
 import parse.IXiParser;
 import parse.Printer;
@@ -32,15 +32,15 @@ public class Parse extends Phase {
 
                 if (previous.isErr()) throw previous.err();
                 
-                Program ast = null;
+                XiProgram ast = null;
                 switch (ext) {
                     case "xi":
                         out = Filename.setExtension(out, "parsed");
-                        ast = (Program) XiParser.from(config.source, config.unit);
+                        ast = (XiProgram) XiParser.from(config.source, config.unit);
                         break;
                     case "ixi":
                         out = Filename.setExtension(out, "iparsed");
-                        ast = (Program) IXiParser.from(config.source, config.unit);
+                        ast = (XiProgram) IXiParser.from(config.source, config.unit);
                         break;
                     default:
                         throw XicException.unsupported(config.unit);

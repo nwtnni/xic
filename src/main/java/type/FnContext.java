@@ -5,7 +5,7 @@ import util.Context;
 import org.pcollections.PMap;
 
 /**
- * Symbol table mapping {@link ast.Fn#id Fn} id to {@link FnType}. Supports merging two
+ * Symbol table mapping {@link XiFn#id Fn} id to {@link FnType}. Supports merging two
  * FnContexts together, in order to check interfaces against definitions.
  * 
  * @see Context

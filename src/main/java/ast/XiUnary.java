@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // A unary operator
-public class Unary extends Node {
+public class XiUnary extends Expr {
     
     public enum Kind {
         INEGATE("-"),
@@ -24,7 +24,7 @@ public class Unary extends Node {
     public Kind kind;
     public Node child; 
 
-    public Unary(Location location, Kind kind, Node child) {
+    public XiUnary(Location location, Kind kind, Node child) {
         this.location = location;
         this.kind = kind; 
         this.child = child;

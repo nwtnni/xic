@@ -3,16 +3,16 @@ package ast;
 import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
-import java.util.List;
+// Binary Operation
+public class XiDot extends Expr {
 
-// A Xi array
-public class XiArray extends Expr {
+    public Node lhs;
+    public Node rhs;
 
-    public List<Node> values;
-
-    public XiArray(Location location, List<Node> values) {
+    public XiDot(Location location, Node lhs, Node rhs) {
         this.location = location;
-        this.values = values;
+        this.lhs = lhs;
+        this.rhs = rhs;
     }
 
     public <T> T accept(ASTVisitor<T> v) throws XicException {

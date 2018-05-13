@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // An Xi primitive boolean
-public class XiBool extends Node {
+public class XiBool extends Expr {
 
     public boolean value;
 
