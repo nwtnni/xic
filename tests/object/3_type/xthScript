@@ -1,23 +1,51 @@
 xic ("Test oXi --typecheck") "--typecheck" {
+
+  bad_assign_new1.xi;
+  bad_assign_new2.xi;
+  bad_assign_new3.xi;
+  bad_assign_new4.xi;
+
+  bad_obj_array1.xi;
+
   method1.xi;
   method2.xi;
   method3.xi;
   method4.xi;
   method5.xi;
+
+  method_override1.xi;
+  method_override2.xi;
+  method_override3.xi;
+
   null1.xi;
   null2.xi;
   null3.xi;
   null4.xi;
+  
   obj_arg1.xi;
   obj_arg2.xi;
   obj_arg3.xi;
+  
   obj_argret1.xi;
   obj_argret2.xi;
-  objargret3.xi;
+  obj_argret3.xi;
+
+  obj_array1.xi;
+  obj_array2.xi;
+  
   obj_assign1.xi;
   obj_assign2.xi;
   obj_assign3.xi;
   obj_assign4.xi;
+
+  obj_eqeq1.xi;
+  obj_eqeq2.xi;
+  obj_eqeq3.xi;
+
+  obj_neq1.xi;
+  obj_neq2.xi;
+  obj_neq3.xi;
+
   obj_ret1.xi;
   obj_ret2.xi;
   obj_ret3.xi;
