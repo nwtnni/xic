@@ -1,0 +1,24 @@
+xic ("Test oXi --typecheck") "--typecheck" {
+  method1.xi;
+  method2.xi;
+  method3.xi;
+  method4.xi;
+  method5.xi;
+  null1.xi;
+  null2.xi;
+  null3.xi;
+  null4.xi;
+  obj_arg1.xi;
+  obj_arg2.xi;
+  obj_arg3.xi;
+  obj_argret1.xi;
+  obj_argret2.xi;
+  objargret3.xi;
+  obj_assign1.xi;
+  obj_assign2.xi;
+  obj_assign3.xi;
+  obj_assign4.xi;
+  obj_ret1.xi;
+  obj_ret2.xi;
+  obj_ret3.xi;
+}

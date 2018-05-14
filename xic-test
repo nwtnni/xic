@@ -163,6 +163,8 @@ test_opt_fail() {
 
 test_object() {
   test_object_lex
+  test_object_parse
+  test_object_typecheck
 }
 
 test_object_lex() {
@@ -172,6 +174,11 @@ test_object_lex() {
 
 test_object_parse() {
     xth/xth -compilerpath . -workpath tests/object/2_parser -testpath tests/object/2_parser tests/object/2_parser/xthScript     
+    printf "\n========================================\n\n" 
+}
+
+test_object_typecheck() {
+    xth/xth -compilerpath . -workpath tests/object/3_type -testpath tests/object/3_type tests/object/3_type/xthScript     
     printf "\n========================================\n\n" 
 }
 
@@ -297,6 +304,9 @@ else
       ;;
   op)
       test_object_parse
+      ;;
+  ot)
+      test_object_typecheck
       ;;
   *)
       echo "Usage:"
