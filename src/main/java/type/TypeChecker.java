@@ -111,7 +111,10 @@ public class TypeChecker extends ASTVisitor<Type> {
         return p.type;
     }
 
-    // We do not need to typecheck XiUse, (visitor will return null)
+    // We do not need to typecheck XiUse, (visitor will return null) TODO
+    public Type visit(XiUse u) throws XicException {
+        throw new RuntimeException();
+    }
 
     //PA7 TODO
     public Type visit(XiClass c) throws XicException {
@@ -216,9 +219,8 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     // PA7 TODO
-
     public Type visit(XiBreak b) throws XicException {
-        throw new RuntimeException();
+        return Type.VOID;
     }
     
     /**

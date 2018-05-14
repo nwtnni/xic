@@ -111,7 +111,7 @@ public abstract class ASTVisitor<T> {
         return null;
     }
 
-    public T visit(XiThis u) throws XicException {
+    public T visit(XiThis t) throws XicException {
         return null;
     }
 
