@@ -111,6 +111,13 @@ public class TypeChecker extends ASTVisitor<Type> {
         return p.type;
     }
 
+    // We do not need to typecheck XiUse, (visitor will return null)
+
+    //PA7 TODO
+    public Type visit(XiClass c) throws XicException {
+        throw new RuntimeException();
+    }
+
     /**
      * A function is valid if none of its arguments
      * shadow anything in the context, and its block is
@@ -140,27 +147,14 @@ public class TypeChecker extends ASTVisitor<Type> {
         return f.type;
     }
 
+    // PA7 TODO
+    public Type visit(XiGlobal g) throws XicException{
+        throw new RuntimeException();
+    }
+
     /*
      * Statement nodes
      */
-    
-    /**
-     * A declaration is valid if it doesn't shadow anything in the context.
-     * 
-     * @returns typeof(declaration) if valid
-     * @throws XicException if a conflict was found
-     */
-    public Type visit(XiDeclr d) throws XicException {
-        if (d.isUnderscore()) {
-            d.type = Type.UNIT;
-        } else if (vars.contains(d.id) || fns.contains(d.id)) {
-            throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
-        } else {
-            d.type = d.xiType.accept(this);
-            vars.add(d.id, d.type);
-        }
-        return d.type;
-    }
 
     /**
      * An assignment is valid if each type on the RHS is a subtype of the
@@ -186,33 +180,6 @@ public class TypeChecker extends ASTVisitor<Type> {
 
         a.type = Type.UNIT;
         return a.type;
-    }
-
-    /**
-     * A return is valid if its type matches {@link TypeChecker#returns}
-     * 
-     * @returns {@link TypeCheck.VOID} if return type matches {@link TypeChecker#returns}
-     * @throws XicException if return type doesn't match
-     */
-    public Type visit(XiReturn r) throws XicException {
-        if (r.hasValues()) {
-            Type value = Type.tupleFromList(visit(r.values));
-            for (Node n : r.values) {
-                if (n instanceof XiCall) {
-                    if (n.type.kind.equals(Type.Kind.TUPLE)) {
-                        throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
-                    }
-                }
-            }
-            if (!value.equals(Type.UNIT) && returns.equals(value)) {
-                r.type = Type.VOID;
-                return r.type;
-            }
-        } else if (returns.equals(Type.UNIT)) {
-            r.type = Type.VOID;
-            return r.type;
-        }
-        throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
     }
 
     /**
@@ -246,6 +213,30 @@ public class TypeChecker extends ASTVisitor<Type> {
         }
         vars.pop();
         return b.type;
+    }
+
+    // PA7 TODO
+
+    public Type visit(XiBreak b) throws XicException {
+        throw new RuntimeException();
+    }
+    
+    /**
+     * A declaration is valid if it doesn't shadow anything in the context.
+     * 
+     * @returns typeof(declaration) if valid
+     * @throws XicException if a conflict was found
+     */
+    public Type visit(XiDeclr d) throws XicException {
+        if (d.isUnderscore()) {
+            d.type = Type.UNIT;
+        } else if (vars.contains(d.id) || fns.contains(d.id)) {
+            throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
+        } else {
+            d.type = d.xiType.accept(this);
+            vars.add(d.id, d.type);
+        }
+        return d.type;
     }
 
     /**
@@ -282,6 +273,33 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     /**
+     * A return is valid if its type matches {@link TypeChecker#returns}
+     * 
+     * @returns {@link TypeCheck.VOID} if return type matches {@link TypeChecker#returns}
+     * @throws XicException if return type doesn't match
+     */
+    public Type visit(XiReturn r) throws XicException {
+        if (r.hasValues()) {
+            Type value = Type.tupleFromList(visit(r.values));
+            for (Node n : r.values) {
+                if (n instanceof XiCall) {
+                    if (n.type.kind.equals(Type.Kind.TUPLE)) {
+                        throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
+                    }
+                }
+            }
+            if (!value.equals(Type.UNIT) && returns.equals(value)) {
+                r.type = Type.VOID;
+                return r.type;
+            }
+        } else if (returns.equals(Type.UNIT)) {
+            r.type = Type.VOID;
+            return r.type;
+        }
+        throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
+    }
+
+    /**
      * A while statement is valid if its guard is {@link TypeCheck.BOOL} and its block is valid.
      * 
      * @returns {@link TypeCheck.UNIT} if valid
@@ -303,33 +321,6 @@ public class TypeChecker extends ASTVisitor<Type> {
     /*
      * Expression nodes
      */
-
-    /**
-     * A function call is valid if the arguments match the function's arguments.
-     */
-    public Type visit(XiCall c) throws XicException {
-        if (c.id.equals("length")) {
-            Type arg = c.args.get(0).accept(this);
-            if (!arg.isArray()) {
-                throw new TypeException(Kind.NOT_AN_ARRAY, c.location);
-            }
-            c.type = Type.INT;
-            return c.type;
-        } else {
-            FnType fn = fns.lookup(c.id);
-            if (fn == null) {
-                throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
-            }
-
-            Type args = Type.listFromList(visit(c.args));
-            if (args.equals(fn.args)) {
-                c.type = fn.returns;
-                return c.type;
-            } else {
-                throw new TypeException(Kind.INVALID_ARG_TYPES, c.location);
-            }
-        }
-    }
 
     /**
      * A binary operation is valid if the types of the operands and the operator match.
@@ -360,6 +351,71 @@ public class TypeChecker extends ASTVisitor<Type> {
             throw new TypeException(Kind.INVALID_BIN_OP, b.location);
         }
         return b.type;
+    }
+
+    /**
+     * A function call is valid if the arguments match the function's arguments.
+     */
+    public Type visit(XiCall c) throws XicException {
+        if (c.id.equals("length")) {
+            Type arg = c.args.get(0).accept(this);
+            if (!arg.isArray()) {
+                throw new TypeException(Kind.NOT_AN_ARRAY, c.location);
+            }
+            c.type = Type.INT;
+            return c.type;
+        } else {
+            FnType fn = fns.lookup(c.id);
+            if (fn == null) {
+                throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
+            }
+
+            Type args = Type.listFromList(visit(c.args));
+            if (args.equals(fn.args)) {
+                c.type = fn.returns;
+                return c.type;
+            } else {
+                throw new TypeException(Kind.INVALID_ARG_TYPES, c.location);
+            }
+        }
+    }
+
+    // PA7 TODO
+    public Type visit(XiDot d) throws XicException {
+        throw new RuntimeException();
+    }
+
+    // PA7 TODO
+    public Type visit(XiExprStmt e) throws XicException {
+        throw new RuntimeException();
+    }
+
+    /**
+     * An array index is valid if the array child is {@link TypeCheck.Kind.ARRAY}, and the
+     * index child is {@link TypeCheck.INT}
+     */
+    public Type visit(XiIndex i) throws XicException {
+        Type it = i.index.accept(this);
+        Type at = i.array.accept(this);
+
+        if (!it.equals(Type.INT)) {
+            throw new TypeException(Kind.INVALID_ARRAY_INDEX, i.index.location);
+        } else if (at.kind != Type.Kind.ARRAY) {
+            throw new TypeException(Kind.NOT_AN_ARRAY, i.array.location);
+        } else {
+            i.type = at.children.get(0);
+            return i.type;
+        }
+    }
+
+    // PA7 TODO
+    public Type visit(XiNew n) {
+        throw new RuntimeException();
+    }
+
+    // PA7 TODO
+    public Type visit(XiThis t) throws XicException {
+        throw new RuntimeException();
     }
 
     /**
@@ -400,63 +456,9 @@ public class TypeChecker extends ASTVisitor<Type> {
         return v.type;
     }
 
-    /**
-     * An array index is valid if the array child is {@link TypeCheck.Kind.ARRAY}, and the
-     * index child is {@link TypeCheck.INT}
+    /*
+     * Constant nodes
      */
-    public Type visit(XiIndex i) throws XicException {
-        Type it = i.index.accept(this);
-        Type at = i.array.accept(this);
-
-        if (!it.equals(Type.INT)) {
-            throw new TypeException(Kind.INVALID_ARRAY_INDEX, i.index.location);
-        } else if (at.kind != Type.Kind.ARRAY) {
-            throw new TypeException(Kind.NOT_AN_ARRAY, i.array.location);
-        } else {
-            i.type = at.children.get(0);
-            return i.type;
-        }
-    }
-
-    /**
-     * A XiInt is always {@link TypeCheck.INT}
-     * 
-     * @returns {@link TypeCheck.INT}
-     */
-    public Type visit(XiInt i) {
-        i.type = Type.INT;
-        return i.type;
-    }
-
-    /**
-     * A XiBool is always {@link TypeCheck.BOOL}
-     * 
-     * @returns {@link TypeCheck.BOOL}
-     */
-    public Type visit(XiBool b) {
-        b.type = Type.BOOL;
-        return b.type;
-    }
-
-    /**
-     * A XiChar is always {@link TypeCheck.INT}
-     * 
-     * @returns {@link TypeCheck.INT}
-     */
-    public Type visit(XiChar c) {
-        c.type = Type.INT;
-        return c.type;
-    }
-
-    /**
-     * A XiString is always a {@link TypeCheck.Kind.ARRAY} of {@link TypeCheck.INT}
-     * 
-     * @returns Array of {@link TypeCheck.INT}
-     */
-    public Type visit(XiString s) {
-        s.type = new Type(Type.INT);
-        return s.type;
-    }
 
     /**
      * A XiArray is valid if its children are the same type.
@@ -492,6 +494,51 @@ public class TypeChecker extends ASTVisitor<Type> {
             a.type = new Type(arrayType);
             return a.type;
         }
+    }
+
+    /**
+     * A XiBool is always {@link TypeCheck.BOOL}
+     * 
+     * @returns {@link TypeCheck.BOOL}
+     */
+    public Type visit(XiBool b) {
+        b.type = Type.BOOL;
+        return b.type;
+    }
+
+    /**
+     * A XiChar is always {@link TypeCheck.INT}
+     * 
+     * @returns {@link TypeCheck.INT}
+     */
+    public Type visit(XiChar c) {
+        c.type = Type.INT;
+        return c.type;
+    }
+
+    /**
+     * A XiInt is always {@link TypeCheck.INT}
+     * 
+     * @returns {@link TypeCheck.INT}
+     */
+    public Type visit(XiInt i) {
+        i.type = Type.INT;
+        return i.type;
+    }
+
+    // PA7 TODO
+    public Type visit(XiNull n) throws XicException {
+        throw new RuntimeException();
+    }
+
+    /**
+     * A XiString is always a {@link TypeCheck.Kind.ARRAY} of {@link TypeCheck.INT}
+     * 
+     * @returns Array of {@link TypeCheck.INT}
+     */
+    public Type visit(XiString s) {
+        s.type = new Type(Type.INT);
+        return s.type;
     }
 
     /**
