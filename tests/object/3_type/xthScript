@@ -1,9 +1,17 @@
 xic ("Test oXi --typecheck") "--typecheck" {
 
+  bad_add_obj1.xi;
+
   bad_assign_new1.xi;
   bad_assign_new2.xi;
   bad_assign_new3.xi;
   bad_assign_new4.xi;
+
+  bad_div_obj1.xi;
+  bad_hmult_obj1.xi;
+  bad_mod_obj1.xi;
+  bad_mult_obj1.xi;
+  bad_sub_obj1.xi;
 
   bad_obj_array1.xi;
 
