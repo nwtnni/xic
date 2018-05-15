@@ -9,24 +9,17 @@ import xic.XicException;
 public class XiProgram extends Node {
 
     public enum Kind {
-        PROGRAM, INTERFACE 
+        PROGRAM, INTERFACE;
     }
 
     public Kind kind;
     public List<Node> uses;
     public List<Node> body;
 
-    public XiProgram(Location location, List<Node> uses, List<Node> fns) {
-        this.kind = Kind.PROGRAM;
+    public XiProgram(Location location, Kind kind, List<Node> uses, List<Node> fns) {
+        this.kind = kind;
         this.location = location;
         this.uses = uses;
-        this.body = fns;
-    }
-
-    public XiProgram(Location location, List<Node> fns) {
-        this.kind = Kind.INTERFACE;
-        this.location = location;
-        this.uses = null;
         this.body = fns;
     }
 

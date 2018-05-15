@@ -73,31 +73,46 @@ parser code {:
 
 scan with {: return lexer.nextToken(); :};
 
-/* Terminals (tokens returned by the scanner). */
-terminal                    PROGRAM, INTERFACE;                                 
-terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH, BREAK;        // New for PA7: BREAK
-terminal                    INT, BOOL;
-terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
-terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
-terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                    EQ, COLON, SEMICOLON, COMMA, DOT, UNDERSCORE;       // New for PA7: DOT
-terminal                    THIS, CLASS, EXTENDS, NEW;                          // New for PA7: THIS, CLASS, EXTENDS, NEW
-terminal    Void            NULL;                                               // New for PA7: NULL
-terminal    Boolean         TRUE, FALSE;
-terminal    String          IDENTIFIER;
-terminal    String          INTEGER;
-terminal    CharWrapper     CHAR;
-terminal    StringWrapper   STRING;
-terminal                    FUNCTIONCALL;
 
-/* Non terminals */
+/* --- Terminals (tokens returned by the scanner). --- */
+
+terminal                        USE, IF, WHILE, ELSE, RETURN, LENGTH, BREAK;    // PA7: BREAK
+terminal                        INT, BOOL;
+terminal                        UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                        LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
+terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                        EQ, COLON, SEMICOLON, COMMA, DOT, UNDERSCORE;   // PA7: DOT
+terminal                        THIS, CLASS, EXTENDS, NEW;                      // PA7
+terminal        Void            NULL;                                           // PA7
+terminal        Boolean         TRUE, FALSE;
+terminal        String          IDENTIFIER;
+terminal        String          INTEGER;
+terminal        CharWrapper     CHAR;
+terminal        StringWrapper   STRING;
+terminal                        FUNCTIONCALL;
+
+
+/* --- Non terminals --- */
 
 // Top level
 non terminal    Node            Program;
 non terminal    List<Node>      UseDeclarations;
+non terminal    List<Node>      ProgramBody;                                    // PA7
 
 // Use statements
 non terminal    Node            UseDeclr;
+
+// Global variables
+non terminal    XiGlobal        GlobalVar;                                      // PA7
+non terminal    Node            GVType;                                         // PA7
+non terminal    Node            GVTypeLiteral;                                  // PA7
+non terminal    List<Node>      GVTypeIndexList;                                // PA7
+
+// Classes
+non terminal    Node            ClassDeclr;                                     // PA7
+non terminal    List<Node>      ClassBody;                                      // PA7
+non terminal    Node            Field;                                          // PA7
+non terminal    Node            FieldType;                                      // PA7
 
 // Functions
 non terminal    Node            FnDeclr, FnSig;
@@ -117,6 +132,7 @@ non terminal    List<Node>      Args, FArgs;
 // Variable declarations
 non terminal    Node            VarDeclr, VarType, KeyType;
 non terminal    List<Node>      VarTypeIndexList, VarTypeIndexListNoExpr;
+non terminal    List<Node>      VarDeclrList, FVarDeclrList;                    // PA7
 
 // Assignment
 non terminal    Node            Assign, SingleAssignTarget, MultiAssignTarget;
@@ -129,6 +145,8 @@ non terminal    List<Node>      IndexList;
 
 // Control flow statements
 non terminal    Node            WhileStmt, IfStmt, ElseStmt;
+non terminal    Node            WhileBlock;                                     // PA7
+non terminal    Node            WhileBlockStmts;                                // PA7
 
 // Expressions
 non terminal    Node            Expr;
@@ -137,25 +155,9 @@ non terminal    List<Node>      ExprList, FExprList;
 // Array literals
 non terminal    List<Node>      ArrayElems, FArrayElems;
 
+// Optional semicolons
 non terminal                    OptSemicolon;
 
-// TODO: PA7 organize these
-non terminal    List<Node>      ProgramBody;                        // PA7
-
-non terminal    XiGlobal        GlobalVar;                          // PA7
-non terminal    Node            GVType;                             // PA7
-non terminal    Node            GVTypeLiteral;                      // PA7
-non terminal    List<Node>      GVTypeIndexList;                    // PA7
-
-non terminal    Node            ClassDeclr;                         // PA7
-non terminal    List<Node>      ClassBody;                           // PA7
-non terminal    Node            Field;                              // PA7
-non terminal    Node            FieldType;                          // PA7
-
-non terminal    List<Node>      VarDeclrList, FVarDeclrList;        // PA7
-
-non terminal    Node            WhileBlock;                         // PA7
-non terminal    Node            WhileBlockStmts;                    // PA7
 
 /* --- Precedences --- */
 precedence nonassoc     ELSE;
@@ -167,10 +169,11 @@ precedence left         ADD, MINUS;
 precedence left         MULT, HMULT, DIV, MOD;
 precedence right        UMINUS, LNEG;
 precedence left         FUNCTIONCALL, LBRACK;   // LBRACK precedence is set to make ArrayCall precedence work
-precedence left         NEW;
 precedence left         DOT;                    // PA7
+precedence left         NEW;                    // PA7
 
-/* --- The grammar rules --- */
+
+/* --- Productions --- */
 start with      Program;
 
 // Optional Semicolon
@@ -179,14 +182,15 @@ OptSemicolon ::=
     ;
 
 // Top level for program
-Program ::= UseDeclarations:uds ProgramBody:body
+Program ::=
+    UseDeclarations:uds ProgramBody:body
     {:
-        RESULT = new XiProgram(udsxleft, uds, body);
+        RESULT = new XiProgram(udsxleft, XiProgram.Kind.PROGRAM, uds, body);
     :}
     ;
 
 // Use statements
-UseDeclarations ::= 
+UseDeclarations ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
@@ -198,7 +202,7 @@ UseDeclarations ::=
     ;
 
 // Single use declaration
-UseDeclr ::= 
+UseDeclr ::=
     USE:u IDENTIFIER:id OptSemicolon
     {:
         RESULT = new XiUse(uxleft, id);
@@ -369,7 +373,6 @@ FieldType ::=
         RESULT = new XiType(typexleft, type);
     :}
     ;
-
 
 /* --- Function and procedure declaration --- */
 
@@ -636,7 +639,7 @@ FVarDeclrList ::=
 VarType ::= 
     KeyType:type VarTypeIndexList:vtil
     {:
-        for (int i=vtil.size() - 1; i>=0; i--) {
+        for (int i=vtil.size() - 1; i >= 0; i--) {
             if (vtil.get(i) == null) {
                 type = new XiType(typexleft,type);
             } else {
@@ -1025,9 +1028,9 @@ Expr ::=
         {:
             RESULT = new XiDot(e1xleft, e1, e2);
         :}
-    | NEW:n Expr:e
+    | NEW:n IDENTIFIER:id
         {:
-            RESULT = new XiNew(nxleft, e);
+            RESULT = new XiNew(nxleft, id);
         :}
     ;
 

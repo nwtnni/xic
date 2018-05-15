@@ -387,11 +387,6 @@ public class TypeChecker extends ASTVisitor<Type> {
         throw new RuntimeException();
     }
 
-    // PA7 TODO
-    public Type visit(XiExprStmt e) throws XicException {
-        throw new RuntimeException();
-    }
-
     /**
      * An array index is valid if the array child is {@link TypeCheck.Kind.ARRAY}, and the
      * index child is {@link TypeCheck.INT}

@@ -6,11 +6,11 @@ import xic.XicException;
 // A unary operator
 public class XiNew extends Expr {
 
-    public Node expr; 
+    public String name; 
 
-    public XiNew(Location location, Node expr) {
+    public XiNew(Location location, String name) {
         this.location = location;
-        this.expr = expr;
+        this.name = name;
     }
 
     public <T> T accept(ASTVisitor<T> v) throws XicException {

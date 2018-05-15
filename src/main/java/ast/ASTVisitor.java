@@ -101,11 +101,6 @@ public abstract class ASTVisitor<T> {
         return null;
     }
 
-    // PA7
-    public T visit(XiExprStmt e) throws XicException {
-        return null;
-    }
-
     public T visit(XiIndex i) throws XicException {
         return null;
     }
