@@ -151,6 +151,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     // PA7 TODO
+    // Need to handle case with assignment
     public Type visit(XiGlobal g) throws XicException{
         throw new RuntimeException();
     }
@@ -218,7 +219,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         return b.type;
     }
 
-    // PA7 TODO
+    // PA7
     public Type visit(XiBreak b) throws XicException {
         return Type.VOID;
     }
