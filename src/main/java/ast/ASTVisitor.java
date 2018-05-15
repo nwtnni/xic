@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 import xic.XicException;
 
-// Boilerplate code to implement the visitor pattern
+/** Base class AST level template for visitor pattern. */
 public abstract class ASTVisitor<T> {
 
     /*

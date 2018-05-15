@@ -1,7 +1,6 @@
 package assemble.instructions;
 
-import assemble.*;
-
+/** Base class assembly level template for visitor pattern. */
 public abstract class InstrVisitor<T> {
 
     /*

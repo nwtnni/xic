@@ -52,6 +52,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         this.vars = new VarContext();
     }
 
+    // TODO: PA7 extend context to globals, classes and function contexts
     /**
      * Associated function context.
      */
@@ -104,6 +105,9 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @throws XicException if program has semantic errors
      */
     public Type visit(XiProgram p) throws XicException {
+
+        // TODO: PA7 handle different top level declarations
+
         for (Node fn : p.body) {
             fn.accept(this);
         }
@@ -116,7 +120,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         throw new RuntimeException();
     }
 
-    //PA7 TODO
+    // TODO: PA7
     public Type visit(XiClass c) throws XicException {
         throw new RuntimeException();
     }
@@ -150,9 +154,8 @@ public class TypeChecker extends ASTVisitor<Type> {
         return f.type;
     }
 
-    // PA7 TODO
-    // Need to handle case with assignment
-    public Type visit(XiGlobal g) throws XicException{
+    // TODO: PA7
+    public Type visit(XiGlobal g) throws XicException {
         throw new RuntimeException();
     }
 
@@ -219,7 +222,11 @@ public class TypeChecker extends ASTVisitor<Type> {
         return b.type;
     }
 
-    // PA7
+    /**
+     * PA7: A break has type void.
+     * 
+     * @returns {@link TypeCheck.VOID}
+     */
     public Type visit(XiBreak b) throws XicException {
         return Type.VOID;
     }
@@ -302,6 +309,11 @@ public class TypeChecker extends ASTVisitor<Type> {
         throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
     }
 
+    // Should be removed in desugaring
+    public Type visit(XiSeq s) throws XicException {
+        throw XicInternalException.runtime("Did not desugar AST.");
+    }
+
     /**
      * A while statement is valid if its guard is {@link TypeCheck.BOOL} and its block is valid.
      * 
@@ -331,6 +343,8 @@ public class TypeChecker extends ASTVisitor<Type> {
     public Type visit(XiBinary b) throws XicException {
         Type lt = b.lhs.accept(this);
         Type rt = b.rhs.accept(this);
+
+        // TODO: PA7 handle object and array comparison restrictions
 
         if (!lt.equals(rt)) {
             throw new TypeException(Kind.MISMATCHED_BINARY, b.location);
@@ -383,7 +397,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         }
     }
 
-    // PA7 TODO
+    // TODO: PA7
     public Type visit(XiDot d) throws XicException {
         throw new RuntimeException();
     }
@@ -406,12 +420,12 @@ public class TypeChecker extends ASTVisitor<Type> {
         }
     }
 
-    // PA7 TODO
-    public Type visit(XiNew n) {
+    // TODO: PA7
+    public Type visit(XiNew n) throws XicException {
         throw new RuntimeException();
     }
 
-    // PA7 TODO
+    // TODO: PA7
     public Type visit(XiThis t) throws XicException {
         throw new RuntimeException();
     }
@@ -524,7 +538,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         return i.type;
     }
 
-    // PA7 TODO
+    // TODO: PA7
     public Type visit(XiNull n) throws XicException {
         throw new RuntimeException();
     }

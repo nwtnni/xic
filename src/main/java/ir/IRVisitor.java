@@ -1,5 +1,6 @@
 package ir;
 
+/** Base class IR level template for visitor pattern. */
 public abstract class IRVisitor<T> {
 
     /*
