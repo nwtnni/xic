@@ -197,7 +197,11 @@ if [[ -f $2 ]] ; then
           pushd "runtime"
           echo "running assembly:"
           echo ""
-          time ./run_test "tests/$name"
+          ./linkxi.sh -o test "tests/$name"
+          time ./test
+          rm test
+          echo ""
+          echo "finished running"
           popd
       else
           echo "Cannot run assembly on $platform"
