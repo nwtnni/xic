@@ -773,6 +773,7 @@ SingleAssignTarget ::=
         RESULT = v;
     :}
     ;
+    // TODO: extend for dot targets
 
 // Variable declaration on LHS of assignment
 AssignVarDeclr ::= 
@@ -875,7 +876,6 @@ WhileStmt ::=
 WBlock ::= 
     LBRACE:l WBlockStmts:wbs RBRACE OptSemicolon
     {:
-        // TODO: PA7 decide what do do with while block statements
         wbs.location = lxleft;
         RESULT = wbs;
     :}
