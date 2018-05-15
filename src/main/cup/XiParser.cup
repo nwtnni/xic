@@ -121,8 +121,10 @@ non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
 non terminal    Node            FnType;
 
 // Block statements
-non terminal    Node            BlockOptBraces, BlockStmts;
-non terminal    Node            SingleStmtNoReturn, StmtNoReturn;
+non terminal    Node            Block;
+non terminal    Node            BlockStmts;
+non terminal    Node            SingleStmtNoReturn;
+non terminal    Node            StmtNoReturn;
 non terminal    List<Node>      StmtListNoReturn;
 
 // Function calls
@@ -144,9 +146,16 @@ non terminal    Node            ArrayCall;
 non terminal    List<Node>      IndexList;
 
 // Control flow statements
-non terminal    Node            WhileStmt, IfStmt, ElseStmt;
-non terminal    Node            WhileBlock;                                     // PA7
-non terminal    Node            WhileBlockStmts;                                // PA7
+non terminal    Node            IfStmt, ElseStmt;
+non terminal    Node            WhileStmt;
+
+// Blocks with breaks allowed for while
+non terminal    Node            WBlock;                                     // PA7
+non terminal    Node            WBlockStmts;                                // PA7
+non terminal    Node            WSingleStmtNoReturn;                        // PA7
+non terminal    Node            WStmtNoReturn;                              // PA7
+non terminal    List<Node>      WStmtListNoReturn;                          // PA7
+non terminal    Node            WIfStmt, WElseStmt;                         // PA7
 
 // Expressions
 non terminal    Node            Expr;
@@ -455,7 +464,7 @@ FnType ::=
 /* --- Blocks --- */
 
 // Block with braces OR single statement (excluding break/return)
-BlockOptBraces ::=
+Block ::=
     LBRACE:l BlockStmts:bs RBRACE OptSemicolon
     {:
         bs.location = lxleft;
@@ -492,6 +501,11 @@ SingleStmtNoReturn ::=
     {:
         RESULT = a;
     :}
+    | FnCall:p OptSemicolon
+    {:
+        // Procedure calls are syntactically the same as function calls
+        RESULT = p;
+    :}
     | IfStmt:i 
     {:
         RESULT = i;
@@ -500,16 +514,12 @@ SingleStmtNoReturn ::=
     {:
         RESULT = w;
     :}
-    | FnCall:p OptSemicolon
-    {:
-        // Procedure calls are syntactically the same as function calls
-        RESULT = p;
-    :}
     | VarDeclr:v OptSemicolon
     {:
         RESULT = v;
     :}
     ;
+// TODO: fix top level dot
 
 // Expression list for returns
 ExprList ::= 
@@ -827,60 +837,9 @@ IndexList ::=
 
 /* --- Control flow statements --- */
 
-// While statement
-WhileStmt ::= 
-    WHILE:w Expr:e WhileBlock:block
-    {:
-        RESULT = new XiWhile(wxleft, evalExpr(e), block);
-    :}
-    ;
-
-// Block for while
-// While statements have one of the following:
-// - A block
-// - A single statement excluding return
-WhileBlock ::= 
-    LBRACE:l WhileBlockStmts:wbs RBRACE OptSemicolon
-    {:
-        // TODO: PA7 decide what do do with while block statements
-        wbs.location = lxleft;
-        RESULT = wbs;
-    :}
-    | SingleStmtNoReturn:ssnr
-    {:
-        RESULT = ssnr;
-    :}
-    | BREAK:b OptSemicolon
-    {:
-        RESULT = new XiBreak(bxleft);
-    :}
-    ;
-
-// Block of statements ending with return or break
-WhileBlockStmts ::=
-    StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
-    {:
-        if (el.size() == 0) {
-        	slnr.add(new XiReturn(rxleft));
-        } else {
-            slnr.add(new XiReturn(rxleft, el));
-        }
-        RESULT = new XiBlock(slnr);
-    :}
-    | StmtListNoReturn:slnr BREAK:b OptSemicolon
-    {:
-        slnr.add(new XiBreak(bxleft));
-        RESULT = new XiBlock(slnr);
-    :}
-    | StmtListNoReturn:slnr
-    {:
-        RESULT = new XiBlock(slnr);
-    :}
-    ;
-
 // If statement
 IfStmt ::= 
-    IF:i Expr:e BlockOptBraces:block ElseStmt:elseBlock
+    IF:i Expr:e Block:block ElseStmt:elseBlock
     {:
         if (elseBlock == null) {
             RESULT = new XiIf(ixleft, evalExpr(e), block);
@@ -895,7 +854,134 @@ ElseStmt ::=
     {: 
         RESULT = null;
     :}
-    | ELSE:el BlockOptBraces:block 
+    | ELSE:el Block:block 
+    {:
+        RESULT = block;
+    :}
+    ;
+    
+// While statement
+WhileStmt ::= 
+    WHILE:w Expr:e WBlock:block
+    {:
+        RESULT = new XiWhile(wxleft, evalExpr(e), block);
+    :}
+    ;
+
+// While: block
+// While statements have one of the following:
+// - A block
+// - A single statement excluding return
+WBlock ::= 
+    LBRACE:l WBlockStmts:wbs RBRACE OptSemicolon
+    {:
+        // TODO: PA7 decide what do do with while block statements
+        wbs.location = lxleft;
+        RESULT = wbs;
+    :}
+    | WSingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    | BREAK:b OptSemicolon
+    {:
+        RESULT = new XiBreak(bxleft);
+    :}
+    ;
+
+// While: Block of statements ending with return or break
+WBlockStmts ::=
+    WStmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
+    {:
+        if (el.size() == 0) {
+        	slnr.add(new XiReturn(rxleft));
+        } else {
+            slnr.add(new XiReturn(rxleft, el));
+        }
+        RESULT = new XiBlock(slnr);
+    :}
+    | WStmtListNoReturn:slnr BREAK:b OptSemicolon
+    {:
+        slnr.add(new XiBreak(bxleft));
+        RESULT = new XiBlock(slnr);
+    :}
+    | WStmtListNoReturn:slnr
+    {:
+        RESULT = new XiBlock(slnr);
+    :}
+    ;
+
+// While: Single statement excluding break/return
+WSingleStmtNoReturn ::= 
+    Assign:a OptSemicolon
+    {:
+        RESULT = a;
+    :}
+    | FnCall:p OptSemicolon
+    {:
+        // Procedure calls are syntactically the same as function calls
+        RESULT = p;
+    :}
+    | WIfStmt:i 
+    {:
+        RESULT = i;
+    :}
+    | WhileStmt:w 
+    {:
+        RESULT = w;
+    :}
+    | VarDeclr:v OptSemicolon
+    {:
+        RESULT = v;
+    :}
+    ;
+// TODO: fix top level dot
+
+// While: List of statements without break/return
+WStmtListNoReturn ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | WStmtNoReturn:snr WStmtListNoReturn:slnr
+    {:
+        slnr.add(0, snr);
+        RESULT = slnr;
+    :}
+    ;
+
+// While: Block of statements or single statement excluding break/return 
+// with optional semicolon after block/statement.
+WStmtNoReturn ::= 
+    LBRACE:l WBlockStmts:block RBRACE OptSemicolon
+    {:
+        block.location = lxleft;
+        RESULT = block;
+    :}
+    | WSingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    ;
+
+
+// While: if statement
+WIfStmt ::= 
+    IF:i Expr:e WBlock:block WElseStmt:elseBlock
+    {:
+        if (elseBlock == null) {
+            RESULT = new XiIf(ixleft, evalExpr(e), block);
+        } else {
+            RESULT = new XiIf(ixleft, evalExpr(e), block, elseBlock);
+        }
+    :}
+    ;
+
+// While: optional else statement
+WElseStmt ::= 
+    {: 
+        RESULT = null;
+    :}
+    | ELSE:el WBlock:block 
     {:
         RESULT = block;
     :}
