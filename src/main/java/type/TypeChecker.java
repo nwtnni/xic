@@ -83,6 +83,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * Returns a list of types from visiting a list of nodes.
      */
+    @Override
     public List<Type> visit(List<Node> nodes) throws XicException {
         List<Type> types = new ArrayList<>();
         for (Node n : nodes) {
@@ -104,6 +105,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns {@link TypeCheck.UNIT} if program is valid
      * @throws XicException if program has semantic errors
      */
+    @Override
     public Type visit(XiProgram p) throws XicException {
 
         // TODO: PA7 handle different top level declarations
@@ -116,11 +118,13 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     // We do not need to typecheck XiUse, (visitor will return null) TODO
+    @Override
     public Type visit(XiUse u) throws XicException {
         throw new RuntimeException();
     }
 
     // TODO: PA7
+    @Override
     public Type visit(XiClass c) throws XicException {
         throw new RuntimeException();
     }
@@ -133,6 +137,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns {@link TypeCheck.UNIT} is function is valid
      * @throws XicException if function has semantic errors
      */
+    @Override
     public Type visit(XiFn f) throws XicException {
         vars.push();
         FnType fnType = fns.lookup(f.id);
@@ -155,6 +160,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     // TODO: PA7
+    @Override
     public Type visit(XiGlobal g) throws XicException {
         throw new RuntimeException();
     }
@@ -173,6 +179,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns {@link TypeCheck.UNIT} if valid
      * @throws XicException if invalid assignment
      */
+    @Override
     public Type visit(XiAssign a) throws XicException {
         Type rt = a.rhs.accept(this);
         Type lt = Type.tupleFromList(visit(a.lhs));
@@ -196,6 +203,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns The type of the last statement
      * @throws XicException if invalid
      */
+    @Override
     public Type visit(XiBlock b) throws XicException {
         b.type = Type.UNIT;
         vars.push();
@@ -227,6 +235,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * 
      * @returns {@link TypeCheck.VOID}
      */
+    @Override
     public Type visit(XiBreak b) throws XicException {
         return Type.VOID;
     }
@@ -237,6 +246,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns typeof(declaration) if valid
      * @throws XicException if a conflict was found
      */
+    @Override
     public Type visit(XiDeclr d) throws XicException {
         if (d.isUnderscore()) {
             d.type = Type.UNIT;
@@ -255,6 +265,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns If both blocks are {@link TypeCheck.VOID}, then Type.VOID, otherwise Type.UNIT
      * @throws XicException if invalid
      */
+    @Override
     public Type visit(XiIf i) throws XicException {
         if (!i.guard.accept(this).equals(Type.BOOL)) {
             throw new TypeException(Kind.INVALID_GUARD, i.guard.location);
@@ -288,6 +299,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns {@link TypeCheck.VOID} if return type matches {@link TypeChecker#returns}
      * @throws XicException if return type doesn't match
      */
+    @Override
     public Type visit(XiReturn r) throws XicException {
         if (r.hasValues()) {
             Type value = Type.tupleFromList(visit(r.values));
@@ -310,6 +322,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     // Should be removed in desugaring
+    @Override
     public Type visit(XiSeq s) throws XicException {
         throw XicInternalException.runtime("Did not desugar AST.");
     }
@@ -320,6 +333,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns {@link TypeCheck.UNIT} if valid
      * @throws XicException if invalid
      */
+    @Override
     public Type visit(XiWhile w) throws XicException {
         if (!w.guard.accept(this).equals(Type.BOOL)) {
             throw new TypeException(Kind.INVALID_GUARD, w.guard.location);
@@ -340,6 +354,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * A binary operation is valid if the types of the operands and the operator match.
      */
+    @Override
     public Type visit(XiBinary b) throws XicException {
         Type lt = b.lhs.accept(this);
         Type rt = b.rhs.accept(this);
@@ -373,6 +388,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * A function call is valid if the arguments match the function's arguments.
      */
+    @Override
     public Type visit(XiCall c) throws XicException {
         if (c.id.equals("length")) {
             Type arg = c.args.get(0).accept(this);
@@ -398,6 +414,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     // TODO: PA7
+    @Override
     public Type visit(XiDot d) throws XicException {
         throw new RuntimeException();
     }
@@ -406,6 +423,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * An array index is valid if the array child is {@link TypeCheck.Kind.ARRAY}, and the
      * index child is {@link TypeCheck.INT}
      */
+    @Override
     public Type visit(XiIndex i) throws XicException {
         Type it = i.index.accept(this);
         Type at = i.array.accept(this);
@@ -421,12 +439,8 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     // TODO: PA7
+    @Override
     public Type visit(XiNew n) throws XicException {
-        throw new RuntimeException();
-    }
-
-    // TODO: PA7
-    public Type visit(XiThis t) throws XicException {
         throw new RuntimeException();
     }
 
@@ -436,6 +450,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns The type of the operator if valid
      * @throws XicException if operator mismatch
      */
+    @Override
     public Type visit(XiUnary u) throws XicException {
         Type ut = u.child.accept(this);
         if (u.isLogical()) {
@@ -460,6 +475,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns typeof(variable) if valid
      * @throws XicException if invalid
      */
+    @Override
     public Type visit(XiVar v) throws XicException {
         v.type = vars.lookup(v.id);
         if (v.type == null) {
@@ -481,6 +497,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns Array of child types
      * @throws XicException if invalid
      */
+    @Override
     public Type visit(XiArray a) throws XicException {
         if (a.values.size() == 0) {
             a.type = Type.POLY;
@@ -513,6 +530,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * 
      * @returns {@link TypeCheck.BOOL}
      */
+    @Override
     public Type visit(XiBool b) {
         b.type = Type.BOOL;
         return b.type;
@@ -523,6 +541,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * 
      * @returns {@link TypeCheck.INT}
      */
+    @Override
     public Type visit(XiChar c) {
         c.type = Type.INT;
         return c.type;
@@ -533,12 +552,14 @@ public class TypeChecker extends ASTVisitor<Type> {
      * 
      * @returns {@link TypeCheck.INT}
      */
+    @Override
     public Type visit(XiInt i) {
         i.type = Type.INT;
         return i.type;
     }
 
     // TODO: PA7
+    @Override
     public Type visit(XiNull n) throws XicException {
         throw new RuntimeException();
     }
@@ -548,9 +569,16 @@ public class TypeChecker extends ASTVisitor<Type> {
      * 
      * @returns Array of {@link TypeCheck.INT}
      */
+    @Override
     public Type visit(XiString s) {
         s.type = new Type(Type.INT);
         return s.type;
+    }
+
+    // TODO: PA7
+    @Override
+    public Type visit(XiThis t) throws XicException {
+        throw new RuntimeException();
     }
 
     /**
@@ -559,6 +587,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @returns Corresponding type
      * @throws XicException if array type with invalid size
      */
+    @Override
     public Type visit(XiType t) throws XicException {
         t.type = new Type(t);
         

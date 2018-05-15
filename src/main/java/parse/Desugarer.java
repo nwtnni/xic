@@ -7,13 +7,21 @@ import ast.*;
 import xic.XicException;
 
 /** Removes syntactic sugar from AST. */
-public class Desugarer extends ASTVisitor<Node> {
+public class Desugarer extends ASTVisitor<MultipleNode> {
+
+    /**
+     * Factory method to desugar a given AST.
+     */
+    public static void desugar(Node ast) throws XicException {
+        ast.accept(new Desugarer());
+    }
 
     /*
      * Psuedo-visit method for visiting a list of nodes.
      */
-    public List<Node> visit(List<Node> nodes) throws XicException {
-        List<Node> t = new ArrayList<>();
+    @Override
+    public List<MultipleNode> visit(List<Node> nodes) throws XicException {
+        List<MultipleNode> t = new ArrayList<>();
         for (Node n : nodes) {
             t.add(n.accept(this));
         }
@@ -24,136 +32,127 @@ public class Desugarer extends ASTVisitor<Node> {
      * Top-level AST nodes
      */
     
-    public Node visit(XiProgram p) throws XicException {
+    @Override
+    public MultipleNode visit(XiProgram p) throws XicException {
+
+        // Rewrite body
+        List<Node> body = new ArrayList<>();
+        for (Node declr : p.body) {
+            MultipleNode n = declr.accept(this);
+            if (n.isSingle()) {
+                body.add(n.getSingle());
+            } else {
+                body.addAll(n.getMultiple());
+            }
+        }
+        p.body = body;
+
         return null;
     }
 
-    public Node visit(XiUse u) throws XicException {
+    // Use statements are already desugared
+    @Override
+    public MultipleNode visit(XiUse u) throws XicException {
         return null;
     }
 
     // PA7
-    public Node visit(XiClass c) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiClass c) throws XicException {
+
+        // Rewrite body
+        List<Node> body = new ArrayList<>();
+        for (Node declr : c.body) {
+            MultipleNode n = declr.accept(this);
+            if (n.isSingle()) {
+                body.add(n.getSingle());
+            } else {
+                body.addAll(n.getMultiple());
+            }
+        }
+        c.body = body;
+
+        return MultipleNode.of(c);
     }
 
     // PA7
-    public Node visit(XiFn f) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiFn f) throws XicException {
+
+        // Rewrite block
+        MultipleNode n = f.block.accept(this);
+        f.block = n.getSingle();
+
+        return MultipleNode.of(f);
     }
 
     // PA7
-    public Node visit(XiGlobal g) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiGlobal g) throws XicException {
+
+        MultipleNode n = g.stmt.accept(this);
+        if (n.isMultiple()) {
+            List<Node> seq = new ArrayList<>();
+            for (Node d : n.getMultiple()) {
+                seq.add(new XiGlobal(d.location, d));
+            }
+            return MultipleNode.of(seq);
+        } else {
+            return MultipleNode.of(g);
+        }
     }
 
     /*
      * Statement nodes
      */
 
-    public Node visit(XiAssign a) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiAssign a) throws XicException {
+        return MultipleNode.of(a);
     }
 
-    public Node visit(XiBlock b) throws XicException {
-        return null;
-    }
-
-    // PA7
-    public Node visit(XiBreak b) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiDeclr d) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiIf i) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiReturn r) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiBlock b) throws XicException {
+        return MultipleNode.of(b);
     }
 
     // PA7
-    public Node visit(XiSeq s) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiBreak b) throws XicException {
+        return MultipleNode.of(b);
     }
 
-    public Node visit(XiWhile w) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiDeclr d) throws XicException {
+        return MultipleNode.of(d);
     }
 
-    /*
-     * Expression nodes
-     */
-
-    public Node visit(XiBinary b) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiIf i) throws XicException {
+        return MultipleNode.of(i);
     }
 
-    public Node visit(XiCall c) throws XicException {
-        return null;
-    }
-
-    // PA7
-    public Node visit(XiDot d) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiIndex i) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiReturn r) throws XicException {
+        return MultipleNode.of(r);
     }
 
     // PA7
-    public Node visit(XiNew n) throws XicException {
-        return null;
+    // Grammar enforces no nested seqs 
+    @Override
+    public MultipleNode visit(XiSeq s) throws XicException {
+        List<Node> seq = new ArrayList<>();
+        for (Node n : s.stmts) {
+            seq.add(n);
+        }
+        return MultipleNode.of(seq);
     }
 
-    // PA7
-    public Node visit(XiThis t) throws XicException {
-        return null;
+    @Override
+    public MultipleNode visit(XiWhile w) throws XicException {
+        return MultipleNode.of(w);
     }
 
-    public Node visit(XiUnary u) throws XicException {
-        return null;
-    }
+    // All expressions and constants are already desugared
 
-    public Node visit(XiVar v) throws XicException {
-        return null;
-    }
-
-    /*
-     * Constant nodes
-     */
-
-    public Node visit(XiArray a) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiBool b) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiChar c) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiInt i) throws XicException {
-        return null;
-    }
-
-    // PA7
-    public Node visit(XiNull n) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiString s) throws XicException {
-        return null;
-    }
-
-    public Node visit(XiType t) throws XicException {
-        return null;
-    }
 }

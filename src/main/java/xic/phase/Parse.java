@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import ast.XiProgram;
+import parse.Desugarer;
 import parse.XiParser;
 import parse.IXiParser;
 import parse.Printer;
@@ -32,6 +33,7 @@ public class Parse extends Phase {
 
                 if (previous.isErr()) throw previous.err();
                 
+                // Parse based on file extension
                 XiProgram ast = null;
                 switch (ext) {
                     case "xi":
@@ -45,6 +47,9 @@ public class Parse extends Phase {
                     default:
                         throw XicException.unsupported(config.unit);
                 }
+
+                // Desugar AST
+                Desugarer.desugar(ast);
 
                 if (output) {
                     Filename.makePathTo(out);

@@ -1,5 +1,6 @@
 package util;
 
+/** An either type. */
 public class Either<L, R> {
 
     private enum Kind { LEFT, RIGHT }

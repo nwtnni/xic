@@ -36,7 +36,6 @@ public abstract class ASTVisitor<T> {
         return null;
     }
 
-    // PA7
     public T visit(XiFn f) throws XicException {
         return null;
     }
@@ -110,11 +109,6 @@ public abstract class ASTVisitor<T> {
         return null;
     }
 
-    // PA7
-    public T visit(XiThis t) throws XicException {
-        return null;
-    }
-
     public T visit(XiUnary u) throws XicException {
         return null;
     }
@@ -149,6 +143,11 @@ public abstract class ASTVisitor<T> {
     }
 
     public T visit(XiString s) throws XicException {
+        return null;
+    }
+
+    // PA7
+    public T visit(XiThis t) throws XicException {
         return null;
     }
 

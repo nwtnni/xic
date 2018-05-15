@@ -11,20 +11,20 @@ import xic.XicException;
 // A Block of statements
 public class XiSeq extends Stmt {
 
-    public List<Node> statements;
+    public List<Node> stmts;
 
     public XiSeq(Location location, List<Node> statements) {
         this.location = location;
-        this.statements = statements;
+        this.stmts = statements;
     }
 
     public XiSeq(Location location, Node... statements) {
         this.location = location;
-        this.statements = new ArrayList<>(Arrays.asList(statements));
+        this.stmts = new ArrayList<>(Arrays.asList(statements));
     }
     
     public XiSeq(List<Node> statements) {
-        this.statements = statements;
+        this.stmts = statements;
     }
 
     public <T> T accept(ASTVisitor<T> v) throws XicException {

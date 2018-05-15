@@ -81,6 +81,7 @@ public class FnType extends ASTVisitor<Type> {
     /**
      * Visits a Fn and populates the fields of this FnType.
      */
+    @Override
     public Type visit(XiFn f) throws XicException {
         location = f.location;
         args = Type.listFromList(visit(f.args));
@@ -91,6 +92,7 @@ public class FnType extends ASTVisitor<Type> {
     /**
      * Visits a Declare node and returns its type.
      */
+    @Override
     public Type visit(XiDeclr d) throws XicException {
         return d.xiType.accept(this);
     }
@@ -98,6 +100,7 @@ public class FnType extends ASTVisitor<Type> {
     /**
      * Visits a XiType node and converts it to a Type.
      */
+    @Override
     public Type visit(XiType xt) {
         return new Type(xt);
     }

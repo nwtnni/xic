@@ -343,6 +343,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     /**
      * Returns a list of IRNodes from visiting a list of AST nodes.
      */
+    @Override
     public List<IRNode> visit(List<Node> nodes) throws XicException {
         List<IRNode> ir = new ArrayList<>();
         for (Node n : nodes) {
@@ -355,6 +356,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Top-level AST nodes
      */
 
+    @Override
     public IRNode visit(XiProgram p) throws XicException {
         IRCompUnit program = new IRCompUnit("program");
 
@@ -371,6 +373,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return program;
     }
 
+    @Override
     public IRNode visit(XiFn f) throws XicException {
         IRSeq body = (IRSeq) f.block.accept(this);
 
@@ -392,6 +395,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Statement nodes
      */
 
+    @Override
     public IRNode visit(XiAssign a) throws XicException {
         List<IRNode> lhs = visit(a.lhs);
         IRExpr rhs = (IRExpr) a.rhs.accept(this);
@@ -423,6 +427,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return stmts;
     }
 
+    @Override
     public IRNode visit(XiBlock b) throws XicException {
         IRSeq stmts = new IRSeq();
         for (Node n : b.statements) {
@@ -438,6 +443,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return stmts;
     }
 
+    @Override
     public IRNode visit(XiDeclr d) throws XicException {
         if (d.isUnderscore()) {
             return null;
@@ -456,6 +462,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return var;
     }
 
+    @Override
     public IRNode visit(XiIf i) throws XicException {
         IRSeq stmts = new IRSeq();
         IRLabel trueL = IRLabelFactory.generate("ifT");
@@ -474,6 +481,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return stmts;
     }
 
+    @Override
     public IRNode visit(XiReturn r) throws XicException {
         if (r.hasValues()) {
             List<IRExpr> values = new ArrayList<>();
@@ -485,6 +493,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return new IRReturn();
     }
 
+    @Override
     public IRNode visit(XiWhile w) throws XicException {
         IRSeq stmts = new IRSeq();
         IRLabel headL = IRLabelFactory.generate("while");
@@ -505,6 +514,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Expression nodes
      */
 
+    @Override
     public IRNode visit(XiBinary b) throws XicException {
         IRExpr left = (IRExpr) b.lhs.accept(this);
         IRExpr right = (IRExpr) b.rhs.accept(this);
@@ -570,6 +580,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return null;
     }
 
+    @Override
     public IRNode visit(XiCall c) throws XicException {
         if (c.id.equals("length")) {
             return length((IRExpr) c.args.get(0).accept(this));
@@ -588,6 +599,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      *  - containing the memory address for an array access on LHS.
      *  - the value at the memory address for an array access on RHS.
      */ 
+    @Override
     public IRNode visit(XiIndex i) throws XicException {
         IRSeq stmts = new IRSeq();
         IRLabel doneL = IRLabelFactory.generate("done");
@@ -622,6 +634,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         return new IRMem(new IRESeq(stmts, addr));
     }
 
+    @Override
     public IRNode visit(XiUnary u) throws XicException {
         IRExpr child = (IRExpr) u.child.accept(this);
         if (u.isLogical()) {
@@ -631,6 +644,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
     }
 
+    @Override
     public IRNode visit(XiVar v) throws XicException {
         return new IRTemp(v.id);
     }
@@ -639,27 +653,33 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Constant nodes
      */
 
+    @Override
     public IRNode visit(XiArray a) throws XicException {
         return alloc(visit(a.values));
     }
 
+    @Override
     public IRNode visit(XiBool b) throws XicException {
         long value = b.value ? 1 : 0;
         return new IRConst(value);
     }
 
+    @Override
     public IRNode visit(XiChar c) throws XicException {
         return new IRConst(c.value);
     }
 
+    @Override
     public IRNode visit(XiInt i) throws XicException {
         return new IRConst(i.value);
     }
 
+    @Override
     public IRNode visit(XiString s) throws XicException {
         return alloc(s);
     }
 
+    @Override
     public IRNode visit(XiType t) throws XicException {
         // Only allocate memory for special case of syntactic sugar
         // for array declarations with dimensions specified

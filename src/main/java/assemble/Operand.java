@@ -2,6 +2,7 @@ package assemble;
 
 import util.Either;
 
+/** Either type of possible operands. */
 public class Operand extends Either<Temp, Mem<Temp>> {
     private Operand(Temp left, Mem<Temp> right) {
         super(left, right);

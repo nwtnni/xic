@@ -103,7 +103,7 @@ non terminal    List<Node>      ProgramBody;                                    
 non terminal    Node            UseDeclr;
 
 // Global variables
-non terminal    XiGlobal        GlobalVar;                                      // PA7
+non terminal    Node            GlobalVar;                                      // PA7
 non terminal    Node            GVType;                                         // PA7
 non terminal    Node            GVTypeLiteral;                                  // PA7
 non terminal    List<Node>      GVTypeIndexList;                                // PA7
