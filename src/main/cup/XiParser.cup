@@ -187,6 +187,7 @@ precedence right        UMINUS, LNEG;
 precedence left         FUNCTIONCALL, LBRACK;   // LBRACK precedence is set to make ArrayCall precedence work
 precedence left         DOT;                    // PA7
 precedence left         NEW;                    // PA7
+// precedence left         LPAREN;                 // PA7
 
 
 /* --- Productions --- */
@@ -502,7 +503,7 @@ BlockStmts ::=
     :}
     ;
 
-// Single statement excluding break/return
+// Single statement excluding break/return TODO PA7
 SingleStmtNoReturn ::= 
     Assign:a OptSemicolon
     {:
@@ -513,10 +514,10 @@ SingleStmtNoReturn ::=
         // Procedure calls are syntactically the same as function calls
         RESULT = p;
     :}
-    | DotCall:d OptSemicolon
-    {:
-        RESULT = d;
-    :}
+//    | DotCall:d OptSemicolon
+//    {:
+//        RESULT = d;
+//    :}
     | IfStmt:i 
     {:
         RESULT = i;
@@ -590,7 +591,7 @@ ExtendedID ::=
     {:
         RESULT = new XiVar(idxleft, id);
     :}
-    | IDENTIFIER:id DotCall:rhs
+    | IDENTIFIER:id DOT DotCall:rhs
     {:
         Node dot = new XiDot(idxleft, new XiVar(idxleft, id), rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -599,7 +600,7 @@ ExtendedID ::=
         RESULT = dot;
 
     :}
-    | THIS:t DotCall:rhs
+    | THIS:t DOT DotCall:rhs
     {:
         Node dot = new XiDot(txleft, new XiThis(txleft, t), rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -607,7 +608,7 @@ ExtendedID ::=
         }
         RESULT = dot;
     :}
-    | NEW:n IDENTIFIER:id DotCall:rhs
+    | NEW:n IDENTIFIER:id DOT DotCall:rhs
     {:
         Node dot = new XiDot(nxleft, new XiNew(nxleft, id), rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -615,7 +616,7 @@ ExtendedID ::=
         }
         RESULT = dot;
     :}
-    | DotFnCall:call DotCall:rhs
+    | DotFnCall:call DOT DotCall:rhs
     {:
         Node dot = new XiDot(call.location, call, rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -623,7 +624,7 @@ ExtendedID ::=
         }
         RESULT = dot;
     :}
-    | DotArrayCall:a DotCall:rhs
+    | DotArrayCall:a DOT DotCall:rhs
     {:
         Node dot = new XiDot(a.location, a, rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -667,19 +668,19 @@ DotArrayCall ::=
     ;
 
 DotCall ::=
-    DOT IDENTIFIER:id
+    IDENTIFIER:id DOT
     {:
         RESULT = new ArrayList<>(Arrays.asList(new XiVar(idxleft, id)));
     :}
-    | DOT IDENTIFIER:id DotCall:rhs
+    | IDENTIFIER:id DOT DotCall:rhs
     {:
         RESULT = rhs.add(0, new XiDot(lhsxleft, lhs, new XiVar(id)));
     :}
-    | DOT DotFnCall:call DotCall:rhs
+    | DotFnCall:call DOT DotCall:rhs
     {:
         RESULT = rhs.add(0, new XiDot(lhsxleft, lhs, call));
     :}
-    | DOT DotArrayCall:a DotCall:rhs
+    | DotArrayCall:a DOT DotCall:rhs
     {:
         RESULT = rhs.add(0, new XiDot(lhsxleft, lhs, a));
     :}
