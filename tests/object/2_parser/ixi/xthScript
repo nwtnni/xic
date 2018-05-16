@@ -1,0 +1,15 @@
+xic ("Test oXi --parse") "--parse" {
+    bad_global01.ixi;
+    bad_global02.ixi;
+    
+    class01.ixi;
+    
+    empty.ixi;
+
+    funcs01.ixi;
+    
+    gen_interface01.ixi;
+
+    use01.ixi;
+    use02.ixi;
+}

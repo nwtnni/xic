@@ -1211,9 +1211,9 @@ Expr ::=
     // TODO: fix
     // Object expressions
     | Expr:e1 DOT Expr:e2
-       {:
+        {:
            RESULT = new XiDot(e1xleft, e1, e2);
-       :}
+        :}
     | NEW:n IDENTIFIER:id
         {:
             RESULT = new XiNew(nxleft, id);

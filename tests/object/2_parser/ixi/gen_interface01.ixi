@@ -1,0 +1,7 @@
+use STUFF
+
+class A {
+    foo()
+}
+
+bar(x:A):A

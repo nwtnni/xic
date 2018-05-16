@@ -65,6 +65,10 @@ xic ("Test oXi --parse") "--parse" {
   classVars06.xi;
   classVars07.xi;
   classVars08.xi;
+  classVars09.xi;
+  classVars10.xi;
+  classVars11.xi;
+  classVars12.xi;
   
   dot01.xi;
   dot02.xi;
@@ -88,6 +92,8 @@ xic ("Test oXi --parse") "--parse" {
   expr_dot10.xi;
   expr_dot11.xi;
   expr_dot12.xi;
+  expr_dot13.xi;
+  expr_dot14.xi;
 
   extends01.xi;
   extends02.xi;
