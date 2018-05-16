@@ -692,38 +692,38 @@ FArgs ::=
 // Array access for LHS of assignment
 ArrayCall ::= 
     FnCall:fc LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            XiIndex index = new XiIndex(fcxleft, fc, il.get(0));
-            for (int i = 1; i < il.size(); i++) {
-                Node n = il.get(i);
-                index = new XiIndex(n.location, index, n);
-            }
-            RESULT = index;
-        :}
+    {:
+        il.add(0, evalExpr(e));
+        XiIndex index = new XiIndex(fcxleft, fc, il.get(0));
+        for (int i = 1; i < il.size(); i++) {
+            Node n = il.get(i);
+            index = new XiIndex(n.location, index, n);
+        }
+        RESULT = index;
+    :}
     | ExtendedID:id LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            XiIndex index = new XiIndex(idxleft, id, il.get(0));
-            for (int i = 1; i < il.size(); i++) {
-                Node n = il.get(i);
-                index = new XiIndex(n.location, index, n);
-            }
-            RESULT = index;
-        :}
+    {:
+        il.add(0, evalExpr(e));
+        XiIndex index = new XiIndex(idxleft, id, il.get(0));
+        for (int i = 1; i < il.size(); i++) {
+            Node n = il.get(i);
+            index = new XiIndex(n.location, index, n);
+        }
+        RESULT = index;
+    :}
     ;
     // TODO: figure out how to put in dot access
 
 // List of expressions for indices in an array access
 IndexList ::=
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
     | LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            RESULT = il;
-        :}
+    {:
+        il.add(0, evalExpr(e));
+        RESULT = il;
+    :}
     ;
 
 
