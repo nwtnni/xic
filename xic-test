@@ -178,7 +178,7 @@ test_object_parse() {
 }
 
 test_object_parse_xi() {
-    xth/xth -compilerpath . -workpath tests/object/2_parser -testpath tests/object/2_parser tests/object/2_parser/xthScript     
+    xth/xth -compilerpath . -workpath tests/object/2_parser/xi -testpath tests/object/2_parser/xi tests/object/2_parser/xi/xthScript     
     printf "\n========================================\n\n" 
 }
 
