@@ -586,6 +586,10 @@ StmtNoReturn ::=
 
 // Top level dot access production
 ExtendedID ::=
+    // IDENTIFIER:id
+    // {:
+    //     RESULT = new XiVar(idxleft, id);
+    // :}
     IDENTIFIER:id DotCall:rhs
     {:
         if (rhs != null) {
@@ -1081,148 +1085,130 @@ WElseStmt ::=
 /* --- Expressions --- */
 
 Expr ::=
-    // Parens
+
     LPAREN Expr:e RPAREN
-    {:
-        RESULT = evalExpr(e);
-    :}
-
-    // Unary operators
+        {:
+            RESULT = evalExpr(e);
+        :}
     | LNEG:l Expr:e
-    {:
-        RESULT = new XiUnary(lxleft, XiUnary.Kind.LNEGATE, evalExpr(e));
-    :}
+        {:
+            RESULT = new XiUnary(lxleft, XiUnary.Kind.LNEGATE, evalExpr(e));
+        :}
     | MINUS:m Expr:e
-    {:
-        RESULT = evalNegExpr(mxleft, e);
-    :}
-    %prec UMINUS
-
-    // Binary operators
+        {:
+            RESULT = evalNegExpr(mxleft, e);
+        :}
+        %prec UMINUS
     | Expr:e1 MULT:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 HMULT:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.HIGH_TIMES, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.HIGH_TIMES, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 DIV:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.DIVISION, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.DIVISION, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 MOD:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.MODULO, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.MODULO, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 ADD:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.PLUS, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.PLUS, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 MINUS:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.MINUS, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.MINUS, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 LTE:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.LE, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.LE, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 LT:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.LT, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.LT, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 GTE:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.GE, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.GE, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 GT:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.GT, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.GT, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 EQEQ:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.EQ, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.EQ, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 NEQ:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.NE, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.NE, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 LAND:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.AND, evalExpr(e1), evalExpr(e2));
-    :}
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.AND, evalExpr(e1), evalExpr(e2));
+        :}
     | Expr:e1 LOR:b Expr:e2
-    {:
-        RESULT = new XiBinary(bxleft, XiBinary.Kind.OR, evalExpr(e1), evalExpr(e2));
-    :}
-
-    // Constants
-    | INTEGER:i
-    {:
-        RESULT = new TempInt(ixleft, i);
-    :}
-    | TRUE:t
-    {:
-        RESULT = new XiBool(txleft, t); 
-    :}
-    | FALSE:f
-    {:
-        RESULT = new XiBool(fxleft, f);
-    :}
-    | CHAR:c
-    {:
-        RESULT = new XiChar(cxleft, c.name, c.value);
-    :}
-    | NULL:n
-    {:
-        RESULT = new XiNull(nxleft);
-    :}
-    | STRING:s
-    {:
-        RESULT = new XiString(sxleft, s.name, s.value);
-    :}
-    | LBRACE ArrayElems:ae RBRACE
-    {:
-        RESULT = new XiArray(aexleft, ae);
-    :}
-
-    // Identifiers
-    | ExtendedID:id
-    {:
-        RESULT = id;
-    :}
-
-    // | THIS:t
-    // {:
-    //     RESULT = new XiThis(txleft);
-    // :}
-
-    // // New operator
-    // | NEW:n IDENTIFIER:id
-    // {:
-    //     RESULT = new XiNew(nxleft, id);
-    // :}
-
-    // Function calls
-    FnCall:call
-    {:
-        RESULT = call;
-    :}
-
-    // Array access
-    | Expr:e1 LBRACK Expr:e2 RBRACK
-    {:
-        XiIndex index = new XiIndex(e1xleft, evalExpr(e1), evalExpr(e2));
-        RESULT = index;
-    :}
-
-    // Length operator
+        {:
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.OR, evalExpr(e1), evalExpr(e2));
+        :}
+    | FnCall:call
+        {:
+            RESULT = call;
+        :}
     | LENGTH:l LPAREN Expr:e RPAREN
-    {:
-        RESULT = new XiCall(lxleft, new XiVar(lxleft, "length"), evalExpr(e));
-    :}
-    %prec FUNCTIONCALL
-
+        {:
+            RESULT = new XiCall(lxleft, new XiVar(lxleft, "length"), evalExpr(e));
+        :}
+        %prec FUNCTIONCALL
+    | Expr:e1 LBRACK Expr:e2 RBRACK
+        {:
+            XiIndex index = new XiIndex(e1xleft, evalExpr(e1), evalExpr(e2));
+            RESULT = index;
+        :}
+    | LBRACE ArrayElems:ae RBRACE
+        {:
+            RESULT = new XiArray(aexleft, ae);
+        :}
+    | TRUE:t
+        {:
+            RESULT = new XiBool(txleft, t); 
+        :}
+    | FALSE:f
+        {:
+            RESULT = new XiBool(fxleft, f);
+        :}
+    | INTEGER:i
+        {:
+            RESULT = new TempInt(ixleft, i);
+        :}
+    | CHAR:c
+        {:
+            RESULT = new XiChar(cxleft, c.name, c.value);
+        :}
+    | STRING:s
+        {:
+            RESULT = new XiString(sxleft, s.name, s.value);
+        :}
+    | NULL:n
+        {:
+            RESULT = new XiNull(nxleft);
+        :}
+    | ExtendedID:id
+        {:
+            RESULT = id;
+        :}
+    | Expr:e1 DOT Expr:e2
+        {:
+            RESULT = new XiDot(e1xleft, e1, e2);
+        :}
+    | NEW:n IDENTIFIER:id
+        {:
+            RESULT = new XiNew(nxleft, id);
+        :}
     ;
 
 // List of exprssions for array literals

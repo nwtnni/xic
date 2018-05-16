@@ -2,7 +2,7 @@
 // use conv
 
 foo() {
-    a:int = a + 1
+    a:int = a + b
     // b:int[2][3]
     // c:int[a[0]]
     // d:bool[bar()]["test"[bar()]]

@@ -81,8 +81,10 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
     public MultipleNode visit(XiFn f) throws XicException {
 
         // Rewrite block
-        MultipleNode n = f.block.accept(this);
-        f.block = n.getSingle();
+        if (f.isDef()) {
+            MultipleNode n = f.block.accept(this);
+            f.block = n.getSingle();
+        }
 
         return MultipleNode.of(f);
     }
