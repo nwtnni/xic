@@ -1,0 +1,1 @@
+(() ((A ((x int))) (B A ((foo () (int) ((return (. this x))))))))

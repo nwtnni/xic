@@ -1,0 +1,1 @@
+(() ((foo () (int) ((return (. (new A) x)))) (A ((x int)))))
