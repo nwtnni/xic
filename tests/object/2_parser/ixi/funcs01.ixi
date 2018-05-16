@@ -1,0 +1,17 @@
+// simple interface
+
+// procedures
+foo()
+foo(x: A)
+foo(x: A[])
+foo(x: A[][])
+foo(x: A, y: B)
+foo(a: A, b: B[])
+
+// functions
+bar() : A
+bar(x: A) : A, B
+bar(x: A[]) : B[]
+bar(x: A[][]) : A[][]
+bar(x: A, y: B) : A[], B[]
+bar(a: A, b: B[]) : A[][][]
