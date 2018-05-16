@@ -398,7 +398,10 @@ public class TypeChecker extends ASTVisitor<Type> {
             c.type = Type.INT;
             return c.type;
         } else {
-            FnType fn = fns.lookup(c.id);
+            // TODO: PA7 update for extended IDs
+            // Currently hacked for id instanceof XiVar
+
+            FnType fn = fns.lookup(((XiVar) c.id).id);
             if (fn == null) {
                 throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
             }

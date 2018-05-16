@@ -582,11 +582,14 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiCall c) throws XicException {
-        if (c.id.equals("length")) {
+        // Special case for length operator
+        if (c.id instanceof XiVar && ((XiVar) c.id).id.equals("length")) {
             return length((IRExpr) c.args.get(0).accept(this));
         }
 
-        IRName target = new IRName(context.lookup(c.id));
+        // TODO: PA7 update for extended IDs
+        // Currently hacked for id instanceof XiVar
+        IRName target = new IRName(context.lookup(((XiVar) c.id).id));
         List<IRExpr> argList = new ArrayList<>();
         for (Node n : c.getArgs()) {
             argList.add((IRExpr) n.accept(this));

@@ -235,7 +235,7 @@ public class Printer extends ASTVisitor<Void> {
     public Void visit(XiCall c) throws XicException{
         printer.startList();
 
-        printer.printAtom(c.id);
+        c.id.accept(this);
         visit(c.args);
 
         printer.endList();

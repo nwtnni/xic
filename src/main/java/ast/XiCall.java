@@ -9,16 +9,16 @@ import xic.XicException;
 // A Function Call
 public class XiCall extends Expr {
     
-    public String id;
+    public Node id;
     public List<Node> args; 
     
-    public XiCall(Location location, String id, List<Node> args) {
+    public XiCall(Location location, Node id, List<Node> args) {
         this.location = location;
         this.id = id; 
         this.args = args;
     }
 
-    public XiCall(Location location, String id, Node arg) {
+    public XiCall(Location location, Node id, Node arg) {
         this.location = location;
         this.id = id;
         this.args = new ArrayList<>();
