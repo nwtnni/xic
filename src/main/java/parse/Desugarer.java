@@ -64,11 +64,12 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
         List<Node> body = new ArrayList<>();
         for (Node declr : c.body) {
             MultipleNode n = declr.accept(this);
-            if (n.isSingle()) {
-                body.add(n.getSingle());
-            } else {
-                body.addAll(n.getMultiple());
-            }
+
+            n.match(
+                single -> body.add(single),
+                multiple -> body.addAll(multiple)
+            );
+
         }
         c.body = body;
 
