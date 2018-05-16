@@ -13,20 +13,25 @@ xic ("Test oXi --parse") "--parse" {
   bad_break06.xi;
   bad_break07.xi;
   bad_break08.xi;
+
   bad_class01.xi;
   bad_class02.xi;
   bad_class03.xi;
   bad_class04.xi;
   bad_class05.xi;
+  
   bad_dot01.xi;
   bad_dot02.xi;
   bad_dot03.xi;
+  
   bad_extends01.xi;
+  
   bad_global01.xi;
   bad_global02.xi;
   bad_global03.xi;
   bad_global04.xi;
   bad_global05.xi;
+  
   bad_new01.xi;
   bad_new02.xi;
   bad_new03.xi;
@@ -70,6 +75,19 @@ xic ("Test oXi --parse") "--parse" {
   dot07.xi;
   dot08.xi;
   dot09.xi;
+
+  expr_dot01.xi;
+  expr_dot02.xi;
+  expr_dot03.xi;
+  expr_dot04.xi;
+  expr_dot05.xi;
+  expr_dot06.xi;
+  expr_dot07.xi;
+  expr_dot08.xi;
+  expr_dot09.xi;
+  expr_dot10.xi;
+  expr_dot11.xi;
+  expr_dot12.xi;
 
   extends01.xi;
   extends02.xi;

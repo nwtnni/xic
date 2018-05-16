@@ -827,6 +827,23 @@ Assign ::=
     {:
         RESULT = new XiAssign(ilxleft, il, evalExpr(e));
     :}
+    | AssignTargetList:il EQ Expr:e1 COMMA Expr:e2 FExprList:fel // PA7 Language Extension
+    {:
+        fel.add(0, evalExpr(e2));
+        fel.add(0, evalExpr(e1));
+        
+        if(il.size() != fel.size()) {
+            throw new RuntimeException(); //TODO
+        }
+
+        List<Node> desugaredStmts = new ArrayList<>();
+
+        for(int i=0; i<il.size(); i++) {
+            desugaredStmts.add(new XiAssign(ilxleft, il.get(i), fel.get(i)));
+        }
+
+        RESULT = new XiSeq(ilxleft, desugaredStmts);
+    :}
     | SingleAssignTarget:san EQ Expr:e
     {:
         RESULT = new XiAssign(sanxleft, san, evalExpr(e));
@@ -1161,11 +1178,11 @@ Expr ::=
             RESULT = new XiArray(aexleft, ae);
         :}
 
-    // Object expressions
-    | Expr:e1 DOT Expr:e2
-        {:
-            RESULT = new XiDot(e1xleft, e1, e2);
-        :}
+    // Object expressions TODO
+//    | Expr:e1 DOT Expr:e2
+//        {:
+//            RESULT = new XiDot(e1xleft, e1, e2);
+//        :}
     | NEW:n IDENTIFIER:id
         {:
             RESULT = new XiNew(nxleft, id);
