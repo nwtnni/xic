@@ -1206,9 +1206,9 @@ Expr ::=
 
     // TODO: fix
     // Object expressions PA7
-    | Expr:e1 DOT ExtendedID:id
+    | Expr:e1 DOT IDENTIFIER:id
         {:
-            RESULT = new XiDot(e1xleft, evalExpr(e1), id);
+            RESULT = new XiDot(e1xleft, evalExpr(e1), new XiVar(idxleft, id));
         :}
     | Expr:e1 DOT ExtendedID:id LPAREN Args:args RPAREN
         {:

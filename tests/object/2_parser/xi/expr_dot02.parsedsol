@@ -1,1 +1,1 @@
-2:14 error: Unexpected token .
+(() ((foo () () ((= x ((. (+ 1 1) foo)))))))
