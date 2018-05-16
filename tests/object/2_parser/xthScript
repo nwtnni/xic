@@ -5,6 +5,33 @@ xic ("Test oXi --parse") "--parse" {
   class.xi;
   method.xi;
 
+  bad_break01.xi;
+  bad_break02.xi;
+  bad_break03.xi;
+  bad_break04.xi;
+  bad_break05.xi;
+  bad_break06.xi;
+  bad_break07.xi;
+  bad_break08.xi;
+  bad_class01.xi;
+  bad_class02.xi;
+  bad_class03.xi;
+  bad_class04.xi;
+  bad_class05.xi;
+  bad_dot01.xi;
+  bad_dot02.xi;
+  bad_dot03.xi;
+  bad_extends01.xi;
+  bad_global01.xi;
+  bad_global02.xi;
+  bad_global03.xi;
+  bad_global04.xi;
+  bad_global05.xi;
+  bad_new01.xi;
+  bad_new02.xi;
+  bad_new03.xi;
+  bad_new04.xi;
+
   break01.xi;
   break02.xi;
   break03.xi;

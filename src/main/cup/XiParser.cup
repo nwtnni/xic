@@ -161,6 +161,8 @@ non terminal    Node            WIfStmt, WElseStmt;                         // P
 // Identifiers
 non terminal    Node            ExtendedID;                                 // PA7
 non terminal    List<Node>      DotCall;                                    // PA7
+non terminal    Node            DotFnCall;                                  // PA7
+non terminal    Node            DotArrayCall;                               // PA7
 
 // Expressions
 non terminal    Node            Expr;
@@ -588,7 +590,7 @@ ExtendedID ::=
     {:
         RESULT = new XiVar(idxleft, id);
     :}
-    | IDENTIFIER:id DOT DotCall:rhs
+    | IDENTIFIER:id DotCall:rhs
     {:
         Node dot = new XiDot(idxleft, new XiVar(idxleft, id), rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -597,7 +599,7 @@ ExtendedID ::=
         RESULT = dot;
 
     :}
-    | THIS:t DOT DotCall:rhs
+    | THIS:t DotCall:rhs
     {:
         Node dot = new XiDot(txleft, new XiThis(txleft, t), rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -605,7 +607,7 @@ ExtendedID ::=
         }
         RESULT = dot;
     :}
-    | NEW:n IDENTIFIER:id DOT DotCall:rhs
+    | NEW:n IDENTIFIER:id DotCall:rhs
     {:
         Node dot = new XiDot(nxleft, new XiNew(nxleft, id), rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -613,7 +615,7 @@ ExtendedID ::=
         }
         RESULT = dot;
     :}
-    | FnCall:call DOT DotCall:rhs
+    | DotFnCall:call DotCall:rhs
     {:
         Node dot = new XiDot(call.location, call, rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -621,7 +623,7 @@ ExtendedID ::=
         }
         RESULT = dot;
     :}
-    | ArrayCall:a DOT DotCall:rhs
+    | DotArrayCall:a DotCall:rhs
     {:
         Node dot = new XiDot(a.location, a, rhs.get(0));
         for (int i = 1; i < rhs.size(); i++) {
@@ -631,20 +633,53 @@ ExtendedID ::=
     :}
     ;
 
+// Top level function call production
+DotFnCall ::= 
+    IDENTIFIER:id LPAREN Args:args RPAREN
+    {:
+        RESULT = new XiCall(idxleft, id, args);
+    :}
+    %prec FUNCTIONCALL
+    ;
+
+// Array access for LHS of assignment
+DotArrayCall ::= 
+    DotFnCall:fc LBRACK Expr:e RBRACK IndexList:il
+        {:
+            il.add(0, evalExpr(e));
+            XiIndex index = new XiIndex(fcxleft, fc, il.get(0));
+            for (int i = 1; i < il.size(); i++) {
+                Node n = il.get(i);
+                index = new XiIndex(n.location, index, n);
+            }
+            RESULT = index;
+        :}
+    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+        {:
+            il.add(0, evalExpr(e));
+            XiIndex index = new XiIndex(idxleft, id, il.get(0));
+            for (int i = 1; i < il.size(); i++) {
+                Node n = il.get(i);
+                index = new XiIndex(n.location, index, n);
+            }
+            RESULT = index;
+        :}
+    ;
+
 DotCall ::=
-    IDENTIFIER:id
+    DOT IDENTIFIER:id
     {:
         RESULT = new ArrayList<>(Arrays.asList(new XiVar(idxleft, id)));
     :}
-    | IDENTIFIER:id DOT DotCall:rhs
+    | DOT IDENTIFIER:id DotCall:rhs
     {:
         RESULT = rhs.add(0, new XiDot(lhsxleft, lhs, new XiVar(id)));
     :}
-    | FnCall:call DOT DotCall:rhs
+    | DOT DotFnCall:call DotCall:rhs
     {:
         RESULT = rhs.add(0, new XiDot(lhsxleft, lhs, call));
     :}
-    | ArrayCall:a DOT DotCall:rhs
+    | DOT DotArrayCall:a DotCall:rhs
     {:
         RESULT = rhs.add(0, new XiDot(lhsxleft, lhs, a));
     :}
