@@ -1179,10 +1179,10 @@ Expr ::=
         :}
 
     // Object expressions TODO
-//    | Expr:e1 DOT Expr:e2
-//        {:
-//            RESULT = new XiDot(e1xleft, e1, e2);
-//        :}
+    | Expr:e1 DOT Expr:e2
+        {:
+            RESULT = new XiDot(e1xleft, e1, e2);
+        :}
     | NEW:n IDENTIFIER:id
         {:
             RESULT = new XiNew(nxleft, id);
