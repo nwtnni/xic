@@ -864,7 +864,7 @@ Assign ::=
 
         List<Node> desugaredStmts = new ArrayList<>();
 
-        for(int i=0; i<il.size(); i++) {
+        for(int i = 0; i < il.size(); i++) {
             desugaredStmts.add(new XiAssign(ilxleft, il.get(i), fel.get(i)));
         }
 
@@ -1187,6 +1187,7 @@ Expr ::=
         {:
             RESULT = new XiCall(idxleft, id, args);
         :}
+        %prec FUNCTIONCALL
     | LENGTH:l LPAREN Expr:e RPAREN
         {:
             RESULT = new XiCall(lxleft, new XiVar(lxleft, "length"), evalExpr(e));
@@ -1208,11 +1209,15 @@ Expr ::=
     // Object expressions PA7
     | Expr:e1 DOT ExtendedID:id
         {:
+<<<<<<< HEAD
             RESULT = new XiDot(e1xleft, evalExpr(e1), id);
         :}
     | Expr:e1 DOT ExtendedID:id LPAREN Args:args RPAREN
         {:
             RESULT = new XiCall(e1xleft, new XiDot(e1xleft,evalExpr(e1),id), args);
+=======
+           RESULT = new XiDot(e1xleft, evalExpr(e1), evalExpr(e2));
+>>>>>>> some evalexpr wrapping
         :}
     | NEW:n IDENTIFIER:id
         {:
