@@ -1,3 +1,3 @@
 foo() {
-    a.b.c.d.foo()
+    y = x.foo1(1).foo2(2)
 }

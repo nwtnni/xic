@@ -94,6 +94,7 @@ xic ("Test oXi --parse") "--parse" {
   expr_dot12.xi;
   expr_dot13.xi;
   expr_dot14.xi;
+  expr_dot15.xi;
 
   extends01.xi;
   extends02.xi;

@@ -630,7 +630,6 @@ FnCall ::=
     {:
         RESULT = new XiCall(idxleft, id, args);
     :}
-    %prec FUNCTIONCALL
     | FnCall:call DOT IDENTIFIER:id2 DotCall:rhs LPAREN Args:args RPAREN
     {:
         XiDot dot = new XiDot(callxleft, call, new XiVar(id2xleft, id2));
@@ -639,7 +638,6 @@ FnCall ::=
         }
         RESULT = new XiCall(callxleft, dot, args);
     :}
-    %prec FUNCTIONCALL
     | ArrayCall:a DOT IDENTIFIER:id2 DotCall:rhs LPAREN Args:args RPAREN
     {:
         XiDot dot = new XiDot(axleft, a, new XiVar(id2xleft, id2));
@@ -648,7 +646,6 @@ FnCall ::=
         }
         RESULT = new XiCall(axleft, dot, args);
     :}
-    %prec FUNCTIONCALL
     | NEW:n IDENTIFIER:nid DOT IDENTIFIER:id2 DotCall:rhs LPAREN Args:args RPAREN
     {:
         XiDot dot = new XiDot(nxleft, new XiNew(nxleft, nid), new XiVar(id2xleft, id2));
@@ -657,7 +654,6 @@ FnCall ::=
         }
         RESULT = new XiCall(nxleft, dot, args);
     :}
-    %prec FUNCTIONCALL
     ;
 
 // List of expressions that are the arguments in a function call
@@ -1187,9 +1183,9 @@ Expr ::=
         :}
 
     // Function call
-    | FnCall:call
+    | ExtendedID:id LPAREN Args:args RPAREN
         {:
-            RESULT = call;
+            RESULT = new XiCall(idxleft, id, args);
         :}
     | LENGTH:l LPAREN Expr:e RPAREN
         {:
@@ -1209,10 +1205,14 @@ Expr ::=
         :}
 
     // TODO: fix
-    // Object expressions
-    | Expr:e1 DOT Expr:e2
+    // Object expressions PA7
+    | Expr:e1 DOT ExtendedID:id
         {:
-           RESULT = new XiDot(e1xleft, e1, e2);
+            RESULT = new XiDot(e1xleft, evalExpr(e1), id);
+        :}
+    | Expr:e1 DOT ExtendedID:id LPAREN Args:args RPAREN
+        {:
+            RESULT = new XiCall(e1xleft, new XiDot(e1xleft,evalExpr(e1),id), args);
         :}
     | NEW:n IDENTIFIER:id
         {:
