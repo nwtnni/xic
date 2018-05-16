@@ -3,6 +3,10 @@ package util;
 /** An either type. */
 public class Either<L, R> {
 
+    public static interface Matcher<S, T> {
+        public T match(S side);
+    }
+
     private enum Kind { LEFT, RIGHT }
 
     private Kind kind;
@@ -39,6 +43,17 @@ public class Either<L, R> {
     public R getRight() {
         assert kind == Kind.RIGHT;
         return right;
+    }
+
+    public <T> T match(Matcher<L, T> l, Matcher<R, T> r) {
+        switch (kind) {
+        case LEFT:
+            return l.match(left);
+        case RIGHT:
+            return r.match(right);
+        }
+        assert false;
+        return null;
     }
 
     @Override
