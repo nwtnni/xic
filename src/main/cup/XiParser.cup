@@ -581,7 +581,7 @@ StmtNoReturn ::=
 
 /* --- Identifiers with dot access --- */
 
-// Top level dot access production
+// Top level dot access production PA7
 ExtendedID ::=
     IDENTIFIER:id
     {:
@@ -624,7 +624,7 @@ DotCall ::=
 /* --- Function calls --- */
 // Parser does not differentiate between procedures and functions
 
-// Top level function call production
+// Top level function call production PA7
 FnCall ::= 
     ExtendedID:id LPAREN Args:args RPAREN
     {:
