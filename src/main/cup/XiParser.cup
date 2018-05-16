@@ -701,7 +701,6 @@ ArrayCall ::=
         RESULT = index;
     :}
     ;
-    // TODO: figure out how to put in dot access
 
 // List of expressions for indices in an array access
 IndexList ::=
@@ -833,6 +832,7 @@ Assign ::=
         RESULT = new XiAssign(sanxleft, san, evalExpr(e));
     :}
     ;
+    // TODO: add language extension with XiSeq (will be desugared)
 
 // LHS of multiple assignment
 AssignTargetList ::= 
@@ -865,7 +865,6 @@ MultiAssignTarget ::=
         RESULT = v;
     :}
     ;
-    // TODO: language extension
 
 // LHS of single assignment
 SingleAssignTarget ::= 
@@ -886,7 +885,6 @@ SingleAssignTarget ::=
         RESULT = v;
     :}
     ;
-    // TODO: extend for dot targets
 
 // Variable declaration on LHS of assignment
 AssignVarDeclr ::= 
@@ -1012,7 +1010,6 @@ WSingleStmtNoReturn ::=
         RESULT = v;
     :}
     ;
-// TODO: fix top level dot
 
 // While: List of statements without break/return
 WStmtListNoReturn ::= 
@@ -1039,7 +1036,6 @@ WStmtNoReturn ::=
         RESULT = ssnr;
     :}
     ;
-
 
 // While: if statement
 WIfStmt ::= 
