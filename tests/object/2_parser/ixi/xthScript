@@ -1,4 +1,6 @@
 xic ("Test oXi --parse") "--parse" {
+    bad_class01.ixi;
+
     bad_global01.ixi;
     bad_global02.ixi;
     

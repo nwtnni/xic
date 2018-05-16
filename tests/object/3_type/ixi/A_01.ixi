@@ -1,0 +1,5 @@
+class A {
+    foo()
+    foo1(x:A)
+    foo2(x:A):A
+}
