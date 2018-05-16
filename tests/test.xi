@@ -1,3 +1,11 @@
-foo() {
-    y = x.foo1(1).foo2(2)
+foo():int {
+    return new A.foo()
+}
+
+class A {
+    x:int
+
+    foo():int {
+        return x
+    }
 }
