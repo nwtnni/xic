@@ -1,20 +1,13 @@
-use io
-use conv
+// use io
+// use conv
 
-main(args:int[][]) {
-    a:int[5]
-    b:int[] = "Hello"
-
-    x:int = 0
-    while (x < length(a)) {
-        a[x] = b[x]
-        printInt(a[x])
-        x = x + 1
-    }
-    println(a)
-    println(b)
+foo() {
+    a:int = a + 1
+    // b:int[2][3]
+    // c:int[a[0]]
+    // d:bool[bar()]["test"[bar()]]
 }
 
-printInt(x:int) {
-    println(unparseInt(x))
+bar() : int {
+    return 1
 }

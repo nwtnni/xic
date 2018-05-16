@@ -185,6 +185,7 @@ precedence right        UMINUS, LNEG;
 precedence left         FUNCTIONCALL, LBRACK;   // LBRACK precedence is set to make ArrayCall precedence work
 precedence left         DOT;                    // PA7
 precedence left         NEW;                    // PA7
+
 // precedence left         LPAREN;                 // PA7
 
 
@@ -581,14 +582,10 @@ StmtNoReturn ::=
     ;
 
 
-/* --- Dot accesses --- */
+/* --- Identifiers with dot access --- */
 
 // Top level dot access production
 ExtendedID ::=
-    // IDENTIFIER:id
-    // {:
-    //     RESULT = new XiVar(idxleft, id);
-    // :}
     IDENTIFIER:id DotCall:rhs
     {:
         if (rhs != null) {
@@ -607,40 +604,42 @@ ExtendedID ::=
         }
         RESULT = rhs;
     :}
-    | NEW:n IDENTIFIER:id DotCall:rhs
-    {:
-        if (rhs != null) {
-            rhs = new XiDot(nxleft, new XiNew(nxleft, id), rhs);
-        } else {
-            rhs = new XiNew(nxleft, id);
-        }
-        RESULT = rhs;
-    :}
-    | FnCall:call DotCall:rhs
-    {:
-        if (rhs != null) {
-            rhs = new XiDot(call.location, call, rhs);
-        } else {
-            rhs = call;
-        }
-        RESULT = rhs;
-    :}
-    | ArrayCall:a DotCall:rhs
-    {:
-        if (rhs != null) {
-            rhs = new XiDot(a.location, a, rhs);
-        } else {
-            rhs = a;
-        }
-        RESULT = rhs;
-    :}
+
+    // TODO: move these outside of extended identifier
+    // | NEW:n IDENTIFIER:id DotCall:rhs
+    // {:
+    //     if (rhs != null) {
+    //         rhs = new XiDot(nxleft, new XiNew(nxleft, id), rhs);
+    //     } else {
+    //         rhs = new XiNew(nxleft, id);
+    //     }
+    //     RESULT = rhs;
+    // :}
+    // | FnCall:call DotCall:rhs
+    // {:
+    //     if (rhs != null) {
+    //         rhs = new XiDot(call.location, call, rhs);
+    //     } else {
+    //         rhs = call;
+    //     }
+    //     RESULT = rhs;
+    // :}
+    // | ArrayCall:a DotCall:rhs
+    // {:
+    //     if (rhs != null) {
+    //         rhs = new XiDot(a.location, a, rhs);
+    //     } else {
+    //         rhs = a;
+    //     }
+    //     RESULT = rhs;
+    // :}
     ;
 
 DotCall ::=
     {:
         RESULT = null;
     :}
-    DOT IDENTIFIER:id DotCall:rhs
+    | DOT IDENTIFIER:id DotCall:rhs
     {:
         if (rhs != null) {
             rhs = new XiDot(idxleft, new XiVar(idxleft, id), rhs);
@@ -693,7 +692,7 @@ FArgs ::=
     ;
 
 
-/* --- Array accesses for LHS */
+/* --- Array accesses for LHS --- */
 
 // Array access for LHS of assignment
 ArrayCall ::= 
@@ -1081,10 +1080,15 @@ WElseStmt ::=
 
 /* --- Expressions --- */
 
-
 Expr ::=
+    // Parens
+    LPAREN Expr:e RPAREN
+    {:
+        RESULT = evalExpr(e);
+    :}
+
     // Unary operators
-    LNEG:l Expr:e
+    | LNEG:l Expr:e
     {:
         RESULT = new XiUnary(lxleft, XiUnary.Kind.LNEGATE, evalExpr(e));
     :}
@@ -1187,16 +1191,17 @@ Expr ::=
     {:
         RESULT = id;
     :}
-    | THIS:t
-    {:
-        RESULT = new XiThis(txleft);
-    :}
 
-    // New operator
-    | NEW:n IDENTIFIER:id
-    {:
-        RESULT = new XiNew(nxleft, id);
-    :}
+    // | THIS:t
+    // {:
+    //     RESULT = new XiThis(txleft);
+    // :}
+
+    // // New operator
+    // | NEW:n IDENTIFIER:id
+    // {:
+    //     RESULT = new XiNew(nxleft, id);
+    // :}
 
     // Function calls
     FnCall:call
@@ -1218,11 +1223,6 @@ Expr ::=
     :}
     %prec FUNCTIONCALL
 
-    // Parens
-    | LPAREN Expr:e RPAREN
-    {:
-        RESULT = evalExpr(e);
-    :}
     ;
 
 // List of exprssions for array literals
