@@ -314,6 +314,8 @@ GVTypeIndexList ::=
         RESULT = list;
     :}
     ;
+    // TODO: check if a:int[] okay for global
+    // TODO: check multiple declaration at global level type restrictions
 
 // Valid initializer for global array dimensions are integers
 // and other global identifiers (checked at typechecking)
@@ -513,10 +515,6 @@ SingleStmtNoReturn ::=
         // Procedure calls are syntactically the same as function calls
         RESULT = p;
     :}
-//    | DotCall:d OptSemicolon
-//    {:
-//        RESULT = d;
-//    :}
     | IfStmt:i 
     {:
         RESULT = i;
@@ -530,7 +528,6 @@ SingleStmtNoReturn ::=
         RESULT = v;
     :}
     ;
-// TODO: fix top level dot
 
 // Expression list for returns
 ExprList ::= 
@@ -586,10 +583,6 @@ StmtNoReturn ::=
 
 // Top level dot access production
 ExtendedID ::=
-    // IDENTIFIER:id
-    // {:
-    //     RESULT = new XiVar(idxleft, id);
-    // :}
     IDENTIFIER:id DotCall:rhs
     {:
         if (rhs != null) {
@@ -608,35 +601,6 @@ ExtendedID ::=
         }
         RESULT = rhs;
     :}
-
-    // TODO: move these outside of extended identifier
-    // | NEW:n IDENTIFIER:id DotCall:rhs
-    // {:
-    //     if (rhs != null) {
-    //         rhs = new XiDot(nxleft, new XiNew(nxleft, id), rhs);
-    //     } else {
-    //         rhs = new XiNew(nxleft, id);
-    //     }
-    //     RESULT = rhs;
-    // :}
-    // | FnCall:call DotCall:rhs
-    // {:
-    //     if (rhs != null) {
-    //         rhs = new XiDot(call.location, call, rhs);
-    //     } else {
-    //         rhs = call;
-    //     }
-    //     RESULT = rhs;
-    // :}
-    // | ArrayCall:a DotCall:rhs
-    // {:
-    //     if (rhs != null) {
-    //         rhs = new XiDot(a.location, a, rhs);
-    //     } else {
-    //         rhs = a;
-    //     }
-    //     RESULT = rhs;
-    // :}
     ;
 
 DotCall ::=
@@ -665,9 +629,14 @@ FnCall ::=
         RESULT = new XiCall(idxleft, id, args);
     :}
     %prec FUNCTIONCALL
-    | FnCall:call LPAREN Args:args RPAREN
+    | FnCall:call DOT ExtendedID:id LPAREN Args:args RPAREN
     {:
-        RESULT = new XiCall(callxleft, call, args);
+        RESULT = new XiCall(callxleft, new XiDot(callxleft, call, id), args);
+    :}
+    %prec FUNCTIONCALL
+    | ArrayCall:a DOT ExtendedID:id LPAREN Args:args RPAREN
+    {:
+        RESULT = new XiCall(axleft, new XiDot(axleft, a, id), args);
     :}
     %prec FUNCTIONCALL
     ;
@@ -698,7 +667,7 @@ FArgs ::=
 
 /* --- Array accesses for LHS --- */
 
-// Array access for LHS of assignment
+// Array access top level production
 ArrayCall ::= 
     ExtendedID:id LBRACK Expr:e RBRACK IndexList:il
     {:
@@ -714,6 +683,17 @@ ArrayCall ::=
     {:
         il.add(0, evalExpr(e));
         XiIndex index = new XiIndex(fcxleft, fc, il.get(0));
+        for (int i = 1; i < il.size(); i++) {
+            Node n = il.get(i);
+            index = new XiIndex(n.location, index, n);
+        }
+        RESULT = index;
+    :}
+
+    | ArrayCall:a DOT ExtendedID:id LBRACK Expr:e RBRACK IndexList:il
+    {:
+        il.add(0, evalExpr(e));
+        XiIndex index = new XiIndex(axleft, new XiDot(axleft, a, id), il.get(0));
         for (int i = 1; i < il.size(); i++) {
             Node n = il.get(i);
             index = new XiIndex(n.location, index, n);
@@ -744,7 +724,7 @@ VarDeclr ::=
     {:
         RESULT = new XiDeclr(idxleft, id, type);
     :}
-    | VarDeclrList:list COLON VarType:type
+    | VarDeclrList:list COLON AssignVarType:type
     {:
         for (Node n : list) {
             XiDeclr d = (XiDeclr) n;
@@ -753,6 +733,9 @@ VarDeclr ::=
         RESULT = new XiSeq(listxleft, list);
     :}
     ;
+    // TODO: check multiple declaration type restriction
+    // e.g. a, b:int[5] allowed?
+    // currently disallowing
 
 // For multiple variable declarations of the same type
 VarDeclrList ::=
@@ -778,7 +761,7 @@ FVarDeclrList ::=
 VarType ::= 
     KeyType:type VarTypeIndexList:vtil
     {:
-        for (int i=vtil.size() - 1; i >= 0; i--) {
+        for (int i = vtil.size() - 1; i >= 0; i--) {
             if (vtil.get(i) == null) {
                 type = new XiType(typexleft,type);
             } else {
@@ -918,7 +901,7 @@ AssignVarDeclr ::=
 AssignVarType ::=
     KeyType:type VarTypeIndexListNoExpr:vtilne
     {:
-        for (int i = vtilne.size()-1; i >= 0; i--) {
+        for (int i = vtilne.size() - 1; i >= 0; i--) {
             if (vtilne.get(i) == null) {
                 type = new XiType(typexleft, type);
             } else {
@@ -1085,11 +1068,13 @@ WElseStmt ::=
 /* --- Expressions --- */
 
 Expr ::=
-
+    // Parens
     LPAREN Expr:e RPAREN
         {:
             RESULT = evalExpr(e);
         :}
+    
+    // Unary
     | LNEG:l Expr:e
         {:
             RESULT = new XiUnary(lxleft, XiUnary.Kind.LNEGATE, evalExpr(e));
@@ -1099,6 +1084,8 @@ Expr ::=
             RESULT = evalNegExpr(mxleft, e);
         :}
         %prec UMINUS
+
+    // Binary
     | Expr:e1 MULT:b Expr:e2
         {:
             RESULT = new XiBinary(bxleft, XiBinary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
@@ -1155,6 +1142,8 @@ Expr ::=
         {:
             RESULT = new XiBinary(bxleft, XiBinary.Kind.OR, evalExpr(e1), evalExpr(e2));
         :}
+
+    // Function call
     | FnCall:call
         {:
             RESULT = call;
@@ -1164,6 +1153,8 @@ Expr ::=
             RESULT = new XiCall(lxleft, new XiVar(lxleft, "length"), evalExpr(e));
         :}
         %prec FUNCTIONCALL
+
+    // Arrays
     | Expr:e1 LBRACK Expr:e2 RBRACK
         {:
             XiIndex index = new XiIndex(e1xleft, evalExpr(e1), evalExpr(e2));
@@ -1173,6 +1164,18 @@ Expr ::=
         {:
             RESULT = new XiArray(aexleft, ae);
         :}
+
+    // Object expressions
+    | Expr:e1 DOT Expr:e2
+        {:
+            RESULT = new XiDot(e1xleft, e1, e2);
+        :}
+    | NEW:n IDENTIFIER:id
+        {:
+            RESULT = new XiNew(nxleft, id);
+        :}
+
+    // Constants
     | TRUE:t
         {:
             RESULT = new XiBool(txleft, t); 
@@ -1197,17 +1200,11 @@ Expr ::=
         {:
             RESULT = new XiNull(nxleft);
         :}
+
+    // Identifiers
     | ExtendedID:id
         {:
             RESULT = id;
-        :}
-    | Expr:e1 DOT Expr:e2
-        {:
-            RESULT = new XiDot(e1xleft, e1, e2);
-        :}
-    | NEW:n IDENTIFIER:id
-        {:
-            RESULT = new XiNew(nxleft, id);
         :}
     ;
 
