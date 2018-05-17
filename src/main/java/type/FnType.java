@@ -6,7 +6,7 @@ import java.util.ArrayList;
 /**
  * Represents a function type in the OXi type system.
  */
-public class FnType extends Type {
+public class FnType extends GlobalType {
 
     protected List<Type> args;
     protected List<Type> returns;

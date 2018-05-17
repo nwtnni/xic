@@ -1,11 +1,5 @@
 package type;
 
-public class GlobalContext {
+import util.Context;
 
-    private
-
-
-
-
-
-}
+public class GlobalContext extends Context<String, GlobalContext> {}
