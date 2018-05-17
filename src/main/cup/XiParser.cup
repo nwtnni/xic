@@ -309,11 +309,6 @@ GVTypeIndexList ::=
         list.add(0, index);
         RESULT = list;
     :}
-    | LBRACK RBRACK VarTypeIndexListNoExpr:list
-    {:
-        list.add(0, null);
-        RESULT = list;
-    :}
     ;
     // TODO: check if a:int[] okay for global
     // TODO: check multiple declaration at global level type restrictions
@@ -811,7 +806,8 @@ FVarDeclrList ::=
     :}
     | COMMA IDENTIFIER:id FVarDeclrList:idList
     {:
-        idList.add(new XiDeclr(idxleft, id, null));
+        idList.add(0, new XiDeclr(idxleft, id, null));
+        RESULT = idList;
     :}
     ;
 

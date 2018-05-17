@@ -1,1 +1,1 @@
-(() ((x ([] int)) (foo () (([] int)) ((return x)))))
+1:7 error: Unexpected token ]
