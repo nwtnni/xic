@@ -5,7 +5,7 @@ import xic.XicInternalException;
 /**
  * Singleton class representing the polymorphic, length-zero array type.
  */
-public class PolyType extends Type {
+public class PolyType extends GlobalType {
 
     public static PolyType POLY = new PolyType();
 

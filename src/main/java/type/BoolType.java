@@ -3,7 +3,7 @@ package type;
 /**
  * Singleton class representing a primitive boolean type in the OXi type system.
  */
-public class BoolType extends Type {
+public class BoolType extends GlobalType {
 
     public static final BoolType BOOL = new BoolType();
 
