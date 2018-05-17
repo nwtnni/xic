@@ -8,20 +8,19 @@ import java.util.ArrayList;
  */
 public class FnType extends Type {
 
-    private List<Type> args;
-    private List<Type> returns;
+    protected List<Type> args;
+    protected List<Type> returns;
 
     public FnType(List<Type> args, List<Type> returns) {
-        this.args = args;
-        this.returns = returns;
+        this.args = new ArrayList<>(args);
+        this.returns = new ArrayList<>(returns);
     }
 
-    public List<Type> getArgs() {
-        return new ArrayList<>(args);
-    }
+    @Override
+    public boolean isFn() { return true; }
 
-    public List<Type> getReturns() {
-        return new ArrayList<>(returns);
-    }
+    public List<Type> getArgs() { return new ArrayList<>(args); }
+
+    public List<Type> getReturns() { return new ArrayList<>(returns); }
 
 }

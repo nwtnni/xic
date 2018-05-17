@@ -23,6 +23,10 @@ public abstract class Type {
 
     public boolean isClass() { return false; }
 
+    public boolean isFn() { return false; }
+    
+    public boolean isMethod() { return false; }
+
     //
     // Type Constructors
     //
