@@ -1,3 +1,7 @@
 xic ("Test oXi --parse") "--parse" {
-
+    bad_func_lang_ext01.xi;
+    bad_method_lang_ext01.xi;
+    
+    func_lang_ext01.xi;
+    method_lang_ext01.xi;
 }

@@ -173,6 +173,7 @@ test_object_lex() {
 }
 
 test_object_parse() {
+  test_object_parse_language_extension
   test_object_parse_xi
   test_object_parse_ixi
 }
@@ -184,6 +185,11 @@ test_object_parse_xi() {
 
 test_object_parse_ixi() {
     xth/xth -compilerpath . -workpath tests/object/2_parser/ixi -testpath tests/object/2_parser/ixi tests/object/2_parser/ixi/xthScript     
+    printf "\n========================================\n\n"   
+}
+
+test_object_parse_language_extension() {
+    xth/xth -compilerpath . -workpath tests/object/2_parser/language_extension -testpath tests/object/2_parser/language_extension tests/object/2_parser/language_extension/xthScript     
     printf "\n========================================\n\n"   
 }
 
@@ -324,6 +330,9 @@ else
       ;;
   opixi)
       test_object_parse_ixi
+      ;;
+  opext)
+      test_object_parse_language_extension
       ;;
   ot)
       test_object_typecheck
