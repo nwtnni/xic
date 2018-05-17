@@ -8,18 +8,28 @@ xic ("Test oXi --typecheck") "--typecheck" {
   bad_assign_new4.xi;
 
   bad_div_obj1.xi;
+
+  bad_func_multi_return01.xi;
+
   bad_hmult_obj1.xi;
+
+  bad_method_multi_return01.xi;
+
   bad_mod_obj1.xi;
   bad_mult_obj1.xi;
   bad_sub_obj1.xi;
 
   bad_obj_array1.xi;
 
+  func_mult_return01.xi;
+
   method1.xi;
   method2.xi;
   method3.xi;
   method4.xi;
   method5.xi;
+
+  method_multi_return01.xi;
 
   method_override1.xi;
   method_override2.xi;
