@@ -33,6 +33,7 @@ xic ("Test oXi --parse") "--parse" {
   bad_global04.xi;
   bad_global05.xi;
   bad_global06.xi;
+  bad_global07.xi;
   
   bad_new01.xi;
   bad_new02.xi;
