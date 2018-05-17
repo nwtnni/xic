@@ -1,0 +1,3 @@
+foo() {
+    new A.foo()
+}

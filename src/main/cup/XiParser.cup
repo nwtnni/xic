@@ -130,6 +130,7 @@ non terminal    List<Node>      StmtListNoReturn;
 
 // Function calls
 non terminal    Node            FnCall;
+non terminal    Node            GenName;                                        // PA7 (Generic name to call a function or array on)
 non terminal    List<Node>      Args, FArgs;
 
 // Variable declarations
@@ -626,33 +627,69 @@ DotCall ::=
 
 // Top level function call production PA7
 FnCall ::= 
-    ExtendedID:id LPAREN Args:args RPAREN
+    IDENTIFIER:id LPAREN Args:args RPAREN
     {:
-        RESULT = new XiCall(idxleft, id, args);
+        RESULT = new XiCall(idxleft, new XiVar(idxleft, id), args);
     :}
-    | FnCall:call DOT IDENTIFIER:id2 DotCall:rhs LPAREN Args:args RPAREN
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN
     {:
-        XiDot dot = new XiDot(callxleft, call, new XiVar(id2xleft, id2));
-        for (Node id : rhs) {
-            dot = new XiDot(id.location, dot, id);
-        }
-        RESULT = new XiCall(callxleft, dot, args);
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        RESULT = new XiCall(gnxleft, dot, args);
     :}
-    | ArrayCall:a DOT IDENTIFIER:id2 DotCall:rhs LPAREN Args:args RPAREN
+    ;
+
+GenName ::=
+    IDENTIFIER:id
     {:
-        XiDot dot = new XiDot(axleft, a, new XiVar(id2xleft, id2));
-        for (Node id : rhs) {
-            dot = new XiDot(id.location, dot, id);
-        }
-        RESULT = new XiCall(axleft, dot, args);
+        RESULT = new XiVar(idxleft, id);
     :}
-    | NEW:n IDENTIFIER:nid DOT IDENTIFIER:id2 DotCall:rhs LPAREN Args:args RPAREN
+    | IDENTIFIER:id LPAREN Args:args RPAREN
     {:
-        XiDot dot = new XiDot(nxleft, new XiNew(nxleft, nid), new XiVar(id2xleft, id2));
-        for (Node id : rhs) {
-            dot = new XiDot(id.location, dot, id);
+        RESULT = new XiCall(idxleft, new XiVar(idxleft, id), args);
+    :}
+    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiIndex index = new XiIndex(idxleft, new XiVar(idxleft, id), evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
         }
-        RESULT = new XiCall(nxleft, dot, args);
+        RESULT = index;
+    :}
+    | NEW:n IDENTIFIER:id
+    {:
+        RESULT = new XiNew(nxleft, id);
+    :}
+    | THIS:t
+    {:
+        RESULT = new XiThis(txleft);
+    :}
+    | GenName:gn DOT IDENTIFIER:id
+    {:
+        RESULT = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+    :}
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        RESULT = new XiCall(gnxleft, dot, args);
+    :}
+    | GenName:gn DOT IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft,id));
+        XiIndex index = new XiIndex(idxleft, dot, evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
+    :}
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft,id));
+        XiCall call = new XiCall(gnxleft, dot, args);
+        XiIndex index = new XiIndex(idxleft, call, evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
     :}
     ;
 
@@ -684,49 +721,45 @@ FArgs ::=
 
 // Array access top level production
 ArrayCall ::= 
-    ExtendedID:id LBRACK Expr:e RBRACK IndexList:il
+    IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
     {:
-        XiIndex index = new XiIndex(idxleft, id, evalExpr(e));
+        XiIndex index = new XiIndex(idxleft, new XiVar(idxleft, id), evalExpr(e));
         for (Node i : il) {
             index = new XiIndex(i.location, index, i);
         }
         RESULT = index;
     :}
-    | FnCall:call LBRACK Expr:e RBRACK IndexList:il
+    | IDENTIFIER:id LPAREN Args:args RPAREN LBRACK Expr:e RBRACK IndexList:il
     {:
-        XiIndex index = new XiIndex(callxleft, call, evalExpr(e));
+        XiIndex index = new XiIndex(idxleft, new XiCall(idxleft, new XiVar(idxleft, id), args), evalExpr(e));
         for (Node i : il) {
             index = new XiIndex(i.location, index, i);
         }
         RESULT = index;
     :}
-    | ArrayCall:a DOT IDENTIFIER:id2 DotCall:rhs LBRACK Expr:e RBRACK IndexList:il
+    | GenName:gn DOT IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
     {:
-        XiDot dot = new XiDot(axleft, a, new XiVar(id2xleft, id2));
-        for (Node id : rhs) {
-            dot = new XiDot(dot.location, dot, id);
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        XiIndex index = new XiIndex(idxleft, dot, evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
         }
+        RESULT = index;
 
-        XiIndex index = new XiIndex(axleft, dot, evalExpr(e));
-        for (Node i : il) {
-            index = new XiIndex(i.location, index, i);
-        }
-        RESULT = index;
     :}
-    | NEW:n IDENTIFIER:nid DOT IDENTIFIER:id2 DotCall:rhs LBRACK Expr:e RBRACK IndexList:il
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN LBRACK Expr:e RBRACK IndexList:il
     {:
-        XiDot dot = new XiDot(nxleft, new XiNew(nxleft, nid), new XiVar(id2xleft, id2));
-        for (Node id : rhs) {
-            dot = new XiDot(id.location, dot, id);
-        }
-
-        XiIndex index = new XiIndex(nxleft, dot, evalExpr(e));
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        XiCall call = new XiCall(gnxleft, dot, args);
+        XiIndex index = new XiIndex(idxleft, call, evalExpr(e));
         for (Node i : il) {
             index = new XiIndex(i.location, index, i);
         }
         RESULT = index;
     :}
     ;
+
+
 
 // List of expressions for indices in an array access
 IndexList ::=
@@ -915,9 +948,13 @@ SingleAssignTarget ::=
     {:
         RESULT = new XiDeclr(uxleft);
     :}
-    | ExtendedID:id
+    | IDENTIFIER:id
     {:
-        RESULT = id;
+        RESULT = new XiVar(idxleft, id);
+    :}
+    | GenName:gn DOT IDENTIFIER:id
+    {:
+        RESULT = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
     :}
     | ArrayCall:a
     {:

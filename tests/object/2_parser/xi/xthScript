@@ -79,6 +79,7 @@ xic ("Test oXi --parse") "--parse" {
   dot07.xi;
   dot08.xi;
   dot09.xi;
+  dot10.xi;
 
   expr_dot01.xi;
   expr_dot02.xi;
