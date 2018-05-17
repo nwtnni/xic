@@ -390,7 +390,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiCall c) throws XicException {
-        if (c.id.equals("length")) {
+        if (((XiVar) c.id).id.equals("length")) {
             Type arg = c.args.get(0).accept(this);
             if (!arg.isArray()) {
                 throw new TypeException(Kind.NOT_AN_ARRAY, c.location);

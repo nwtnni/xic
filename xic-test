@@ -194,7 +194,23 @@ test_object_parse_language_extension() {
 }
 
 test_object_typecheck() {
-    xth/xth -compilerpath . -workpath tests/object/3_type -testpath tests/object/3_type tests/object/3_type/xthScript     
+    test_object_typecheck_language_extension
+    test_object_typecheck_xi
+    test_object_typecheck_ixi
+}
+
+test_object_typecheck_xi() {
+    xth/xth -compilerpath . -workpath tests/object/3_type/xi -testpath tests/object/3_type/xi tests/object/3_type/xi/xthScript
+    printf "\n========================================\n\n" 
+}
+
+test_object_typecheck_ixi() {
+    xth/xth -compilerpath . -workpath tests/object/3_type/ixi -testpath tests/object/3_type/ixi tests/object/3_type/ixi/xthScript
+    printf "\n========================================\n\n" 
+}
+
+test_object_typecheck_language_extension() {
+    xth/xth -compilerpath . -workpath tests/object/3_type/language_extension -testpath tests/object/3_type/language_extension tests/object/3_type/language_extension/xthScript
     printf "\n========================================\n\n" 
 }
 
@@ -253,8 +269,14 @@ else
   l|lexer)
       test_lex
       ;;
+  lf)
+      test_lex_fails
+      ;;
   p|parser)
       test_parse
+      ;;
+  pf)
+      test_parse_fails
       ;;
   t|type)
       test_type
@@ -267,6 +289,9 @@ else
       ;;
   tm)
       test_type_man
+      ;;
+  tf)
+      test_type_fails
       ;;
   i|ir)
       test_ir
@@ -336,6 +361,15 @@ else
       ;;
   ot)
       test_object_typecheck
+      ;;
+  otxi)
+      test_object_typecheck_xi
+      ;;
+  otixi)
+      test_object_typecheck_ixi
+      ;;
+  otext)
+      test_object_typecheck_language_extension
       ;;
   *)
       echo "Usage:"

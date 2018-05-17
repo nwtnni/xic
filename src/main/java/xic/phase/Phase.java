@@ -13,8 +13,8 @@ public abstract class Phase {
     public static List<Phase> complete() {
         return new ArrayList<>(List.of(
             new Lex(),
-            new Parse()//,
-            // new TypeCheck(),
+            new Parse(),
+            new TypeCheck() //,
             // new Emit(),
             // new Fold(),
             // new Canonize(),
