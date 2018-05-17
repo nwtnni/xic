@@ -11,6 +11,10 @@ public class ClassType extends GlobalType {
         this.id = id;
     }
 
+    public String getID() {
+        return new String(id);
+    }
+
     @Override
     public boolean isClass() {
         return true;
