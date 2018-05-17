@@ -22,7 +22,7 @@ import xic.XicInternalException;
  * @see TypeContext
  * @see VarContext
  */
-public abstract class Context<S,T> {
+public class Context<S,T> {
 
     /**
      * The backing persistent data structure.
