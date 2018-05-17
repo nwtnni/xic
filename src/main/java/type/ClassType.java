@@ -3,7 +3,7 @@ package type;
 /**
  * Represents a user-defined class in the OXi type system.
  */
-public class ClassType extends Type {
+public class ClassType extends GlobalType {
 
     private String id;
     
