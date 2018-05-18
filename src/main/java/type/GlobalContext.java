@@ -17,7 +17,7 @@ public class GlobalContext {
 
     private Context<String, GlobalType> context;
     private Map<ClassType, ClassType> hierarchy;
-    private Map<ClassType, OrderedMap<String, Type>> classes;
+    private Map<ClassType, ClassContext> classes;
 
     public GlobalContext() {
         this.context = new Context<>();
@@ -25,15 +25,15 @@ public class GlobalContext {
         this.classes = new HashMap<>();
     }
 
-    public void put(String id, OrderedMap<String, Type> contents) throws TypeException {
+    public void put(String id, ClassContext cc) throws TypeException {
         if (context.contains(id)) throw new TypeException(Kind.DECLARATION_CONFLICT);
         ClassType ct = new ClassType(id);
         context.add(id, ct);
-        classes.put(ct, contents);
+        classes.put(ct, cc);
     }
 
     public void put(String id, GlobalType gt) {
-        if (gt.isClass()) throw new XicInternalException("Attempting to insert class without methods"); 
+        if (gt.isClass()) throw new XicInternalException("Attempting to insert class without methods");
         context.add(id, gt);
     }
 
@@ -43,14 +43,20 @@ public class GlobalContext {
 
     }
 
-    public GlobalType lookup(String id) throws TypeException {
-        if (!context.contains(id)) throw new TypeException(Kind.SYMBOL_NOT_FOUND);
+    public boolean contains(ClassType ct) {
+        return classes.containsKey(ct.getID());
+    }
+
+    public boolean contains(String id) {
         return context.lookup(id);
     }
 
-    public OrderedMap<String, Type> lookup(ClassType ct) throws TypeException {
-        Stack<ClassType> stack = new Stack<>();
-        OrderedMap<String, Type> methods = new OrderedMap<>();
+    public GlobalType lookup(String id) {
+        return context.lookup(id);
+    }
+
+    public ClassContext lookup(ClassType ct) {
+        return classes.get(ct.getID());
     }
 
     public boolean isSubclass(ClassType subclass, ClassType superclass) {
@@ -59,7 +65,7 @@ public class GlobalContext {
 
         ClassType ct = subclass;
         while (hierarchy.containsKey(subclass) && !hierarchy.get(ct).equals(superclass)) {
-            ct = hierarchy.get(ct); 
+            ct = hierarchy.get(ct);
         }
 
         return ct.equals(superclass);

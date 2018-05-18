@@ -16,9 +16,17 @@ public class OrderedMap<K, V> {
         this.order = new ArrayList<>();
     }
 
+    public V get(K key) {
+        return map.get(key);
+    }
+
     public Pair<K, V> get(int index) {
         K key = order.get(index);
         return new Pair<>(key, map.get(key));
+    }
+
+    public boolean containsKey(K key) {
+        return map.containsKey(key);
     }
 
     public void addAll(OrderedMap<K, V> other) {

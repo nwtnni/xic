@@ -56,7 +56,6 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     protected GlobalContext globalContext;
     protected LocalContext localContext;
-    protected ClassContext classContext;
 
     /**
      * The current value of rho, the expected return
@@ -409,9 +408,26 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     @Override
     public Type visit(XiDot d) throws XicException {
-        Type lt = d.lhs.accept(this);
-        Type rt = d.rhs.accept(this);
 
+        // Must be XiVar, or else internal error
+        XiVar var = (XiVar) d.rhs;
+
+        // LHS of dot operator must be class
+        Type lt = d.lhs.accept(this);
+        if (!lt.isClass()) throw new TypeException(INVALID_DOT, d.lhs.location);
+
+        // Class must be bound in global context
+        ClassType ct = (ClassType) lt;
+        if (!globalContext.contains(ct)) throw new TypeException(UNBOUND_CLASS, d.lhs.location);
+
+        // RHS field or method must be bound in class
+        ClassContext classContext = globalContext.lookup(ct);
+        if (!classContext.contains(var.id)) throw new TypeException(UNBOUND_FIELD, d.rhs.location);
+
+        return classContext.lookup(var.id).match(
+            field ->  { d.rhs.type = field;  d.type = field;  return d.type; },
+            method -> { d.rhs.type = method; d.type = method; return d.type; }
+        );
     }
 
     /**
