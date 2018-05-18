@@ -11,6 +11,10 @@ public class ArrayType extends FieldType {
         this.child = child;
     }
 
+    public Type getChild() {
+        return child;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ArrayType)) return false;

@@ -407,10 +407,11 @@ public class TypeChecker extends ASTVisitor<Type> {
         }
     }
 
-    // TODO: PA7
     @Override
     public Type visit(XiDot d) throws XicException {
-        throw new RuntimeException();
+        Type lt = d.lhs.accept(this);
+        Type rt = d.rhs.accept(this);
+
     }
 
     /**
@@ -422,14 +423,12 @@ public class TypeChecker extends ASTVisitor<Type> {
         Type it = i.index.accept(this);
         Type at = i.array.accept(this);
 
-        if (!it.equals(Type.INT)) {
-            throw new TypeException(Kind.INVALID_ARRAY_INDEX, i.index.location);
-        } else if (at.kind != Type.Kind.ARRAY) {
-            throw new TypeException(Kind.NOT_AN_ARRAY, i.array.location);
-        } else {
-            i.type = at.children.get(0);
-            return i.type;
-        }
+        if (!it.isInt()) throw new TypeException(INVALID_ARRAY_INDEX, i.index.location);
+        if (!at.isArray()) throw new TypeException(NOT_AN_ARRAY, i.array.location);
+
+        ArrayType a = (ArrayType) at;
+        i.type = a.getChild();
+        return i.type;
     }
 
     @Override
@@ -449,19 +448,11 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiUnary u) throws XicException {
         Type ut = u.child.accept(this);
-        if (u.isLogical()) {
-            if (ut.isBool()) {
-                u.type = ut;
-            } else {
-                throw new TypeException(LNEG_ERROR, u.location);
-            }
-        } else {
-            if (ut.isInt()) {
-                u.type = ut;
-            } else {
-                throw new TypeException(NEG_ERROR, u.location);
-            }
-        }
+
+        if (u.isLogical() && !ut.isBool()) throw new TypeException(LNEG_ERROR, u.location);
+        if (!u.isLogical() && !ut.isInt()) throw new TypeException(NEG_ERROR, u.location);
+
+        u.type = ut;
         return u.type;
     }
 
