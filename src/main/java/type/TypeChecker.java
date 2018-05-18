@@ -17,7 +17,7 @@ import xic.XicInternalException;
 public class TypeChecker extends ASTVisitor<Type> {
 
     /**
-     * Factory method to type check the given AST and return the 
+     * Factory method to type check the given AST and return the
      * associated function context.
      * @param lib Directory to search for interface files
      * @param ast AST to typecheck
@@ -41,7 +41,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * This constructor initializes the FnContext with {@link Importer},
      * but leaves the other empty.
-     * 
+     *
      * @param lib Directory to search for interface files
      * @param ast AST to resolve dependencies for
      * @throws XicException if a semantic error occurred while resolving dependencies
@@ -52,29 +52,16 @@ public class TypeChecker extends ASTVisitor<Type> {
         this.vars = new VarContext();
     }
 
-    // TODO: PA7 extend context to globals, classes and function contexts
-    /**
-     * Associated function context.
-     */
-    protected FnContext fns;
+    protected GlobalContext global;
+    protected LocalContext local;
 
-    /**
-     * Associated variable context.
-     */
-    protected VarContext vars;
-    
-    /**
-     * Associated type context.
-     */
-    private TypeContext types;
-    
     /**
      * The current value of rho, the expected return
      * type for the current function in scope, as defined
      * in the type specification.
      */
-    private Type returns;
-
+    private List<Type> returns;
+    private ClassType inside;
 
     /*
      * Visitor Methods ---------------------------------------------------------------------
@@ -95,13 +82,13 @@ public class TypeChecker extends ASTVisitor<Type> {
     /*
      * Top-level AST nodes
      */
-    
+
     /**
      * A program is valid if all of its top-level declarations
-     * are valid. Use statements and top-level declarations 
+     * are valid. Use statements and top-level declarations
      * are checked by {@link Importer},
      * while function bodies are checked by this class.
-     * 
+     *
      * @returns {@link TypeCheck.UNIT} if program is valid
      * @throws XicException if program has semantic errors
      */
@@ -113,7 +100,8 @@ public class TypeChecker extends ASTVisitor<Type> {
         for (Node fn : p.body) {
             fn.accept(this);
         }
-        p.type = Type.UNIT;
+
+        p.type = UnitType.UNIT;
         return p.type;
     }
 
@@ -133,13 +121,13 @@ public class TypeChecker extends ASTVisitor<Type> {
      * A function is valid if none of its arguments
      * shadow anything in the context, and its block is
      * void if it has return types.
-     * 
+     *
      * @returns {@link TypeCheck.UNIT} is function is valid
      * @throws XicException if function has semantic errors
      */
     @Override
     public Type visit(XiFn f) throws XicException {
-        vars.push();
+        local.push();
         FnType fnType = fns.lookup(f.id);
         if (fnType == null) {
             // Internal error occurred; should never happen
@@ -172,10 +160,10 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * An assignment is valid if each type on the RHS is a subtype of the
      * corresponding type on the LHS, and the number of types is matched.
-     * 
+     *
      * Additionally, a procedure cannot be assigned to anything, and only
      * function calls can have wildcards on the LHS.
-     * 
+     *
      * @returns {@link TypeCheck.UNIT} if valid
      * @throws XicException if invalid assignment
      */
@@ -199,7 +187,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     /**
      * A block is valid if each statement is valid, and no statement before the
      * last one is type {@link TypeCheck.VOID}.
-     * 
+     *
      * @returns The type of the last statement
      * @throws XicException if invalid
      */
@@ -232,17 +220,17 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * PA7: A break has type void.
-     * 
+     *
      * @returns {@link TypeCheck.VOID}
      */
     @Override
     public Type visit(XiBreak b) throws XicException {
         return Type.VOID;
     }
-    
+
     /**
      * A declaration is valid if it doesn't shadow anything in the context.
-     * 
+     *
      * @returns typeof(declaration) if valid
      * @throws XicException if a conflict was found
      */
@@ -261,7 +249,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * An if statement is valid if its guard is {@link TypeCheck.BOOL} and its block is valid.
-     * 
+     *
      * @returns If both blocks are {@link TypeCheck.VOID}, then Type.VOID, otherwise Type.UNIT
      * @throws XicException if invalid
      */
@@ -276,7 +264,7 @@ public class TypeChecker extends ASTVisitor<Type> {
             i.block = new XiBlock(i.block.location, i.block);
         }
         Type it = i.block.accept(this);
-        
+
         Type et = null;
         if (i.hasElse()) {
             if (!(i.elseBlock instanceof XiBlock)) {
@@ -295,7 +283,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A return is valid if its type matches {@link TypeChecker#returns}
-     * 
+     *
      * @returns {@link TypeCheck.VOID} if return type matches {@link TypeChecker#returns}
      * @throws XicException if return type doesn't match
      */
@@ -329,7 +317,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A while statement is valid if its guard is {@link TypeCheck.BOOL} and its block is valid.
-     * 
+     *
      * @returns {@link TypeCheck.UNIT} if valid
      * @throws XicException if invalid
      */
@@ -370,7 +358,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                 b.type = Type.BOOL;
             } else {
                 b.type = Type.INT;
-            } 
+            }
         } else if (lt.equals(Type.BOOL) && b.acceptsBool()) {
             b.type = Type.BOOL;
         } else if (lt.kind.equals(Type.Kind.ARRAY) && b.acceptsList()) {
@@ -449,7 +437,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A unary operator is valid if the type of the operator and operand match.
-     * 
+     *
      * @returns The type of the operator if valid
      * @throws XicException if operator mismatch
      */
@@ -474,7 +462,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A variable lookup is valid if the variable exists in the context.
-     * 
+     *
      * @returns typeof(variable) if valid
      * @throws XicException if invalid
      */
@@ -493,10 +481,10 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A XiArray is valid if its children are the same type.
-     * 
+     *
      * The 0-length array is polymorphic and has special type {@link TypeCheck.POLY},
      * which is equal to all array types.
-     * 
+     *
      * @returns Array of child types
      * @throws XicException if invalid
      */
@@ -517,12 +505,12 @@ public class TypeChecker extends ASTVisitor<Type> {
                 }
             }
 
-            // Iterate through elements again to coerce all types 
+            // Iterate through elements again to coerce all types
             for (int i = 0; i < a.values.size(); i++) {
                 Type elemType = a.values.get(i).accept(this);
                 elemType.equals(arrayType);
             }
-            
+
             a.type = new Type(arrayType);
             return a.type;
         }
@@ -530,7 +518,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A XiBool is always {@link TypeCheck.BOOL}
-     * 
+     *
      * @returns {@link TypeCheck.BOOL}
      */
     @Override
@@ -541,7 +529,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A XiChar is always {@link TypeCheck.INT}
-     * 
+     *
      * @returns {@link TypeCheck.INT}
      */
     @Override
@@ -552,7 +540,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A XiInt is always {@link TypeCheck.INT}
-     * 
+     *
      * @returns {@link TypeCheck.INT}
      */
     @Override
@@ -569,7 +557,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A XiString is always a {@link TypeCheck.Kind.ARRAY} of {@link TypeCheck.INT}
-     * 
+     *
      * @returns Array of {@link TypeCheck.INT}
      */
     @Override
@@ -586,14 +574,14 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     /**
      * A XiType is equal to its corresponding Type.
-     * 
+     *
      * @returns Corresponding type
      * @throws XicException if array type with invalid size
      */
     @Override
     public Type visit(XiType t) throws XicException {
         t.type = new Type(t);
-        
+
         if (t.hasSize() && !t.size.accept(this).equals(Type.INT)) {
             throw new TypeException(Kind.INVALID_ARRAY_SIZE, t.size.location);
         }

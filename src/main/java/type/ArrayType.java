@@ -3,7 +3,7 @@ package type;
 /**
  * Represents an array type constructor in the OXi type system.
  */
-public class ArrayType extends GlobalType {
+public class ArrayType extends FieldType {
 
     private Type child;
 
