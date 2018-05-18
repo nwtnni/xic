@@ -11,9 +11,19 @@ public class OrderedMap<K, V> {
     private Map<K, V> map;
     private List<K> order;
 
+    public OrderedMap() {
+        this.map = new HashMap<>();
+        this.order = new ArrayList<>();
+    }
+
     public Pair<K, V> get(int index) {
         K key = order.get(index);
         return new Pair<>(key, map.get(key));
+    }
+
+    public void addAll(OrderedMap<K, V> other) {
+        map.putAll(other.map);
+        order.addAll(other.order);
     }
 
     public int size() {

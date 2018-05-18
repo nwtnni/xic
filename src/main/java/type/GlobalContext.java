@@ -2,6 +2,7 @@ package type;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Stack;
 
 import util.Context;
 import util.OrderedMap;
@@ -31,15 +32,25 @@ public class GlobalContext {
         classes.put(ct, contents);
     }
 
+    public void put(String id, GlobalType gt) {
+        if (gt.isClass()) throw new XicInternalException("Attempting to insert class without methods"); 
+        context.add(id, gt);
+    }
+
     //TODO: make sure overrides line up
     public void extend(ClassType subclass, ClassType superclass) throws TypeException {
 
 
     }
 
-    public void put(String id, GlobalType gt) {
-        if (gt.isClass()) throw new XicInternalException("Attempting to insert class without methods"); 
-        context.add(id, gt);
+    public GlobalType lookup(String id) throws TypeException {
+        if (!context.contains(id)) throw new TypeException(Kind.SYMBOL_NOT_FOUND);
+        return context.lookup(id);
+    }
+
+    public OrderedMap<String, Type> lookup(ClassType ct) throws TypeException {
+        Stack<ClassType> stack = new Stack<>();
+        OrderedMap<String, Type> methods = new OrderedMap<>();
     }
 
     public boolean isSubclass(ClassType subclass, ClassType superclass) {
