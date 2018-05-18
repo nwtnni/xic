@@ -310,8 +310,6 @@ GVTypeIndexList ::=
         RESULT = list;
     :}
     ;
-    // TODO: check if a:int[] okay for global
-    // TODO: check multiple declaration at global level type restrictions
 
 // Valid initializer for global array dimensions are integers
 // and other global identifiers (checked at typechecking)
