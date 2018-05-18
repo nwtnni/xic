@@ -5,4 +5,4 @@ import util.Context;
 /**
  * Represents a function-local or method-local type context.
  */
-public class LocalContext extends Context<String, Type> {}
+public class LocalContext extends Context<String, FieldType> {}

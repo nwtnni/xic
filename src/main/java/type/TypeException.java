@@ -17,6 +17,7 @@ public class TypeException extends XicException {
 
         // Object exceptions
         UNBOUND_THIS("The this keyword can only be used inside of a class"),
+        UNBOUND_NEW("The new keyword can only be used inside of the class"),
 
         // Statement exceptions
         CONTROL_FLOW("Control reached end of non-void function"),

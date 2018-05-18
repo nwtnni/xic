@@ -2,6 +2,7 @@ package type;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import ast.*;
 import xic.XicException;
@@ -53,8 +54,9 @@ public class TypeChecker extends ASTVisitor<Type> {
         this.vars = new VarContext();
     }
 
-    protected GlobalContext global;
-    protected LocalContext local;
+    protected GlobalContext globalContext;
+    protected LocalContext localContext;
+    protected ClassContext classContext;
 
     /**
      * The current value of rho, the expected return
@@ -430,10 +432,12 @@ public class TypeChecker extends ASTVisitor<Type> {
         }
     }
 
-    // TODO: PA7
     @Override
     public Type visit(XiNew n) throws XicException {
-        throw new RuntimeException();
+        ClassType ct = new ClassType(n.name);
+        if (inside == null || !inside.equals(ct)) throw new TypeException(UNBOUND_NEW, n.location);
+        n.type = ct;
+        return n.type;
     }
 
     /**
@@ -446,16 +450,16 @@ public class TypeChecker extends ASTVisitor<Type> {
     public Type visit(XiUnary u) throws XicException {
         Type ut = u.child.accept(this);
         if (u.isLogical()) {
-            if (ut.equals(Type.BOOL)) {
-                u.type = Type.BOOL;
+            if (ut.isBool()) {
+                u.type = ut;
             } else {
-                throw new TypeException(Kind.LNEG_ERROR, u.location);
+                throw new TypeException(LNEG_ERROR, u.location);
             }
         } else {
-            if (ut.equals(Type.INT)) {
-                u.type = Type.INT;
+            if (ut.isInt()) {
+                u.type = ut;
             } else {
-                throw new TypeException(Kind.NEG_ERROR, u.location);
+                throw new TypeException(NEG_ERROR, u.location);
             }
         }
         return u.type;
@@ -469,10 +473,8 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiVar v) throws XicException {
-        v.type = vars.lookup(v.id);
-        if (v.type == null) {
-            throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
-        }
+        if (!localContext.contains(v.id)) throw new TypeException(SYMBOL_NOT_FOUND, v.location);
+        v.type = localContext.lookup(v.id);
         return v.type;
     }
 
@@ -492,30 +494,41 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiArray a) throws XicException {
 
-        // Special case: empty literal array
+        List<Type> types = a.values.stream()
+            .map(elem -> elem.accept(this))
+            .collect(Collectors.toList());
+
+        // Early return: empty literal array
         if (a.values.size() == 0) {
             a.type = PolyType.POLY;
             return a.type;
         }
 
-        Type arrayType = a.values.get(0).accept(this);
+        // Early return: entirely polymorphic array
+        if (types.stream().allMatch(elem -> elem.isPoly())) {
+            a.type = PolyType.POLY;
+            return a.type;
+        }
 
-        for (int i = 1; i < a.values.size(); i++) {
-            Type elemType = a.values.get(i).accept(this);
-            if (arrayType.isPoly()) {
-                arrayType = elemType;
-            } else if (!arrayType.equals(elemType)) {
-                throw new TypeException(NOT_UNIFORM_ARRAY, a.location);
+        // Otherwise must be at least one non-polymorphic element
+        Type reference = types.stream()
+            .filter(elem -> !elem.isPoly())
+            .findFirst()
+            .get();
+
+        for (int i = 0; i < types.size(); i++) {
+
+            Type type = types.get(i);
+
+            // Coerce polymorphic types
+            if (type.isPoly()) {
+                a.values.get(i).type = reference;
+            } else if (!type.equals(reference)) {
+                throw new TypeException(NOT_UNIFORM_ARRAY, a.values.get(i).location);
             }
         }
 
-        // Iterate through elements again to coerce all types
-        for (int i = 0; i < a.values.size(); i++) {
-            Type elemType = a.values.get(i).accept(this);
-            elemType.equals(arrayType);
-        }
-
-        a.type = new ArrayType(arrayType);
+        a.type = new ArrayType(reference);
         return a.type;
     }
 
