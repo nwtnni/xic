@@ -19,6 +19,8 @@ public abstract class Type {
 
     public boolean isPoly() { return false; }
 
+    public boolean isNull() { return false; }
+
     // User-defined Types
 
     public boolean isClass() { return false; }

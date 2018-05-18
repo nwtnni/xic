@@ -4,9 +4,10 @@ import java.util.List;
 import java.util.ArrayList;
 
 import ast.*;
-import type.TypeException.Kind;
 import xic.XicException;
 import xic.XicInternalException;
+
+import static type.TypeException.Kind.*;
 
 /**
  * Main type checking implementation. Recursively traverses the AST
@@ -139,7 +140,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         Type ft = f.block.accept(this);
 
         if (f.isFn() && !ft.equals(Type.VOID)) {
-            throw new TypeException(Kind.CONTROL_FLOW, f.location);
+            throw new TypeException(CONTROL_FLOW, f.location);
         }
 
         vars.pop();
@@ -490,30 +491,32 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiArray a) throws XicException {
+
+        // Special case: empty literal array
         if (a.values.size() == 0) {
-            a.type = Type.POLY;
-            return Type.POLY;
-        } else {
-            Type arrayType = a.values.get(0).accept(this);
-
-            for (int i = 1; i < a.values.size(); i++) {
-                Type elemType = a.values.get(i).accept(this);
-                if (arrayType.isPoly()) {
-                    arrayType = elemType;
-                } else if (!arrayType.equals(elemType)) {
-                    throw new TypeException(Kind.NOT_UNIFORM_ARRAY, a.location);
-                }
-            }
-
-            // Iterate through elements again to coerce all types
-            for (int i = 0; i < a.values.size(); i++) {
-                Type elemType = a.values.get(i).accept(this);
-                elemType.equals(arrayType);
-            }
-
-            a.type = new Type(arrayType);
+            a.type = PolyType.POLY;
             return a.type;
         }
+
+        Type arrayType = a.values.get(0).accept(this);
+
+        for (int i = 1; i < a.values.size(); i++) {
+            Type elemType = a.values.get(i).accept(this);
+            if (arrayType.isPoly()) {
+                arrayType = elemType;
+            } else if (!arrayType.equals(elemType)) {
+                throw new TypeException(NOT_UNIFORM_ARRAY, a.location);
+            }
+        }
+
+        // Iterate through elements again to coerce all types
+        for (int i = 0; i < a.values.size(); i++) {
+            Type elemType = a.values.get(i).accept(this);
+            elemType.equals(arrayType);
+        }
+
+        a.type = new ArrayType(arrayType);
+        return a.type;
     }
 
     /**
@@ -523,7 +526,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiBool b) {
-        b.type = Type.BOOL;
+        b.type = BoolType.BOOL;
         return b.type;
     }
 
@@ -534,7 +537,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiChar c) {
-        c.type = Type.INT;
+        c.type = IntType.INT;
         return c.type;
     }
 
@@ -545,14 +548,14 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiInt i) {
-        i.type = Type.INT;
+        i.type = IntType.INT;
         return i.type;
     }
 
-    // TODO: PA7
     @Override
     public Type visit(XiNull n) throws XicException {
-        throw new RuntimeException();
+        n.type = NullType.NULL;
+        return n.type;
     }
 
     /**
@@ -562,14 +565,15 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiString s) {
-        s.type = new Type(Type.INT);
+        s.type = new ArrayType(IntType.INT);
         return s.type;
     }
 
-    // TODO: PA7
     @Override
     public Type visit(XiThis t) throws XicException {
-        throw new RuntimeException();
+        if (inside == null) throw new TypeException(UNBOUND_THIS, t.location);
+        t.type = inside;
+        return t.type;
     }
 
     /**
@@ -580,14 +584,29 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiType t) throws XicException {
-        t.type = new Type(t);
 
-        if (t.hasSize() && !t.size.accept(this).equals(Type.INT)) {
-            throw new TypeException(Kind.INVALID_ARRAY_SIZE, t.size.location);
+        // Check for size expression
+        if (t.hasSize() && !t.size.accept(this).equals(IntType.INT)) {
+            throw new TypeException(INVALID_ARRAY_SIZE, t.size.location);
         }
 
-        if (t.child != null) {
-            t.child.accept(this);
+        // Check for array type
+        if (t.isArray()) {
+            t.type = new ArrayType(t.child.accept(this));
+            return t.type;
+        }
+
+        // Must be primitive or class
+        switch (t.id) {
+        case "int":
+            t.type = IntType.INT;
+            break;
+        case "bool":
+            t.type = BoolType.BOOL;
+            break;
+        default:
+            t.type = new ClassType(t.id);
+            break;
         }
 
         return t.type;
