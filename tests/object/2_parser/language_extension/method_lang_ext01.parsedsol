@@ -1,0 +1,18 @@
+(()
+ ((A
+   ((foo
+     ()
+     ()
+     ((= (x int) 1)
+      (= (y int) 2)
+      (= (x bool) true)
+      (= (y bool) false)
+      (= (x int) (% (* 1 5) 3))
+      (= (y int) (- (/ 2 2) 5))
+      (= (z int) (. A x))
+      (= (x bool) ([] (true) 0))
+      (= (y bool) ((. (. ((new A)) x) foo) 2))
+      (= (z bool) true)
+      (= (x ([] ([] bool))) (()))
+      (= (y A) (new A))
+      (= (z B) ((. (. (new A) x) createB)))))))))
