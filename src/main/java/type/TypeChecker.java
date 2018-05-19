@@ -118,11 +118,9 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiProgram p) throws XicException {
-
-        // TODO: PA7 handle different top level declarations
-
-        for (Node fn : p.body) {
-            fn.accept(this);
+        for (Node element : p.body) {
+            if (element instanceof XiGlobal) continue;
+            element.accept(this);
         }
 
         p.type = UnitType.UNIT;
