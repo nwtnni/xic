@@ -1,0 +1,206 @@
+.file "xi-global.s"
+.data
+.local _I_g_x_i
+_I_g_x_i:
+        .quad   0
+.local _I_g_a_ai
+_I_g_a_ai:
+        .quad   0
+.local _I_g_b_ai
+_I_g_b_ai:
+        .quad   0
+
+.section .ctors
+.align 4
+.quad   _I_init_p
+
+.text
+
+# Init global variables
+.local _I_init_G_p
+.align 4
+_I_init_G_p:
+        # Initialize _I_g_a_ai:int[3]
+        movq $3, %rdi
+        callq _xi_d_alloc
+        movq %rax, _I_g_a_ai
+        retq
+
+# Main init
+.local _I_init
+.align 4
+_I_init_p:
+        # init globals
+        callq _I_init_G_p
+
+        # foo()
+        callq _Ifoo_p
+        retq
+
+
+# Functions
+
+# foo
+.globl _Ifoo_p
+.align 4
+_Ifoo_p:
+        pushq %rbp
+        movq %rsp, %rbp
+
+        # println("foo")
+        movq $32, %rdi
+        callq _xi_alloc
+        movq %rax, %rdi
+        movq %rdi, %rax
+        movq $3, (%rax)
+        movq $102, 8(%rdi)
+        movq $111, 16(%rdi)
+        movq $111, 24(%rdi)
+        addq $8, %rdi
+        callq _Iprintln_pai
+        
+_RET_Ifoo_p:
+        popq %rbp
+        retq
+
+# main
+.globl _Imain_paai
+.align 4
+_Imain_paai:
+        pushq %rbp
+        movq %rsp, %rbp
+        subq $32, %rsp
+
+        # println("main") -> main
+        movq $40, %rdi
+        callq _xi_alloc
+        movq %rax, %rdx
+        movq $4, (%rdx)
+        movq $109, 8(%rax)
+        movq $97, 16(%rax)
+        movq $105, 24(%rax)
+        movq $110, 32(%rax)
+        addq $8, %rax
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        # #######################################
+        # Examples of global var addressing modes
+
+        # println(unparseInt(_I_g_x_i))
+        movq _I_g_x_i, %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        leaq _I_g_x_i(%rip), %rax
+        movq $17, (%rax)
+
+        # println(unparseInt(_I_g_x_i))
+        movq _I_g_x_i, %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        movq $_I_g_x_i, %rax
+        movq $42, (%rax)
+
+        # println(unparseInt(_I_g_x_i))
+        movq _I_g_x_i, %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        addq $42, _I_g_x_i
+
+        # println(unparseInt(_I_g_x_i))
+        movq _I_g_x_i, %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        movq $9223372036854775807, %rax
+        movq %rax, _I_g_x_i
+
+        # println(unparseInt(_I_g_x_i))
+        movq _I_g_x_i, %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        # ####################
+        # Examples with arrays
+
+        # a = "abc"
+        movq _I_g_a_ai, %r15
+
+        movq $8, %rax
+        movq $0, %rcx
+        imulq %rcx
+        movq %r15, %rcx
+        addq %rax, %rcx
+        movq $97, (%rcx)
+
+        movq $8, %rax
+        movq $1, %rcx
+        imulq %rcx
+        movq %r15, %rcx
+        addq %rax, %rcx
+        movq $98, (%rcx)
+        
+        movq $8, %rax
+        movq $2, %rcx
+        imulq %rcx
+        addq %rax, %r15
+        movq $99, (%r15)
+        movq -8(%rbp), %r15
+
+        # println(a)
+        movq _I_g_a_ai, %rdi
+        callq _Iprintln_pai
+
+        # b = a
+        movq _I_g_a_ai, %rax
+        movq %rax, _I_g_b_ai
+
+        # println(b)
+        movq _I_g_b_ai, %rdi
+        callq _Iprintln_pai
+
+        # println(unparseInt(a[0]))
+        movq _I_g_a_ai, %rax
+        movq 0(%rax), %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        jmp _RET_Imain_paai
+_RET_Imain_paai:
+        addq $32, %rsp
+        popq %rbp
+        retq
+
+# _xi_d_alloc
+.globl _xi_d_alloc
+.align 4
+_xi_d_alloc:
+        pushq %rbp
+        movq %rsp, %rbp
+        subq $32, %rsp
+        movq %r15, -8(%rbp)
+        movq %rdi, %r15
+        movq %r15, %rcx
+        addq $1, %rcx
+        movq $8, %rax
+        imulq %rcx
+        movq %rax, %rdi
+        callq _xi_alloc
+        movq %rax, %rcx
+        movq %r15, (%rcx)
+        addq $8, %rax
+        movq -8(%rbp), %r15
+        jmp _RET_xi_d_alloc
+_RET_xi_d_alloc:
+        addq $32, %rsp
+        popq %rbp
+        retq
