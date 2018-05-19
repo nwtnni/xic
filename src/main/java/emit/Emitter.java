@@ -44,6 +44,11 @@ public class Emitter extends ASTVisitor<IRNode> {
     String unit;
 
     /**
+     * The current loop
+     */
+    private IRLabel currentLoop;
+
+    /**
      * Associated function name to ABI name context.
      */
     protected ABIContext context;
@@ -199,6 +204,12 @@ public class Emitter extends ASTVisitor<IRNode> {
         return stmts;
     }
 
+    // PA7
+    @Override
+    public IRNode visit(XiBreak b) {
+        return new IRJump(new IRName(currentLoop));
+    }
+
     @Override
     public IRNode visit(XiBlock b) throws XicException {
         IRSeq stmts = new IRSeq();
@@ -263,6 +274,12 @@ public class Emitter extends ASTVisitor<IRNode> {
             return new IRReturn(values);
         }
         return new IRReturn();
+    }
+
+    // PA7
+    @Override
+    public IRNode visit(XiSeq s) throws XicException {
+        throw XicInternalException.runtime("Found XiSeq. Check desugar.");
     }
 
     @Override
@@ -360,6 +377,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         // TODO: PA7 update for method calls
+
         // Currently hacked for id instanceof XiVar
         IRName target = new IRName(context.lookup(((XiVar) c.id).id));
         List<IRExpr> argList = new ArrayList<>();
@@ -367,6 +385,12 @@ public class Emitter extends ASTVisitor<IRNode> {
             argList.add((IRExpr) n.accept(this));
         }
         return new IRCall(target, argList);
+    }
+
+    // PA7
+    @Override
+    public IRNode visit(XiDot d) {
+        throw XicInternalException.runtime("Emit XiDot");
     }
 
     /**
@@ -449,14 +473,26 @@ public class Emitter extends ASTVisitor<IRNode> {
         return new IRConst(i.value);
     }
 
+    // PA7
+    @Override
+    public IRNode visit(XiNull n) throws XicException {
+        return new IRConst(0);
+    }
+
     @Override
     public IRNode visit(XiString s) throws XicException {
         return Library.alloc(s);
     }
 
+    // PA7
+    @Override
+    public IRNode visit(XiThis t) throws XicException {
+        return new IRTemp("this");
+    }
+
     @Override
     public IRNode visit(XiType t) throws XicException {
-        // Only allocate memory for special case of syntactic sugar
+        // Allocate memory for special case of syntactic sugar
         // for array declarations with dimensions specified
         if (t.hasSize()) {
             IRTemp size = IRTempFactory.generate("size");
