@@ -23,6 +23,7 @@ public class TypeException extends XicException {
         INVALID_DOT("Left-hand side of dot operator must be a class"),
         NOT_A_METHOD("Expected method"),
         PRIVATE_EQ("Object equality is private to the class definition"),
+        MISMATCHED_INTERFACE("Subclass must implement all interface methods"),         
 
         // Statement exceptions
         CONTROL_FLOW("Control reached end of non-void function"),

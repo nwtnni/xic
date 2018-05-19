@@ -165,12 +165,12 @@ public class TypeChecker extends ASTVisitor<Type> {
         // Literal assisgnment; must be XiInt or XiBool
         if (g.stmt instanceof XiAssign) {
             XiAssign assign = (XiAssign) g.stmt;
-            XiVar var = (XiVar) assign.lhs.get(0); 
+            XiVar var = (XiVar) assign.lhs.get(0);
 
             if (globalContext.contains(var.id)) {
                 throw new TypeException(DECLARATION_CONFLICT, g.location);
             }
-            
+
             var.type = assign.rhs.accept(this);
             globalContext.put(var.id, (GlobalType) var.type);
             g.type = UnitType.UNIT;
@@ -182,6 +182,38 @@ public class TypeChecker extends ASTVisitor<Type> {
 
     @Override
     public Type visit(XiClass c) throws XicException {
+
+        // First pass to populate class context
+        ClassContext cc = new ClassContext();
+        ClassType ct = new ClassType(c.id);
+
+        for (Node n : c.body) {
+
+            if (n instanceof XiDeclr) {
+                XiDeclr field = (XiDeclr) n;
+
+                cc.put(
+                    field.id,
+                    (FieldType) field.xiType.accept(this)
+                );
+            }
+
+            if (n instanceof XiFn) {
+                XiFn method = (XiFn) n;
+                cc.put(
+                    method.id,
+                    new MethodType(ct, visit(method.args), visit(method.returns))
+                );
+            }
+        }
+
+        // Validate context with global context from importing
+        if (globalContext.contains(ct)) {
+            ClassContext imported = globalContext.lookup(ct);
+            if (!imported.merge(cc)) throw new TypeException(MISMATCHED_INTERFACE, c.location);
+        }
+
+        // Populate class method bodies
         inside = new ClassType(c.id);
         for (Node n : c.body) {
             if (n instanceof XiFn) n.accept(this);
