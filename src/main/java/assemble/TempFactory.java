@@ -11,7 +11,7 @@ public class TempFactory {
      * Generate a new temporary name.
      */
     public static Temp generate() {
-        String t = String.format("_ASM_%04d", tempIndex++);
+        String t = String.format("_A%04d", tempIndex++);
         return new Temp(t);
     }
 
@@ -19,7 +19,7 @@ public class TempFactory {
      * Generate a new temporary with a descriptive name.
      */
     public static Temp generate(String name) {
-        String t = String.format("_ASM_%04d_%s", tempIndex++, name);
+        String t = String.format("_A%04d_%s", tempIndex++, name);
         return new Temp(t);
     }
 

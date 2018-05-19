@@ -14,7 +14,7 @@ public class IRTempFactory {
      * Generate a new temporary name.
      */
     public static IRTemp generate() {
-        String t = String.format("_TEMP_%04d", tempIndex++);
+        String t = String.format("_T%04d", tempIndex++);
         return new IRTemp(t);
     }
 
@@ -22,7 +22,7 @@ public class IRTempFactory {
      * Generate a new temporary with a descriptive name.
      */
     public static IRTemp generate(String name) {
-        String t = String.format("_TEMP_%04d_%s", tempIndex++, name);
+        String t = String.format("_T%04d_%s", tempIndex++, name);
         return new IRTemp(t);
     }
 

@@ -1,8 +1,6 @@
 package parse;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.awt.font.MultipleMaster;
 import java.util.ArrayList;
 
 import ast.*;
@@ -181,6 +179,12 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
         );
 
         return MultipleNode.of(w);
+    }
+
+    // Calls can be treated as a statement
+    @Override
+    public MultipleNode visit(XiCall c) throws XicException {
+        return MultipleNode.of(c);
     }
 
     /* All expressions and constants do not require desugaring */

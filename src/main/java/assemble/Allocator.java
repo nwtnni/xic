@@ -96,7 +96,7 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
 
     protected Allocator(CompUnit<Temp> unit) {
         this.unit = unit;
-        this.allocated = new CompUnit<>();
+        this.allocated = new CompUnit<>(unit.name);
         this.tempStack = null;
         this.instrs = null;
         this.tempCounter = 0;

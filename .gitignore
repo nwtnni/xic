@@ -31,7 +31,6 @@ xth.tar.gz
 *.iparsed
 *.typed
 *.ir
-*.S
 *.s
 *.results
 *.dot

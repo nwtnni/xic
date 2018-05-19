@@ -109,6 +109,7 @@ public class Tiler extends IRVisitor<Operand> {
      */
     
     public Operand visit(IRCompUnit c) {
+        unit.name = c.name();
         for (IRFuncDecl fn : c.functions().values()) {
             fn.accept(this);
         }
@@ -157,7 +158,6 @@ public class Tiler extends IRVisitor<Operand> {
         
         return null;
     }
-
 
     public Operand visit(IRBinOp b) {
         Optional<Imm> immL = checkImm(b.left());

@@ -24,9 +24,9 @@ public class Emitter extends ASTVisitor<IRNode> {
      * @param ast AST to generate into IR
      * @param context function context corresponding to the AST
      */
-    public static Pair<IRCompUnit, ABIContext> emitIR(XiProgram ast, FnContext context) {
+    public static Pair<IRCompUnit, ABIContext> emitIR(String unit, XiProgram ast, FnContext context) {
         IRTempFactory.reset();
-        Emitter e = new Emitter(context);
+        Emitter e = new Emitter(unit, context);
         try {
             return new Pair<>((IRCompUnit) ast.accept(e), e.context);
         } catch (XicException err) {
@@ -34,9 +34,15 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
     }
 
-    public Emitter(FnContext context) {
+    public Emitter(String unit, FnContext context) {
+        this.unit = unit;
         this.context = new ABIContext(context);
     }
+
+    /** 
+     * The compilation unit. 
+     */
+    String unit;
 
     /**
      * Associated function name to ABI name context.
@@ -358,7 +364,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiProgram p) throws XicException {
-        IRCompUnit program = new IRCompUnit("program");
+        IRCompUnit program = new IRCompUnit(this.unit);
 
         if (INCLUDE_LIB) {
             program.appendFunc(xiArrayConcat());

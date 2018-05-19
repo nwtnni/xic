@@ -361,7 +361,7 @@ public abstract class InstrFactory {
     }
 
     public static Label<Temp> labelFromRet(IRFuncDecl fn) {
-        return new Label.T("_RET_" + fn.name() + ":");
+        return new Label.T("_RET" + fn.name() + ":");
     }
 
     /*
