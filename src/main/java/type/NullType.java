@@ -3,7 +3,7 @@ package type;
 /**
  * Represents the null type in the OXi type system.
  */
-public class NullType extends FieldType {
+public class NullType extends Type {
 
     public static NullType NULL = new NullType();
 

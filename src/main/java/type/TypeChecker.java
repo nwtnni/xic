@@ -349,28 +349,38 @@ public class TypeChecker extends ASTVisitor<Type> {
         Type lt = b.lhs.accept(this);
         Type rt = b.rhs.accept(this);
 
-        // TODO: PA7 handle object and array comparison restrictions
+        // Special cases: class comparisons and array comparisons
+        if (b.kind == XiBinary.Kind.EQ || b.kind == XiBinary.Kind.NE) {
 
-        if (!lt.equals(rt)) {
-            throw new TypeException(Kind.MISMATCHED_BINARY, b.location);
+            // Class comparisons are privately scoped, except when comparing to null
+            if ((lt.isClass() && (lt.equals(inside) || rt.isNull()))
+            ||  (rt.isClass() && (rt.equals(inside) || lt.isNull()))
+            ||  (lt.isClass() && lt.equals(inside) && rt.isClass() && rt.equals(inside))) {
+                b.type = BoolType.BOOL;
+                return b.type;
+            }
+
+            // Arrays can always be compared to null
+            if ((lt.isArray() && rt.isNull())
+            ||  (rt.isArray() && lt.isNull())
+            ||  (lt.isNull()  && rt.isNull())) {
+                b.type = BoolType.BOOL;
+                return b.type;
+            }
         }
 
-        if (lt.equals(Type.INT) && b.acceptsInt()) {
-            if (b.returnsBool()) {
-                b.type = Type.BOOL;
-            } else {
-                b.type = Type.INT;
-            }
-        } else if (lt.equals(Type.BOOL) && b.acceptsBool()) {
-            b.type = Type.BOOL;
-        } else if (lt.kind.equals(Type.Kind.ARRAY) && b.acceptsList()) {
-            if (b.returnsBool()) {
-                b.type = Type.BOOL;
-            } else {
-                b.type = lt;
-            }
+        if (!lt.equals(rt)) {
+            throw new TypeException(MISMATCHED_BINARY, b.location);
+        }
+
+        if (lt.isInt() && b.acceptsInt()) {
+            b.type = b.returnsBool() ? BoolType.BOOL : IntType.INT;
+        } else if (lt.isBool() && b.acceptsBool()) {
+            b.type = BoolType.BOOL;
+        } else if (lt.isArray() && b.acceptsList()) {
+            b.type = lt;
         } else {
-            throw new TypeException(Kind.INVALID_BIN_OP, b.location);
+            throw new TypeException(INVALID_BIN_OP, b.location);
         }
         return b.type;
     }
@@ -380,30 +390,60 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiCall c) throws XicException {
-        if (((XiVar) c.id).id.equals("length")) {
-            Type arg = c.args.get(0).accept(this);
-            if (!arg.isArray()) {
-                throw new TypeException(Kind.NOT_AN_ARRAY, c.location);
+
+        // Early return: builtin length function
+        if (c.id instanceof XiVar && ((XiVar) c.id).id.equals("length")) {
+            XiVar fn = (XiVar) c.id;
+            if (c.args.size() != 1 || !c.args.get(0).accept(this).isArray()) {
+                throw new TypeException(NOT_AN_ARRAY, c.location);
             }
-            c.type = Type.INT;
+            c.type = IntType.INT;
             return c.type;
-        } else {
-            // TODO: PA7 update for extended IDs
-            // Currently hacked for id instanceof XiVar
-
-            FnType fn = fns.lookup(((XiVar) c.id).id);
-            if (fn == null) {
-                throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
-            }
-
-            Type args = Type.listFromList(visit(c.args));
-            if (args.equals(fn.args)) {
-                c.type = fn.returns;
-                return c.type;
-            } else {
-                throw new TypeException(Kind.INVALID_ARG_TYPES, c.location);
-            }
         }
+
+        FnType ft = null;
+
+        // Must be function call
+        if (c.id instanceof XiVar) {
+            GlobalType type = globalContext.lookup(((XiVar) c.id).id);
+            c.id.type = type;
+            if (type == null || !type.isFn()) throw new TypeException(SYMBOL_NOT_FOUND, c.location);
+            ft = (FnType) type;
+        }
+
+        // Must be method call
+        else {
+            Type type = c.id.accept(this);
+            if (!type.isMethod()) throw new TypeException(NOT_A_METHOD, c.location);
+            ft = (MethodType) type;
+        }
+
+        // Check parameter passing for both function and method
+        List<Type> caller = visit(c.args);
+        List<Type> called = ft.getArgs();
+        if (caller.size() != called.size()) throw new TypeException(INVALID_ARG_TYPES, c.location);
+
+        for (int i = 0; i < caller.size(); i++) {
+            Type sub = caller.get(i);
+            Type sup = called.get(i);
+
+            // Equal classes can always be passed
+            if (sub.equals(sup)) continue;
+
+            // Null subclasses objects and arrays
+            if (sub.isNull() && (sup.isClass() || sup.isArray())) continue;
+
+            // Polymorphic arrays can be passed as any array
+            if (sub.isPoly() && sup.isArray()) continue;
+
+            // Otherwise must check class hierarchy
+            if (sub.isClass() && sup.isClass() && globalContext.isSubclass((ClassType) sub, (ClassType) sup)) continue;
+
+            throw new TypeException(INVALID_ARG_TYPES, c.location);
+        }
+
+        c.type = (ft.getReturns().size() == 0) ? UnitType.UNIT : new TupleType(ft.getReturns());
+        return c.type;
     }
 
     @Override
@@ -424,10 +464,9 @@ public class TypeChecker extends ASTVisitor<Type> {
         ClassContext classContext = globalContext.lookup(ct);
         if (!classContext.contains(var.id)) throw new TypeException(UNBOUND_FIELD, d.rhs.location);
 
-        return classContext.lookup(var.id).match(
-            field ->  { d.rhs.type = field;  d.type = field;  return d.type; },
-            method -> { d.rhs.type = method; d.type = method; return d.type; }
-        );
+        d.rhs.type = classContext.lookup(var.id);
+        d.type = d.rhs.type;
+        return d.type;
     }
 
     /**
@@ -480,8 +519,26 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiVar v) throws XicException {
-        if (!localContext.contains(v.id)) throw new TypeException(SYMBOL_NOT_FOUND, v.location);
-        v.type = localContext.lookup(v.id);
+
+        // Early return: local context contains symbol
+        if (localContext.contains(v.id)) {
+            v.type = localContext.lookup(v.id);
+            return v.type;
+        }
+
+        // Early return: class context contains symbol
+        if (inside != null && globalContext.lookup(inside).containsField(v.id)) {
+            v.type = globalContext.lookup(inside).lookupField(v.id);
+            return v.type;
+        }
+
+        // Early return: symbol not found
+        if (!globalContext.contains(v.id) || !globalContext.lookup(v.id).isField()) {
+            throw new TypeException(SYMBOL_NOT_FOUND, v.location);
+        }
+
+        // Must be valid global symbol
+        v.type = globalContext.lookup(v.id);
         return v.type;
     }
 

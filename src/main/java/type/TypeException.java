@@ -21,6 +21,8 @@ public class TypeException extends XicException {
         UNBOUND_FIELD("Field or method not found"),
         UNBOUND_NEW("Keyword 'new' can only be used inside of the class"),
         INVALID_DOT("Left-hand side of dot operator must be a class"),
+        NOT_A_METHOD("Expected method"),
+        PRIVATE_EQ("Object equality is private to the class definition"),
 
         // Statement exceptions
         CONTROL_FLOW("Control reached end of non-void function"),

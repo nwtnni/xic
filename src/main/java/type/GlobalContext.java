@@ -48,7 +48,7 @@ public class GlobalContext {
     }
 
     public boolean contains(String id) {
-        return context.lookup(id);
+        return context.contains(id);
     }
 
     public GlobalType lookup(String id) {

@@ -77,7 +77,7 @@ public class XiBinary extends Expr {
     }
 
     public boolean acceptsList() {
-        return kind == Kind.PLUS || kind == Kind.EQ || kind == Kind.NE;
+        return kind == Kind.PLUS;
     }
 
     public boolean returnsBool() {

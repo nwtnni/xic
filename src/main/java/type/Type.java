@@ -26,7 +26,7 @@ public abstract class Type {
     public boolean isClass() { return false; }
 
     public boolean isFn() { return false; }
-    
+
     public boolean isMethod() { return false; }
 
     //
@@ -34,4 +34,15 @@ public abstract class Type {
     //
 
     public boolean isArray() { return false; }
+    
+    public boolean isTuple() { return false; }
+
+    //
+    // Type groups
+    //
+
+    public boolean isGlobal() { return false; }
+
+    public boolean isField() { return false; }
+
 }
