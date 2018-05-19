@@ -278,7 +278,7 @@ public class Tiler extends IRVisitor<Operand> {
             instrs.addAll(mov(val, Config.callerArg(i + callIsMultiple), imm));
         }
 
-        instrs.add(call(target, callerNumArgs, numRets));
+        instrs.add(callS(target, callerNumArgs, numRets));
         return Config.callerRet(0, callerNumArgs);
     }
 

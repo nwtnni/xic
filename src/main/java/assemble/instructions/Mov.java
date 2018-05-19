@@ -63,6 +63,22 @@ public abstract class Mov<S, D, A> extends Instr<A> {
         public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
     }
 
+    /**
+     * Abstract label source, register destination addressing mode.
+     */
+    public static class TLR extends Mov<String, Temp, Temp> {
+        public TLR(String src, Temp dest) { super(src, dest); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+
+    /**
+     * Abstract register source, label destination addressing mode.
+     */
+    public static class TRL extends Mov<Temp, String, Temp> {
+        public TRL(Temp src, String dest) { super(src, dest); }
+        public <T> T accept(InstrVisitor<T> v) { return v.visit(this); }
+    }
+
     /*
      *
      * Assembly Instructions
@@ -102,5 +118,19 @@ public abstract class Mov<S, D, A> extends Instr<A> {
      */
     public static class RRR extends Mov<Reg, Reg, Reg> {
         public RRR(Reg src, Reg dest) { super(src, dest); }
+    }
+
+    /**
+     * Label source, register destination addressing mode.
+     */
+    public static class RLR extends Mov<String, Reg, Reg> {
+        public RLR(String src, Reg dest) { super(src, dest); }
+    }
+
+    /**
+     * Register source, label destination addressing mode.
+     */
+    public static class RRL extends Mov<Reg, String, Reg> {
+        public RRL(Reg src, String dest) { super(src, dest); }
     }
 }

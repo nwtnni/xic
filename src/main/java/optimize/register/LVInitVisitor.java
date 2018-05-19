@@ -93,7 +93,7 @@ public class LVInitVisitor extends InstrVisitor<Void> {
      * Call Visitor
      */
 
-    public Void visit(Call.T c) {
+    public Void visit(Call.TL c) {
         int numArgs = c.numArgs;
 
         // Args in registers must be live if call uses them
@@ -101,6 +101,44 @@ public class LVInitVisitor extends InstrVisitor<Void> {
         for (int i = 0; i < Math.min(numArgs, 6); i++) {
             use.add(Config.getArg(i));
         }
+
+        // All caller saved registers are killed
+        Set<Temp> def = Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RDI, Temp.RSI, Temp.R8, Temp.R9, Temp.R10, Temp.R11);
+
+        update(c, use, def);
+        return null;
+    }
+
+    public Void visit(Call.TR c) {
+        int numArgs = c.numArgs;
+
+        // Args in registers must be live if call uses them
+        Set<Temp> use = new HashSet<>();
+        for (int i = 0; i < Math.min(numArgs, 6); i++) {
+            use.add(Config.getArg(i));
+        }
+
+        // Call uses target register
+        use.add(c.name);
+
+        // All caller saved registers are killed
+        Set<Temp> def = Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RDI, Temp.RSI, Temp.R8, Temp.R9, Temp.R10, Temp.R11);
+
+        update(c, use, def);
+        return null;
+    }
+
+    public Void visit(Call.TM c) {
+        int numArgs = c.numArgs;
+
+        // Args in registers must be live if call uses them
+        Set<Temp> use = new HashSet<>();
+        for (int i = 0; i < Math.min(numArgs, 6); i++) {
+            use.add(Config.getArg(i));
+        }
+
+        // Call uses target memory address temps
+        use.addAll(Mem.getTemps(c.name));
 
         // All caller saved registers are killed
         Set<Temp> def = Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RDI, Temp.RSI, Temp.R8, Temp.R9, Temp.R10, Temp.R11);
@@ -247,6 +285,16 @@ public class LVInitVisitor extends InstrVisitor<Void> {
 
     public Void visit(Mov.TRR m) {
         update(m, Set.of(m.src), Set.of(m.dest));
+        return null;
+    }
+
+    public Void visit(Mov.TLR m) {
+        update(m, EMPTY, Set.of(m.dest));
+        return null;
+    }
+
+    public Void visit(Mov.TRL m) {
+        update(m, Set.of(m.src), EMPTY);
         return null;
     }
     

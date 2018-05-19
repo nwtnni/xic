@@ -185,8 +185,16 @@ public abstract class InstrFactory {
      * Call Factory Method
      */
 
-    public static Call<Temp> call(String name, int numArgs, int numRets) {
-        return new Call.T(name, numArgs, numRets);
+    public static Call<String, Temp> callS(String name, int numArgs, int numRets) {
+        return new Call.TL(name, numArgs, numRets);
+    }
+
+    public static Call<Temp, Temp> callT(Temp name, int numArgs, int numRets) {
+        return new Call.TR(name, numArgs, numRets);
+    }
+
+    public static Call<Mem<Temp>, Temp> callM(Mem<Temp> name, int numArgs, int numRets) {
+        return new Call.TM(name, numArgs, numRets);
     }
 
     /*
@@ -394,6 +402,21 @@ public abstract class InstrFactory {
 
     public static Mov<Temp, Temp, Temp> movRR(Temp src, Temp dest) {
         return new Mov.TRR(src, dest);
+    }
+
+    /** Read memory at label. */
+    public static Mov<String, Temp, Temp> movLR(String src, Temp dest) {
+        return new Mov.TLR(src, dest);
+    }
+
+    /** Get address of label. */
+    public static Mov<String, Temp, Temp> movLAR(String src, Temp dest) {
+        return new Mov.TLR("$" + src, dest);
+    }
+
+    /** Write to memory at label. */
+    public static Mov<Temp, String, Temp> movRL(Temp src, String dest) {
+        return new Mov.TRL(src, dest);
     }
 
     /**

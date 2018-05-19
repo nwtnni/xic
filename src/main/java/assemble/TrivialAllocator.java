@@ -151,4 +151,10 @@ public class TrivialAllocator extends Allocator {
         store(m.dest); 
         return null;
     }
+
+    public Boolean visit(Mov.TLR m) {
+        super.visit(m);
+        store(m.dest);
+        return null;
+    }
 }
