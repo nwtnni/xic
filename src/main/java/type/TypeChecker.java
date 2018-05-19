@@ -65,6 +65,28 @@ public class TypeChecker extends ASTVisitor<Type> {
     private List<Type> returns;
     private ClassType inside;
 
+    private boolean allSubclass(List<Type> subs, List<Type> supers) {
+        for (int i = 0; i < subs.size(); i++) {
+            Type sub = subs.get(i);
+            Type sup = supers.get(i);
+
+            // Equal classes can always be passed
+            if (sub.equals(sup)) continue;
+
+            // Null subclasses objects and arrays
+            if (sub.isNull() && (sup.isClass() || sup.isArray())) continue;
+
+            // Polymorphic arrays can be passed as any array
+            if (sub.isPoly() && sup.isArray()) continue;
+
+            // Otherwise must check class hierarchy
+            if (sub.isClass() && sup.isClass() && globalContext.isSubclass((ClassType) sub, (ClassType) sup)) continue;
+
+            return false;
+        }
+        return true;
+    }
+
     /*
      * Visitor Methods ---------------------------------------------------------------------
      */
@@ -291,24 +313,32 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiReturn r) throws XicException {
+
+        // Returning values
         if (r.hasValues()) {
-            Type value = Type.tupleFromList(visit(r.values));
+            List<Type> values = visit(r.values);
+
             for (Node n : r.values) {
-                if (n instanceof XiCall) {
-                    if (n.type.kind.equals(Type.Kind.TUPLE)) {
-                        throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
-                    }
+                if (n instanceof XiCall && n.type.isTuple()) {
+                    throw new TypeException(MISMATCHED_RETURN, r.location);
                 }
             }
-            if (!value.equals(Type.UNIT) && returns.equals(value)) {
-                r.type = Type.VOID;
-                return r.type;
+
+            if (values.size() != returns.size() || !allSubclass(values, returns)) {
+                throw new TypeException(MISMATCHED_RETURN, r.location);
             }
-        } else if (returns.equals(Type.UNIT)) {
-            r.type = Type.VOID;
+
+            r.type = VoidType.VOID;
             return r.type;
         }
-        throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
+
+        // Procedure; no values returned
+        else if (returns.isEmpty()) {
+            r.type = VoidType.VOID;
+            return r.type;
+        }
+
+        throw new TypeException(MISMATCHED_RETURN, r.location);
     }
 
     // Should be removed in desugaring
@@ -325,15 +355,16 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiWhile w) throws XicException {
-        if (!w.guard.accept(this).equals(Type.BOOL)) {
-            throw new TypeException(Kind.INVALID_GUARD, w.guard.location);
+        if (!w.guard.accept(this).isBool()) {
+            throw new TypeException(INVALID_GUARD, w.guard.location);
         }
 
         if (!(w.block instanceof XiBlock)) {
             w.block = new XiBlock(w.block.location, w.block);
         }
+
         w.block.accept(this);
-        w.type = Type.UNIT;
+        w.type = UnitType.UNIT;
         return w.type;
     }
 
@@ -421,26 +452,9 @@ public class TypeChecker extends ASTVisitor<Type> {
         // Check parameter passing for both function and method
         List<Type> caller = visit(c.args);
         List<Type> called = ft.getArgs();
+
         if (caller.size() != called.size()) throw new TypeException(INVALID_ARG_TYPES, c.location);
-
-        for (int i = 0; i < caller.size(); i++) {
-            Type sub = caller.get(i);
-            Type sup = called.get(i);
-
-            // Equal classes can always be passed
-            if (sub.equals(sup)) continue;
-
-            // Null subclasses objects and arrays
-            if (sub.isNull() && (sup.isClass() || sup.isArray())) continue;
-
-            // Polymorphic arrays can be passed as any array
-            if (sub.isPoly() && sup.isArray()) continue;
-
-            // Otherwise must check class hierarchy
-            if (sub.isClass() && sup.isClass() && globalContext.isSubclass((ClassType) sub, (ClassType) sup)) continue;
-
-            throw new TypeException(INVALID_ARG_TYPES, c.location);
-        }
+        if (!allSubclass(caller, called)) throw new TypeException(INVALID_ARG_TYPES, c.location);
 
         c.type = (ft.getReturns().size() == 0) ? UnitType.UNIT : new TupleType(ft.getReturns());
         return c.type;
