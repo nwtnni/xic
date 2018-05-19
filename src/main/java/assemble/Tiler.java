@@ -154,7 +154,7 @@ public class Tiler extends IRVisitor<Operand> {
 
         // Set up prologue and epilogue
         FuncDecl.T fn = new FuncDecl.T(f, args, returns, instrs);
-        unit.fns.add(fn);
+        unit.text.add(fn);
         
         return null;
     }

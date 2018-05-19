@@ -39,7 +39,7 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
      */
     public Map<String, ASAGraph<E>> getAllCfgs(CompUnit<Temp> compUnit) {
         Map<String, ASAGraph<E>> fns = new HashMap<>();
-        for (FuncDecl<Temp> fn : compUnit.fns) {
+        for (FuncDecl<Temp> fn : compUnit.text) {
             // Generate graph
             makeCfg(fn);
             fns.put(fn.name, cfg);

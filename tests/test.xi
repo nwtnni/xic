@@ -1,20 +1,21 @@
 use io
 use conv
 
-main(args:int[][]) {
-    println("main")
-    println(unparseInt(1))
-    foo()
-}
+main (args:int[][]) {
+    n:int = 3
+    m:int = 5
+    arr:int[n][m]
 
-bar() {
-    a:int[3]
-
-    a[0] = 'a'
-    a[1] = 'b'
-    a[2] = 'c'
-}
-
-foo() {
-    println("foo");
+    i:int = 0
+    while (i < length(arr)) {
+        j:int = 0
+        while (j < length(arr[i])) {
+            arr[i][j] = (i + 1) * (j + 1)
+            print(unparseInt(arr[i][j]))
+            if (j != m - 1) print(", ")
+            j = j + 1
+        }
+        println("")
+        i = i + 1
+    }
 }

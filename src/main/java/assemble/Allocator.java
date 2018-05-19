@@ -310,6 +310,7 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
     }
 
     public Boolean visit(Mov.TIM m) {
+        // Move immediate into memory
         Optional<Mem<Reg>> dest = allocate(m.dest);
         dest.ifPresent(d -> instrs.add(new Mov.RIM(m.src, d)));
         return dest.isPresent();
@@ -340,6 +341,7 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
     }
 
     public Boolean visit(Mov.TRR m) {
+        // Move register into register
         Optional<Reg> src = allocate(m.src, 0);
         Optional<Reg> dest = allocate(m.dest, 1);
         src.ifPresent(s ->
@@ -351,14 +353,14 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
     }
 
     public Boolean visit(Mov.TLR m) {
-        // Move immediate into register
+        // Move labeled memory into register
         Optional<Reg> dest = allocate(m.dest, 1);
         dest.ifPresent(d -> instrs.add(new Mov.RLR(m.src, d)));
         return dest.isPresent();
     }
 
     public Boolean visit(Mov.TRL m) {
-        // Move register into memory
+        // Move register into labeled memory
         Optional<Reg> src = allocate(m.src, 1);
         src.ifPresent(s -> instrs.add(new Mov.RRL(s, m.dest)));
         return src.isPresent();

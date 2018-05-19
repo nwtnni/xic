@@ -22,8 +22,11 @@ public class ABIContext extends Context<String, String> {
             reverseContext.add(mangled, e.getValue());
         }
 
-        reverseContext.add(Emitter.ARRAY_ALLOC, new FnType(Type.INT, Type.INT));
-        reverseContext.add(Emitter.ARRAY_CONCAT, new FnType(Type.listFromTypes(Type.INT, Type.INT), Type.INT));
+        reverseContext.add(Library.ARRAY_ALLOC, new FnType(Type.INT, Type.INT));
+        reverseContext.add(Library.ARRAY_CONCAT, new FnType(Type.listFromTypes(Type.INT, Type.INT), Type.INT));
+
+        // TODO: a hack for init function
+        reverseContext.add("_I_init_p", new FnType(Type.UNIT, Type.UNIT));
     }
 
     /**
