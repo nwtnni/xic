@@ -111,7 +111,9 @@ _Imain_paai:
         movq %rax, %rdi
         callq _Iprintln_pai
 
-        addq $42, _I_g_x_i
+        movq _I_g_x_i, %rax
+        addq $42, %rax
+        movq %rax, _I_g_x_i
 
         # println(unparseInt(_I_g_x_i))
         movq _I_g_x_i, %rdi

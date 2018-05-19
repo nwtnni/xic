@@ -46,7 +46,8 @@ _I_init_A:
         callq _Iprintln_pai
 
         # A has 1 field f1
-        movq $1, _I_size_A
+        movq $1, %rdi
+        movq %rdi, _I_size_A
 
         # Address of A's vt
         movq $_I_vt_A, %rax
@@ -75,10 +76,10 @@ _I_init_B:
 
         # B has 1 field f2 
         # in addition A's fields
-        movq $1, _I_size_B
-
-        movq _I_size_A, %rdi
-        addq %rdi, _I_size_B
+        movq $1, %rdi
+        movq _I_size_A, %rsi
+        addq %rsi, %rdi
+        movq %rdi, _I_size_B
 
         # Address of B's vt
         movq $_I_vt_B, %rax
