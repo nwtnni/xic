@@ -55,7 +55,8 @@ public class TypeChecker extends ASTVisitor<Type> {
     }
 
     protected GlobalContext globalContext;
-    protected LocalContext localContext;
+
+    private ClassType inside;
 
     /**
      * The current value of rho, the expected return
@@ -63,7 +64,8 @@ public class TypeChecker extends ASTVisitor<Type> {
      * in the type specification.
      */
     private List<Type> returns;
-    private ClassType inside;
+
+    private LocalContext localContext;
 
     private boolean allSubclass(List<Type> subs, List<Type> supers) {
         for (int i = 0; i < subs.size(); i++) {
@@ -118,13 +120,64 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiProgram p) throws XicException {
-        for (Node element : p.body) {
-            if (element instanceof XiGlobal) continue;
-            element.accept(this);
+
+        // First pass to populate global variables
+        for (Node n : p.body) {
+            if (n instanceof XiGlobal) {
+
+                // Required try/catch if an array global uses other globals e.g.
+                // arr: int[length];
+                // length: int
+                try { n.accept(this); } catch (XicException e) {}
+            }
+        }
+
+        // Second pass to finish populating global variables
+        for (Node n : p.body) {
+            if (n instanceof XiGlobal && n.type == null) n.accept(this);
+        }
+
+        // Third pass to populate function and method bodies
+        for (Node n : p.body) {
+            if (!(n instanceof XiGlobal)) n.accept(this);
         }
 
         p.type = UnitType.UNIT;
         return p.type;
+    }
+
+    @Override
+    public Type visit(XiGlobal g) throws XicException {
+
+        // Declaration; must be either array or class
+        if (g.stmt instanceof XiDeclr) {
+            XiDeclr declr = (XiDeclr) g.stmt;
+
+            if (globalContext.contains(declr.id)) {
+                throw new TypeException(DECLARATION_CONFLICT, g.location);
+            }
+
+            globalContext.put(declr.id, (GlobalType) declr.xiType.accept(this));
+            g.type = UnitType.UNIT;
+            return g.type;
+        }
+
+        // Literal assisgnment; must be XiInt or XiBool
+        if (g.stmt instanceof XiAssign) {
+            XiAssign assign = (XiAssign) g.stmt;
+            XiVar var = (XiVar) assign.lhs.get(0); 
+
+            if (globalContext.contains(var.id)) {
+                throw new TypeException(DECLARATION_CONFLICT, g.location);
+            }
+            
+            var.type = assign.rhs.accept(this);
+            globalContext.put(var.id, (GlobalType) var.type);
+            g.type = UnitType.UNIT;
+            return g.type;
+        }
+
+        throw new XicInternalException("XiGlobal must be XiDeclr or XiAssign");
     }
 
     @Override
