@@ -123,14 +123,23 @@ public class Emitter extends ASTVisitor<IRNode> {
             program.appendFunc(Library.xiDynamicAlloc());
         }
 
+        // TODO: initialize globals
+
         // TODO: pass context to generate init function
+        // - initialize global arrays
+        // - initialize class size + vt
         program.appendFunc(Initializer.generateInit());
 
-        // TODO: visit classes
-
         for (Node n : p.body) {
-            IRFuncDecl f = (IRFuncDecl) n.accept(this);
-            program.appendFunc(f);
+            // Can ignore globals
+
+            // TODO: visit classes
+
+
+            if (n instanceof XiFn) {
+                IRFuncDecl f = (IRFuncDecl) n.accept(this);
+                program.appendFunc(f);
+            }
         }
 
         return program;
