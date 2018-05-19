@@ -13,4 +13,9 @@ public class TupleType extends Type {
 
     @Override
     public boolean isTuple() { return true; }
+
+    public List<Type> getTuple() {
+        return new ArrayList<>(tuple);
+    }
+
 }

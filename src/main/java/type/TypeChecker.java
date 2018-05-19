@@ -129,16 +129,13 @@ public class TypeChecker extends ASTVisitor<Type> {
         return p.type;
     }
 
-    // We do not need to typecheck XiUse, (visitor will return null) TODO
-    @Override
-    public Type visit(XiUse u) throws XicException {
-        throw new RuntimeException();
-    }
-
-    // TODO: PA7
     @Override
     public Type visit(XiClass c) throws XicException {
-        throw new RuntimeException();
+        inside = new ClassType(c.id);
+        for (Node n : c.body) {
+            if (n instanceof XiFn) n.accept(this);
+        }
+        inside = null;
     }
 
     /**
@@ -151,30 +148,20 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiFn f) throws XicException {
-        local.push();
-        FnType fnType = fns.lookup(f.id);
-        if (fnType == null) {
-            // Internal error occurred; should never happen
-            throw XicInternalException.runtime("Function not found. Fix Importer.");
-        }
+        localContext.push();
+        FnType fnType = (FnType) globalContext.lookup(f.id);
 
         visit(f.args);
-        returns = fnType.returns;
+        returns = fnType.getReturns();
         Type ft = f.block.accept(this);
 
-        if (f.isFn() && !ft.equals(Type.VOID)) {
+        if (f.isFn() && !ft.isVoid()) {
             throw new TypeException(CONTROL_FLOW, f.location);
         }
 
-        vars.pop();
-        f.type = Type.UNIT;
+        localContext.pop();
+        f.type = UnitType.UNIT;
         return f.type;
-    }
-
-    // TODO: PA7
-    @Override
-    public Type visit(XiGlobal g) throws XicException {
-        throw new RuntimeException();
     }
 
     /*
@@ -193,18 +180,28 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiAssign a) throws XicException {
-        Type rt = a.rhs.accept(this);
-        Type lt = Type.tupleFromList(visit(a.lhs));
 
-        if (!types.isSubType(rt, lt)) {
-            throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
+        Type right = a.rhs.accept(this);
+        List<Type> lt = visit(a.lhs);
+
+        // Only function calls can use wildcards
+        if (lt.stream().anyMatch(t -> t.isUnit()) && !(a.rhs instanceof XiCall)) {
+            throw new TypeException(INVALID_WILDCARD, a.location);
         }
 
-        if (lt.equals(Type.UNIT) && !(a.rhs instanceof XiCall)) {
-            throw new TypeException(Kind.INVALID_WILDCARD, a.location);
+        // Procedures are disallowed in an assign
+        if (a.rhs instanceof XiCall && right.isUnit()) {
+            throw new TypeException(MISMATCHED_ASSIGN, a.location);
         }
 
-        a.type = Type.UNIT;
+        // Right hand side must subtype left hand side
+        List<Type> rt = right.isTuple() ? ((TupleType) right).getTuple() : List.of(right);
+
+        if (lt.size() != rt.size() || !allSubclass(rt, lt)) {
+            throw new TypeException(MISMATCHED_ASSIGN, a.location);
+        }
+
+        a.type = UnitType.UNIT;
         return a.type;
     }
 
@@ -217,8 +214,9 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiBlock b) throws XicException {
-        b.type = Type.UNIT;
-        vars.push();
+
+        b.type = UnitType.UNIT;
+        localContext.push();
         int size = b.statements.size();
 
         for (int i = 0; i < size; i++) {
@@ -227,18 +225,19 @@ public class TypeChecker extends ASTVisitor<Type> {
             Type st = s.accept(this);
 
             // Unused function result
-            if (!st.equals(Type.VOID) && !st.equals(Type.UNIT) && s instanceof XiCall) {
-                throw new TypeException(Kind.UNUSED_FUNCTION, b.statements.get(i).location);
+            if (!st.isVoid() && !st.isUnit() && s instanceof XiCall) {
+                throw new TypeException(UNUSED_FUNCTION, b.statements.get(i).location);
             }
 
             // Unreachable code
-            if (i < size - 1 && st.equals(Type.VOID)) {
-                throw new TypeException(Kind.UNREACHABLE, b.statements.get(i + 1).location);
+            if (i < size - 1 && st.isVoid()) {
+                throw new TypeException(UNREACHABLE, b.statements.get(i + 1).location);
             } else {
-                b.type = st.equals(Type.VOID) ? Type.VOID : Type.UNIT;
+                b.type = st.isVoid() ? VoidType.VOID : UnitType.UNIT;
             }
         }
-        vars.pop();
+
+        localContext.pop();
         return b.type;
     }
 
@@ -249,7 +248,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiBreak b) throws XicException {
-        return Type.VOID;
+        return VoidType.VOID;
     }
 
     /**
@@ -260,14 +259,19 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiDeclr d) throws XicException {
+
+        // Early return: underscore binds nothing
         if (d.isUnderscore()) {
-            d.type = Type.UNIT;
-        } else if (vars.contains(d.id) || fns.contains(d.id)) {
-            throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
-        } else {
-            d.type = d.xiType.accept(this);
-            vars.add(d.id, d.type);
+            d.type = UnitType.UNIT;
+            return d.type;
         }
+
+        // In this pass, we only check local variables
+        // We allow shadowing against class fields and methods, which can be resolved with the this keyword
+        if (localContext.contains(d.id) || globalContext.contains(d.id)) throw new TypeException(DECLARATION_CONFLICT, d.location);
+
+        d.type = d.xiType.accept(this);
+        localContext.add(d.id, (FieldType) d.type);
         return d.type;
     }
 
@@ -279,17 +283,17 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiIf i) throws XicException {
-        if (!i.guard.accept(this).equals(Type.BOOL)) {
-            throw new TypeException(Kind.INVALID_GUARD, i.guard.location);
-        }
+
+        if (!i.guard.accept(this).isBool()) throw new TypeException(INVALID_GUARD, i.guard.location);
 
         // Check if the statement is followed by a single statement
         if (!(i.block instanceof XiBlock)) {
             i.block = new XiBlock(i.block.location, i.block);
         }
-        Type it = i.block.accept(this);
 
+        Type it = i.block.accept(this);
         Type et = null;
+
         if (i.hasElse()) {
             if (!(i.elseBlock instanceof XiBlock)) {
                 i.elseBlock = new XiBlock(i.elseBlock.location, i.elseBlock);
@@ -297,10 +301,10 @@ public class TypeChecker extends ASTVisitor<Type> {
             et = i.elseBlock.accept(this);
         }
 
-        if (et != null && it.equals(Type.VOID) && et.equals(Type.VOID)) {
-            i.type = Type.VOID;
+        if (et != null && it.isVoid() && et.isVoid()) {
+            i.type = VoidType.VOID;
         } else {
-            i.type = Type.UNIT;
+            i.type = UnitType.UNIT;
         }
         return i.type;
     }
