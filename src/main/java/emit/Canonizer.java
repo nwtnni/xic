@@ -98,7 +98,8 @@ public class Canonizer extends IRVisitor<IRNode> {
         }
         
         // Call is always hoisted
-        return new IRCall(c.target(), c.numRets(), args);
+        IRExpr target = (IRExpr) c.target().accept(this);
+        return new IRCall(target, c.numRets(), args);
     }
 
     /**

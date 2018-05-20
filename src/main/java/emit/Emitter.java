@@ -196,9 +196,6 @@ public class Emitter extends ASTVisitor<IRNode> {
     private IRExpr dispatch(IRExpr obj, String name, ClassType type) {
         GlobalContext gc = context.gc;
 
-        IRTemp t = IRFactory.generate();
-        IRExpr target;
-
         // Field dispatch
         if (gc.inherits(type, name) != null && gc.inherits(type, name).isField()) {
             Pair<ClassType, List<String>> source = context.gc.lookupFieldSource(type, name);
@@ -207,34 +204,32 @@ public class Emitter extends ASTVisitor<IRNode> {
             int offset = source.second.size() - source.second.indexOf(name);
             
             // Take fixed offset off of
-            target = new IRMem(
+            return new IRMem(
                 new IRBinOp(OpType.ADD,
                     new IRBinOp(OpType.MUL, 
                         new IRBinOp(OpType.SUB, IRFactory.generateSize(cls, context), new IRConst(offset)),
                         Library.WORD_SIZE
                     ),
-                    t
+                    obj
                 )
             );
         }
 
         // Method dispatch
-        else if (gc.inherits(type, name) != null && gc.inherits(type, name).isMethod()) {
+        if (gc.inherits(type, name) != null && gc.inherits(type, name).isMethod()) {
 
             OrderedMap<String, MethodType> order = gc.lookupAllMethods(type);
             int offset = order.indexOf(name);
 
             // Access vt then take fixed offset to method address
-            target = new IRMem(
+            return new IRMem(
                 new IRBinOp(OpType.ADD, 
                     new IRConst(offset * Configuration.WORD_SIZE), 
-                    new IRMem(t)
+                    new IRMem(obj)
             ));
         }
 
-        else { throw new XicInternalException("Error in dispatch"); }
-
-        return new IRESeq(new IRMove(t, obj), target);
+        throw new XicInternalException("Error in dispatch");
     }
 
     /*
