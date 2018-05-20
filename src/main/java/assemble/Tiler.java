@@ -37,7 +37,7 @@ public class Tiler extends IRVisitor<Operand> {
         return tiler.unit;
     }
 
-    public static final boolean INCLUDE_COMMENTS = false;
+    public static final boolean INCLUDE_COMMENTS = true;
 
     // Mangled names context
     private ABIContext context;
@@ -89,8 +89,6 @@ public class Tiler extends IRVisitor<Operand> {
             unit.data.add(name + ":");
             unit.data.add("        .quad   " + c.globals().get(name));
         }
-
-        System.out.println(context.gc.lookupLocalClasses());
 
         // Add globals for all classes
         for (ClassType cls : context.gc.lookupLocalClasses()) {
@@ -252,7 +250,7 @@ public class Tiler extends IRVisitor<Operand> {
             instrs.add(callS(target, callerNumArgs, numRets));
 
         // Method calls
-        } else if (c.target() instanceof IRTemp) {
+        } else if (c.target() instanceof IRExpr) {
             Operand target = c.target().accept(this);
             if (target.isTemp()) {
                 instrs.add(callT(target.getTemp(), callerNumArgs, numRets));

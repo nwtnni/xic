@@ -12,17 +12,22 @@ main (args:int[][]) {
 
     x:A = new A
     y:B = new B
+
+    _ = x.foo()
+    _ = y.foo()
 }
 
 class A {
     x:int
     foo():A {
-        return null
+        println("in A")
+        return this
     }
 }
 
 class B extends A {
     foo():A {
+        println("in B")
         return this
     }
 }

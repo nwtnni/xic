@@ -24,7 +24,7 @@ public abstract class Phase {
             // new ConstProp(),
             // new FoldNoPrint(),
             // new CSE(),
-            // new Irgen(),
+            new Irgen(),
             new Tile(),
             new RegAlloc(),
             new TrivialAlloc()

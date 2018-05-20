@@ -162,12 +162,13 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         // Copy or generate entries of vt
-        int i = 0;
+        int i = -1;
         OrderedMap<String, MethodType> methods = gc.lookupAllMethods(ct);
+
+        System.out.println(methods.keyList());
+
         for (String method : methods.keyList()) {
-
             i++;
-
             if (method.matches("[0-9]+")) continue;
 
             IRConst offset = new IRConst(i * Configuration.WORD_SIZE);
@@ -213,7 +214,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             int offset = order.indexOf(name);
 
             // Access offset
-            return new IRMem(new IRBinOp(OpType.ADD, new IRConst(offset * Configuration.WORD_SIZE), obj));
+            return new IRMem(new IRBinOp(OpType.ADD, new IRConst(offset * Configuration.WORD_SIZE), new IRMem(obj)));
         }
 
         throw new XicInternalException("Error in dispatch");
@@ -596,6 +597,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
         IRExpr target;
         String name;
+        int numRets;
         List<IRExpr> argList = new ArrayList<>();
 
         // Method call requires injecting object reference
@@ -619,10 +621,13 @@ public class Emitter extends ASTVisitor<IRNode> {
             target = dispatch(obj, name, type);
             argList.add(obj);
 
+            numRets = context.gc.lookup(type).lookupMethod(name).getNumRets();
+
         // Function call
         } else {
             name = ((XiVar) c.id).id;
             target = new IRName(context.mangleFunction(name));
+            numRets = ((FnType) context.gc.lookup(name)).getNumRets();
         }
 
         // Inject dummy temp for multiple return if needed
@@ -636,10 +641,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             argList.add((IRExpr) n.accept(this));
         }
 
-        // Get number of returns
-        FnType t = (FnType) context.gc.lookup(name);
-
-        return new IRCall(target, t.getNumRets(), argList);
+        return new IRCall(target, numRets, argList);
     }
 
     // PA7
@@ -705,7 +707,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         setup.add(new IRMove(obj, Library.alloc(size)));
 
         // Copy dispatch vector
-        setup.add(new IRMove(vt, IRFactory.generateVT(n.name, context)));
+        setup.add(new IRMove(vt, new IRMem(IRFactory.generateVT(n.name, context), MemType.GLOBAL)));
         setup.add(new IRMove(new IRMem(obj), vt));
 
         return new IRESeq(setup, obj);
