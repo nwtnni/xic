@@ -1,5 +1,6 @@
 package type;
 
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Stack;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 
 import util.Context;
 import util.OrderedMap;
+import util.Pair;
 import xic.XicInternalException;
 
 import static type.TypeException.Kind;
@@ -108,13 +110,13 @@ public class GlobalContext {
     }
 
     public MethodType inherits(ClassType ct, String id) {
-        
+
         // No such class exists
-        if (!classes.containsKey(ct)) return null; 
+        if (!classes.containsKey(ct)) return null;
 
         // Seearch through class and all ancestors
         do {
-            ClassContext cc = classes.get(ct); 
+            ClassContext cc = classes.get(ct);
             if (cc == null) throw new XicInternalException("Class in hierarchy but not in classes");
             if (cc.containsMethod(id)) return cc.lookupMethod(id);
             ct = hierarchy.get(ct);
@@ -129,6 +131,23 @@ public class GlobalContext {
 
     public ClassContext lookup(ClassType ct) {
         return classes.get(ct);
+    }
+
+    public Pair<ClassType, List<String>> lookupFieldSource(ClassType sub, String name) {
+        while (true) {
+
+            if (sub == null || !classes.containsKey(sub)) throw new XicInternalException("Field not bound in any superclass");
+
+            // Keep traversing hierarchy
+            if (!classes.get(sub).containsField(name)) {
+                sub = hierarchy.get(sub);
+            }
+
+            // Otherwise get context
+            ClassContext cc = classes.get(sub);
+            return new Pair<>(sub, cc.getFields());
+
+        }
     }
 
     public Set<ClassType> lookupLocalClasses() {
