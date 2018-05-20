@@ -3,7 +3,10 @@ package type;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Stack;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import util.Context;
 import util.OrderedMap;
@@ -19,11 +22,13 @@ public class GlobalContext {
     private Map<String, GlobalType> context;
     private Map<ClassType, ClassType> hierarchy;
     private Map<ClassType, ClassContext> classes;
+    private Set<String> local;
 
     public GlobalContext() {
         this.context = new HashMap<>();
         this.hierarchy = new HashMap<>();
         this.classes = new HashMap<>();
+        this.local = new HashSet<>();
     }
 
     public void put(String id, ClassContext cc) {
@@ -35,6 +40,10 @@ public class GlobalContext {
     public void put(String id, GlobalType gt) {
         if (gt.isClass()) throw new XicInternalException("Attempting to insert class without methods");
         context.put(id, gt);
+    }
+
+    public void setLocal(String id) {
+        local.add(id);
     }
 
     public boolean extend(ClassType subclass, ClassType superclass) {
@@ -81,6 +90,10 @@ public class GlobalContext {
         return true;
     }
 
+    public boolean isLocal(String id) {
+        return local.contains(id);
+    }
+
     public boolean contains(ClassType ct) {
         return classes.containsKey(ct);
     }
@@ -111,6 +124,12 @@ public class GlobalContext {
 
     public ClassContext lookup(ClassType ct) {
         return classes.get(ct);
+    }
+
+    public Set<String> lookupLocalClasses() {
+        return local.stream()
+            .filter(id -> classes.containsKey(id))
+            .collect(Collectors.toSet());
     }
 
     public OrderedMap<String, MethodType> lookupAllMethods(ClassType ct) {

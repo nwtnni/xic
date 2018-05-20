@@ -112,7 +112,7 @@ public class Importer extends TypeChecker {
 
                 // Add class context to global context
                 globalContext.put(c.id, cc);
-                moduleLocal.add(c.id);
+                globalContext.setLocal(c.id);
                 c.type = ct;
 
                 // Lazily extend if necessary
@@ -124,7 +124,7 @@ public class Importer extends TypeChecker {
                 XiFn f = (XiFn) n;
 
                 // Early return: functions must be unique in a module
-                if (moduleLocal.contains(f.id)) throw new TypeException(DECLARATION_CONFLICT, f.location);
+                if (globalContext.isLocal(f.id)) throw new TypeException(DECLARATION_CONFLICT, f.location);
 
                 localContext.push();
                 FnType type = new FnType(visit(f.args), visit(f.returns));
@@ -137,7 +137,7 @@ public class Importer extends TypeChecker {
                 }
 
                 globalContext.put(f.id, type);
-                moduleLocal.add(f.id);
+                globalContext.setLocal(f.id);
             }
         }
 
