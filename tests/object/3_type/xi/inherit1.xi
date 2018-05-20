@@ -1,7 +1,9 @@
 class B extends A {}
 
 class A {
-  foo(): int
+  foo(): int {
+    return 1
+  }
 }
 
 bar(b: B): int {
