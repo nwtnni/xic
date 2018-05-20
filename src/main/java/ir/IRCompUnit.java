@@ -16,25 +16,25 @@ public class IRCompUnit extends IRNode {
     private String name;
 
     /** Compilation unit global variables. */
-    private List<IRStmt> globals;
+    private Map<String, Long> globals;
 
     /** Map of ABI names to function declarations. */
     private Map<String, IRFuncDecl> functions;
 
     public IRCompUnit(String name) {
         this.name = name;
-        this.globals = new ArrayList<>();
+        this.globals = new LinkedHashMap<>();
         functions = new LinkedHashMap<>();
     }
 
 
-    public IRCompUnit(String name, List<IRStmt> globals) {
+    public IRCompUnit(String name, Map<String, Long> globals) {
         this.name = name;
         this.globals = globals;
         functions = new LinkedHashMap<>();
     }
 
-    public IRCompUnit(String name, List<IRStmt> globals, Map<String, IRFuncDecl> functions) {
+    public IRCompUnit(String name, Map<String, Long> globals, Map<String, IRFuncDecl> functions) {
         this.name = name;
         this.globals = globals;
         this.functions = functions;
@@ -48,7 +48,7 @@ public class IRCompUnit extends IRNode {
         return name;
     }
 
-    public List<IRStmt> globals() {
+    public Map<String, Long> globals() {
         return globals;
     }
 

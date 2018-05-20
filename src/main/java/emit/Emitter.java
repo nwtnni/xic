@@ -230,17 +230,32 @@ public class Emitter extends ASTVisitor<IRNode> {
         // TODO: initialize globals and classes
         // - initialize global arrays
         // - initialize class size + vt
-        List<IRStmt> globals = new ArrayList<>();
-        List<IRStmt> classes = new ArrayList<>();
+        List<IRStmt> globalInit = new ArrayList<>();
+        List<IRStmt> classInit = new ArrayList<>();
 
         for (Node node : p.body) {
 
             // Visit globals
             if (node instanceof XiGlobal) {
-                IRStmt g = (IRStmt) node.accept(this);
-                if (g != null) {
-                    globals.add(g);
+                IRNode g = node.accept(this);
+                if (node.type.isArray()) {
+                    globalInit.add((IRStmt) g);
                 }
+
+                String name;
+                Long value;
+                if (g instanceof IRMove) {
+                    name = context.mangleGlobal(((IRTemp) ((IRMove) g).target()).name());
+                    value = ((IRConst) ((IRMove) g).src()).value();
+
+                } else if (g instanceof IRTemp) {
+                    name = context.mangleGlobal(((IRTemp) g).name());
+                    value = 0L;
+                } else {
+                    throw XicInternalException.runtime("Unknown global type");
+                }
+
+                program.globals().put(name, value);
 
             // Visit classes
             } else if (node instanceof XiClass) {
@@ -250,7 +265,7 @@ public class Emitter extends ASTVisitor<IRNode> {
                 // Create initialization function
                 program.appendFunc(init(c));
                 IRName name = new IRName(context.classInit(c.id));
-                classes.add(new IRExp(new IRCall(name, 0, List.of())));
+                classInit.add(new IRExp(new IRCall(name, 0, List.of())));
 
                 // Visit each method
                 for (Node method : c.body) {
@@ -266,7 +281,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             }
         }
 
-        program.appendFunc(Library.generateInitFunc(classes, globals));
+        program.appendFunc(Library.generateInitFunc(classInit, globalInit));
 
         return program;
     }
@@ -275,7 +290,6 @@ public class Emitter extends ASTVisitor<IRNode> {
     // PA7
     @Override
     public IRNode visit(XiGlobal g) throws XicException {
-        if (!(g.type.isArray())) { return null; }
         return g.stmt.accept(this);
     }
 
