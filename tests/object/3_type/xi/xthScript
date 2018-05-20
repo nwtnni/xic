@@ -23,11 +23,6 @@ xic ("Test oXi --typecheck") "--typecheck" {
 
   bad_inherit1.xi;
 
-  bad_local_shadow1.xi;
-  bad_local_shadow2.xi;
-  bad_local_shadow3.xi;
-  bad_local_shadow4.xi;
-
   bad_method_shadow1.xi;
   bad_method_shadow2.xi;
 
@@ -48,6 +43,9 @@ xic ("Test oXi --typecheck") "--typecheck" {
   inherit1.xi;
   inherit2.xi;
   inherit3.xi;
+
+  local_shadow1.xi;
+  local_shadow2.xi;
 
   null1.xi;
   null2.xi;

@@ -4,7 +4,7 @@ class A {
 
 class B extends A {
   foo(): int {
-    x: int = 1
-    return x 
+    x: bool = true
+    return this.x
   }
 }
