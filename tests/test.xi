@@ -82,6 +82,7 @@ createColoredPoint(x: int, y: int, r: int, g: int, b: int): ColoredPoint {
 
 main(args: int[][]) {
     println("Starting point/coloredpoint example");
+
     p1: Point = createPoint(100, 200);
     println(p1.toString());
     println("Should have printed \"Point at x = 100 and y = 200\"");
@@ -94,20 +95,20 @@ main(args: int[][]) {
     println("Should have printed \"Point at x = 105 and y = 205\"");
 
     cp1: ColoredPoint = createColoredPoint(1000, 1000, 255, 128, 0);
-    // println(cp1.toString());
-    // println("Should have printed \"ColoredPoint at x = 1000 and y = 2000 and Color with r = 255 and g = 128 and b = 0\"");
-    // p3: Point = cp1.clone();
-    // p3.move(5, 5);
-    // println(cp1.toString());
-    // println("Should have printed \"ColoredPoint at x = 1000 and y = 2000 and Color with r = 255 and g = 128 and b = 0\"");
-    // println(p3.toString());
-    // println("Should have printed \"ColoredPoint at x = 1005 and y = 2005 and Color with r = 255 and g = 128 and b = 0\"");
+    println(cp1.toString());
+    println("Should have printed \"ColoredPoint at x = 1000 and y = 2000 and Color with r = 255 and g = 128 and b = 0\"");
+    p3: Point = cp1.clone();
+    p3.move(5, 5);
+    println(cp1.toString());
+    println("Should have printed \"ColoredPoint at x = 1000 and y = 2000 and Color with r = 255 and g = 128 and b = 0\"");
+    println(p3.toString());
+    println("Should have printed \"ColoredPoint at x = 1005 and y = 2005 and Color with r = 255 and g = 128 and b = 0\"");
 
-    // p4: Point = p3.add(p2);
-    // println(p4.toString());
-    // println("Should have printed \"Point at x = 1110 and y = 2210\"");
+    p4: Point = p3.add(p2);
+    println(p4.toString());
+    println("Should have printed \"Point at x = 1110 and y = 2210\"");
 
-    // p5: Point = p2.add(cp1);
-    // println(p5.toString());
-    // println("Should have printed \"Point at x = 1105 and y = 1205\"");
+    p5: Point = p2.add(cp1);
+    println(p5.toString());
+    println("Should have printed \"Point at x = 1105 and y = 1205\"");
 }

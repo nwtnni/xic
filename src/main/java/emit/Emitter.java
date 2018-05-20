@@ -359,7 +359,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
         // Inject temporary for multiple returns
         if (f.returns.size() > 2) {
-            body.add(1, new IRMove(Library.CALLEE_MULT_RET, IRFactory.getArgument(argOffset)));
+            body.add(argOffset, new IRMove(Library.CALLEE_MULT_RET, IRFactory.getArgument(argOffset)));
             argOffset++;
             numArgs++;
         }
@@ -367,7 +367,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Bind arguments to temps
         List<IRNode> args = visit(f.args);
         for (int i = 0; i < args.size(); i++) {
-            body.add(i, new IRMove((IRExpr) args.get(i), IRFactory.getArgument(i + argOffset)));
+            body.add(i + argOffset, new IRMove((IRExpr) args.get(i), IRFactory.getArgument(i + argOffset)));
         }
 
         // Insert empty return if needed
