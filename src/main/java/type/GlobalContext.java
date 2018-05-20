@@ -51,6 +51,7 @@ public class GlobalContext {
 
     public boolean validate(ClassType subclass) {
 
+        // Early return: no superclass
         if (!hierarchy.containsKey(subclass)) return true;
 
         ClassContext cc = classes.get(subclass);
@@ -58,6 +59,9 @@ public class GlobalContext {
 
         // Make sure all overrides match up
         while (ct != null) {
+
+            // Early return: superclass doesn't exist
+            if (!classes.containsKey(ct)) return false;
 
             ClassContext parent = classes.get(ct);
 
@@ -73,7 +77,7 @@ public class GlobalContext {
             // Traverse upward through hierarchy
             ct = hierarchy.get(ct);
         }
-        
+
         return true;
     }
 
