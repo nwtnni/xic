@@ -33,6 +33,7 @@ public class TypeException extends XicException {
         UNUSED_FUNCTION("Unused function result"),
         UNREACHABLE("Unreachable statement"),
         INVALID_GUARD("Guard expressions must be type bool"),
+        INVALID_CALL("Only functions and methods can be called"),
 
         // Expression exceptions
         INVALID_ARG_TYPES("Invalid arguments for function call"),

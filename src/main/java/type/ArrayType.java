@@ -16,6 +16,9 @@ public class ArrayType extends FieldType {
     }
 
     @Override
+    public boolean isArray() { return true; }
+
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof ArrayType)) return false;
         ArrayType a = (ArrayType) o;

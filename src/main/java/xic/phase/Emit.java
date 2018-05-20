@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import ast.XiProgram;
-import type.FnContext;
+import type.GlobalContext;
 
 import emit.ABIContext;
 import emit.Canonizer;
@@ -38,7 +38,7 @@ public class Emit extends Phase {
 
         if (previous.isErr()) return previous;
         
-        Pair<XiProgram, FnContext> typed = previous.ok().getTyped();
+        Pair<XiProgram, GlobalContext> typed = previous.ok().getTyped();
         Pair<IRCompUnit, ABIContext> emitted = Emitter.emitIR(config.unit, typed.first, typed.second);
         
         if (!(output || outputCFG)) return new Result<>(Product.emitted(emitted));

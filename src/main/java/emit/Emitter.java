@@ -8,7 +8,6 @@ import ast.*;
 import type.*;
 import ir.*;
 import ir.IRBinOp.OpType;
-import ir.IRMem.MemType;
 import xic.XicException;
 import xic.XicInternalException;
 import util.Pair;
@@ -272,7 +271,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         IRTemp var = new IRTemp(d.id);
 
         // Case for primitive and class
-        if (!(d.type.isPrimitive() || d.type.isClass())) {
+        if (d.type.isPrimitive() || d.type.isClass()) {
             return var;
         
         // Case for array
