@@ -201,18 +201,21 @@ public class Emitter extends ASTVisitor<IRNode> {
 
         // Field dispatch
         if (cc.containsField(name)) {
-            String source = type.getID();
-            int offset = 0;
+            Pair<ClassType, List<String>> source = context.gc.lookupFieldSource(type, name);
+
+            String cls = source.first.getID();
+            int offset = source.second.size() - source.second.indexOf(name);
             
             // Take fixed offset off of
             return new IRMem(
                 new IRBinOp(OpType.ADD,
-                    new IRBinOp(OpType.MUL(
-                        new IRBinOp(OpType.SUB, IRFactory.generateSize(source, context), new IRConst(offset)),
+                    new IRBinOp(OpType.MUL, 
+                        new IRBinOp(OpType.SUB, IRFactory.generateSize(cls, context), new IRConst(offset)),
                         Library.WORD_SIZE
                     ),
                     obj
-            ));
+                )
+            );
         }
 
         // Method dispatch

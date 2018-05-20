@@ -10,24 +10,26 @@ main (args:int[][]) {
     println(unparseInt(n))
     println(a)
 
-    x:A = new A
-    y:B = new B
+    a1:A = new A
+    b1:B = new B
 
-    _ = x.foo()
-    _ = y.foo()
+    _ = a1.foo()
+    _ = b1.foo()
 }
 
 class A {
     x:int
     foo():A {
-        println("in A")
+        this.x = 1
+        println(unparseInt(x))
         return this
     }
 }
 
 class B extends A {
     foo():A {
-        println("in B")
+        x = 2
+        println(unparseInt(x))
         return this
     }
 }
