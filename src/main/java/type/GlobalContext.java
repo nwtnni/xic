@@ -37,7 +37,6 @@ public class GlobalContext {
         context.add(id, gt);
     }
 
-    //TODO: make sure overrides line up
     public boolean extend(ClassType subclass, ClassType superclass) {
 
         ClassType ct = superclass;
@@ -47,6 +46,34 @@ public class GlobalContext {
         }
 
         hierarchy.put(subclass, superclass);
+        return true;
+    }
+
+    public boolean validate(ClassType subclass) {
+
+        if (!hierarchy.containsKey(subclass)) return true;
+
+        ClassContext cc = classes.get(subclass);
+        ClassType ct = hierarchy.get(subclass);
+
+        // Make sure all overrides match up
+        while (ct != null) {
+
+            ClassContext parent = classes.get(ct);
+
+            // Compare methods to parent
+            for (String method : cc.getMethods()) {
+
+                if (!parent.containsMethod(method)) continue;
+
+                // Make sure method types are equal
+                if (!parent.lookupMethod(method).equals(cc.lookupMethod(method))) return false;
+            }
+
+            // Traverse upward through hierarchy
+            ct = hierarchy.get(ct);
+        }
+        
         return true;
     }
 
