@@ -9,8 +9,3 @@ class A {
 bar(b: B): int {
   return b.foo()
 }
-
-main(args:int[][]) {
-    println(unparseInt(new A.foo()))
-    println(unparseInt(bar(new B)))
-}

@@ -111,14 +111,12 @@ public class GlobalContext {
 
     public Type inherits(ClassType ct, String id) {
 
-        // No such class exists
-        if (!classes.containsKey(ct)) return null;
-
         // Seearch through class and all ancestors
         do {
             ClassContext cc = classes.get(ct);
-            if (cc == null) throw new XicInternalException("Class in hierarchy but not in classes");
-            if (cc.contains(id)) return cc.lookup(id);
+            if (cc != null) {
+                if (cc.contains(id)) return cc.lookup(id);
+            }
             ct = hierarchy.get(ct);
         } while (ct != null);
 

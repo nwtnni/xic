@@ -171,15 +171,34 @@ public class TypeChecker extends ASTVisitor<Type> {
                 ClassType ct = new ClassType(c.id);
                 ClassContext cc = new ClassContext();
 
+                // Lazily extend superclasses
+                if (c.parent != null) globalContext.extend(ct, new ClassType(c.parent));
+
                 for (Node m : c.body) {
 
                     localContext.push();
                     if (m instanceof XiFn) {
                         XiFn f = (XiFn) m;
+
+                        // Prevent shadowing between methods and inherited fields
+                        if (globalContext.inherits(ct, f.id) != null) {
+                            if (globalContext.inherits(ct, f.id).isField()) {
+                                throw new TypeException(DECLARATION_CONFLICT, m.location);
+                            }
+                        }
+
                         MethodType mt = new MethodType(ct, visit(f.args), visit(f.returns));
                         cc.put(f.id, mt);
                     } else if (m instanceof XiDeclr) {
                         XiDeclr d = (XiDeclr) m;
+
+                        // Prevent shadowing between fields and inherited methods
+                        if (globalContext.inherits(ct, d.id) != null) {
+                            if (globalContext.inherits(ct, d.id).isMethod()) {
+                                throw new TypeException(DECLARATION_CONFLICT, m.location);
+                            }
+                        }
+
                         cc.put(d.id, (FieldType) d.xiType.accept(this));
                         d.type = d.xiType.type;
                     }
@@ -207,15 +226,13 @@ public class TypeChecker extends ASTVisitor<Type> {
                     for (String field : cc.getFields()) {
                         reference.put(field, cc.lookupField(field));
                     }
+                    globalContext.put(c.id, reference);
                 }
 
                 // Otherwise update global context with class information
                 else {
                     globalContext.put(c.id, cc);
                 }
-
-                // Lazily extend superclasses
-                if (c.parent != null) globalContext.extend(ct, new ClassType(c.parent));
 
                 // Update module local set
                 globalContext.setLocal(c.id);
