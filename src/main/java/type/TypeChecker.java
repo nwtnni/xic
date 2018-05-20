@@ -715,6 +715,8 @@ public class TypeChecker extends ASTVisitor<Type> {
      * The 0-length array is polymorphic and has special type {@link TypeCheck.POLY},
      * which is equal to all array types.
      *
+     * Arrays of classes typecheck to the LUB of all classes.
+     *
      * @returns Array of child types
      * @throws XicException if invalid
      */
