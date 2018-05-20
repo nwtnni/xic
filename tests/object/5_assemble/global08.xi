@@ -1,15 +1,16 @@
 use io
 use conv
 
-x:int[6]
+len:int = 5
+x:int[len]
 
 main(args:int[][]) {
-    foo()
+    x = "Hello"
     print(x)
 }
 
-foo() {
-    x = "Hello!"
+printInt(i:int) {
+    println(unparseInt(i))
 }
 
 printBool(b:bool) {

@@ -1,5 +1,7 @@
 xic ("Test assemble") "-target linux" {
 
+    break01.xi;
+
     extends01.xi;
     extends02.xi;
     extends03.xi;
@@ -21,6 +23,7 @@ xic ("Test assemble") "-target linux" {
     global05.xi;
     global06.xi;
     global07.xi;
+    global08.xi;
 
     global_init01.xi;
     global_init02.xi;
@@ -35,6 +38,7 @@ xic ("Test assemble") "-target linux" {
     null01.xi;
     null02.xi;
     null03.xi;
+    null04.xi;
 
     obj_array01.xi;
 

@@ -1,15 +1,19 @@
 use io
 use conv
 
-x:int[6]
-
 main(args:int[][]) {
-    foo()
-    print(x)
+    x:int[]
+    if x == null {
+        print("null")
+    }
 }
 
-foo() {
-    x = "Hello!"
+class A {}
+
+class B extends A {}
+
+printInt(i:int) {
+    print(unparseInt(i))
 }
 
 printBool(b:bool) {
