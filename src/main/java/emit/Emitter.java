@@ -231,6 +231,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         if (d.isUnderscore()) {
             return null;
         }
+
         IRTemp var = new IRTemp(d.id);
         if (!d.type.isPrimitive()) {
 
@@ -239,13 +240,9 @@ public class Emitter extends ASTVisitor<IRNode> {
             if (arr != null) {
                 return new IRMove(var, arr);
             }
-            // TOOD: return new ir null for classes
-            // return new IRMove(var, new IRNull());
-        } else {
-            return new IRMove(var, new IRConst(0));
         }
 
-        return null;
+        return var;
     }
 
     @Override
