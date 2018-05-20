@@ -200,7 +200,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         ClassContext cc = gc.lookup(type);
 
         // Field dispatch
-        if (cc.containsField(name)) {
+        if (gc.inherits(type, name) != null && gc.inherits(type, name).isField()) {
             Pair<ClassType, List<String>> source = context.gc.lookupFieldSource(type, name);
 
             String cls = source.first.getID();
@@ -663,8 +663,8 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiDot d) throws XicException {
         IRExpr obj = (IRExpr) d.lhs.accept(this);
-        IRTemp id = (IRTemp) d.rhs.accept(this);
-        return dispatch(obj, id.name(), (ClassType) d.lhs.type);
+        String id = ((XiVar) d.rhs).id;
+        return dispatch(obj, id, (ClassType) d.lhs.type);
     }
 
     /**

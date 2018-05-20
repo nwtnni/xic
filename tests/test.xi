@@ -14,13 +14,18 @@ main (args:int[][]) {
     b1:B = new B
 
     _ = a1.foo()
-    _ = b1.foo()
+    c1:A = b1.foo()
+
+    println(unparseInt(a1.x))
+    println(unparseInt(b1.x))
+    println(unparseInt(c1.x))
+
 }
 
 class A {
     x:int
     foo():A {
-        this.x = 1
+        x = 1
         println(unparseInt(x))
         return this
     }
