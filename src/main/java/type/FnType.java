@@ -13,7 +13,7 @@ public class FnType extends GlobalType {
 
     public FnType(List<Type> args, List<Type> returns) {
         this.args = new ArrayList<>(args);
-        this.returns = new ArrayList<>(returns);
+        this.returns = returns.isEmpty() ? List.of(UnitType.UNIT) : new ArrayList<>(returns);
     }
 
     @Override
