@@ -38,7 +38,6 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     protected TypeChecker() {
         this.globalContext = new GlobalContext();
-        this.moduleLocal = new HashSet<>();
         this.inside = null;
         this.returns = null;
         this.initializing = true;
@@ -56,7 +55,6 @@ public class TypeChecker extends ASTVisitor<Type> {
     private TypeChecker(String lib, Node ast) throws XicException {
         this.lib = lib;
         this.globalContext = new GlobalContext();
-        this.moduleLocal = new HashSet<>();
         this.inside = null;
         this.returns = null;
         this.initializing = true;
@@ -66,8 +64,6 @@ public class TypeChecker extends ASTVisitor<Type> {
     private String lib;
 
     protected GlobalContext globalContext;
-
-    protected Set<String> moduleLocal;
 
     private ClassType inside;
 
@@ -221,7 +217,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                 if (c.parent != null) globalContext.extend(ct, new ClassType(c.parent));
 
                 // Update module local set
-                moduleLocal.add(c.id);
+                globalContext.setLocal(c.id);
             }
 
             if (n instanceof XiFn) {
@@ -238,7 +234,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                     GlobalType gt = globalContext.lookup(f.id);
 
                     // Incorrect shadowing
-                    if (!ft.equals(gt) || moduleLocal.contains(f.id)) {
+                    if (!ft.equals(gt) || globalContext.isLocal(f.id)) {
                         throw new TypeException(DECLARATION_CONFLICT, f.location);
                     }
                 }
@@ -249,7 +245,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                 }
 
                 // Update module local set
-                moduleLocal.add(f.id);
+                globalContext.setLocal(f.id);
             }
         }
 
@@ -705,7 +701,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiNew n) throws XicException {
         ClassType ct = new ClassType(n.name);
-        if (!moduleLocal.contains(n.name)) throw new TypeException(UNBOUND_NEW, n.location);
+        if (!globalContext.isLocal(n.name)) throw new TypeException(UNBOUND_NEW, n.location);
         n.type = ct;
         return n.type;
     }
