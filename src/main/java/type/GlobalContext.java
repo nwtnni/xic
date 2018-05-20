@@ -74,6 +74,11 @@ public class GlobalContext {
 
             ClassContext parent = classes.get(ct);
 
+            // Compare fields to parent
+            for (String field : cc.getFields()) {
+                if (parent.contains(field)) return false;
+            }
+
             // Compare methods to parent
             for (String method : cc.getMethods()) {
 
