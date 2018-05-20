@@ -27,19 +27,20 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @param ast AST to typecheck
      * @throws XicException if a semantic error was found
      */
-    public static FnContext check(String source, String lib, Node ast) throws XicException {
-        TypeChecker checker = new TypeChecker(source, lib, ast);
+    public static GlobalContext check(String lib, Node ast) throws XicException {
+        TypeChecker checker = new TypeChecker(lib, ast);
         ast.accept(checker);
-        return checker.fns;
+        return checker.globalContext;
     }
 
     /**
      * Default constructor initializes empty contexts.
      */
     protected TypeChecker() {
-        this.fns = new FnContext();
-        this.types = new TypeContext();
-        this.vars = new VarContext();
+        this.globalContext = new GlobalContext();
+        this.inside = null;
+        this.returns = null;
+        this.localContext = new LocalContext();
     }
 
     /**
@@ -50,10 +51,11 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @param ast AST to resolve dependencies for
      * @throws XicException if a semantic error occurred while resolving dependencies
      */
-    private TypeChecker(String source, String lib, Node ast) throws XicException {
-        this.fns = Importer.resolve(lib, ast);
-        this.types = new TypeContext();
-        this.vars = new VarContext();
+    private TypeChecker(String lib, Node ast) throws XicException {
+        this.globalContext = new GlobalContext();
+        this.inside = null;
+        this.returns = null;
+        this.localContext = new LocalContext();
     }
 
     protected GlobalContext globalContext;
@@ -562,8 +564,9 @@ public class TypeChecker extends ASTVisitor<Type> {
             return c.type;
         }
 
-        FnType ft = c.id.accept(this);
-        if (!ft.isFn()) throw new TypeException(INVALID_CALL, c.location);
+        Type t = c.id.accept(this);
+        if (!t.isFn()) throw new TypeException(INVALID_CALL, c.location);
+        FnType ft = (FnType) t;
 
         // Check parameter passing for both function and method
         List<Type> caller = visit(c.args);
