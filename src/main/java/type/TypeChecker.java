@@ -691,7 +691,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         Type at = i.array.accept(this);
 
         if (!it.isInt()) throw new TypeException(INVALID_ARRAY_INDEX, i.index.location);
-        if (!at.isArray()) throw new TypeException(NOT_AN_ARRAY, i.array.location);
+        if (!at.isArray() || !at.isPoly()) throw new TypeException(NOT_AN_ARRAY, i.array.location);
 
         ArrayType a = (ArrayType) at;
         i.type = a.getChild();
