@@ -195,7 +195,9 @@ public class Emitter extends ASTVisitor<IRNode> {
      */
     private IRExpr dispatch(IRExpr obj, String name, ClassType type) {
         GlobalContext gc = context.gc;
-        ClassContext cc = gc.lookup(type);
+
+        IRTemp t = IRFactory.generate();
+        IRExpr target;
 
         // Field dispatch
         if (gc.inherits(type, name) != null && gc.inherits(type, name).isField()) {
@@ -205,32 +207,34 @@ public class Emitter extends ASTVisitor<IRNode> {
             int offset = source.second.size() - source.second.indexOf(name);
             
             // Take fixed offset off of
-            return new IRMem(
+            target = new IRMem(
                 new IRBinOp(OpType.ADD,
                     new IRBinOp(OpType.MUL, 
                         new IRBinOp(OpType.SUB, IRFactory.generateSize(cls, context), new IRConst(offset)),
                         Library.WORD_SIZE
                     ),
-                    obj
+                    t
                 )
             );
         }
 
         // Method dispatch
-        if (cc.containsMethod(name)) {
+        else if (gc.inherits(type, name) != null && gc.inherits(type, name).isMethod()) {
 
             OrderedMap<String, MethodType> order = gc.lookupAllMethods(type);
             int offset = order.indexOf(name);
 
             // Access vt then take fixed offset to method address
-            return new IRMem(
+            target = new IRMem(
                 new IRBinOp(OpType.ADD, 
                     new IRConst(offset * Configuration.WORD_SIZE), 
-                    new IRMem(obj)
+                    new IRMem(t)
             ));
         }
 
-        throw new XicInternalException("Error in dispatch");
+        else { throw new XicInternalException("Error in dispatch"); }
+
+        return new IRESeq(new IRMove(t, obj), target);
     }
 
     /*
@@ -634,7 +638,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             target = dispatch(obj, name, type);
             argList.add(obj);
 
-            numRets = context.gc.lookup(type).lookupMethod(name).getNumRets();
+            numRets = ((MethodType) context.gc.inherits(type, name)).getNumRets();
 
         // Function call
         } else {
