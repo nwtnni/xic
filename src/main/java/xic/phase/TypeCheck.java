@@ -5,7 +5,7 @@ import java.io.FileWriter;
 
 import ast.XiProgram;
 import type.TypeChecker;
-import type.FnContext;
+import type.GlobalContext;
 
 import util.Filename;
 import util.Pair;
@@ -34,7 +34,7 @@ public class TypeCheck extends Phase {
 
                 XiProgram ast = previous.ok().getParsed();
 
-                FnContext context = TypeChecker.check(config.lib, ast);
+                GlobalContext context = TypeChecker.check(config.lib, ast);
 
                 if (output) {
                     Filename.makePathTo(out);

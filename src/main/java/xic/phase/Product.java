@@ -7,7 +7,7 @@ import ast.XiProgram;
 import emit.ABIContext;
 import ir.IRCompUnit;
 import lex.XiLexer;
-import type.FnContext;
+import type.GlobalContext;
 import util.Pair;
 import xic.XicInternalException;
 
@@ -21,12 +21,12 @@ public class Product {
 
     private final XiLexer lexed;
     private final XiProgram parsed;
-    private final Pair<XiProgram, FnContext> typed;
+    private final Pair<XiProgram, GlobalContext> typed;
     private final Pair<IRCompUnit, ABIContext> emitted;
     private final CompUnit<Temp> assembled;
     private final CompUnit<Reg> allocated;
 
-    private Product (XiLexer l, XiProgram p, Pair<XiProgram, FnContext> t, Pair<IRCompUnit, ABIContext> e, CompUnit<Temp> a, CompUnit<Reg> r) {
+    private Product (XiLexer l, XiProgram p, Pair<XiProgram, GlobalContext> t, Pair<IRCompUnit, ABIContext> e, CompUnit<Temp> a, CompUnit<Reg> r) {
         lexed = l; 
         parsed = p;
         typed = t;
@@ -41,7 +41,7 @@ public class Product {
 
     public static Product parsed(XiProgram p) { return new Product(null, p, null, null, null, null); }
 
-    public static Product typed(Pair<XiProgram, FnContext> t) { return new Product(null, null, t, null, null, null); }
+    public static Product typed(Pair<XiProgram, GlobalContext> t) { return new Product(null, null, t, null, null, null); }
 
     public static Product emitted(Pair<IRCompUnit, ABIContext> e) { return new Product(null, null, null, e, null, null); }
 
@@ -63,7 +63,7 @@ public class Product {
         return parsed;
     }
 
-    public Pair<XiProgram, FnContext> getTyped() {
+    public Pair<XiProgram, GlobalContext> getTyped() {
         if (typed == null) {
             throw XicInternalException.runtime("Could not retrieve typed AST from intermediate.");
         }

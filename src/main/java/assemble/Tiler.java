@@ -77,7 +77,9 @@ public class Tiler extends IRVisitor<Operand> {
         } else if (fn.equals(Config.XI_OUT_OF_BOUNDS)) {
             return 0;
         }
-        return context.getNumArgs(fn);
+        return 0;
+        //TODO: fix this
+        // return context.getNumArgs(fn);
     }
     
     /**
@@ -90,7 +92,9 @@ public class Tiler extends IRVisitor<Operand> {
         } else if (fn.equals(Config.XI_OUT_OF_BOUNDS)) {
             return 0;
         }
-        return context.getNumReturns(fn);
+        return 0;
+        // TODO: fix this
+        // return context.getNumReturns(fn);
     }
 
     /**

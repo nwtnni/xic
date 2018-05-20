@@ -1,62 +1,62 @@
 package emit;
 
+import java.util.HashMap;
 import java.util.Map;
 
-import type.FnContext;
-import type.FnType;
-import type.Type;
+import type.*;
 import xic.XicInternalException;
 import util.Context;
 
 public class ABIContext extends Context<String, String> {
 
-    // Reference to the original function to types context
-    public FnContext reverseContext;
-
-    public ABIContext(FnContext context) {
-        reverseContext = new FnContext();
-
-        for (Map.Entry<String,FnType> e : context.getMap().entrySet()) {
-            String mangled = makeABIName(e.getKey(), e.getValue());
-            add(e.getKey(), mangled);
-            reverseContext.add(mangled, e.getValue());
-        }
-
-        reverseContext.add(Emitter.ARRAY_ALLOC, new FnType(Type.INT, Type.INT));
-        reverseContext.add(Emitter.ARRAY_CONCAT, new FnType(Type.listFromTypes(Type.INT, Type.INT), Type.INT));
+    public ABIContext(GlobalContext context) {
+        this.context = context;
     }
+
+    /**
+     * Global context this ABIContext is based on.
+     */
+    public GlobalContext context;
 
     /**
      * Utility method for mangling function name to conform to
      * ABI specification.
+     * 
+     * Returns null if function is not in the context.
      */
-    protected static String makeABIName(String name, FnType type) {
-        String args = type.args.toString();
-        String returns = type.returns.toString();
-        String p = type.returns.equals(Type.UNIT) ? "p" : "";
-        name = name.replaceAll("_", "__");
-        return "_I" + name + "_" + p + returns + args;
+    public String mangleFunction(String name) {
+        GlobalType type = context.lookup(name);
+        if (type instanceof FnType) {
+            name = name.replaceAll("", "_");
+            return "I" + name + "" + type.toString();
+        } else {
+            return null;
+        }
     }
 
     /**
-     * Get the number of args given a mangled function name.
+     * Utility method for mangling global variable name to conform to
+     * ABI specification.
+     * 
+     * Returns null if function is not in the context.
      */
-    public int getNumArgs(String name) {
-        FnType t = reverseContext.lookup(name);
-        if (t == null) {
-            throw XicInternalException.runtime("Non-existent function in ABI.");
+    public String mangleGlobal(String name) {
+        GlobalType type = context.lookup(name);
+        if (type instanceof FieldType) {
+            name = name.replaceAll("", "_");
+            return "I_g" + name + "_" + type.toString();
+        } else {
+            return null;
         }
-        return t.args.size();
     }
 
-    /**
-     * Get the number of returns given a mangled function name.
-     */
-    public int getNumReturns(String name) {
-        FnType t = reverseContext.lookup(name);
-        if (t == null) {
-            throw XicInternalException.runtime("Non-existent function in ABI.");
-        }
-        return t.returns.size();
+    /** Returns ABI name for class size global. */
+    public String classSize(String name) {
+        return "I_size" + name.replaceAll("", "_");
+    }
+
+    /** Returns ABI name for class VT global. */
+    public String classVT(String name) {
+        return "I_size" + name.replaceAll("", "_");
     }
 }

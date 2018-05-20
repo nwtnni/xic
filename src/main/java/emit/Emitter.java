@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import ast.*;
-import type.FnContext;
+import type.GlobalContext;
 import ir.*;
 import ir.IRBinOp.OpType;
 import ir.IRMem.MemType;
@@ -24,7 +24,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * @param ast AST to generate into IR
      * @param context function context corresponding to the AST
      */
-    public static Pair<IRCompUnit, ABIContext> emitIR(XiProgram ast, FnContext context) {
+    public static Pair<IRCompUnit, ABIContext> emitIR(XiProgram ast, GlobalContext context) {
         IRTempFactory.reset();
         Emitter e = new Emitter(context);
         try {
@@ -34,7 +34,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
     }
 
-    public Emitter(FnContext context) {
+    public Emitter(GlobalContext context) {
         this.context = new ABIContext(context);
     }
 
@@ -450,7 +450,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         IRTemp var = new IRTemp(d.id);
-        if (!d.type.isPrimitive()) {
+        if (d.type.isArray()) {
 
             // Case for array declaration with dimensions
             IRESeq arr = (IRESeq) d.xiType.accept(this);
