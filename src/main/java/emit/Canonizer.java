@@ -241,6 +241,12 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by commuting
      */
     public IRNode visit(IRMove m) {
+        
+        // TODO: do special cases for globals
+        // Preserve so at assembly
+        // Mem(Temp(_G))        -> _G
+        // Mem(Mem(Temp(_G)))   -> $_G
+
         // Need to check memory targets
         if (m.isMem()) {
             IRMem mem = m.getMem();
@@ -308,9 +314,14 @@ public class Canonizer extends IRVisitor<IRNode> {
     }
 
     /**
-     * Trivially lowers an IRTemp node, which is an expression leaf.
+     * Lowers an IRTemp node, which is a global memory address or an expression leaf.
      */
     public IRNode visit(IRTemp t) {
+
+        // Globals are hoisted
+        if (t.global()) { return t; }
+
+        // All other temporaries are lowered
         t.isCanonical = true;
         return t;
     }

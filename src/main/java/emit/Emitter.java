@@ -108,6 +108,60 @@ public class Emitter extends ASTVisitor<IRNode> {
     }
 
     /**
+     * Generates init function for the class.
+     */
+    private IRFuncDecl init(XiClass c) {
+        GlobalContext gc = context.gc;
+
+        String name = context.classInit(c.id);
+
+        IRFuncDecl fn = new IRFuncDecl(name, name, 0, 0);
+        
+
+        IRExpr size = IRFactory.generateSize(c.id, context);
+        IRExpr vt = IRFactory.generateVT(c.id, context);
+
+        // Short circuit if already initialized
+        IRTemp t = IRFactory.generate("size_" + c.id);
+        IRLabel done = IRFactory.generateLabel(c.id);
+        fn.add(new IRMove(t, size));
+        fn.add(new IRCJump(new IRBinOp(OpType.NEQ, Library.ZERO, t), done));
+
+        // Recursively intialize parent with _I_init_parent
+        if (c.hasParent()) {
+            fn.add(new IRExp(new IRCall(new IRName(context.classInit(c.parent)), 0, List.of())));
+        }
+
+        ClassContext cc = context.gc.lookup((ClassType) c.type);
+
+        // Initialize _I_size_name
+        t = IRFactory.generate("size_" + c.id);
+
+        if (c.hasParent()) {
+            // Allocate size
+            IRExpr parentSize = IRFactory.generateSize(c.id, context);
+            fn.add(new IRMove(t, parentSize));
+        }
+        fn.add(new IRMove(t, new IRBinOp(OpType.ADD, t, new IRConst(cc.numFields()))));
+        fn.add(new IRMove(size, t));
+
+        // Initialize _I_vt_name
+        t = IRFactory.generate("vt_" + c.id);
+        fn.add(new IRMove(t, new IRMem(vt)));
+        if (c.hasParent()) {
+            IRExpr parentVT = IRFactory.generateVT(c.parent, context);
+            IRTemp p = IRFactory.generate("vt_" + c.parent);
+            fn.add(new IRMove(p, parentVT));
+
+            
+        }
+
+        fn.add(done);
+
+        return null;
+    }
+
+    /**
      * Generates code for dispatch to the field or method [name] from [obj] of type [type]
      */
     private IRExpr dispatch(IRExpr obj, String name, ClassType type) {
@@ -143,26 +197,59 @@ public class Emitter extends ASTVisitor<IRNode> {
             program.appendFunc(Library.xiDynamicAlloc());
         }
 
-        // TODO: initialize globals
-
-        // TODO: pass context to generate init function
+        // TODO: initialize globals and classes
         // - initialize global arrays
         // - initialize class size + vt
-        program.appendFunc(Initializer.generateInitFunc(context.context));
+        List<IRStmt> globals = new ArrayList<>();
+        List<IRStmt> classes = new ArrayList<>();
 
         for (Node n : p.body) {
-            // Can ignore globals
+            // Visit globals
+            if (n instanceof XiGlobal) {
+                IRStmt g = (IRStmt) n.accept(this);
+                if (g != null) {
+                    globals.add(g);
+                }
 
-            // TODO: visit classes
+            // Visit classes
+            } else if (n instanceof XiClass) {
+                XiClass c = (XiClass) n;
+                currentClass = Optional.of((ClassType) c.type);
 
+                // Create initialization function
+                program.appendFunc(init(c));
+                IRName name = new IRName(context.classInit(c.id));
+                classes.add(new IRExp(new IRCall(name, 0, List.of())));
 
-            if (n instanceof XiFn) {
-                IRFuncDecl f = (IRFuncDecl) n.accept(this);
-                program.appendFunc(f);
+                // Visit each method
+                for (Node m : c.body) {
+                    if (m instanceof XiFn) {
+                        program.appendFunc((IRFuncDecl) n.accept(this));
+                    }
+                }
+
+                currentClass = Optional.empty();
+            // Visit functions
+            } else if (n instanceof XiFn) {
+                program.appendFunc((IRFuncDecl) n.accept(this));
             }
         }
 
+        program.appendFunc(Library.generateInitFunc(globals, classes));
+
         return program;
+    }
+
+    // Only need to initialize global arrays
+    // PA7
+    @Override
+    public IRNode visit(XiGlobal g) throws XicException {
+        if (!(g.stmt instanceof XiAssign)) { return null; }
+        
+        XiAssign assign = (XiAssign) g.stmt;
+        if (!assign.rhs.type.isArray()) { return null; }
+
+        return g.stmt.accept(this);
     }
 
     @Override
@@ -211,10 +298,13 @@ public class Emitter extends ASTVisitor<IRNode> {
         IRExpr rhs = (IRExpr) a.rhs.accept(this);
 
         if (lhs.size() == 1) {
-            // If not an underscore
+
+            // Assign to expression
             IRExpr var = (IRExpr) lhs.get(0);
             if (var != null) {
                 return new IRMove(var, rhs);
+            
+            // Discard result if assign to underscore
             } else {
                 return new IRExp(rhs);
             }
@@ -436,20 +526,22 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Method call requires injecting object reference
         if (c.id.type.isMethod()) {
             IRExpr obj;
+            ClassType type;
 
             // Implicit this in a method
             if (c.id instanceof XiVar && currentClass.isPresent()) {
                 name = ((XiVar) c.id).id;
                 obj = Library.THIS;
+                type = currentClass.get();
             
             // Off a dot access
             } else {
                 XiDot d = (XiDot) c.id;
-
-                name = ((IRName) d.rhs.accept(this)).name();
+                name = ((XiVar) d.rhs).id;
                 obj = (IRExpr) d.lhs.accept(this);
+                type = (ClassType) d.type;
             }
-            target = dispatch(obj, name, currentClass.get());
+            target = dispatch(obj, name, type);
             argList.add(obj);
 
         // Function call
@@ -470,7 +562,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         // Get number of returns
-        FnType t = (FnType) context.context.lookup(name);
+        FnType t = (FnType) context.gc.lookup(name);
 
         return new IRCall(target, t.getNumRets(), argList);
     }
@@ -556,6 +648,13 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiVar v) throws XicException {
+
+        // Global variables
+        if (context.gc.contains(v.id)) {
+            return IRFactory.generateGlobal(v.id, context);
+        }
+
+        // Ordinary temporary
         return new IRTemp(v.id);
     }
 

@@ -48,6 +48,14 @@ public class ClassContext {
         methods.put(id, mt);
     }
 
+    public int numFields() {
+        return fields.size();
+    }
+
+    public int numMethods() {
+        return methods.size();
+    }
+
     public boolean merge(ClassContext module) {
 
         this.fields = module.fields;

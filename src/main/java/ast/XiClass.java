@@ -26,6 +26,10 @@ public class XiClass extends TopDeclr {
         this.body = body;
     }
 
+    public boolean hasParent() {
+        return parent != null;
+    }
+
     public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }

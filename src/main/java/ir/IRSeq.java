@@ -47,6 +47,10 @@ public class IRSeq extends IRStmt {
         stmts.add(index, s);
     }
 
+    public boolean addAll(List<IRStmt> s) {
+        return stmts.addAll(s);
+    }
+
     public IRStmt set(int index, IRStmt s) {
         return stmts.set(index, s);
     }
