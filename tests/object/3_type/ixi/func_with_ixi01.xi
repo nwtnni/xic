@@ -1,8 +1,8 @@
 use A_01
 
 foo() {
-    x:A = new A
+    x:A = bar()
     x.foo()
-    x.foo(x)
+    x.foo1(x)
     x = x.foo2(x)
 }

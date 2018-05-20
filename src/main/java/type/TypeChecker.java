@@ -140,15 +140,13 @@ public class TypeChecker extends ASTVisitor<Type> {
     public Type visit(XiProgram p) throws XicException {
 
         // Initially visit all dependencies recursively
-        List<String> files = p.uses.stream()
-            .map(n -> (XiUse) n)
-            .map(use -> use.file)
-            .collect(Collectors.toList());
-
         // Global context now contains all used interfaces
         // Two cases: may or may not include interface for this module
-        for (String file : files) {
-            globalContext.merge(Importer.resolve(lib, file));
+        for (Node n : p.uses) {
+            XiUse u = (XiUse) n;
+            if (!globalContext.merge(Importer.resolve(lib, u.file))) {
+                throw new TypeException(INCOMPATIBLE_USE, u.location);
+            }
         }
 
         // First pass to populate global variables
@@ -173,7 +171,6 @@ public class TypeChecker extends ASTVisitor<Type> {
             if (n instanceof XiGlobal) continue;
             if (n instanceof XiClass) {
                 XiClass c = (XiClass) n;
-                moduleLocal.add(c.id);
                 ClassType ct = new ClassType(c.id);
                 ClassContext cc = new ClassContext();
 
@@ -221,11 +218,13 @@ public class TypeChecker extends ASTVisitor<Type> {
 
                 // Lazily extend superclasses
                 if (c.parent != null) globalContext.extend(ct, new ClassType(c.parent));
+
+                // Update module local set
+                moduleLocal.add(c.id);
             }
 
             if (n instanceof XiFn) {
                 XiFn f = (XiFn) n;
-                moduleLocal.add(f.id);
 
                 localContext.push();
                 FnType ft = new FnType(visit(f.args), visit(f.returns));
@@ -247,6 +246,9 @@ public class TypeChecker extends ASTVisitor<Type> {
                 else {
                     globalContext.put(f.id, ft);
                 }
+
+                // Update module local set
+                moduleLocal.add(f.id);
             }
         }
 
@@ -507,8 +509,16 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiReturn r) throws XicException {
 
+        // Procedure; no values returned
+        if (returns.get(0).isUnit()) {
+            if (r.hasValues()) throw new TypeException(MISMATCHED_RETURN, r.location);
+
+            r.type = VoidType.VOID;
+            return r.type;
+        }
+
         // Returning values
-        if (r.hasValues()) {
+        else if (r.hasValues()) {
             List<Type> values = visit(r.values);
 
             for (Node n : r.values) {
@@ -521,12 +531,6 @@ public class TypeChecker extends ASTVisitor<Type> {
                 throw new TypeException(MISMATCHED_RETURN, r.location);
             }
 
-            r.type = VoidType.VOID;
-            return r.type;
-        }
-
-        // Procedure; no values returned
-        else if (returns.isEmpty()) {
             r.type = VoidType.VOID;
             return r.type;
         }
@@ -800,6 +804,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
             // Coerce polymorphic types
             if (type.isPoly() && reference.isArray()) {
+                type = reference;
                 a.values.get(i).type = reference;
             }
 
