@@ -460,7 +460,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         if (localContext.contains(d.id) || globalContext.contains(d.id)) throw new TypeException(DECLARATION_CONFLICT, d.location);
 
         // Check against class context if necessary
-        if (inside != null && globalContext.lookup(inside).contains(d.id)) throw new TypeException(DECLARATION_CONFLICT, d.location);
+        if (inside != null && globalContext.inherits(inside, d.id) != null) throw new TypeException(DECLARATION_CONFLICT, d.location);
 
         d.type = d.xiType.accept(this);
         localContext.add(d.id, (FieldType) d.type);
