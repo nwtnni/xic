@@ -14,6 +14,9 @@ xic ("Test assemble") "-target linux" {
     field03.xi;
     field04.xi;
 
+    global_init01.xi;
+    global_init02.xi;
+
     global01.xi;
     global02.xi;
     global03.xi;
@@ -22,10 +25,9 @@ xic ("Test assemble") "-target linux" {
     global06.xi;
     global07.xi;
 
-    global_init01.xi;
-    global_init02.xi;
-
     method01.xi;
     method02.xi;
     method03.xi;
+
+    obj_array01.xi;
 }
