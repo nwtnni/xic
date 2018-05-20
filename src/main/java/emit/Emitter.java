@@ -199,12 +199,20 @@ public class Emitter extends ASTVisitor<IRNode> {
         GlobalContext gc = context.gc;
         ClassContext cc = gc.lookup(type);
 
-        IRSeq setup = new IRSeq();
-
         // Field dispatch
         if (cc.containsField(name)) {
-           
-
+            String source = type.getID();
+            int offset = 0;
+            
+            // Take fixed offset off of
+            return new IRMem(
+                new IRBinOp(OpType.ADD,
+                    new IRBinOp(OpType.MUL(
+                        new IRBinOp(OpType.SUB, IRFactory.generateSize(source, context), new IRConst(offset)),
+                        Library.WORD_SIZE
+                    ),
+                    obj
+            ));
         }
 
         // Method dispatch
@@ -213,8 +221,12 @@ public class Emitter extends ASTVisitor<IRNode> {
             OrderedMap<String, MethodType> order = gc.lookupAllMethods(type);
             int offset = order.indexOf(name);
 
-            // Access offset
-            return new IRMem(new IRBinOp(OpType.ADD, new IRConst(offset * Configuration.WORD_SIZE), new IRMem(obj)));
+            // Access vt then take fixed offset to method address
+            return new IRMem(
+                new IRBinOp(OpType.ADD, 
+                    new IRConst(offset * Configuration.WORD_SIZE), 
+                    new IRMem(obj)
+            ));
         }
 
         throw new XicInternalException("Error in dispatch");
