@@ -32,6 +32,7 @@ xth.tar.gz
 *.typed
 *.ir
 *.s
+*.S
 *.results
 *.dot
 *.pdf
