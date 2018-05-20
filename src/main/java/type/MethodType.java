@@ -21,20 +21,14 @@ public class MethodType extends FnType {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof MethodType)) return false;
+        return super.equals(o)
+            && (o instanceof MethodType)
+            && ((MethodType) o).implicit.equals(implicit);
+    }
 
-        MethodType mt = (MethodType) o;
-        if (mt.args.size() != args.size() || mt.returns.size() != returns.size()) return false;
-
-        for (int i = 0; i < args.size(); i++) {
-            if (!mt.args.get(i).equals(args.get(i))) return false;  
-        }
-
-        for (int i = 0; i < returns.size(); i++) {
-            if (!mt.returns.get(i).equals(returns.get(i))) return false;
-        }
-
-        return true;
+    @Override
+    public int hashCode() {
+        return implicit.hashCode() * args.hashCode() * returns.hashCode();
     }
 
 }
