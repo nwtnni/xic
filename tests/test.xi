@@ -1,11 +1,14 @@
 use io
 use conv
 
-x:int[5][n]
 n:int = 5
+a:int[2]
 
 main (args:int[][]) {
-    x[0][0] = 1
+    a[0] = 'h'
+    a[1] = 'i'
+    println(unparseInt(n))
+    println(a)
 }
 
 // class A {

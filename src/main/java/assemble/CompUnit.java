@@ -15,6 +15,7 @@ public class CompUnit<A> {
 
     public CompUnit() {
         this.name = "COMPUNIT";
+        this.data = new ArrayList<>();
         this.text = new ArrayList<>();
     }
 
@@ -24,8 +25,10 @@ public class CompUnit<A> {
         this.text = new ArrayList<>();
     }
 
-    public CompUnit(List<FuncDecl<A>> fns) {
-        this.text = fns;
+    public CompUnit(String name, List<String> data) {
+        this.name = name;
+        this.data = data;
+        this.text = new ArrayList<>();
     }
 
     public List<String> toAssembly() {
@@ -39,7 +42,7 @@ public class CompUnit<A> {
         
         instrs.add(".section .ctors");
         instrs.add(".align 4");
-        instrs.add(".quad   _I_init_p");
+        instrs.add(".quad   _I_init");
 
         instrs.add(".text");
         for (FuncDecl<A> f : text) {

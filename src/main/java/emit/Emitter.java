@@ -244,12 +244,16 @@ public class Emitter extends ASTVisitor<IRNode> {
 
                 String name;
                 Long value;
-                if (g instanceof IRMove) {
-                    name = context.mangleGlobal(((IRTemp) ((IRMove) g).target()).name());
-                    value = ((IRConst) ((IRMove) g).src()).value();
-
-                } else if (g instanceof IRTemp) {
-                    name = context.mangleGlobal(((IRTemp) g).name());
+                Node stmt = ((XiGlobal) node).stmt;
+                if (stmt instanceof XiAssign) {
+                    name = context.mangleGlobal(((XiVar) ((XiAssign) stmt).lhs.get(0)).id);
+                    if (((XiAssign) stmt).rhs instanceof XiInt) {
+                        value = ((XiInt) ((XiAssign) stmt).rhs).value;
+                    } else {
+                        value = ((XiBool) ((XiAssign) stmt).rhs).value ? 1L : 0L; 
+                    }
+                } else if (stmt instanceof XiDeclr) {
+                    name = context.mangleGlobal(((XiDeclr) stmt).id);
                     value = 0L;
                 } else {
                     throw XicInternalException.runtime("Unknown global type");

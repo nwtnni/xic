@@ -82,6 +82,8 @@ public class Tiler extends IRVisitor<Operand> {
     public Operand visit(IRCompUnit c) {
         unit.name = c.name();
 
+        System.out.println(c.globals());
+
         // Add globals
         for (String name : c.globals().keySet()) {
             unit.data.add(".local " + name);
