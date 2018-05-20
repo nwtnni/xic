@@ -66,6 +66,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     protected GlobalContext globalContext;
 
     private ClassType inside;
+    private ClassType explicit;
 
     /**
      * The current value of rho, the expected return
@@ -300,8 +301,10 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiClass c) throws XicException {
 
-        // Populate class method bodies
         inside = new ClassType(c.id);
+        if (!globalContext.validate(inside)) throw new TypeException(INVALID_OVERRIDE, c.location);
+
+        // Populate class method bodies
         for (Node n : c.body) {
             if (n instanceof XiDeclr) {
                 ((XiDeclr) n).xiType.accept(this);
@@ -312,7 +315,6 @@ public class TypeChecker extends ASTVisitor<Type> {
             }
         }
 
-        if (!globalContext.validate(inside)) throw new TypeException(INVALID_OVERRIDE, c.location);
         c.type = inside;
         inside = null;
         return c.type;
@@ -334,8 +336,8 @@ public class TypeChecker extends ASTVisitor<Type> {
         visit(f.returns);
         FnType ft = null;
 
-        if (inside != null && globalContext.lookup(inside).containsMethod(f.id)) {
-            ft = globalContext.lookup(inside).lookupMethod(f.id);
+        if (inside != null && globalContext.inherits(inside, f.id) != null && globalContext.inherits(inside, f.id).isMethod()) {
+            ft = (FnType) globalContext.inherits(inside, f.id);
         } else if (globalContext.contains(f.id) && globalContext.lookup(f.id).isFn()) {
             ft = (FnType) globalContext.lookup(f.id);
         } else {
@@ -458,9 +460,6 @@ public class TypeChecker extends ASTVisitor<Type> {
 
         // Check against local and global contexts
         if (localContext.contains(d.id) || globalContext.contains(d.id)) throw new TypeException(DECLARATION_CONFLICT, d.location);
-
-        // Check against class context if necessary
-        if (inside != null && globalContext.inherits(inside, d.id) != null) throw new TypeException(DECLARATION_CONFLICT, d.location);
 
         d.type = d.xiType.accept(this);
         localContext.add(d.id, (FieldType) d.type);
@@ -675,10 +674,9 @@ public class TypeChecker extends ASTVisitor<Type> {
         if (!lt.isClass()) throw new TypeException(INVALID_DOT, d.lhs.location);
 
         // Temporarily scope rhs class
-        ClassType previous = inside;
-        inside = (ClassType) lt;
+        explicit = (ClassType) lt;
         d.type = d.rhs.accept(this);
-        inside = previous;
+        explicit = null;
         return d.type;
     }
 
@@ -734,24 +732,32 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiVar v) throws XicException {
 
-        // Early return: local context contains symbol
+        // Explicit scoping
+        if (explicit != null && globalContext.inherits(explicit, v.id) != null) {
+            v.type = globalContext.inherits(explicit, v.id);
+            return v.type;
+        }
+
+        // Local context contains symbol
         if (localContext.contains(v.id)) {
             v.type = localContext.lookup(v.id);
             return v.type;
         }
 
-        // Early return: class context contains symbol
+        // Class context contains symbol
         if (inside != null && globalContext.inherits(inside, v.id) != null) {
             v.type = globalContext.inherits(inside, v.id);
             return v.type;
         }
 
-        // Early return: symbol not found
-        if (!globalContext.contains(v.id)) throw new TypeException(SYMBOL_NOT_FOUND, v.location);
-
         // Must be valid global symbol
-        v.type = globalContext.lookup(v.id);
-        return v.type;
+        if (globalContext.contains(v.id)) {
+            v.type = globalContext.lookup(v.id);
+            return v.type;
+        }
+
+        // Early return: symbol not found
+        throw new TypeException(SYMBOL_NOT_FOUND, v.location);
     }
 
     /*

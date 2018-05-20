@@ -26,6 +26,10 @@ xic ("Test oXi --typecheck") "--typecheck" {
   bad_local_shadow1.xi;
   bad_local_shadow2.xi;
   bad_local_shadow3.xi;
+  bad_local_shadow4.xi;
+
+  bad_method_shadow1.xi;
+  bad_method_shadow2.xi;
 
   func_multi_return01.xi;
 
@@ -67,6 +71,8 @@ xic ("Test oXi --typecheck") "--typecheck" {
   obj_assign4.xi;
 
   obj_field1.xi;
+  obj_field2.xi;
+  obj_field3.xi;
 
   obj_eqeq1.xi;
   obj_eqeq2.xi;
