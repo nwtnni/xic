@@ -11,15 +11,15 @@ main (args:int[][]) {
     println(a)
 }
 
-// class A {
-//     x:int
-//     foo():A {
-//         return null
-//     }
-// }
+class A {
+    x:int
+    foo():A {
+        return null
+    }
+}
 
-// class B extends A {
-//     foo():A {
-//         return this
-//     }
-// }
+class B extends A {
+    foo():A {
+        return this
+    }
+}
