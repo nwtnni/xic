@@ -12,6 +12,7 @@ import static assemble.instructions.InstrFactory.*;
 import assemble.instructions.*;
 import assemble.Config;
 import emit.ABIContext;
+import emit.Library;
 import interpret.Configuration;
 import ir.*;
 import ir.IRBinOp.OpType;
@@ -90,27 +91,6 @@ public class Tiler extends IRVisitor<Operand> {
 
         // Reset instance variables for each function
         instrs = new ArrayList<>();
-        String funcName = f.name();
-
-        // Set the number of returns
-        int returns = f.rets();
-
-
-        // TODO: PA7 check if is method
-
-        // If function has multiple returns, save return address from arg 0 to a temp
-        if (returns > 2) {
-            calleeIsMultiple = 1;
-            Temp returnAddr = Config.calleeArg(0).getTemp();
-            calleeReturnAddress = TempFactory.generate("ret");
-            instrs.add(0, movRR(returnAddr, calleeReturnAddress));
-        } else {
-            calleeIsMultiple = 0;
-            calleeReturnAddress = null;
-        }
-
-        // Set number of arguments including offset for multiple returns
-        int args = f.args() + calleeIsMultiple;
 
         // Set return label
         returnLabel = labelFromRet(f);
@@ -126,7 +106,7 @@ public class Tiler extends IRVisitor<Operand> {
         instrs.add(0, movRR(Temp.R15, new Temp("_STORE_R15")));
 
         // Set up prologue and epilogue
-        FuncDecl.T fn = new FuncDecl.T(f, args, returns, instrs);
+        FuncDecl.T fn = new FuncDecl.T(f, f.args(), f.rets(), instrs);
         unit.text.add(fn);
         
         return null;
@@ -220,20 +200,32 @@ public class Tiler extends IRVisitor<Operand> {
     }
     
     public Operand visit(IRCall c) {
-        // TODO: PA7 fix for dynamic dispatch
-        // TODO: calculate num args and num rets at ir level and only calculate offsets
-        // not the total number in Tiler
 
-        int callIsMultiple = 0;
-        
+        callerNumArgs = c.numArgs();
         int numRets = c.numRets();
 
-        callerNumArgs = c.numArgs()
+        // Arguments
+        for (int i = 0; i < c.numArgs(); i++) {
+
+            // Multiple return address (injected by Emitter)
+            if (c.get(i).equals(Library.CALLER_MULT_RET)) {
+                Mem<Temp> callerRet = Config.callerRet(2, callerNumArgs).getMem();
+                instrs.add(lea(callerRet, Config.callerArg(i).getTemp()));
+            
+            // Ordinary argument (including object reference injected by Emitter)
+            } else {
+                Optional<Imm> imm = checkImm(c.get(i));
+                Operand val = c.get(i).accept(this);
+                instrs.addAll(mov(val, Config.callerArg(i), imm));
+            }
+        }
 
         // Function calls
         if (c.target() instanceof IRName) {
             String target = ((IRName) c.target()).name();
             instrs.add(callS(target, callerNumArgs, numRets));
+
+        // Method calls
         } else if (c.target() instanceof IRTemp) {
             Operand target = c.target().accept(this);
             if (target.isTemp()) {
@@ -241,31 +233,6 @@ public class Tiler extends IRVisitor<Operand> {
             } else {
                 instrs.add(callM(target.getMem(), callerNumArgs, numRets));
             }
-        }
-
-        // Set up for multiple returns from call
-        if (numRets > 2) {
-
-            // DEPRECATE
-            callIsMultiple = 1;
-            callerNumArgs++;
-
-            // CALLER defines address that is passed as CALLER_RET_ADDR
-            // Address passed is the same as address to write ret2 to
-
-            // These unwraps are guaranteed to be safe based on our stack layout
-            Temp callerArg = Config.callerArg(0).getTemp();
-            Mem<Temp> callerRet = Config.callerRet(2, callerNumArgs).getMem();
-            instrs.add(lea(callerRet, callerArg));
-        }
-
-        // CALLER args
-        // callIsMultiple deined by this CALL
-        for (int i = 0; i < c.numArgs(); i++) {
-
-            Optional<Imm> imm = checkImm(c.get(i));
-            Operand val = c.get(i).accept(this);
-            instrs.addAll(mov(val, Config.callerArg(i + callIsMultiple), imm));
         }
 
         return Config.callerRet(0, callerNumArgs);
@@ -371,6 +338,8 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRMem m) {
+        // TODO: PA7 cases for mems of global labels
+
         // Make allocator use addressing modes for immutable memory accesses
         if (m.memType() == MemType.IMMUTABLE && m.expr() instanceof IRBinOp) {
 
@@ -493,7 +462,7 @@ public class Tiler extends IRVisitor<Operand> {
         if (name.matches(Configuration.ABSTRACT_ARG_PREFIX + "\\d+")) {
             // isMultiple defined by FUNCDECL to offset for multiple 
             // return address passed as arg0
-            int num = Integer.parseInt(name.substring(4)) + calleeIsMultiple;
+            int num = Integer.parseInt(name.substring(4));
             return Config.calleeArg(num);
         } 
 
@@ -502,6 +471,14 @@ public class Tiler extends IRVisitor<Operand> {
             // callerNumArgs defined by CALL
             int num = Integer.parseInt(name.substring(4));
             return Config.callerRet(num, callerNumArgs);
+        }
+
+        // Set calleeReturnAddress to CALLEE_MULT_RET
+        if (t.equals(Library.CALLEE_MULT_RET)) {
+            if (calleeReturnAddress == null) {
+                calleeReturnAddress = new Temp(name);
+            }
+            return Operand.temp(calleeReturnAddress);
         }
 
         // Default temp

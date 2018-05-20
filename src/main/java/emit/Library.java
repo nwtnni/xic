@@ -23,7 +23,8 @@ public class Library {
     public static final IRConst ONE = new IRConst(1);
 
     public static final IRTemp THIS = new IRTemp("this");
-    public static final IRTemp MULT_RET = new IRTemp("_MULT_RET");
+    public static final IRTemp CALLEE_MULT_RET = new IRTemp("_CALLEE_MULT_RET");
+    public static final IRTemp CALLER_MULT_RET = new IRTemp("_CALLER_MULT_RET");
 
     /** 
      * ABI names for array library functions ignore the types of arrays and 

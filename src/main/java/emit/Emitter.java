@@ -180,7 +180,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
         // Inject temporary for multiple returns
         if (f.returns.size() > 2) {
-            body.add(1, new IRMove(Library.MULT_RET, IRFactory.getArgument(argOffset)));
+            body.add(1, new IRMove(Library.CALLEE_MULT_RET, IRFactory.getArgument(argOffset)));
             argOffset++;
             numArgs++;
         }
@@ -454,9 +454,10 @@ public class Emitter extends ASTVisitor<IRNode> {
             target = new IRName(context.mangleFunction(name));
         }
 
-        // Inject temp for multiple return if needed
+        // Inject dummy temp for multiple return if needed
+        // Will be set by Tiler to appropriate memory address
         if (c.type.isTuple() && ((TupleType) c.type).size() > 2) {
-            argList.add(Library.MULT_RET);
+            argList.add(Library.CALLER_MULT_RET);
         }
 
         // Get arguments
@@ -522,9 +523,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiNew n) throws XicException {
         IRSeq setup = new IRSeq();
-
-        ClassType type = (ClassType) n.type;
-
+        
         IRTemp size = IRFactory.generate("size_" + n.name);
         IRTemp vt = IRFactory.generate("vt_" + n.name);
         IRTemp obj = IRFactory.generate("obj_" + n.name);
