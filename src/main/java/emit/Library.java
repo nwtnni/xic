@@ -81,10 +81,10 @@ public class Library {
         
         // Calcuate size of array
         int length = array.size();
-        IRConst size = new IRConst((length + 1) * Configuration.WORD_SIZE);
+        IRConst byteSize = new IRConst((length + 1) * Configuration.WORD_SIZE);
         
         // Generate pointers and allocate memory
-        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), size);
+        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), 1, byteSize);
         IRTemp pointer = IRTempFactory.generate("array");
         stmts.add(new IRMove(pointer, addr));
 
@@ -128,7 +128,7 @@ public class Library {
      * Dynamically allocate memory for an an array of size length
      */
     protected static IRExpr alloc(IRExpr length) {
-        return new IRCall(new IRName(ARRAY_ALLOC), length);
+        return new IRCall(new IRName(ARRAY_ALLOC), 1, length);
     }
 
     /**
@@ -192,7 +192,7 @@ public class Library {
         );
 
         // Generate pointers and allocate memory
-        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), byteSize);
+        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), 1, byteSize);
         IRTemp pointer = IRTempFactory.generate("d_array");
         fn.add(new IRMove(pointer, addr));
 

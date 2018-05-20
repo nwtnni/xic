@@ -2,6 +2,7 @@ package emit;
 
 import ir.IRFuncDecl;
 import ir.IRReturn;
+import type.*;
 
 class Initializer {
 
@@ -10,7 +11,7 @@ class Initializer {
     /**
      * TODO: generate initialization function based on program context
      */
-    public static IRFuncDecl generateInit() {
+    public static IRFuncDecl generateInitFunc(GlobalContext context) {
         IRFuncDecl fn = new IRFuncDecl(INIT_FUNCTION, "_I_init_p");
         fn.add(new IRReturn());
         

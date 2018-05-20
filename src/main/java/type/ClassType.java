@@ -31,4 +31,9 @@ public class ClassType extends FieldType {
     public int hashCode() {
         return id.hashCode();
     }
+
+    @Override
+    public String toString() {
+        return "o" + id.length() + id.replaceAll("_", "__");
+    }
 }

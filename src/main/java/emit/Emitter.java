@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import ast.*;
-import type.FnContext;
+import type.*;
 import ir.*;
 import ir.IRBinOp.OpType;
 import ir.IRMem.MemType;
@@ -23,7 +23,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * @param ast AST to generate into IR
      * @param context function context corresponding to the AST
      */
-    public static Pair<IRCompUnit, ABIContext> emitIR(String unit, XiProgram ast, FnContext context) {
+    public static Pair<IRCompUnit, ABIContext> emitIR(String unit, XiProgram ast, GlobalContext context) {
         IRTempFactory.reset();
         Emitter e = new Emitter(unit, context);
         try {
@@ -33,25 +33,31 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
     }
 
-    public Emitter(String unit, FnContext context) {
+    public Emitter(String unit, GlobalContext context) {
         this.unit = unit;
+        this.globalContext = context;
         this.context = new ABIContext(context);
     }
 
     /** 
      * The compilation unit. 
      */
-    String unit;
+    private String unit;
 
     /**
-     * The current loop
+     * The global identifiers and types context.
      */
-    private IRLabel currentLoop;
+    private GlobalContext globalContext;
 
     /**
      * Associated function name to ABI name context.
      */
     protected ABIContext context;
+
+    /**
+     * The current loop exit label.
+     */
+    private IRLabel currentLoop;
 
     // Toggle inserting library functions
     private static final boolean INCLUDE_LIB = true;
@@ -121,7 +127,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiProgram p) throws XicException {
-        IRCompUnit program = new IRCompUnit(this.unit);
+        IRCompUnit program = new IRCompUnit(this.unit, context);
 
         if (INCLUDE_LIB) {
             program.appendFunc(Library.xiArrayConcat());
@@ -133,7 +139,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         // TODO: pass context to generate init function
         // - initialize global arrays
         // - initialize class size + vt
-        program.appendFunc(Initializer.generateInit());
+        program.appendFunc(Initializer.generateInitFunc(globalContext));
 
         for (Node n : p.body) {
             // Can ignore globals
@@ -165,7 +171,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             body.add(new IRReturn());
         }
 
-        return new IRFuncDecl(f.id, context.lookup(f.id), body);
+        return new IRFuncDecl(f.id, , body);
     }
 
     /*
@@ -216,8 +222,14 @@ public class Emitter extends ASTVisitor<IRNode> {
         for (Node n : b.statements) {
             IRNode stmt = n.accept(this);
             // For procedures
-            if (stmt instanceof IRExpr) {
-                stmts.add(new IRExp((IRExpr) stmt));
+            if (stmt instanceof IRCall) {
+                stmts.add(new IRExp((IRCall) stmt));
+
+            // Zero declarations
+            } else if (stmt instanceof IRTemp) {
+                stmts.add(new IRMove((IRTemp) stmt, new IRConst(0)));
+
+            // Add other statements
             } else {
                 stmts.add((IRStmt) stmt);
             }
@@ -233,16 +245,25 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         IRTemp var = new IRTemp(d.id);
-        if (!d.type.isPrimitive()) {
 
+        // Case for primitive and class
+        if (!(d.type.isPrimitive() || d.type.isClass())) {
+            return var;
+        
+        // Case for array
+        } else if (d.type.isArray()) {
             // Case for array declaration with dimensions
             IRESeq arr = (IRESeq) d.xiType.accept(this);
             if (arr != null) {
                 return new IRMove(var, arr);
+            } else {
+                return var;
             }
-        }
 
-        return var;
+        // Can only have primitive, class, array
+        } else {
+            throw XicInternalException.runtime("Emitter: Visited non-local variable declaration.");
+        }
     }
 
     @Override
@@ -285,9 +306,11 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiWhile w) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel headL = IRLabelFactory.generate("while");
+        IRLabel headL = IRLabelFactory.generate("whileH");
         IRLabel trueL = IRLabelFactory.generate("whileT");
         IRLabel falseL = IRLabelFactory.generate("whileF");
+
+        currentLoop = falseL;
 
         stmts.add(headL);
         stmts.add(makeControlFlow(w.guard, trueL, falseL));
@@ -318,7 +341,7 @@ public class Emitter extends ASTVisitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.MOD, left, right);
             case PLUS:
                 if (b.lhs.type.isArray()) {
-                    return new IRCall(new IRName(Library.ARRAY_CONCAT), left, right);
+                    return new IRCall(new IRName(Library.ARRAY_CONCAT), 1, left, right);
                 }
                 return new IRBinOp(IRBinOp.OpType.ADD, left, right);
             case MINUS:
@@ -376,21 +399,49 @@ public class Emitter extends ASTVisitor<IRNode> {
             return Library.length((IRExpr) c.args.get(0).accept(this));
         }
 
-        // TODO: PA7 update for method calls
+        IRExpr target;
 
-        // Currently hacked for id instanceof XiVar
-        IRName target = new IRName(context.lookup(((XiVar) c.id).id));
+        String name;
+        // Function call
+        if (c.id instanceof XiVar) {
+            // TODO: update for new context
+            name = ((XiVar) c.id).id;
+            target = new IRName(context.mangleFunction(name));
+        
+        // Method call
+        } else if (c.id instanceof XiDot) {
+            target = (IRExpr) c.id.accept(this);
+        
+        } else {
+            throw XicInternalException.runtime("Invalid XiCall.");
+        }
+
+        // Get arguments
         List<IRExpr> argList = new ArrayList<>();
         for (Node n : c.getArgs()) {
             argList.add((IRExpr) n.accept(this));
         }
+
+        // Get number of returns
+        FnType t = (FnType) context.lookup(name);
+
         return new IRCall(target, argList);
     }
 
     // PA7
     @Override
-    public IRNode visit(XiDot d) {
-        throw XicInternalException.runtime("Emit XiDot");
+    public IRNode visit(XiDot d) throws XicException {
+        IRExpr lhs = (IRExpr) d.lhs.accept(this);
+        IRTemp name = (IRTemp) d.rhs.accept(this);
+
+        IRTemp obj = IRTempFactory.generate("obj");
+
+        IRSeq dispatch = new IRSeq();
+        dispatch.add(new IRMove(obj, lhs));
+
+        // TODO: add 
+
+        return new IRESeq(dispatch, name);
     }
 
     /**
@@ -425,7 +476,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, Library.length(pointer)), outOfBounds));
         stmts.add(Library.jump(doneL));
         stmts.add(outOfBounds);
-        stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"))));
+        stmts.add(new IRExp(new IRCall(new IRName("_xi_out_of_bounds"), 0)));
         stmts.add(doneL);
 
         IRExpr byteShift = new IRBinOp(OpType.MUL, Library.WORD_SIZE, index);

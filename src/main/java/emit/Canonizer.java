@@ -98,7 +98,7 @@ public class Canonizer extends IRVisitor<IRNode> {
         }
         
         // Call is always hoisted
-        return new IRCall(c.target(), args);
+        return new IRCall(c.target(), c.numRets(), args);
     }
 
     /**
@@ -146,11 +146,14 @@ public class Canonizer extends IRVisitor<IRNode> {
     public IRNode visit(IRCompUnit c) {
         Map<String, IRFuncDecl> lowered = new HashMap<>();
         
+        // Globals do not require lowering
+
+        // Lower each function
         for (IRFuncDecl fn : c.functions().values()) {
             lowered.put(fn.name(), (IRFuncDecl) fn.accept(this));
         }
         
-        return new IRCompUnit(c.name(), lowered);
+        return new IRCompUnit(c.name(), c.context(), c.globals(), lowered);
     }
 
     /**

@@ -45,4 +45,6 @@ public abstract class Type {
 
     public boolean isField() { return false; }
 
+    public boolean isPrimitive() { return false; }
+
 }

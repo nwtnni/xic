@@ -9,11 +9,11 @@ import java.util.ArrayList;
 public class FnType extends GlobalType {
 
     protected List<Type> args;
-    protected List<Type> returns;
+    protected List<Type> rets;
 
     public FnType(List<Type> args, List<Type> returns) {
         this.args = new ArrayList<>(args);
-        this.returns = new ArrayList<>(returns);
+        this.rets = new ArrayList<>(returns);
     }
 
     @Override
@@ -21,6 +21,25 @@ public class FnType extends GlobalType {
 
     public List<Type> getArgs() { return new ArrayList<>(args); }
 
-    public List<Type> getReturns() { return new ArrayList<>(returns); }
+    public int getNumArgs() { return args.size(); }
+
+    public List<Type> getReturns() { return new ArrayList<>(rets); }
+
+    public int getNumRets() { return rets.size(); }
+
+    @Override
+    public String toString() { 
+        String a = args.stream()
+            .map(e -> e.toString())
+            .reduce("", (acc, s) -> acc + s);
+
+        String r = rets.stream()
+            .map(e -> e.toString())
+            .reduce("", (acc, s) -> acc + s);
+
+        String p = rets.size() == 1 && rets.get(0).equals(UnitType.UNIT) ? "p" : "";
+
+        return p + r + a;
+    }
 
 }
