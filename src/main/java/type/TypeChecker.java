@@ -311,6 +311,8 @@ public class TypeChecker extends ASTVisitor<Type> {
                 n.accept(this);
             }
         }
+
+        if (!globalContext.validate(inside)) throw new TypeException(INVALID_OVERRIDE, c.location);
         c.type = inside;
         inside = null;
         return c.type;
