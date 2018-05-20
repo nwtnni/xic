@@ -86,7 +86,7 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
         
         // Return multiple if found
         return n.match(
-            single -> n,
+            single -> MultipleNode.of(g),
             multiple -> { 
                 List<Node> seq = new ArrayList<>();
                 for (Node d : multiple) {

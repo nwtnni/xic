@@ -67,6 +67,10 @@ public class IRFuncDecl extends IRNode {
         body.add(index, s);
     }
 
+    public boolean addAll(List<IRStmt> s) {
+        return body.addAll(s);
+    }
+
     public IRStmt set(int index, IRStmt s) {
         return body.set(index, s);
     }

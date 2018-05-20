@@ -6,7 +6,6 @@ package ir;
  */
 public class IRTemp extends IRExpr {
     private String name;
-    private boolean global;
 
     /**
      *
@@ -16,17 +15,8 @@ public class IRTemp extends IRExpr {
         this.name = name;
     }
 
-    public IRTemp(String name, boolean global) {
-        this.name = name;
-        this.global = global;
-    }
-
     public String name() {
         return name;
-    }
-
-    public boolean global() {
-        return global;
     }
 
     @Override

@@ -6,11 +6,14 @@ import java.util.Optional;
 import java.util.Stack;
 
 import ast.*;
+import interpret.Configuration;
 import type.*;
 import ir.*;
 import ir.IRBinOp.OpType;
+import ir.IRMem.MemType;
 import xic.XicException;
 import xic.XicInternalException;
+import util.OrderedMap;
 import util.Pair;
 
 /**
@@ -80,14 +83,14 @@ public class Emitter extends ASTVisitor<IRNode> {
             XiBinary b = (XiBinary) n;
             switch (b.kind) {
                 case AND:
-                    IRLabel andL = IRFactory.generateLabel("and");
+                    IRLabel andL = IRFactory.generateLabel("c_and");
                     return new IRSeq(
                         makeControlFlow(b.lhs, andL, falseL),
                         andL,
                         makeControlFlow(b.rhs, trueL, falseL)
                     );
                 case OR:
-                    IRLabel orL = IRFactory.generateLabel("and");
+                    IRLabel orL = IRFactory.generateLabel("c_or");
                     return new IRSeq(
                         makeControlFlow(b.lhs, trueL, orL),
                         orL,
@@ -105,6 +108,83 @@ public class Emitter extends ASTVisitor<IRNode> {
             new IRCJump((IRExpr) n.accept(this), trueL),
             Library.jump(falseL)
         );
+    }
+
+    /**
+     * Generates init function for the class.
+     */
+    private IRFuncDecl init(XiClass cls) {
+        GlobalContext gc = context.gc;
+        String name = context.classInit(cls.id);
+        ClassType ct = (ClassType) cls.type;
+        ClassContext cc = context.gc.lookup(ct);
+
+        IRFuncDecl fn = new IRFuncDecl(name, name, 0, 0);
+
+        // Shuttle temp
+        IRTemp t = IRFactory.generate();
+
+        // Globals for class c
+        IRExpr size = IRFactory.generateSize(cls.id, context);
+        IRExpr vt = IRFactory.generateVT(cls.id, context);
+
+        // Short circuit if already initialized
+        IRLabel done = IRFactory.generateLabel(cls.id);
+        fn.add(new IRMove(t, size));
+        fn.add(new IRCJump(new IRBinOp(OpType.NEQ, Library.ZERO, t), done));
+
+        // Recursively intialize parent with _I_init_parent
+        if (cls.hasParent()) {
+            fn.add(new IRExp(new IRCall(new IRName(context.classInit(cls.parent)), 0, List.of())));
+        }
+
+        // Initialize _I_size_name
+        if (cls.hasParent()) {
+            // Allocate size
+            IRExpr parentSize = IRFactory.generateSize(cls.id, context);
+            fn.add(new IRMove(t, parentSize));
+        }
+        fn.add(new IRMove(t, new IRBinOp(OpType.ADD, t, new IRConst(cc.numFields()))));
+        fn.add(new IRMove(size, t));
+
+        // Initialize _I_vt_name
+
+        // Get vt address in c
+        IRTemp c = IRFactory.generate("vt_" + cls.id);
+        fn.add(new IRMove(c, new IRMem(vt, MemType.IMMUTABLE)));
+
+        // Get parent vt address in p
+        IRTemp p = null;
+        if (cls.hasParent()) {
+            IRExpr parentVT = IRFactory.generateVT(cls.parent, context);
+            p = IRFactory.generate("vt_" + cls.parent);
+            fn.add(new IRMove(p, new IRMem(parentVT, MemType.IMMUTABLE)));
+        }
+
+        // Copy or generate entries of vt
+        int i = 1;
+        OrderedMap<String, MethodType> methods = gc.lookupAllMethods(ct);
+        for (String method : methods.keyList()) {
+            IRConst offset = new IRConst(i * Configuration.WORD_SIZE);
+            IRMem addr = new IRMem(new IRBinOp(OpType.ADD, c, offset), MemType.IMMUTABLE);
+
+            // Copy inherited methods
+            if (!cc.containsMethod(method)) {
+                IRMem paddr = new IRMem(new IRBinOp(OpType.ADD, p, offset), MemType.IMMUTABLE);
+                fn.add(new IRMove(addr, paddr));
+
+            // Insert addresses for overriden and self defined methods
+            } else {
+                IRMem pointer = IRFactory.generateMethodAddr(method, ct, context);
+                fn.add(new IRMove(t, pointer));
+                fn.add(new IRMove(addr, t));
+            }
+            i++;
+        }
+
+        fn.add(done);
+        fn.add(new IRReturn());
+        return fn;
     }
 
     /**
@@ -143,32 +223,63 @@ public class Emitter extends ASTVisitor<IRNode> {
             program.appendFunc(Library.xiDynamicAlloc());
         }
 
-        // TODO: initialize globals
-
-        // TODO: pass context to generate init function
+        // TODO: initialize globals and classes
         // - initialize global arrays
         // - initialize class size + vt
-        program.appendFunc(Initializer.generateInitFunc(context.context));
+        List<IRStmt> globals = new ArrayList<>();
+        List<IRStmt> classes = new ArrayList<>();
 
-        for (Node n : p.body) {
-            // Can ignore globals
+        for (Node node : p.body) {
 
-            // TODO: visit classes
+            // Visit globals
+            if (node instanceof XiGlobal) {
+                IRStmt g = (IRStmt) node.accept(this);
+                if (g != null) {
+                    globals.add(g);
+                }
 
+            // Visit classes
+            } else if (node instanceof XiClass) {
+                XiClass c = (XiClass) node;
+                currentClass = Optional.of((ClassType) c.type);
 
-            if (n instanceof XiFn) {
-                IRFuncDecl f = (IRFuncDecl) n.accept(this);
-                program.appendFunc(f);
+                // Create initialization function
+                program.appendFunc(init(c));
+                IRName name = new IRName(context.classInit(c.id));
+                classes.add(new IRExp(new IRCall(name, 0, List.of())));
+
+                // Visit each method
+                for (Node method : c.body) {
+                    if (method instanceof XiFn) {
+                        program.appendFunc((IRFuncDecl) method.accept(this));
+                    }
+                }
+
+                currentClass = Optional.empty();
+            // Visit functions
+            } else if (node instanceof XiFn) {
+                program.appendFunc((IRFuncDecl) node.accept(this));
             }
         }
 
+        program.appendFunc(Library.generateInitFunc(classes, globals));
+
         return program;
+    }
+
+    // Only need to initialize global arrays
+    // PA7
+    @Override
+    public IRNode visit(XiGlobal g) throws XicException {
+        if (!(g.type.isArray())) { return null; }
+        return g.stmt.accept(this);
     }
 
     @Override
     public IRNode visit(XiFn f) throws XicException {
         IRSeq body = (IRSeq) f.block.accept(this);
 
+        String name;
         int numArgs = f.args.size();
         int numRets = f.returns.size();
 
@@ -176,8 +287,11 @@ public class Emitter extends ASTVisitor<IRNode> {
         int argOffset = 0;
         if (currentClass.isPresent()) {
             body.add(0, new IRMove(Library.THIS, IRFactory.getArgument(0)));
+            name = context.mangleMethod(f.id, currentClass.get());
             argOffset++;
             numArgs++;
+        } else {
+            name = context.mangleFunction(f.id);
         }
 
         // Inject temporary for multiple returns
@@ -198,7 +312,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             body.add(new IRReturn());
         }
 
-        return new IRFuncDecl(f.id, context.mangleFunction(f.id), numArgs, numRets, body);
+        return new IRFuncDecl(f.id, name, numArgs, numRets, body);
     }
 
     /*
@@ -211,10 +325,13 @@ public class Emitter extends ASTVisitor<IRNode> {
         IRExpr rhs = (IRExpr) a.rhs.accept(this);
 
         if (lhs.size() == 1) {
-            // If not an underscore
+
+            // Assign to expression
             IRExpr var = (IRExpr) lhs.get(0);
             if (var != null) {
                 return new IRMove(var, rhs);
+            
+            // Discard result if assign to underscore
             } else {
                 return new IRExp(rhs);
             }
@@ -271,7 +388,12 @@ public class Emitter extends ASTVisitor<IRNode> {
             return null;
         }
 
-        IRTemp var = new IRTemp(d.id);
+        IRExpr var;
+        if (context.gc.contains(d.id)) {
+            var = IRFactory.generateGlobal(d.id, context);
+        } else {
+            var = new IRTemp(d.id);
+        }
 
         // Case for primitive and class
         if (d.type.isPrimitive() || d.type.isClass()) {
@@ -296,15 +418,15 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiIf i) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel trueL = IRFactory.generateLabel("ifT");
-        IRLabel falseL = IRFactory.generateLabel("ifF");
+        IRLabel trueL = IRFactory.generateLabel("if_t");
+        IRLabel falseL = IRFactory.generateLabel("if_f");
 
         stmts.add(makeControlFlow(i.guard, trueL, falseL));
         stmts.add(trueL);
         stmts.add((IRStmt) i.block.accept(this));
         stmts.add(falseL);
         if (i.hasElse()) {
-            IRLabel doneL = IRFactory.generateLabel("ifDone");
+            IRLabel doneL = IRFactory.generateLabel("if_done");
             stmts.add(stmts.size() - 1, Library.jump(doneL));
             stmts.add((IRStmt) i.elseBlock.accept(this));
             stmts.add(doneL);
@@ -333,9 +455,9 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiWhile w) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel headL = IRFactory.generateLabel("whileH");
-        IRLabel trueL = IRFactory.generateLabel("whileT");
-        IRLabel falseL = IRFactory.generateLabel("whileF");
+        IRLabel headL = IRFactory.generateLabel("while_h");
+        IRLabel trueL = IRFactory.generateLabel("while_t");
+        IRLabel falseL = IRFactory.generateLabel("while_f");
 
         currentLoop.push(falseL);
 
@@ -389,8 +511,8 @@ public class Emitter extends ASTVisitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
             case AND:
                 IRTemp andFlag = IRFactory.generate("and");
-                IRLabel trueL = IRFactory.generateLabel("andT");
-                IRLabel falseL = IRFactory.generateLabel("andF");
+                IRLabel trueL = IRFactory.generateLabel("t");
+                IRLabel falseL = IRFactory.generateLabel("f");
                 return new IRESeq(
                     new IRSeq(
                         new IRMove(andFlag, new IRConst(0)),
@@ -403,8 +525,8 @@ public class Emitter extends ASTVisitor<IRNode> {
                 );
             case OR:
                 IRTemp orFlag = IRFactory.generate("or");
-                trueL = IRFactory.generateLabel("orT");
-                falseL = IRFactory.generateLabel("orF");
+                trueL = IRFactory.generateLabel("t");
+                falseL = IRFactory.generateLabel("f");
                 return new IRESeq(
                     new IRSeq(
                         new IRMove(orFlag, new IRConst(1)),
@@ -436,20 +558,22 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Method call requires injecting object reference
         if (c.id.type.isMethod()) {
             IRExpr obj;
+            ClassType type;
 
             // Implicit this in a method
             if (c.id instanceof XiVar && currentClass.isPresent()) {
                 name = ((XiVar) c.id).id;
                 obj = Library.THIS;
+                type = currentClass.get();
             
             // Off a dot access
             } else {
                 XiDot d = (XiDot) c.id;
-
-                name = ((IRName) d.rhs.accept(this)).name();
+                name = ((XiVar) d.rhs).id;
                 obj = (IRExpr) d.lhs.accept(this);
+                type = (ClassType) d.type;
             }
-            target = dispatch(obj, name, currentClass.get());
+            target = dispatch(obj, name, type);
             argList.add(obj);
 
         // Function call
@@ -470,7 +594,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         // Get number of returns
-        FnType t = (FnType) context.context.lookup(name);
+        FnType t = (FnType) context.gc.lookup(name);
 
         return new IRCall(target, t.getNumRets(), argList);
     }
@@ -491,7 +615,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiIndex i) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel doneL = IRFactory.generateLabel("done");
+        IRLabel doneL = IRFactory.generateLabel("index_done");
 
         // Store array reference copy if not already a temp
         IRExpr pointer = (IRExpr) i.array.accept(this);
@@ -510,7 +634,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         // Check bounds
-        IRLabel outOfBounds = IRFactory.generateLabel("outOfBounds");
+        IRLabel outOfBounds = IRFactory.generateLabel("out_of_bounds");
         stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, Library.ZERO), outOfBounds));
         stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, Library.length(pointer)), outOfBounds));
         stmts.add(Library.jump(doneL));
@@ -556,6 +680,13 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiVar v) throws XicException {
+
+        // Global variables
+        if (context.gc.contains(v.id)) {
+            return IRFactory.generateGlobal(v.id, context);
+        }
+
+        // Ordinary temporary
         return new IRTemp(v.id);
     }
 
@@ -606,13 +737,13 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Allocate memory for special case of syntactic sugar
         // for array declarations with dimensions specified
         if (t.hasSize()) {
-            IRTemp size = IRFactory.generate("size");
+            IRTemp size = IRFactory.generate("type_size");
             IRExpr sizeExpr =  (IRExpr) t.size.accept(this);
             IRESeq children = (IRESeq) t.child.accept(this);
             if (children == null) {
                 IRSeq n = new IRSeq();
                 n.add(new IRMove(size, sizeExpr));
-                return new IRESeq(n, Library.alloc(size));
+                return new IRESeq(n, Library.allocArray(size));
             } else {
                 IRSeq sizes = (IRSeq) children.stmt();
                 IRExpr alloc = (IRExpr) children.expr();

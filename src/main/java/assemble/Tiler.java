@@ -338,10 +338,8 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRMem m) {
-        // TODO: PA7 cases for mems of global labels
-
         // Make allocator use addressing modes for immutable memory accesses
-        if (m.memType() == MemType.IMMUTABLE && m.expr() instanceof IRBinOp) {
+        if (m.isImmutable() && m.expr() instanceof IRBinOp) {
 
             IRBinOp bop = (IRBinOp) m.expr();
             assert bop.type() == OpType.ADD;
@@ -402,6 +400,7 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRMove m) {
+        // TODO: PA7 cases for mems of global labels
 
         // Must be Mem<Temp> or else IRGen has a bug
         Operand dest = m.target().accept(this);

@@ -144,16 +144,16 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRCompUnit by lowering each function body.
      */
     public IRNode visit(IRCompUnit c) {
-        Map<String, IRFuncDecl> lowered = new HashMap<>();
         
         // Globals do not require lowering
+        IRCompUnit unit = new IRCompUnit(c.name(), c.globals());
 
         // Lower each function
         for (IRFuncDecl fn : c.functions().values()) {
-            lowered.put(fn.name(), (IRFuncDecl) fn.accept(this));
+            unit.appendFunc((IRFuncDecl) fn.accept(this));
         }
         
-        return new IRCompUnit(c.name(), c.globals(), lowered);
+        return unit;
     }
 
     /**
@@ -214,14 +214,18 @@ public class Canonizer extends IRVisitor<IRNode> {
            Where there is a guarantee that there is no change of aliasing
         */
 
-        if (m.memType() == MemType.IMMUTABLE) {
-            m.isCanonical = true;
+        // if (m.isImmutable()) {
+        //     m.isCanonical = true;
+        //     return m;
+        // }
+
+        if (m.isGlobal()) {
             return m;
         }
 
         IRExpr expr = (IRExpr) m.expr().accept(this);
+        IRTemp t = IRFactory.generate("mem");
         if (!expr.isCanonical) {
-            IRTemp t = IRFactory.generate("mem");
             stmts.add(new IRMove(t, expr));
             expr = t;
         }
@@ -241,18 +245,10 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by commuting
      */
     public IRNode visit(IRMove m) {
-        // Need to check memory targets
-        if (m.isMem()) {
-            IRMem mem = m.getMem();
 
-            // Hoist mem expression if not certain about immutability
-            IRExpr dest = mem;
-            if (mem.memType() != MemType.IMMUTABLE) {
-                IRTemp temp = IRFactory.generate();
-                IRExpr memExpr = (IRExpr) mem.expr().accept(this);
-                stmts.add(new IRMove(temp, memExpr));
-                dest = new IRMem(temp);
-            }
+        // Hoist memory targets
+        if (m.isMem()) {
+            IRExpr dest = (IRExpr) m.target().accept(this);
 
             IRExpr srcExpr = (IRExpr) m.src().accept(this);
             stmts.add(new IRMove(dest, srcExpr));
@@ -308,7 +304,7 @@ public class Canonizer extends IRVisitor<IRNode> {
     }
 
     /**
-     * Trivially lowers an IRTemp node, which is an expression leaf.
+     * Lowers an IRTemp node, which is a global memory address or an expression leaf.
      */
     public IRNode visit(IRTemp t) {
         t.isCanonical = true;

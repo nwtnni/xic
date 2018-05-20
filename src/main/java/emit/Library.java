@@ -33,6 +33,9 @@ public class Library {
     protected static final String ARRAY_ALLOC = "_xi_d_alloc";
     protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
+    /** Main initialization function name. */
+    public static final String INIT_FUNCTION = "_init";
+
     /* 
      *
      * Utility methods for code generation
@@ -188,6 +191,17 @@ public class Library {
      * Library functions
      *
      */
+
+    /**
+     * Function to be called in .ctors section to initialize classes and globals
+     */
+    public static IRFuncDecl generateInitFunc(List<IRStmt> classSetup, List<IRStmt> globalSetup) {
+        IRFuncDecl fn = new IRFuncDecl(INIT_FUNCTION, INIT_FUNCTION, 0, 0);
+        fn.addAll(classSetup);
+        fn.addAll(globalSetup);
+        fn.add(new IRReturn());
+        return fn;
+    }
 
     /**
      * Generates library function for allocating memory for an dynamic array.
