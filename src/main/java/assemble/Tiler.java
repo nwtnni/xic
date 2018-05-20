@@ -37,7 +37,7 @@ public class Tiler extends IRVisitor<Operand> {
         return tiler.unit;
     }
 
-    public static final boolean INCLUDE_COMMENTS = true;
+    public static final boolean INCLUDE_COMMENTS = false;
 
     // Mangled names context
     private ABIContext context;
@@ -118,6 +118,10 @@ public class Tiler extends IRVisitor<Operand> {
 
         // Set return label
         returnLabel = labelFromRet(f);
+
+        if (f.rets() > 2) {
+            calleeReturnAddress = new Temp(Library.CALLEE_MULT_RET.name());
+        }
 
         // Tile the function body
         f.body().accept(this);
@@ -537,9 +541,6 @@ public class Tiler extends IRVisitor<Operand> {
 
         // Set calleeReturnAddress to CALLEE_MULT_RET
         if (t.equals(Library.CALLEE_MULT_RET)) {
-            if (calleeReturnAddress == null) {
-                calleeReturnAddress = new Temp(name);
-            }
             return Operand.temp(calleeReturnAddress);
         }
 

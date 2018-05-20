@@ -138,13 +138,19 @@ public class Emitter extends ASTVisitor<IRNode> {
             fn.add(new IRExp(new IRCall(new IRName(context.classInit(cls.parent)), 0, List.of())));
         }
 
+        int fields = cc.numFields();
+
         // Initialize _I_size_name
         if (cls.hasParent()) {
             // Allocate size
             IRExpr parentSize = IRFactory.generateSize(cls.id, context);
             fn.add(new IRMove(t, parentSize));
+        } else {
+            // Offset for vt if the base case
+            fields++;
         }
-        fn.add(new IRMove(t, new IRBinOp(OpType.ADD, t, new IRConst(cc.numFields()))));
+
+        fn.add(new IRMove(t, new IRBinOp(OpType.ADD, t, new IRConst(fields))));
         fn.add(new IRMove(size, t));
 
         // Initialize _I_vt_name
@@ -201,6 +207,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             Pair<ClassType, List<String>> source = context.gc.lookupFieldSource(type, name);
 
             String cls = source.first.getID();
+
             int offset = source.second.size() - source.second.indexOf(name);
             
             // Take fixed offset off of
@@ -352,7 +359,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
         // Inject temporary for multiple returns
         if (f.returns.size() > 2) {
-            body.add(1, new IRMove(Library.CALLEE_MULT_RET, IRFactory.getArgument(argOffset)));
+            body.add(argOffset, new IRMove(Library.CALLEE_MULT_RET, IRFactory.getArgument(argOffset)));
             argOffset++;
             numArgs++;
         }
@@ -360,7 +367,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Bind arguments to temps
         List<IRNode> args = visit(f.args);
         for (int i = 0; i < args.size(); i++) {
-            body.add(i, new IRMove((IRExpr) args.get(i), IRFactory.getArgument(i + argOffset)));
+            body.add(i + argOffset, new IRMove((IRExpr) args.get(i), IRFactory.getArgument(i + argOffset)));
         }
 
         // Insert empty return if needed
