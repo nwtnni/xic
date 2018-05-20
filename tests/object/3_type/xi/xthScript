@@ -38,6 +38,8 @@ xic ("Test oXi --typecheck") "--typecheck" {
   method_override3.xi;
 
   inherit1.xi;
+  inherit2.xi;
+  inherit3.xi;
 
   null1.xi;
   null2.xi;
