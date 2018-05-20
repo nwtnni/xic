@@ -1,0 +1,46 @@
+xic ("Test assemble") "-target linux" {
+
+    break01.xi;
+
+    extends01.xi;
+    extends02.xi;
+    extends03.xi;
+    extends04.xi;
+    extends05.xi;
+    extends06.xi;
+    extends07.xi;
+    extends08.xi;
+
+    field01.xi;
+    field02.xi;
+    field03.xi;
+    field04.xi;
+
+    global01.xi;
+    global02.xi;
+    global03.xi;
+    global04.xi;
+    global05.xi;
+    global06.xi;
+    global07.xi;
+    global08.xi;
+
+    global_init01.xi;
+    global_init02.xi;
+
+    method01.xi;
+    method02.xi;
+    method03.xi;
+
+    multi_declr01.xi;
+    multi_declr02.xi;
+
+    null01.xi;
+    null02.xi;
+    null03.xi;
+    null04.xi;
+
+    obj_array01.xi;
+
+    this01.xi;
+}

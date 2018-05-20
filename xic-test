@@ -214,6 +214,21 @@ test_object_typecheck_language_extension() {
     printf "\n========================================\n\n" 
 }
 
+test_object_assemble() {
+    test_object_assemble_language_extension
+    test_object_assemble_xi
+}
+
+test_object_assemble_language_extension() {
+    xth/xth -compilerpath . -workpath tests/object/5_assemble/language_extension -testpath tests/object/5_assemble/language_extension tests/object/5_assemble/language_extension/xthScript
+    printf "\n========================================\n\n"
+}
+
+test_object_assemble_xi() {
+    xth/xth -compilerpath . -workpath tests/object/5_assemble/ -testpath tests/object/5_assemble/ tests/object/5_assemble//xthScript
+    printf "\n========================================\n\n"
+}
+
 if [[ -f $2 ]] ; then
   gradle xic
   FILE=$2
@@ -370,6 +385,15 @@ else
       ;;
   otext)
       test_object_typecheck_language_extension
+      ;;
+  oa)
+      test_object_assemble
+      ;;
+  oaext)
+      test_object_assemble_language_extension
+      ;;
+  oaxi)
+      test_object_assemble_xi
       ;;
   *)
       echo "Usage:"
