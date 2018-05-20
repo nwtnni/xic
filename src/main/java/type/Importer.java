@@ -96,7 +96,7 @@ public class Importer extends TypeChecker {
     @Override
     public Type visit(XiClass c) throws XicException {
 
-
+        return null;
     }
 
     /**

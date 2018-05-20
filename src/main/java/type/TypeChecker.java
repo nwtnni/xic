@@ -254,7 +254,8 @@ public class TypeChecker extends ASTVisitor<Type> {
             if (n instanceof XiFn) n.accept(this);
         }
         inside = null;
-
+        c.type = UnitType.UNIT;
+        return c.type;
     }
 
     /**
@@ -683,9 +684,10 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiArray a) throws XicException {
 
-        List<Type> types = a.values.stream()
-            .map(elem -> elem.accept(this))
-            .collect(Collectors.toList());
+        List<Type> types = new ArrayList<>();
+        for (Node value : a.values) {
+            types.add(value.accept(this));
+        }
 
         // Early return: empty literal array
         if (a.values.size() == 0) {
