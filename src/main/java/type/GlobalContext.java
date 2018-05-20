@@ -126,8 +126,9 @@ public class GlobalContext {
         return classes.get(ct);
     }
 
-    public Set<String> lookupLocalClasses() {
+    public Set<ClassType> lookupLocalClasses() {
         return local.stream()
+            .map(id -> new ClassType(id))
             .filter(id -> classes.containsKey(id))
             .collect(Collectors.toSet());
     }

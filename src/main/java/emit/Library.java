@@ -34,7 +34,7 @@ public class Library {
     protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
     /** Main initialization function name. */
-    public static final String INIT_FUNCTION = "_init";
+    public static final String INIT_FUNCTION = "_I_init";
 
     /* 
      *
