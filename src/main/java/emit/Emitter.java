@@ -203,7 +203,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
         // Field dispatch
         if (cc.containsField(name)) {
-           //TODO plz
+           
 
         }
 
@@ -729,6 +729,10 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Global variables
         if (context.gc.contains(v.id)) {
             return IRFactory.generateGlobal(v.id, context);
+        }
+
+        if (currentClass.isPresent() && context.gc.lookup(currentClass.get()).containsField(v.id)) {
+            return dispatch(Library.THIS, v.id, currentClass.get());
         }
 
         // Ordinary temporary
