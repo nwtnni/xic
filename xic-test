@@ -12,7 +12,7 @@ test_all() {
 }
 
 test_course() {
-    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
+    # xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
     xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa7 xth/tests/pa7/xthScript
     printf "\n========================================\n\n" 
 }
@@ -215,6 +215,10 @@ test_object_typecheck_language_extension() {
     printf "\n========================================\n\n" 
 }
 
+test_object_asm() {
+    xth/xth -compilerpath . -workpath tests/object/4_asm -testpath tests/object/4_asm tests/object/4_asm/xthScript
+}
+
 if [[ -f $2 ]] ; then
   gradle xic
   FILE=$2
@@ -371,6 +375,9 @@ else
       ;;
   otext)
       test_object_typecheck_language_extension
+      ;;
+  oa)
+      test_object_asm
       ;;
   *)
       echo "Usage:"

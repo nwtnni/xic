@@ -15,4 +15,8 @@ xic ("Test oXi assembly") {
 
   inherit_field01.xi;
   inherit_field02.xi;
+
+  nested_object01.xi;
+  nested_object02.xi;
+  nested_object03.xi;
 }
