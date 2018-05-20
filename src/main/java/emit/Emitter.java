@@ -195,7 +195,6 @@ public class Emitter extends ASTVisitor<IRNode> {
      */
     private IRExpr dispatch(IRExpr obj, String name, ClassType type) {
         GlobalContext gc = context.gc;
-        ClassContext cc = gc.lookup(type);
 
         // Field dispatch
         if (gc.inherits(type, name) != null && gc.inherits(type, name).isField()) {
@@ -217,7 +216,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         // Method dispatch
-        if (cc.containsMethod(name)) {
+        if (gc.inherits(type, name) != null && gc.inherits(type, name).isMethod()) {
 
             OrderedMap<String, MethodType> order = gc.lookupAllMethods(type);
             int offset = order.indexOf(name);
@@ -634,7 +633,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             target = dispatch(obj, name, type);
             argList.add(obj);
 
-            numRets = context.gc.lookup(type).lookupMethod(name).getNumRets();
+            numRets = ((MethodType) context.gc.inherits(type, name)).getNumRets();
 
         // Function call
         } else {
