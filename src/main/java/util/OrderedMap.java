@@ -29,6 +29,10 @@ public class OrderedMap<K, V> {
         return new Pair<>(key, map.get(key));
     }
 
+    public int indexOf(K key) {
+        return order.indexOf(key);
+    }
+
     public void put(K key, V value) {
         map.put(key, value);
         order.add(key);

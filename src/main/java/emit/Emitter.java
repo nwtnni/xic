@@ -17,7 +17,7 @@ import util.OrderedMap;
 import util.Pair;
 
 /**
- * Main decorated AST to IR translation implementation. Recursively 
+ * Main decorated AST to IR translation implementation. Recursively
  * traverses the AST and constructs a new IR tree that represents the AST.
  */
 public class Emitter extends ASTVisitor<IRNode> {
@@ -44,8 +44,8 @@ public class Emitter extends ASTVisitor<IRNode> {
         this.currentLoop = new Stack<>();
     }
 
-    /** 
-     * The compilation unit. 
+    /**
+     * The compilation unit.
      */
     private String unit;
 
@@ -54,7 +54,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      */
     protected ABIContext context;
 
-    /** 
+    /**
      * Flag to see if currently visiting a class.
      */
     private Optional<ClassType> currentClass;
@@ -195,7 +195,28 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Generates code for dispatch to the field or method [name] from [obj] of type [type]
      */
     private IRExpr dispatch(IRExpr obj, String name, ClassType type) {
-        return null;
+        GlobalContext gc = context.gc;
+        ClassContext cc = gc.lookup(type);
+
+        IRSeq setup = new IRSeq();
+
+        // Field dispatch
+        if (cc.containsField(name)) {
+           //TODO plz
+
+        }
+
+        // Method dispatch
+        if (cc.containsMethod(name)) {
+
+            OrderedMap<String, MethodType> order = gc.lookupAllMethods(type);
+            int offset = order.indexOf(name);
+
+            // Access offset
+            return new IRMem(new IRBinOp(OpType.ADD, new IRConst(offset * Configuration.WORD_SIZE), obj));
+        }
+
+        throw new XicInternalException("Error in dispatch");
     }
 
     /*
@@ -348,7 +369,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             IRExpr var = (IRExpr) lhs.get(0);
             if (var != null) {
                 return new IRMove(var, rhs);
-            
+
             // Discard result if assign to underscore
             } else {
                 return new IRExp(rhs);
@@ -416,7 +437,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Case for primitive and class
         if (d.type.isPrimitive() || d.type.isClass()) {
             return var;
-        
+
         // Case for array
         } else if (d.type.isArray()) {
             // Case for array declaration with dimensions
@@ -487,7 +508,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         stmts.add(falseL);
 
         currentLoop.pop();
-        
+
         return new IRSeq(stmts);
     }
 
@@ -538,7 +559,7 @@ public class Emitter extends ASTVisitor<IRNode> {
                         trueL,
                         new IRMove(andFlag, new IRConst(1)),
                         falseL
-                    ), 
+                    ),
                     andFlag
                 );
             case OR:
@@ -552,7 +573,7 @@ public class Emitter extends ASTVisitor<IRNode> {
                         falseL,
                         new IRMove(orFlag, new IRConst(0)),
                         trueL
-                    ), 
+                    ),
                     orFlag
                 );
         }
@@ -583,7 +604,7 @@ public class Emitter extends ASTVisitor<IRNode> {
                 name = ((XiVar) c.id).id;
                 obj = Library.THIS;
                 type = currentClass.get();
-            
+
             // Off a dot access
             } else {
                 XiDot d = (XiDot) c.id;
@@ -629,7 +650,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * Returns an expression that
      *  - containing the memory address for an array access on LHS.
      *  - the value at the memory address for an array access on RHS.
-     */ 
+     */
     @Override
     public IRNode visit(XiIndex i) throws XicException {
         IRSeq stmts = new IRSeq();
@@ -669,7 +690,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiNew n) throws XicException {
         IRSeq setup = new IRSeq();
-        
+
         IRTemp size = IRFactory.generate("size_" + n.name);
         IRTemp vt = IRFactory.generate("vt_" + n.name);
         IRTemp obj = IRFactory.generate("obj_" + n.name);
@@ -774,4 +795,4 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
     }
 
-}   
+}
