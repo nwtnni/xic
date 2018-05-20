@@ -1,10 +1,11 @@
-xic ("Test oXi assembly") {
+xic ("Test assembly") "-target linux" {
   simple_method01.xi; 
   simple_method02.xi; 
   simple_method03.xi; 
 
   simple_field01.xi;
   simple_field02.xi;
+  simple_field03.xi;
 
   this_method01.xi;
   this_method02.xi;
@@ -19,4 +20,8 @@ xic ("Test oXi assembly") {
   nested_object01.xi;
   nested_object02.xi;
   nested_object03.xi;
+
+  color01.xi;
+  color02.xi;
+  color03.xi;
 }

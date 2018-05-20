@@ -7,13 +7,13 @@ class A {
 
   foo(): A {
     x = x + 1
-    print("Foo " + unparseInt(x))
+    print("Foo " + unparseInt(x) + "\n")
     return this
   }
 
   bar(): A {
     x = x + 1
-    print("Bar " + unparseInt(x))
+    print("Bar " + unparseInt(x) + "\n")
     return this
   }
 }

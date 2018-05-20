@@ -23,6 +23,6 @@ main(args:int[][]) {
   b.c = 10
   b.d = 6
 
-  print(unparseInt(a.a) + " " + unparseInt(a.c))
+  print(unparseInt(a.a) + " " + unparseInt(a.c) + "\n")
   print(unparseInt(b.a) + " " + unparseInt(b.c) + " " + unparseInt(b.d))
 }

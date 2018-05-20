@@ -13,6 +13,6 @@ main(args:int[][]) {
   while x < 5 {
     x = x + 1
     a.x = a.x + 1
-    print(unparseInt(a.x))
+    print(unparseInt(a.x) + "\n")
   }
 }

@@ -17,5 +17,6 @@ main(args:int[][]) {
   while x < 10 {
     print(unparseInt(a.x))
     a.incr()
+    x = x + 1
   }
 }

@@ -1,19 +1,19 @@
 use io
 
 class A {
-  foo() { print("A") }
+  foo() { print("A\n") }
 }
 
 class B extends A {}
 
 class C extends B {
-  foo() { print("C") }
+  foo() { print("C\n") }
 }
 
 class D extends C {}
 
 class E extends D {
-  foo() { print("E") }
+  foo() { print("E\n") }
 }
 
 main(args:int[][]) {

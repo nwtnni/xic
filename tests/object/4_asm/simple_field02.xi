@@ -15,6 +15,6 @@ main(args:int[][]) {
     a.x = a.x + x 
     b.x = b.x + 1
     x = x + 1
-    print(unparseInt(b.x) + " " + unparseInt(a.x))
+    print(unparseInt(b.x) + " " + unparseInt(a.x) + "\n")
   }
 }

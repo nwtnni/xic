@@ -1,11 +1,11 @@
 use io
 
 class A {
-  foo() { print("A") }
+  foo() { print("A\n") }
 }
 
 class B extends A {
-  foo() { print("B") }
+  foo() { print("B\n") }
 }
 
 main(args:int[][]) {
