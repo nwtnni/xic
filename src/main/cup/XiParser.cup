@@ -8,6 +8,7 @@ import java.util.Arrays;
 import lex.*;
 import ast.*;
 import xic.XicException;
+import xic.XicInternalException;
 
 parser code {:
 
@@ -22,7 +23,7 @@ parser code {:
         } catch (XicException xic) {
         	throw xic;
         } catch (Exception e) {
-        	throw ParseException.internal(e);
+        	throw new XicInternalException("File not found");
         }
     }
 
