@@ -232,6 +232,16 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
         return union(wrap(m.src), wrap(m.dest));
     }
     
+    @Override
+    public Set<Reg> visit(Mov.TLR m) {
+        return wrap(m.dest);
+    }
+
+    @Override
+    public Set<Reg> visit(Mov.TRL m) {
+        return wrap(m.src);
+    }
+
     /*
      * Pop Visitors
      */

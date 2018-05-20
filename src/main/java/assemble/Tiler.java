@@ -338,6 +338,10 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRMem m) {
+        if (m.isGlobal()) {
+            throw XicInternalException.runtime("found global in invalid instruction");
+        }
+
         // Make allocator use addressing modes for immutable memory accesses
         if (m.isImmutable() && m.expr() instanceof IRBinOp) {
 
@@ -400,13 +404,48 @@ public class Tiler extends IRVisitor<Operand> {
     }
 
     public Operand visit(IRMove m) {
-        // TODO: PA7 cases for mems of global labels
 
-        // Must be Mem<Temp> or else IRGen has a bug
+        // Source is global memory or global address
+        if (m.src() instanceof IRMem) {
+            IRMem mem = (IRMem) m.src();
+            if (mem.isGlobal()) {
+                Operand dest = m.target().accept(this);
+
+                // LAR
+                if (mem.expr instanceof IRMem && ((IRMem) mem.expr).isGlobal()) {
+                    String src = ((IRTemp) ((IRMem) mem.expr).expr).name();
+                    instrs.add(movLAR(src, dest.getTemp()));
+                
+                // LR
+                } else {
+                    String src = ((IRTemp) mem.expr).name();
+                    instrs.add(movLR(src, dest.getTemp()));
+                }
+
+                return null;
+            }
+        }
+
+        // Target is global memory
+        if (m.target() instanceof IRMem) {
+            IRMem mem = (IRMem) m.target();
+            if (mem.isGlobal()) {
+                Operand src = m.src().accept(this);
+                String dest = ((IRTemp) mem.expr).name();
+                instrs.add(movRL(src.getTemp(), dest));
+                return null;
+            }
+        }
+
+        // Ordinary move
+
+        // Dest must be Temp or Mem<Temp>
         Operand dest = m.target().accept(this);
 
+        // Src can be Imm
         Optional<Imm> imm = checkImm(m.src());
         Operand src = m.src().accept(this);
+
         instrs.addAll(mov(src, dest, imm));
         return null;
     }

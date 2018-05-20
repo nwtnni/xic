@@ -214,10 +214,10 @@ public class Canonizer extends IRVisitor<IRNode> {
            Where there is a guarantee that there is no change of aliasing
         */
 
-        // if (m.isImmutable()) {
-        //     m.isCanonical = true;
-        //     return m;
-        // }
+        if (m.isImmutable()) {
+            m.isCanonical = true;
+            return m;
+        }
 
         if (m.isGlobal()) {
             return m;

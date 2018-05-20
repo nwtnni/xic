@@ -239,11 +239,11 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
     }
 
     public Instr<Temp> visit(Mov.TLR m) {
-        return null;
+        return m;
     }
 
     public Instr<Temp> visit(Mov.TRL m) {
-        return null;
+        return m;
     }
     
     /*

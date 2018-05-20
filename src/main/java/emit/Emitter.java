@@ -151,14 +151,14 @@ public class Emitter extends ASTVisitor<IRNode> {
 
         // Get vt address in c
         IRTemp c = IRFactory.generate("vt_" + cls.id);
-        fn.add(new IRMove(c, new IRMem(vt, MemType.IMMUTABLE)));
+        fn.add(new IRMove(c, new IRMem(vt, MemType.GLOBAL)));
 
         // Get parent vt address in p
         IRTemp p = null;
         if (cls.hasParent()) {
             IRExpr parentVT = IRFactory.generateVT(cls.parent, context);
             p = IRFactory.generate("vt_" + cls.parent);
-            fn.add(new IRMove(p, new IRMem(parentVT, MemType.IMMUTABLE)));
+            fn.add(new IRMove(p, new IRMem(parentVT, MemType.GLOBAL)));
         }
 
         // Copy or generate entries of vt
