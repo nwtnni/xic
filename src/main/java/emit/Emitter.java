@@ -3,6 +3,7 @@ package emit;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.Stack;
 
 import ast.*;
 import type.*;
@@ -36,6 +37,8 @@ public class Emitter extends ASTVisitor<IRNode> {
     public Emitter(String unit, GlobalContext context) {
         this.unit = unit;
         this.context = new ABIContext(context);
+        this.currentClass = Optional.empty();
+        this.currentLoop = new Stack<>();
     }
 
     /** 
@@ -56,7 +59,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     /**
      * The current loop exit label.
      */
-    private IRLabel currentLoop;
+    private Stack<IRLabel> currentLoop;
 
     // Toggle inserting library functions
     private static final boolean INCLUDE_LIB = true;
@@ -237,7 +240,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     // PA7
     @Override
     public IRNode visit(XiBreak b) {
-        return new IRJump(new IRName(currentLoop));
+        return new IRJump(new IRName(currentLoop.peek()));
     }
 
     @Override
@@ -334,7 +337,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         IRLabel trueL = IRFactory.generateLabel("whileT");
         IRLabel falseL = IRFactory.generateLabel("whileF");
 
-        currentLoop = falseL;
+        currentLoop.push(falseL);
 
         stmts.add(headL);
         stmts.add(makeControlFlow(w.guard, trueL, falseL));
@@ -342,6 +345,8 @@ public class Emitter extends ASTVisitor<IRNode> {
         stmts.add((IRStmt) w.block.accept(this));
         stmts.add(Library.jump(headL));
         stmts.add(falseL);
+
+        currentLoop.pop();
         
         return new IRSeq(stmts);
     }
