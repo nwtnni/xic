@@ -162,9 +162,14 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         // Copy or generate entries of vt
-        int i = 1;
+        int i = 0;
         OrderedMap<String, MethodType> methods = gc.lookupAllMethods(ct);
         for (String method : methods.keyList()) {
+
+            i++;
+
+            if (method.matches("[0-9]+")) continue;
+
             IRConst offset = new IRConst(i * Configuration.WORD_SIZE);
             IRMem addr = new IRMem(new IRBinOp(OpType.ADD, c, offset), MemType.IMMUTABLE);
 
@@ -179,7 +184,6 @@ public class Emitter extends ASTVisitor<IRNode> {
                 fn.add(new IRMove(t, pointer));
                 fn.add(new IRMove(addr, t));
             }
-            i++;
         }
 
         fn.add(done);
@@ -571,7 +575,7 @@ public class Emitter extends ASTVisitor<IRNode> {
                 XiDot d = (XiDot) c.id;
                 name = ((XiVar) d.rhs).id;
                 obj = (IRExpr) d.lhs.accept(this);
-                type = (ClassType) d.type;
+                type = (ClassType) d.lhs.type;
             }
             target = dispatch(obj, name, type);
             argList.add(obj);
@@ -746,7 +750,7 @@ public class Emitter extends ASTVisitor<IRNode> {
                 return new IRESeq(n, Library.allocArray(size));
             } else {
                 IRSeq sizes = (IRSeq) children.stmt();
-                IRExpr alloc = (IRExpr) children.expr();
+                IRExpr alloc = children.expr();
                 sizes.add(0, new IRMove(size, sizeExpr));
                 children.expr = Library.populate(size, alloc);
                 return children;
