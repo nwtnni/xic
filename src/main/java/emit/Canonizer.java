@@ -214,10 +214,10 @@ public class Canonizer extends IRVisitor<IRNode> {
            Where there is a guarantee that there is no change of aliasing
         */
 
-        if (m.isImmutable()) {
-            m.isCanonical = true;
-            return m;
-        }
+        // if (m.isImmutable()) {
+        //     m.isCanonical = true;
+        //     return m;
+        // }
 
         if (m.isGlobal()) {
             return m;
@@ -227,10 +227,11 @@ public class Canonizer extends IRVisitor<IRNode> {
         IRTemp t = IRFactory.generate("mem");
         if (!expr.isCanonical) {
             stmts.add(new IRMove(t, expr));
+            expr = t;
         }
 
         // Mems are not canonical due to aliasing
-        return new IRMem(t);
+        return new IRMem(expr);
     }
 
     /**
@@ -247,7 +248,7 @@ public class Canonizer extends IRVisitor<IRNode> {
 
         // Hoist memory targets
         if (m.isMem()) {
-            IRExpr dest = (IRExpr) m.target.accept(this);
+            IRExpr dest = (IRExpr) m.target().accept(this);
 
             IRExpr srcExpr = (IRExpr) m.src().accept(this);
             stmts.add(new IRMove(dest, srcExpr));

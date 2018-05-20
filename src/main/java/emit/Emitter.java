@@ -65,7 +65,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     private Stack<IRLabel> currentLoop;
 
     // Toggle inserting library functions
-    private static final boolean INCLUDE_LIB = false;
+    private static final boolean INCLUDE_LIB = true;
 
 
     /**
@@ -743,7 +743,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             if (children == null) {
                 IRSeq n = new IRSeq();
                 n.add(new IRMove(size, sizeExpr));
-                return new IRESeq(n, Library.alloc(size));
+                return new IRESeq(n, Library.allocArray(size));
             } else {
                 IRSeq sizes = (IRSeq) children.stmt();
                 IRExpr alloc = (IRExpr) children.expr();
