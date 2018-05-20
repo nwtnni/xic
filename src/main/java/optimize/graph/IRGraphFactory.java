@@ -3,7 +3,7 @@ package optimize.graph;
 import java.util.HashMap;
 import java.util.Map;
 
-import emit.IRLabelFactory;
+import emit.IRFactory;
 import ir.*;
 
 /** Factory class for making IR CFGs. */
@@ -47,9 +47,9 @@ public class IRGraphFactory<E> extends IRVisitor<IRStmt> {
     public IRStmt visit(IRFuncDecl f) {
         state = State.IN_BLOCK;
 
-        IRLabel start = IRLabelFactory.generate("START");
+        IRLabel start = IRFactory.generateLabel("START");
         prev = start;
-        cfg = new IRGraph<>(f.sourceName(), f.name(), prev, edgeFactory);
+        cfg = new IRGraph<>(f, prev, edgeFactory);
         f.body().accept(this);
 
         return null;

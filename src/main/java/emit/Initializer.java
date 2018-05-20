@@ -12,7 +12,7 @@ class Initializer {
      * TODO: generate initialization function based on program context
      */
     public static IRFuncDecl generateInitFunc(GlobalContext context) {
-        IRFuncDecl fn = new IRFuncDecl(INIT_FUNCTION, "_I_init_p");
+        IRFuncDecl fn = new IRFuncDecl(INIT_FUNCTION, INIT_FUNCTION, 0, 0);
         fn.add(new IRReturn());
         
         return fn;

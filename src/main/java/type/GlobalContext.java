@@ -44,7 +44,7 @@ public class GlobalContext {
     }
 
     public boolean contains(ClassType ct) {
-        return classes.containsKey(ct.getID());
+        return classes.containsKey(ct);
     }
 
     public boolean contains(String id) {
@@ -56,7 +56,7 @@ public class GlobalContext {
     }
 
     public ClassContext lookup(ClassType ct) {
-        return classes.get(ct.getID());
+        return classes.get(ct);
     }
 
     public boolean isSubclass(ClassType subclass, ClassType superclass) {

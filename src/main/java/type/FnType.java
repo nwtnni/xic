@@ -11,9 +11,9 @@ public class FnType extends GlobalType {
     protected List<Type> args;
     protected List<Type> rets;
 
-    public FnType(List<Type> args, List<Type> returns) {
+    public FnType(List<Type> args, List<Type> rets) {
         this.args = new ArrayList<>(args);
-        this.rets = new ArrayList<>(returns);
+        this.rets = new ArrayList<>(rets);
     }
 
     @Override
@@ -42,4 +42,26 @@ public class FnType extends GlobalType {
         return p + r + a;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof FnType)) return false;
+
+        FnType mt = (FnType) o;
+        if (mt.args.size() != args.size() || mt.rets.size() != rets.size()) return false;
+
+        for (int i = 0; i < args.size(); i++) {
+            if (!mt.args.get(i).equals(args.get(i))) return false;  
+        }
+
+        for (int i = 0; i < rets.size(); i++) {
+            if (!mt.rets.get(i).equals(rets.get(i))) return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return args.hashCode() + rets.hashCode();
+    }
 }

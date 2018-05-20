@@ -2,13 +2,22 @@ package emit;
 
 import interpret.Configuration;
 import ir.IRTemp;
+import ir.IRMem;
+import ir.IRLabel;
 
 /**
  * Unique temporary generators for IR productions.
  */
-public class IRTempFactory {
+public class IRFactory {
 
     private static long tempIndex = 0;
+
+    private static int labelIndex = 0;
+
+    public static IRLabel generateLabel(String name) {
+        String label = String.format("L%04d_%s", labelIndex++, name);
+        return new IRLabel(label);
+    }
     
     /**
      * Generate a new temporary name.
@@ -24,6 +33,27 @@ public class IRTempFactory {
     public static IRTemp generate(String name) {
         String t = String.format("_T%04d_%s", tempIndex++, name);
         return new IRTemp(t);
+    }
+
+    /**
+     * Generates a global.
+     */
+    public static IRMem generateGlobal(String name, ABIContext context) {
+        return new IRMem(new IRTemp(context.mangleGlobal(name), true));
+    }
+
+    /**
+     * Generates a global.
+     */
+    public static IRMem generateSize(String name, ABIContext context) {
+        return new IRMem(new IRTemp(context.classSize(name), true));
+    }
+
+    /**
+     * Generates a global.
+     */
+    public static IRMem generateVT(String name, ABIContext context) {
+        return new IRMem(new IRTemp(context.classVT(name), true));
     }
 
     /**

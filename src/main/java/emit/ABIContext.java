@@ -1,10 +1,6 @@
 package emit;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import type.*;
-import xic.XicInternalException;
 import util.Context;
 
 public class ABIContext extends Context<String, String> {
@@ -16,7 +12,7 @@ public class ABIContext extends Context<String, String> {
     /**
      * Global context this ABIContext is based on.
      */
-    GlobalContext context;
+    public GlobalContext context;
 
     /**
      * Utility method for mangling function name to conform to
@@ -57,7 +53,7 @@ public class ABIContext extends Context<String, String> {
 
     /** Returns ABI name for class VT global. */
     public String classVT(String name) {
-        return "_I_size_" + name.replaceAll("_", "__");
+        return "_I_vt_" + name.replaceAll("_", "__");
     }
 
 }

@@ -13,12 +13,17 @@ import xic.XicException;
 public class Library {
 
     /*
+     *
      * Configuration constants.
+     * 
      */
 
-    protected static final IRConst WORD_SIZE = new IRConst(Configuration.WORD_SIZE);
-    protected static final IRConst ZERO = new IRConst(0);
-    protected static final IRConst ONE = new IRConst(1);
+    public static final IRConst WORD_SIZE = new IRConst(Configuration.WORD_SIZE);
+    public static final IRConst ZERO = new IRConst(0);
+    public static final IRConst ONE = new IRConst(1);
+
+    public static final IRTemp THIS = new IRTemp("this");
+    public static final IRTemp MULT_RET = new IRTemp("_MULT_RET");
 
     /** 
      * ABI names for array library functions ignore the types of arrays and 
@@ -28,7 +33,9 @@ public class Library {
     protected static final String ARRAY_CONCAT = "_xi_array_concat";
 
     /* 
+     *
      * Utility methods for code generation
+     * 
      */
 
     /**
@@ -42,9 +49,9 @@ public class Library {
      * Generate a loop in IR code given a IR node guard and body.
      */
     protected static IRStmt generateLoop(String name, IRExpr guard, IRStmt block) {
-        IRLabel headL = IRLabelFactory.generate(name);
-        IRLabel trueL = IRLabelFactory.generate("true");
-        IRLabel falseL = IRLabelFactory.generate("false");
+        IRLabel headL = IRFactory.generateLabel(name);
+        IRLabel trueL = IRFactory.generateLabel("true");
+        IRLabel falseL = IRFactory.generateLabel("false");
 
         return new IRSeq(
             headL,
@@ -58,25 +65,32 @@ public class Library {
     }
 
     /**
-     * Increment pointer by WORD_SIZE bytes.
+     * Allocates [size] bytes of memory and returns the pointer.
      */
-    protected static IRStmt incrPointer(IRTemp pointer) {
-        IRExpr addr = new IRBinOp(OpType.ADD, pointer, WORD_SIZE);
-        return new IRMove(pointer, addr);
+    protected static IRExpr alloc(IRExpr size) {
+        return new IRCall(new IRName("_xi_alloc"), 1, size);
+    }
+
+    /**
+     * Increment temp by WORD_SIZE.
+     */
+    protected static IRStmt incrWord(IRTemp t) {
+        IRExpr addr = new IRBinOp(OpType.ADD, t, WORD_SIZE);
+        return new IRMove(t, addr);
     }
 
     /**
      * Increments a temp by 1.
      */
-    protected static IRStmt increment(IRTemp i) {
-        IRExpr plus = new IRBinOp(IRBinOp.OpType.ADD, i, ONE);
-        return new IRMove(i, plus);
+    protected static IRStmt incr(IRTemp t) {
+        IRExpr plus = new IRBinOp(IRBinOp.OpType.ADD, t, ONE);
+        return new IRMove(t, plus);
     }
 
     /**
      * Allocate memory for an array and copy the values into memory.
      */
-    protected static IRExpr alloc(List<IRNode> array) throws XicException {
+    protected static IRExpr allocArray(List<IRNode> array) throws XicException {
         IRSeq stmts = new IRSeq();
         
         // Calcuate size of array
@@ -84,8 +98,8 @@ public class Library {
         IRConst byteSize = new IRConst((length + 1) * Configuration.WORD_SIZE);
         
         // Generate pointers and allocate memory
-        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), 1, byteSize);
-        IRTemp pointer = IRTempFactory.generate("array");
+        IRExpr addr = alloc(byteSize);
+        IRTemp pointer = IRFactory.generate("array");
         stmts.add(new IRMove(pointer, addr));
 
         //Store length of array
@@ -104,7 +118,7 @@ public class Library {
         }
 
         // Shift pointer to head of array
-        stmts.add(incrPointer(pointer));
+        stmts.add(incrWord(pointer));
 
         return new IRESeq(
             stmts, 
@@ -116,18 +130,18 @@ public class Library {
     /**
      * Allocate memory for a string.
      */
-    protected static IRExpr alloc(XiString s) throws XicException {
+    protected static IRExpr allocArray(XiString s) throws XicException {
         List<IRNode> chars = new ArrayList<>();
         for (Long c : s.value) {
             chars.add(new IRConst(c));
         }
-        return alloc(chars);
+        return allocArray(chars);
     }
 
     /**
      * Dynamically allocate memory for an an array of size length
      */
-    protected static IRExpr alloc(IRExpr length) {
+    protected static IRExpr allocArray(IRExpr length) {
         return new IRCall(new IRName(ARRAY_ALLOC), 1, length);
     }
 
@@ -139,12 +153,12 @@ public class Library {
         IRSeq stmts = new IRSeq();
 
         // Generate pointers and allocate memory
-        IRTemp pointer = IRTempFactory.generate("populate_array");
-        stmts.add(new IRMove(pointer, alloc(size)));
+        IRTemp pointer = IRFactory.generate("populate_array");
+        stmts.add(new IRMove(pointer, allocArray(size)));
 
         // Create copies of the child (so no checking if child is an alloc)
         // addr = (workPointer,i,8)
-        IRTemp i = IRTempFactory.generate("i");
+        IRTemp i = IRFactory.generate("i");
         IRExpr index = new IRBinOp(OpType.MUL, i, new IRConst(8));
         IRMem addr = new IRMem(new IRBinOp(OpType.ADD, pointer, index), MemType.IMMUTABLE);
         
@@ -154,14 +168,11 @@ public class Library {
             new IRBinOp(OpType.LT, i, size),
             new IRSeq(
                 new IRMove(addr, child),
-                increment(i)
+                incr(i)
             )
         ));
 
-        return new IRESeq(
-            stmts, 
-            pointer
-        );
+        return new IRESeq(stmts, pointer);
     }
 
     /**
@@ -172,17 +183,19 @@ public class Library {
     }
 
     /*
+     *
      * Library functions
+     *
      */
 
     /**
      * Generates library function for allocating memory for an dynamic array.
      */
     protected static IRFuncDecl xiDynamicAlloc() {
-        IRFuncDecl fn = new IRFuncDecl(ARRAY_ALLOC, ARRAY_ALLOC);
+        IRFuncDecl fn = new IRFuncDecl(ARRAY_ALLOC, ARRAY_ALLOC, 1, 1);
 
-        IRTemp length = IRTempFactory.generate("d_length");
-        fn.add(new IRMove(length, IRTempFactory.getArgument(0)));
+        IRTemp length = IRFactory.generate("d_length");
+        fn.add(new IRMove(length, IRFactory.getArgument(0)));
 
         // Calculate size of array
         IRExpr byteSize = new IRBinOp(
@@ -192,13 +205,13 @@ public class Library {
         );
 
         // Generate pointers and allocate memory
-        IRExpr addr =  new IRCall(new IRName("_xi_alloc"), 1, byteSize);
-        IRTemp pointer = IRTempFactory.generate("d_array");
+        IRExpr addr = alloc(byteSize);
+        IRTemp pointer = IRFactory.generate("d_array");
         fn.add(new IRMove(pointer, addr));
 
         // Store length then shift pointer
         fn.add(new IRMove(new IRMem(pointer, MemType.IMMUTABLE), length));
-        fn.add(incrPointer(pointer));
+        fn.add(incrWord(pointer));
 
         fn.add(new IRReturn(pointer));
 
@@ -210,27 +223,27 @@ public class Library {
      * _xi_array_concat(a, b)
      */
     protected static IRFuncDecl xiArrayConcat() {
-        IRFuncDecl fn = new IRFuncDecl(ARRAY_CONCAT, ARRAY_CONCAT);
+        IRFuncDecl fn = new IRFuncDecl(ARRAY_CONCAT, ARRAY_CONCAT, 2, 1);
 
         // Make copies of pointers
-        IRTemp ap = IRTempFactory.generate("a");
-        fn.add(new IRMove(ap, IRTempFactory.getArgument(0)));
-        IRTemp bp = IRTempFactory.generate("b");
-        fn.add(new IRMove(bp, IRTempFactory.getArgument(1)));
+        IRTemp ap = IRFactory.generate("a");
+        fn.add(new IRMove(ap, IRFactory.getArgument(0)));
+        IRTemp bp = IRFactory.generate("b");
+        fn.add(new IRMove(bp, IRFactory.getArgument(1)));
 
         // Calculate new array size
-        IRExpr aLen = IRTempFactory.generate("aLen");
+        IRExpr aLen = IRFactory.generate("aLen");
         fn.add(new IRMove(aLen, length(ap)));
-        IRExpr bLen = IRTempFactory.generate("bLen");
+        IRExpr bLen = IRFactory.generate("bLen");
         fn.add(new IRMove(bLen, length(bp)));
-        IRTemp size = IRTempFactory.generate("size");
+        IRTemp size = IRFactory.generate("size");
         fn.add(new IRMove(size, new IRBinOp(OpType.ADD, aLen, bLen)));
 
         // Generate pointers and allocate memory
-        IRTemp pointer = IRTempFactory.generate("array");
-        fn.add(new IRMove(pointer, alloc(size)));
+        IRTemp pointer = IRFactory.generate("array");
+        fn.add(new IRMove(pointer, allocArray(size)));
 
-        IRTemp i = IRTempFactory.generate("i");
+        IRTemp i = IRFactory.generate("i");
         IRExpr index = new IRBinOp(OpType.MUL, i, new IRConst(8));
         IRMem addr = new IRMem(new IRBinOp(OpType.ADD, pointer, index), MemType.IMMUTABLE);
         IRMem aElem = new IRMem(new IRBinOp(OpType.ADD, ap, index), MemType.IMMUTABLE);
@@ -241,11 +254,11 @@ public class Library {
             new IRBinOp(OpType.LT, i, aLen), 
             new IRSeq(
                 new IRMove(addr, aElem),
-                increment(i)
+                incr(i)
             )
         ));
 
-        IRTemp j = IRTempFactory.generate("j");
+        IRTemp j = IRFactory.generate("j");
         IRExpr indexb = new IRBinOp(OpType.MUL, j, new IRConst(8));
         IRMem bElem = new IRMem(new IRBinOp(OpType.ADD, bp, indexb), MemType.IMMUTABLE);
 
@@ -255,8 +268,8 @@ public class Library {
             new IRBinOp(OpType.LT, j, bLen), 
             new IRSeq(
                 new IRMove(addr, bElem),
-                increment(i),
-                increment(j)
+                incr(i),
+                incr(j)
             )
         ));
 

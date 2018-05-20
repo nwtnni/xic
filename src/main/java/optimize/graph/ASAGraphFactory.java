@@ -5,7 +5,7 @@ import java.util.Map;
 
 import assemble.*;
 import assemble.instructions.*;
-import emit.IRLabelFactory;
+import emit.IRFactory;
 
 /** Factory class for generating ASAGraphs from IR. */
 public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
@@ -51,7 +51,7 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
     public ASAGraph<E> makeCfg(FuncDecl<Temp> fn) {
         state = State.IN_BLOCK;
 
-        Label<Temp> start = new Label.T(IRLabelFactory.generate("START"));
+        Label<Temp> start = new Label.T(IRFactory.generateLabel("START"));
         prev = start;
         cfg = new ASAGraph<>(fn, start, edgeFactory);
 

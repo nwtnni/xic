@@ -2,6 +2,7 @@ package emit;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
 
 import ast.*;
 import type.*;
@@ -24,7 +25,7 @@ public class Emitter extends ASTVisitor<IRNode> {
      * @param context function context corresponding to the AST
      */
     public static Pair<IRCompUnit, ABIContext> emitIR(String unit, XiProgram ast, GlobalContext context) {
-        IRTempFactory.reset();
+        IRFactory.reset();
         Emitter e = new Emitter(unit, context);
         try {
             return new Pair<>((IRCompUnit) ast.accept(e), e.context);
@@ -35,7 +36,6 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     public Emitter(String unit, GlobalContext context) {
         this.unit = unit;
-        this.globalContext = context;
         this.context = new ABIContext(context);
     }
 
@@ -45,14 +45,14 @@ public class Emitter extends ASTVisitor<IRNode> {
     private String unit;
 
     /**
-     * The global identifiers and types context.
-     */
-    private GlobalContext globalContext;
-
-    /**
      * Associated function name to ABI name context.
      */
     protected ABIContext context;
+
+    /** 
+     * Flag to see if currently visiting a class.
+     */
+    private Optional<ClassType> currentClass;
 
     /**
      * The current loop exit label.
@@ -78,14 +78,14 @@ public class Emitter extends ASTVisitor<IRNode> {
             XiBinary b = (XiBinary) n;
             switch (b.kind) {
                 case AND:
-                    IRLabel andL = IRLabelFactory.generate("and");
+                    IRLabel andL = IRFactory.generateLabel("and");
                     return new IRSeq(
                         makeControlFlow(b.lhs, andL, falseL),
                         andL,
                         makeControlFlow(b.rhs, trueL, falseL)
                     );
                 case OR:
-                    IRLabel orL = IRLabelFactory.generate("and");
+                    IRLabel orL = IRFactory.generateLabel("and");
                     return new IRSeq(
                         makeControlFlow(b.lhs, trueL, orL),
                         orL,
@@ -103,6 +103,13 @@ public class Emitter extends ASTVisitor<IRNode> {
             new IRCJump((IRExpr) n.accept(this), trueL),
             Library.jump(falseL)
         );
+    }
+
+    /**
+     * Generates code for dispatch to the field or method [name] from [obj] of type [type]
+     */
+    private IRExpr dispatch(IRExpr obj, String name, ClassType type) {
+        return null;
     }
 
     /*
@@ -127,7 +134,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiProgram p) throws XicException {
-        IRCompUnit program = new IRCompUnit(this.unit, context);
+        IRCompUnit program = new IRCompUnit(this.unit);
 
         if (INCLUDE_LIB) {
             program.appendFunc(Library.xiArrayConcat());
@@ -139,7 +146,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         // TODO: pass context to generate init function
         // - initialize global arrays
         // - initialize class size + vt
-        program.appendFunc(Initializer.generateInitFunc(globalContext));
+        program.appendFunc(Initializer.generateInitFunc(context.context));
 
         for (Node n : p.body) {
             // Can ignore globals
@@ -160,10 +167,28 @@ public class Emitter extends ASTVisitor<IRNode> {
     public IRNode visit(XiFn f) throws XicException {
         IRSeq body = (IRSeq) f.block.accept(this);
 
+        int numArgs = f.args.size();
+        int numRets = f.returns.size();
+
+        // Inject receiver for object reference
+        int argOffset = 0;
+        if (currentClass.isPresent()) {
+            body.add(0, new IRMove(Library.THIS, IRFactory.getArgument(0)));
+            argOffset++;
+            numArgs++;
+        }
+
+        // Inject temporary for multiple returns
+        if (f.returns.size() > 2) {
+            body.add(1, new IRMove(Library.MULT_RET, IRFactory.getArgument(argOffset)));
+            argOffset++;
+            numArgs++;
+        }
+
         // Bind arguments to temps
         List<IRNode> args = visit(f.args);
         for (int i = 0; i < args.size(); i++) {
-            body.add(i, new IRMove((IRExpr) args.get(i), IRTempFactory.getArgument(i)));
+            body.add(i, new IRMove((IRExpr) args.get(i), IRFactory.getArgument(i + argOffset)));
         }
 
         // Insert empty return if needed
@@ -171,7 +196,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             body.add(new IRReturn());
         }
 
-        return new IRFuncDecl(f.id, , body);
+        return new IRFuncDecl(f.id, context.mangleFunction(f.id), numArgs, numRets, body);
     }
 
     /*
@@ -203,7 +228,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         for (int i = 1; i < lhs.size(); i++) {
             IRNode n = lhs.get(i);
             if (n != null) {
-                stmts.add(new IRMove((IRExpr) n, IRTempFactory.getReturn(i)));
+                stmts.add(new IRMove((IRExpr) n, IRFactory.getReturn(i)));
             }
         }
 
@@ -269,15 +294,15 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiIf i) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel trueL = IRLabelFactory.generate("ifT");
-        IRLabel falseL = IRLabelFactory.generate("ifF");
+        IRLabel trueL = IRFactory.generateLabel("ifT");
+        IRLabel falseL = IRFactory.generateLabel("ifF");
 
         stmts.add(makeControlFlow(i.guard, trueL, falseL));
         stmts.add(trueL);
         stmts.add((IRStmt) i.block.accept(this));
         stmts.add(falseL);
         if (i.hasElse()) {
-            IRLabel doneL = IRLabelFactory.generate("ifDone");
+            IRLabel doneL = IRFactory.generateLabel("ifDone");
             stmts.add(stmts.size() - 1, Library.jump(doneL));
             stmts.add((IRStmt) i.elseBlock.accept(this));
             stmts.add(doneL);
@@ -306,9 +331,9 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiWhile w) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel headL = IRLabelFactory.generate("whileH");
-        IRLabel trueL = IRLabelFactory.generate("whileT");
-        IRLabel falseL = IRLabelFactory.generate("whileF");
+        IRLabel headL = IRFactory.generateLabel("whileH");
+        IRLabel trueL = IRFactory.generateLabel("whileT");
+        IRLabel falseL = IRFactory.generateLabel("whileF");
 
         currentLoop = falseL;
 
@@ -359,9 +384,9 @@ public class Emitter extends ASTVisitor<IRNode> {
             case NE:
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
             case AND:
-                IRTemp andFlag = IRTempFactory.generate("and");
-                IRLabel trueL = IRLabelFactory.generate("andT");
-                IRLabel falseL = IRLabelFactory.generate("andF");
+                IRTemp andFlag = IRFactory.generate("and");
+                IRLabel trueL = IRFactory.generateLabel("andT");
+                IRLabel falseL = IRFactory.generateLabel("andF");
                 return new IRESeq(
                     new IRSeq(
                         new IRMove(andFlag, new IRConst(0)),
@@ -373,9 +398,9 @@ public class Emitter extends ASTVisitor<IRNode> {
                     andFlag
                 );
             case OR:
-                IRTemp orFlag = IRTempFactory.generate("or");
-                trueL = IRLabelFactory.generate("orT");
-                falseL = IRLabelFactory.generate("orF");
+                IRTemp orFlag = IRFactory.generate("or");
+                trueL = IRFactory.generateLabel("orT");
+                falseL = IRFactory.generateLabel("orF");
                 return new IRESeq(
                     new IRSeq(
                         new IRMove(orFlag, new IRConst(1)),
@@ -394,54 +419,63 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiCall c) throws XicException {
+
         // Special case for length operator
         if (c.id instanceof XiVar && ((XiVar) c.id).id.equals("length")) {
             return Library.length((IRExpr) c.args.get(0).accept(this));
         }
 
         IRExpr target;
-
         String name;
+        List<IRExpr> argList = new ArrayList<>();
+
+        // Method call requires injecting object reference
+        if (c.id.type.isMethod()) {
+            IRExpr obj;
+
+            // Implicit this in a method
+            if (c.id instanceof XiVar && currentClass.isPresent()) {
+                name = ((XiVar) c.id).id;
+                obj = Library.THIS;
+            
+            // Off a dot access
+            } else {
+                XiDot d = (XiDot) c.id;
+
+                name = ((IRName) d.rhs.accept(this)).name();
+                obj = (IRExpr) d.lhs.accept(this);
+            }
+            target = dispatch(obj, name, currentClass.get());
+            argList.add(obj);
+
         // Function call
-        if (c.id instanceof XiVar) {
-            // TODO: update for new context
+        } else {
             name = ((XiVar) c.id).id;
             target = new IRName(context.mangleFunction(name));
-        
-        // Method call
-        } else if (c.id instanceof XiDot) {
-            target = (IRExpr) c.id.accept(this);
-        
-        } else {
-            throw XicInternalException.runtime("Invalid XiCall.");
+        }
+
+        // Inject temp for multiple return if needed
+        if (c.type.isTuple() && ((TupleType) c.type).size() > 2) {
+            argList.add(Library.MULT_RET);
         }
 
         // Get arguments
-        List<IRExpr> argList = new ArrayList<>();
         for (Node n : c.getArgs()) {
             argList.add((IRExpr) n.accept(this));
         }
 
         // Get number of returns
-        FnType t = (FnType) context.lookup(name);
+        FnType t = (FnType) context.context.lookup(name);
 
-        return new IRCall(target, argList);
+        return new IRCall(target, t.getNumRets(), argList);
     }
 
     // PA7
     @Override
     public IRNode visit(XiDot d) throws XicException {
-        IRExpr lhs = (IRExpr) d.lhs.accept(this);
-        IRTemp name = (IRTemp) d.rhs.accept(this);
-
-        IRTemp obj = IRTempFactory.generate("obj");
-
-        IRSeq dispatch = new IRSeq();
-        dispatch.add(new IRMove(obj, lhs));
-
-        // TODO: add 
-
-        return new IRESeq(dispatch, name);
+        IRExpr obj = (IRExpr) d.lhs.accept(this);
+        IRTemp id = (IRTemp) d.rhs.accept(this);
+        return dispatch(obj, id.name(), (ClassType) d.lhs.type);
     }
 
     /**
@@ -452,12 +486,12 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiIndex i) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel doneL = IRLabelFactory.generate("done");
+        IRLabel doneL = IRFactory.generateLabel("done");
 
         // Store array reference copy if not already a temp
         IRExpr pointer = (IRExpr) i.array.accept(this);
         if (!(pointer instanceof IRTemp)) {
-            IRTemp temp = IRTempFactory.generate("array");
+            IRTemp temp = IRFactory.generate("array");
             stmts.add(new IRMove(temp, pointer));
             pointer = temp;
         }
@@ -465,13 +499,13 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Store index if not already a temp or constant
         IRExpr index = (IRExpr) i.index.accept(this);
         if (!(index instanceof IRTemp || index instanceof IRConst)) {
-            IRTemp temp = IRTempFactory.generate("index");
+            IRTemp temp = IRFactory.generate("index");
             stmts.add(new IRMove(temp, index));
             index = temp;
         }
 
         // Check bounds
-        IRLabel outOfBounds = IRLabelFactory.generate("outOfBounds");
+        IRLabel outOfBounds = IRFactory.generateLabel("outOfBounds");
         stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, Library.ZERO), outOfBounds));
         stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, Library.length(pointer)), outOfBounds));
         stmts.add(Library.jump(doneL));
@@ -482,6 +516,29 @@ public class Emitter extends ASTVisitor<IRNode> {
         IRExpr byteShift = new IRBinOp(OpType.MUL, Library.WORD_SIZE, index);
         IRExpr addr = new IRBinOp(OpType.ADD, pointer, byteShift);
         return new IRMem(new IRESeq(stmts, addr));
+    }
+
+    // PA7
+    @Override
+    public IRNode visit(XiNew n) throws XicException {
+        IRSeq setup = new IRSeq();
+
+        ClassType type = (ClassType) n.type;
+
+        IRTemp size = IRFactory.generate("size_" + n.name);
+        IRTemp vt = IRFactory.generate("vt_" + n.name);
+        IRTemp obj = IRFactory.generate("obj_" + n.name);
+
+        // Allocate space
+        setup.add(new IRMove(size, IRFactory.generateSize(n.name, context)));
+        setup.add(new IRMove(size, new IRBinOp(OpType.MUL, Library.WORD_SIZE, size)));
+        setup.add(new IRMove(obj, Library.alloc(size)));
+
+        // Copy dispatch vector
+        setup.add(new IRMove(vt, IRFactory.generateVT(n.name, context)));
+        setup.add(new IRMove(new IRMem(obj), vt));
+
+        return new IRESeq(setup, obj);
     }
 
     @Override
@@ -505,7 +562,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiArray a) throws XicException {
-        return Library.alloc(visit(a.values));
+        return Library.allocArray(visit(a.values));
     }
 
     @Override
@@ -532,7 +589,7 @@ public class Emitter extends ASTVisitor<IRNode> {
 
     @Override
     public IRNode visit(XiString s) throws XicException {
-        return Library.alloc(s);
+        return Library.allocArray(s);
     }
 
     // PA7
@@ -546,7 +603,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Allocate memory for special case of syntactic sugar
         // for array declarations with dimensions specified
         if (t.hasSize()) {
-            IRTemp size = IRTempFactory.generate("size");
+            IRTemp size = IRFactory.generate("size");
             IRExpr sizeExpr =  (IRExpr) t.size.accept(this);
             IRESeq children = (IRESeq) t.child.accept(this);
             if (children == null) {

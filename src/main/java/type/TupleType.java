@@ -18,4 +18,8 @@ public class TupleType extends Type {
         return new ArrayList<>(tuple);
     }
 
+    public int size() {
+        return tuple.size();
+    }
+
 }

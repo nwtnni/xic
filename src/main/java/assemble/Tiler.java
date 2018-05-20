@@ -46,9 +46,6 @@ public class Tiler extends IRVisitor<Operand> {
     // Current list of instructions
     List<Instr<Temp>> instrs;
 
-    // 1 if current function has multiple returns else 0
-    private int calleeIsMultiple;
-
     // Number of args passed to a called function
     private int callerNumArgs;
 
@@ -62,36 +59,9 @@ public class Tiler extends IRVisitor<Operand> {
         this.context = c;
         this.unit = new CompUnit<>();
         this.instrs = new ArrayList<>();
-        this.calleeIsMultiple = 0;
         this.callerNumArgs = 0;
         this.returnLabel = null;
-    }
-
-    /**
-     * Returns number of return values for a function.
-     * Takes the mangled function name.
-     */
-    private int numArgs(String fn) {
-        if (fn.equals(Config.XI_ALLOC)) {
-            return 1;
-        } else if (fn.equals(Config.XI_OUT_OF_BOUNDS)) {
-            return 0;
-        }
-        return context.getNumArgs(fn);
-    }
-    
-    /**
-     * Returns number of return values for a function.
-     * Takes the mangled function name.
-     */
-    private int numReturns(String fn) {
-        if (fn.equals(Config.XI_ALLOC)) {
-            return 1;
-        } else if (fn.equals(Config.XI_OUT_OF_BOUNDS)) {
-            return 0;
-        }
-        return context.getNumReturns(fn);
-    }
+}
 
     /**
      * Checks if this node is an IRConst, and returns the corresponding
@@ -123,7 +93,10 @@ public class Tiler extends IRVisitor<Operand> {
         String funcName = f.name();
 
         // Set the number of returns
-        int returns = numReturns(funcName);
+        int returns = f.rets();
+
+
+        // TODO: PA7 check if is method
 
         // If function has multiple returns, save return address from arg 0 to a temp
         if (returns > 2) {
@@ -137,7 +110,7 @@ public class Tiler extends IRVisitor<Operand> {
         }
 
         // Set number of arguments including offset for multiple returns
-        int args = numArgs(funcName) + calleeIsMultiple;
+        int args = f.args() + calleeIsMultiple;
 
         // Set return label
         returnLabel = labelFromRet(f);
@@ -247,16 +220,33 @@ public class Tiler extends IRVisitor<Operand> {
     }
     
     public Operand visit(IRCall c) {
-        String target = c.target().name();
+        // TODO: PA7 fix for dynamic dispatch
+        // TODO: calculate num args and num rets at ir level and only calculate offsets
+        // not the total number in Tiler
 
         int callIsMultiple = 0;
         
-        int numRets = numReturns(target);
+        int numRets = c.numRets();
 
-        callerNumArgs = numArgs(target);
+        callerNumArgs = c.numArgs()
+
+        // Function calls
+        if (c.target() instanceof IRName) {
+            String target = ((IRName) c.target()).name();
+            instrs.add(callS(target, callerNumArgs, numRets));
+        } else if (c.target() instanceof IRTemp) {
+            Operand target = c.target().accept(this);
+            if (target.isTemp()) {
+                instrs.add(callT(target.getTemp(), callerNumArgs, numRets));
+            } else {
+                instrs.add(callM(target.getMem(), callerNumArgs, numRets));
+            }
+        }
 
         // Set up for multiple returns from call
         if (numRets > 2) {
+
+            // DEPRECATE
             callIsMultiple = 1;
             callerNumArgs++;
 
@@ -271,14 +261,13 @@ public class Tiler extends IRVisitor<Operand> {
 
         // CALLER args
         // callIsMultiple deined by this CALL
-        for (int i = 0; i < c.size(); i++) {
+        for (int i = 0; i < c.numArgs(); i++) {
 
             Optional<Imm> imm = checkImm(c.get(i));
             Operand val = c.get(i).accept(this);
             instrs.addAll(mov(val, Config.callerArg(i + callIsMultiple), imm));
         }
 
-        instrs.add(callS(target, callerNumArgs, numRets));
         return Config.callerRet(0, callerNumArgs);
     }
 

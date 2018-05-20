@@ -59,14 +59,14 @@ public class Canonizer extends IRVisitor<IRNode> {
     public IRNode visit(IRBinOp b) {
         IRExpr leftExpr = (IRExpr) b.left().accept(this);
         if (!leftExpr.isCanonical) {
-            IRTemp temp = IRTempFactory.generate("binopL");
+            IRTemp temp = IRFactory.generate("binopL");
             stmts.add(new IRMove(temp, leftExpr));
             leftExpr = temp; 
         }
 
         IRExpr rightExpr = (IRExpr) b.right().accept(this);
         if (!rightExpr.isCanonical) {
-            IRTemp temp = IRTempFactory.generate("binopR");
+            IRTemp temp = IRFactory.generate("binopR");
             stmts.add(new IRMove(temp, rightExpr));
             rightExpr = temp; 
 
@@ -90,7 +90,7 @@ public class Canonizer extends IRVisitor<IRNode> {
             
             // Only hoist if necessary
             if (!argExpr.isCanonical) {
-                IRTemp t = IRTempFactory.generate();
+                IRTemp t = IRFactory.generate();
                 stmts.add(new IRMove(t, argExpr));
                 argExpr = t;
             }
@@ -110,7 +110,7 @@ public class Canonizer extends IRVisitor<IRNode> {
 
         // Hoist condition expression 
         if (!condition.isCanonical) {
-            IRTemp t = IRTempFactory.generate("cjump");
+            IRTemp t = IRFactory.generate("cjump");
             stmts.add(new IRMove(t, condition));
             condition = t;
         }
@@ -130,7 +130,7 @@ public class Canonizer extends IRVisitor<IRNode> {
 
             // Hoist target expression if needed.
             if (!targetExpr.isCanonical) {
-                IRTemp t = IRTempFactory.generate("cjump");
+                IRTemp t = IRFactory.generate("cjump");
                 stmts.add(new IRMove(t, targetExpr));
                 targetExpr = t;
             }
@@ -153,7 +153,7 @@ public class Canonizer extends IRVisitor<IRNode> {
             lowered.put(fn.name(), (IRFuncDecl) fn.accept(this));
         }
         
-        return new IRCompUnit(c.name(), c.context(), c.globals(), lowered);
+        return new IRCompUnit(c.name(), c.globals(), lowered);
     }
 
     /**
@@ -191,7 +191,7 @@ public class Canonizer extends IRVisitor<IRNode> {
     public IRNode visit(IRFuncDecl f) {
         stmts = new IRSeq();
         f.body().accept(this);
-        return new IRFuncDecl(f.sourceName(), f.name(), stmts);
+        return new IRFuncDecl(f.sourceName(), f.name(), f.args(), f.rets(), stmts);
     }
 
     /**
@@ -221,7 +221,7 @@ public class Canonizer extends IRVisitor<IRNode> {
 
         IRExpr expr = (IRExpr) m.expr().accept(this);
         if (!expr.isCanonical) {
-            IRTemp t = IRTempFactory.generate("mem");
+            IRTemp t = IRFactory.generate("mem");
             stmts.add(new IRMove(t, expr));
             expr = t;
         }
@@ -248,7 +248,7 @@ public class Canonizer extends IRVisitor<IRNode> {
             // Hoist mem expression if not certain about immutability
             IRExpr dest = mem;
             if (mem.memType() != MemType.IMMUTABLE) {
-                IRTemp temp = IRTempFactory.generate();
+                IRTemp temp = IRFactory.generate();
                 IRExpr memExpr = (IRExpr) mem.expr().accept(this);
                 stmts.add(new IRMove(temp, memExpr));
                 dest = new IRMem(temp);
@@ -285,7 +285,7 @@ public class Canonizer extends IRVisitor<IRNode> {
 
             // Only hoist if necessary
             if (!retExpr.isCanonical) {
-                IRTemp temp = IRTempFactory.generate();
+                IRTemp temp = IRFactory.generate();
                 stmts.add(new IRMove(temp, retExpr));
                 retExpr = temp;
             }

@@ -61,7 +61,7 @@ public class CanonizerTest {
 		assertEquals(0, statements.size());
 
 		// Should hoist expression with potential side effect
-		IRCall f1 = new IRCall(new IRName("foo"));
+		IRCall f1 = new IRCall(new IRName("foo"), 0);
 		b.left = f1;
 		result = Canonizer.canonize(b);
 		statements = Canonizer.debug(b);
@@ -79,12 +79,12 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRCall() {
-		IRTemp temp = IRTempFactory.generate();
+		IRTemp temp = IRFactory.generate();
 		IRConst val = new IRConst(6);
 		IRESeq a1 = new IRESeq(new IRMove(temp, val), temp);
 		IRConst a2 = new IRConst(5);
 		
-		IRCall c = new IRCall(new IRName("test"), a1, a2);
+		IRCall c = new IRCall(new IRName("test"), 0, a1, a2);
 		
 		IRNode result = Canonizer.canonize(c);
 		List<IRStmt> statements = Canonizer.debug(c);
@@ -117,7 +117,7 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRCJump() {
-		IRTemp temp = IRTempFactory.generate();
+		IRTemp temp = IRFactory.generate();
 		IRConst cond = new IRConst(1);
 		IRESeq c = new IRESeq(new IRMove(temp, cond), temp);
 		IRCJump j = new IRCJump(c, new IRLabel("true"));
@@ -143,7 +143,7 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRJump() {
-		IRTemp temp = IRTempFactory.generate();
+		IRTemp temp = IRFactory.generate();
 		IRConst c = new IRConst(1);
 		IRESeq e = new IRESeq(new IRMove(temp, c), temp);
 		IRJump j = new IRJump(e);
@@ -168,8 +168,8 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRESeq() {
-		IRTemp t1 = IRTempFactory.generate();
-		IRTemp t2 = IRTempFactory.generate();
+		IRTemp t1 = IRFactory.generate();
+		IRTemp t2 = IRFactory.generate();
 		IRConst c = new IRConst(0);
 		IRESeq e1 = new IRESeq(new IRMove(t1, c), t1);
 		IRESeq e2 = new IRESeq(new IRMove(t2, e1), t2);
@@ -199,7 +199,7 @@ public class CanonizerTest {
 	public void testIRExp() {
 		IRConst a1 = new IRConst(6);
 		IRConst a2 = new IRConst(5);
-		IRCall c = new IRCall(new IRName("test"), a1, a2);
+		IRCall c = new IRCall(new IRName("test"), 0, a1, a2);
 		IRExp e = new IRExp(c);
 		
 		IRNode result = Canonizer.canonize(e);
@@ -226,7 +226,7 @@ public class CanonizerTest {
 	@Test
 	public void testIRMoveTemp() {
 		IRConst c = new IRConst(0);
-		IRTemp t = IRTempFactory.generate();
+		IRTemp t = IRFactory.generate();
 		IRMove m = new IRMove(t, c);
 		
 		IRNode result = Canonizer.canonize(m);
@@ -247,7 +247,7 @@ public class CanonizerTest {
 	
 	@Test
 	public void testIRMoveMem() {
-		IRTemp t = IRTempFactory.generate();
+		IRTemp t = IRFactory.generate();
 		IRConst c = new IRConst(0);
 		IRMem mem = new IRMem(new IRESeq(new IRMove(t, c), t));
 		IRMove m = new IRMove(mem, t);
@@ -291,7 +291,7 @@ public class CanonizerTest {
 	@Test
 	public void testIRReturn() {
 		IRConst a1 = new IRConst(2);
-		IRTemp temp = IRTempFactory.generate();
+		IRTemp temp = IRFactory.generate();
 		IRConst val = new IRConst(6);
 		IRESeq a2 = new IRESeq(new IRMove(temp, val), temp);
 		IRReturn r = new IRReturn(a1, a2);
