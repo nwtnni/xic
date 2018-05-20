@@ -16,7 +16,7 @@ public abstract class Phase {
             new Parse(),
             new TypeCheck(),
             new Emit(),
-            // new Fold(),
+            new Fold(),
             new Canonize(),
             new Interpret()
             // new ConstPropNoPrint(),

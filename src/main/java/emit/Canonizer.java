@@ -252,7 +252,7 @@ public class Canonizer extends IRVisitor<IRNode> {
 
             // Hoist mem expression if not certain about immutability
             IRExpr dest = mem;
-            if (mem.memType() != MemType.IMMUTABLE) {
+            if (mem.isImmutable() || mem.isGlobal()) {
                 IRTemp temp = IRFactory.generate();
                 IRExpr memExpr = (IRExpr) mem.expr().accept(this);
                 stmts.add(new IRMove(temp, memExpr));

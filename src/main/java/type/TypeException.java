@@ -24,6 +24,8 @@ public class TypeException extends XicException {
         NOT_A_METHOD("Expected method"),
         PRIVATE_EQ("Object equality is private to the class definition"),
         MISMATCHED_INTERFACE("Subclass must implement all interface methods"),         
+        INVALID_OVERRIDE("Overriding method must have same type as superclass method"),
+        INCOMPATIBLE_USE("Interface is incompatible with module"),
 
         // Statement exceptions
         CONTROL_FLOW("Control reached end of non-void function"),

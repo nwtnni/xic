@@ -83,14 +83,14 @@ public class Emitter extends ASTVisitor<IRNode> {
             XiBinary b = (XiBinary) n;
             switch (b.kind) {
                 case AND:
-                    IRLabel andL = IRFactory.generateLabel("and");
+                    IRLabel andL = IRFactory.generateLabel("c_and");
                     return new IRSeq(
                         makeControlFlow(b.lhs, andL, falseL),
                         andL,
                         makeControlFlow(b.rhs, trueL, falseL)
                     );
                 case OR:
-                    IRLabel orL = IRFactory.generateLabel("and");
+                    IRLabel orL = IRFactory.generateLabel("c_or");
                     return new IRSeq(
                         makeControlFlow(b.lhs, trueL, orL),
                         orL,
@@ -183,7 +183,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         fn.add(done);
-
+        fn.add(new IRReturn());
         return fn;
     }
 
@@ -230,12 +230,10 @@ public class Emitter extends ASTVisitor<IRNode> {
         List<IRStmt> classes = new ArrayList<>();
 
         for (Node node : p.body) {
-            System.out.println(node);
 
             // Visit globals
             if (node instanceof XiGlobal) {
                 IRStmt g = (IRStmt) node.accept(this);
-                System.out.println("global " + node);
                 if (g != null) {
                     globals.add(g);
                 }
@@ -274,7 +272,6 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiGlobal g) throws XicException {
         if (!(g.type.isArray())) { return null; }
-        System.out.println("do init");
         return g.stmt.accept(this);
     }
 
@@ -421,15 +418,15 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiIf i) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel trueL = IRFactory.generateLabel("ifT");
-        IRLabel falseL = IRFactory.generateLabel("ifF");
+        IRLabel trueL = IRFactory.generateLabel("if_t");
+        IRLabel falseL = IRFactory.generateLabel("if_f");
 
         stmts.add(makeControlFlow(i.guard, trueL, falseL));
         stmts.add(trueL);
         stmts.add((IRStmt) i.block.accept(this));
         stmts.add(falseL);
         if (i.hasElse()) {
-            IRLabel doneL = IRFactory.generateLabel("ifDone");
+            IRLabel doneL = IRFactory.generateLabel("if_done");
             stmts.add(stmts.size() - 1, Library.jump(doneL));
             stmts.add((IRStmt) i.elseBlock.accept(this));
             stmts.add(doneL);
@@ -458,9 +455,9 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiWhile w) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel headL = IRFactory.generateLabel("whileH");
-        IRLabel trueL = IRFactory.generateLabel("whileT");
-        IRLabel falseL = IRFactory.generateLabel("whileF");
+        IRLabel headL = IRFactory.generateLabel("while_h");
+        IRLabel trueL = IRFactory.generateLabel("while_t");
+        IRLabel falseL = IRFactory.generateLabel("while_f");
 
         currentLoop.push(falseL);
 
@@ -514,8 +511,8 @@ public class Emitter extends ASTVisitor<IRNode> {
                 return new IRBinOp(IRBinOp.OpType.NEQ, left, right);
             case AND:
                 IRTemp andFlag = IRFactory.generate("and");
-                IRLabel trueL = IRFactory.generateLabel("andT");
-                IRLabel falseL = IRFactory.generateLabel("andF");
+                IRLabel trueL = IRFactory.generateLabel("t");
+                IRLabel falseL = IRFactory.generateLabel("f");
                 return new IRESeq(
                     new IRSeq(
                         new IRMove(andFlag, new IRConst(0)),
@@ -528,8 +525,8 @@ public class Emitter extends ASTVisitor<IRNode> {
                 );
             case OR:
                 IRTemp orFlag = IRFactory.generate("or");
-                trueL = IRFactory.generateLabel("orT");
-                falseL = IRFactory.generateLabel("orF");
+                trueL = IRFactory.generateLabel("t");
+                falseL = IRFactory.generateLabel("f");
                 return new IRESeq(
                     new IRSeq(
                         new IRMove(orFlag, new IRConst(1)),
@@ -618,7 +615,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     @Override
     public IRNode visit(XiIndex i) throws XicException {
         IRSeq stmts = new IRSeq();
-        IRLabel doneL = IRFactory.generateLabel("done");
+        IRLabel doneL = IRFactory.generateLabel("index_done");
 
         // Store array reference copy if not already a temp
         IRExpr pointer = (IRExpr) i.array.accept(this);
@@ -637,7 +634,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         }
 
         // Check bounds
-        IRLabel outOfBounds = IRFactory.generateLabel("outOfBounds");
+        IRLabel outOfBounds = IRFactory.generateLabel("out_of_bounds");
         stmts.add(new IRCJump(new IRBinOp(OpType.LT, index, Library.ZERO), outOfBounds));
         stmts.add(new IRCJump(new IRBinOp(OpType.GEQ, index, Library.length(pointer)), outOfBounds));
         stmts.add(Library.jump(doneL));
@@ -740,7 +737,7 @@ public class Emitter extends ASTVisitor<IRNode> {
         // Allocate memory for special case of syntactic sugar
         // for array declarations with dimensions specified
         if (t.hasSize()) {
-            IRTemp size = IRFactory.generate("size");
+            IRTemp size = IRFactory.generate("type_size");
             IRExpr sizeExpr =  (IRExpr) t.size.accept(this);
             IRESeq children = (IRESeq) t.child.accept(this);
             if (children == null) {

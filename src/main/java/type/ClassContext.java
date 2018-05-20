@@ -17,6 +17,10 @@ public class ClassContext {
         this.methods = new OrderedMap<>();
     }
 
+    public List<String> getFields() {
+        return fields.keyList();
+    }
+
     public List<String> getMethods() {
         return methods.keyList();
     }
