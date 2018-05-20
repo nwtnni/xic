@@ -15,26 +15,25 @@ import static type.TypeException.Kind;
  */
 public class GlobalContext {
 
-    private Context<String, GlobalType> context;
+    private Map<String, GlobalType> context;
     private Map<ClassType, ClassType> hierarchy;
     private Map<ClassType, ClassContext> classes;
 
     public GlobalContext() {
-        this.context = new Context<>();
+        this.context = new HashMap<>();
         this.hierarchy = new HashMap<>();
         this.classes = new HashMap<>();
     }
 
-    public void put(String id, ClassContext cc) throws TypeException {
-        if (context.contains(id)) throw new TypeException(Kind.DECLARATION_CONFLICT);
+    public void put(String id, ClassContext cc) {
         ClassType ct = new ClassType(id);
-        context.add(id, ct);
+        context.put(id, ct);
         classes.put(ct, cc);
     }
 
     public void put(String id, GlobalType gt) {
         if (gt.isClass()) throw new XicInternalException("Attempting to insert class without methods");
-        context.add(id, gt);
+        context.put(id, gt);
     }
 
     public boolean extend(ClassType subclass, ClassType superclass) {
@@ -86,11 +85,11 @@ public class GlobalContext {
     }
 
     public boolean contains(String id) {
-        return context.contains(id);
+        return context.containsKey(id);
     }
 
     public GlobalType lookup(String id) {
-        return context.lookup(id);
+        return context.get(id);
     }
 
     public ClassContext lookup(ClassType ct) {
@@ -141,7 +140,46 @@ public class GlobalContext {
         return ct.equals(superclass);
     }
 
-    public void merge(GlobalContext other) {
+    /**
+     * Merges the interface GlobalContext [other] into this GlobalContext.
+     */
+    public boolean merge(GlobalContext other) {
 
+        // Check all top-level declarations for conflicts
+        for (String name : other.context.keySet()) {
+
+            GlobalType reference = other.context.get(name);
+
+            // No conflict possible
+            if (!context.containsKey(name)) {
+                context.put(name, reference);
+                continue;
+            }
+
+            GlobalType current = context.get(name);
+
+            // Functions are allowed to shadow if their types are the same
+            if (current.isFn() && reference.isFn() && current.equals(reference)) continue;
+
+            // Otherwise must be a namespace conflict (no globals in interfaces)
+            return false;
+        }
+
+        // Update classes
+        for (ClassType ct : other.classes.keySet()) {
+
+            // All classes must be unique
+            if (classes.containsKey(ct)) throw new XicInternalException("Inconsistent GlobalContext state");
+
+            // Otherwise update current context
+            classes.put(ct, other.classes.get(ct));
+        }
+
+        // Update hierarcy
+        for (ClassType ct : other.hierarchy.keySet()) {
+            hierarchy.put(ct, other.hierarchy.get(ct));
+        }
+
+        return true;
     }
 }

@@ -38,9 +38,10 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     protected TypeChecker() {
         this.globalContext = new GlobalContext();
-        this.moduleClasses = new HashSet<>();
+        this.moduleLocal = new HashSet<>();
         this.inside = null;
         this.returns = null;
+        this.strict = false;
         this.localContext = new LocalContext();
     }
 
@@ -54,15 +55,16 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     private TypeChecker(String lib, Node ast) throws XicException {
         this.globalContext = new GlobalContext();
-        this.moduleClasses = new HashSet<>();
+        this.moduleLocal = new HashSet<>();
         this.inside = null;
         this.returns = null;
+        this.strict = false;
         this.localContext = new LocalContext();
     }
 
     protected GlobalContext globalContext;
 
-    protected Set<ClassType> moduleClasses; 
+    protected Set<String> moduleLocal;
 
     private ClassType inside;
 
@@ -74,6 +76,8 @@ public class TypeChecker extends ASTVisitor<Type> {
     private List<Type> returns;
 
     protected LocalContext localContext;
+
+    protected boolean strict;
 
     private boolean allSubclass(List<Type> subs, List<Type> supers) {
         for (int i = 0; i < subs.size(); i++) {
@@ -195,8 +199,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                 }
 
                 globalContext.put(c.id, cc);
-                moduleClasses.add(ct);
-                if (c.parent != null) globalContext.extend(ct, new ClassType(c.parent));
+                moduleLocal.add(c.id);
             }
 
             // Populate top-level functions
@@ -212,6 +215,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                 }
 
                 globalContext.put(f.id, type);
+                moduleLocal.add(f.id);
             }
         }
 
@@ -652,7 +656,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiNew n) throws XicException {
         ClassType ct = new ClassType(n.name);
-        if (!moduleClasses.contains(ct)) throw new TypeException(UNBOUND_NEW, n.location);
+        if (!moduleLocal.contains(n.name)) throw new TypeException(UNBOUND_NEW, n.location);
         n.type = ct;
         return n.type;
     }
@@ -769,7 +773,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                     throw new TypeException(NOT_UNIFORM_ARRAY, a.values.get(i).location);
                 }
             }
-            
+
             else if (!type.equals(reference)) {
                 throw new TypeException(NOT_UNIFORM_ARRAY, a.values.get(i).location);
             }
@@ -865,7 +869,9 @@ public class TypeChecker extends ASTVisitor<Type> {
             t.type = BoolType.BOOL;
             break;
         default:
-            t.type = new ClassType(t.id);
+            ClassType ct = new ClassType(t.id);
+            if (strict && !globalContext.contains(ct)) throw new TypeException(SYMBOL_NOT_FOUND, t.location);
+            t.type = ct; 
             break;
         }
 
