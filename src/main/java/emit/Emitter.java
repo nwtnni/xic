@@ -239,7 +239,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             if (arr != null) {
                 return new IRMove(var, arr);
             }
-            // TOOD: return new ir null
+            // TOOD: return new ir null for classes
             // return new IRMove(var, new IRNull());
         } else {
             return new IRMove(var, new IRConst(0));
