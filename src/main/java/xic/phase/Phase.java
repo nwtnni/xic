@@ -15,16 +15,16 @@ public abstract class Phase {
             new Lex(),
             new Parse(),
             new TypeCheck(),
-            new Emit()
-            // new Fold(),
-            // new Canonize(),
-            // new Interpret(),
+            new Emit(),
+            new Fold(),
+            new Canonize(),
+            // new Interpret()
             // new ConstPropNoPrint(),
             // new FoldNoPrint(),
             // new ConstProp(),
             // new FoldNoPrint(),
             // new CSE(),
-            // new Irgen(),
+            new Irgen()
             // new Tile(),
             // new RegAlloc(),
             // new TrivialAlloc()
