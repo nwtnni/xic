@@ -109,7 +109,7 @@ public class GlobalContext {
         return context.containsKey(id);
     }
 
-    public MethodType inherits(ClassType ct, String id) {
+    public Type inherits(ClassType ct, String id) {
 
         // No such class exists
         if (!classes.containsKey(ct)) return null;
@@ -118,7 +118,7 @@ public class GlobalContext {
         do {
             ClassContext cc = classes.get(ct);
             if (cc == null) throw new XicInternalException("Class in hierarchy but not in classes");
-            if (cc.containsMethod(id)) return cc.lookupMethod(id);
+            if (cc.contains(id)) return cc.lookup(id);
             ct = hierarchy.get(ct);
         } while (ct != null);
 

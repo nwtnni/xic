@@ -23,6 +23,10 @@ xic ("Test oXi --typecheck") "--typecheck" {
 
   bad_inherit1.xi;
 
+  bad_local_shadow1.xi;
+  bad_local_shadow2.xi;
+  bad_local_shadow3.xi;
+
   func_multi_return01.xi;
 
   method1.xi;
@@ -45,22 +49,24 @@ xic ("Test oXi --typecheck") "--typecheck" {
   null2.xi;
   null3.xi;
   null4.xi;
-  
+
   obj_arg1.xi;
   obj_arg2.xi;
   obj_arg3.xi;
-  
+
   obj_argret1.xi;
   obj_argret2.xi;
   obj_argret3.xi;
 
   obj_array1.xi;
   obj_array2.xi;
-  
+
   obj_assign1.xi;
   obj_assign2.xi;
   obj_assign3.xi;
   obj_assign4.xi;
+
+  obj_field1.xi;
 
   obj_eqeq1.xi;
   obj_eqeq2.xi;
