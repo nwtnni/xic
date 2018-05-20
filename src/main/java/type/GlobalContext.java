@@ -3,6 +3,7 @@ package type;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Stack;
+import java.util.ArrayList;
 
 import util.Context;
 import util.OrderedMap;
@@ -88,6 +89,22 @@ public class GlobalContext {
         return context.containsKey(id);
     }
 
+    public MethodType inherits(ClassType ct, String id) {
+        
+        // No such class exists
+        if (!classes.containsKey(ct)) return null; 
+
+        // Seearch through class and all ancestors
+        do {
+            ClassContext cc = classes.get(ct); 
+            if (cc == null) throw new XicInternalException("Class in hierarchy but not in classes");
+            if (cc.containsMethod(id)) return cc.lookupMethod(id);
+            ct = hierarchy.get(ct);
+        } while (ct != null);
+
+        return null;
+    }
+
     public GlobalType lookup(String id) {
         return context.get(id);
     }
@@ -112,10 +129,18 @@ public class GlobalContext {
             ancestors.push(traverse);
         }
 
+        // Dummy method name
+        int n = 0;
+
         // Add methods top-down to preserve correct order
         while (!ancestors.isEmpty()) {
 
-            ClassContext ancestor = classes.get(ancestors.pop());
+            ClassType ancestorClass = ancestors.pop();
+            ClassContext ancestor = classes.get(ancestorClass);
+
+            // Spacer "method" for IR generation
+            methods.put(Integer.toString(n), new MethodType(ancestorClass, new ArrayList<>(), new ArrayList<>()));
+            n += 1;
 
             for (String method : ancestor.getMethods()) {
 
@@ -124,6 +149,7 @@ public class GlobalContext {
 
                 // Otherwise add it to the ordered map
                 methods.put(method, ancestor.lookupMethod(method));
+
             }
         }
 

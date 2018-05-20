@@ -184,6 +184,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                     } else if (m instanceof XiDeclr) {
                         XiDeclr d = (XiDeclr) m;
                         cc.put(d.id, (FieldType) d.xiType.accept(this));
+                        d.type = d.xiType.type;
                     }
                     localContext.pop();
                 }
@@ -457,9 +458,11 @@ public class TypeChecker extends ASTVisitor<Type> {
             return d.type;
         }
 
-        // We only check against local variables and global variables
-        // We allow shadowing against class fields and methods, which can be resolved with the this keyword
+        // Check against local and global contexts
         if (localContext.contains(d.id) || globalContext.contains(d.id)) throw new TypeException(DECLARATION_CONFLICT, d.location);
+
+        // Check against class context if necessary
+        if (inside != null && globalContext.lookup(inside).contains(d.id)) throw new TypeException(DECLARATION_CONFLICT, d.location);
 
         d.type = d.xiType.accept(this);
         localContext.add(d.id, (FieldType) d.type);
@@ -740,15 +743,13 @@ public class TypeChecker extends ASTVisitor<Type> {
         }
 
         // Early return: class context contains symbol
-        if (inside != null && globalContext.lookup(inside).contains(v.id)) {
-            v.type = globalContext.lookup(inside).lookup(v.id);
+        if (inside != null && globalContext.inherits(inside, v.id) != null) {
+            v.type = globalContext.inherits(inside, v.id);
             return v.type;
         }
 
         // Early return: symbol not found
-        if (!globalContext.contains(v.id)) {
-            throw new TypeException(SYMBOL_NOT_FOUND, v.location);
-        }
+        if (!globalContext.contains(v.id)) throw new TypeException(SYMBOL_NOT_FOUND, v.location);
 
         // Must be valid global symbol
         v.type = globalContext.lookup(v.id);
