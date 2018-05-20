@@ -236,7 +236,8 @@ public class TypeChecker extends ASTVisitor<Type> {
             }
 
             globalContext.put(declr.id, (GlobalType) declr.xiType.accept(this));
-            g.type = UnitType.UNIT;
+            declr.type = declr.xiType.type;
+            g.type = declr.xiType.type;
             return g.type;
         }
 
@@ -251,7 +252,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
             var.type = assign.rhs.accept(this);
             globalContext.put(var.id, (GlobalType) var.type);
-            g.type = UnitType.UNIT;
+            g.type = var.type;
             return g.type;
         }
 
@@ -266,8 +267,8 @@ public class TypeChecker extends ASTVisitor<Type> {
         for (Node n : c.body) {
             if (n instanceof XiFn) n.accept(this);
         }
+        c.type = inside;
         inside = null;
-        c.type = UnitType.UNIT;
         return c.type;
     }
 

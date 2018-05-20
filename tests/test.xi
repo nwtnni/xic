@@ -1,21 +1,19 @@
-use io
-use conv
+x:int[5]
 
-main (args:int[][]) {
-    n:int = 3
-    m:int = 5
-    arr:int[n][m]
+main(args: int[][]) {
+    i:int[] = "hello"
+    x = {}
+}
 
-    i:int = 0
-    while (i < length(arr)) {
-        j:int = 0
-        while (j < length(arr[i])) {
-            arr[i][j] = (i + 1) * (j + 1)
-            print(unparseInt(arr[i][j]))
-            if (j != m - 1) print(", ")
-            j = j + 1
-        }
-        println("")
-        i = i + 1
+class A {
+    x:int
+    foo():A {
+        return null
+    }
+}
+
+class B extends A {
+    foo():A {
+        return this
     }
 }

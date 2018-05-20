@@ -2,6 +2,7 @@ package emit;
 
 import type.*;
 import util.Context;
+import xic.XicInternalException;
 
 public class ABIContext extends Context<String, String> {
 
@@ -17,8 +18,6 @@ public class ABIContext extends Context<String, String> {
     /**
      * Utility method for mangling function name to conform to
      * ABI specification.
-     * 
-     * Returns null if function is not in the context.
      */
     public String mangleFunction(String name) {
         GlobalType type = gc.lookup(name);
@@ -26,15 +25,23 @@ public class ABIContext extends Context<String, String> {
             name = name.replaceAll("_", "__");
             return "_I" + name + "_" + type.toString();
         } else {
-            return null;
+            throw XicInternalException.runtime("bad function " + name);
+        }
+    }
+
+    public String mangleMethod(String name, ClassType t) {
+        MethodType type = gc.lookup(t).lookupMethod(name);
+        if (type instanceof FnType) {
+            name = name.replaceAll("_", "__");
+            return "_I" + t.getID() + "_" + name + "_" + type.toString();
+        } else {
+            throw XicInternalException.runtime("bad method " + name);
         }
     }
 
     /**
      * Utility method for mangling global variable name to conform to
      * ABI specification.
-     * 
-     * Returns null if function is not in the context.
      */
     public String mangleGlobal(String name) {
         GlobalType type = gc.lookup(name);
@@ -42,7 +49,7 @@ public class ABIContext extends Context<String, String> {
             name = name.replaceAll("_", "__");
             return "_I_g_" + name + "_" + type.toString();
         } else {
-            return null;
+            throw XicInternalException.runtime("bad global " + name);
         }
     }
 

@@ -15,10 +15,10 @@ public abstract class Phase {
             new Lex(),
             new Parse(),
             new TypeCheck(),
-            new Emit()
+            new Emit(),
             // new Fold(),
-            // new Canonize(),
-            // new Interpret(),
+            new Canonize(),
+            new Interpret()
             // new ConstPropNoPrint(),
             // new FoldNoPrint(),
             // new ConstProp(),

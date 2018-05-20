@@ -1,7 +1,9 @@
 package emit;
 
+import type.ClassType;
 import interpret.Configuration;
 import ir.IRTemp;
+import ir.IRMem.MemType;
 import ir.IRMem;
 import ir.IRLabel;
 
@@ -39,21 +41,36 @@ public class IRFactory {
      * Generates a global.
      */
     public static IRMem generateGlobal(String name, ABIContext context) {
-        return new IRMem(new IRTemp(context.mangleGlobal(name), true));
+        return new IRMem(new IRTemp(context.mangleGlobal(name)), MemType.GLOBAL);
     }
 
     /**
-     * Generates a global.
+     * Generates a class size global.
      */
     public static IRMem generateSize(String name, ABIContext context) {
-        return new IRMem(new IRTemp(context.classSize(name), true));
+        return new IRMem(new IRTemp(context.classSize(name)), MemType.GLOBAL);
     }
 
     /**
-     * Generates a global.
+     * Generates a class vt global.
      */
     public static IRMem generateVT(String name, ABIContext context) {
-        return new IRMem(new IRTemp(context.classVT(name), true));
+        return new IRMem(new IRTemp(context.classVT(name)), MemType.GLOBAL);
+    }
+
+    /**
+     * Generates a function address.
+     */
+    public static IRMem generateFuncAddr(String name, ABIContext context) {
+        return new IRMem(new IRTemp(context.mangleFunction(name)), MemType.GLOBAL);
+    }
+
+
+    /**
+     * Generates a method address.
+     */
+    public static IRMem generateMethodAddr(String name, ClassType type, ABIContext context) {
+        return new IRMem(new IRTemp(context.mangleMethod(name, type)), MemType.GLOBAL);
     }
 
     /**

@@ -144,16 +144,16 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRCompUnit by lowering each function body.
      */
     public IRNode visit(IRCompUnit c) {
-        Map<String, IRFuncDecl> lowered = new HashMap<>();
         
         // Globals do not require lowering
+        IRCompUnit unit = new IRCompUnit(c.name(), c.globals());
 
         // Lower each function
         for (IRFuncDecl fn : c.functions().values()) {
-            lowered.put(fn.name(), (IRFuncDecl) fn.accept(this));
+            unit.appendFunc((IRFuncDecl) fn.accept(this));
         }
         
-        return new IRCompUnit(c.name(), c.globals(), lowered);
+        return unit;
     }
 
     /**
@@ -214,8 +214,12 @@ public class Canonizer extends IRVisitor<IRNode> {
            Where there is a guarantee that there is no change of aliasing
         */
 
-        if (m.memType() == MemType.IMMUTABLE) {
+        if (m.isImmutable()) {
             m.isCanonical = true;
+            return m;
+        }
+
+        if (m.isGlobal()) {
             return m;
         }
 
@@ -241,11 +245,6 @@ public class Canonizer extends IRVisitor<IRNode> {
      * TODO: can be optimized by commuting
      */
     public IRNode visit(IRMove m) {
-        
-        // TODO: do special cases for globals
-        // Preserve so at assembly
-        // Mem(Temp(_G))        -> _G
-        // Mem(Mem(Temp(_G)))   -> $_G
 
         // Need to check memory targets
         if (m.isMem()) {
@@ -317,11 +316,6 @@ public class Canonizer extends IRVisitor<IRNode> {
      * Lowers an IRTemp node, which is a global memory address or an expression leaf.
      */
     public IRNode visit(IRTemp t) {
-
-        // Globals are hoisted
-        if (t.global()) { return t; }
-
-        // All other temporaries are lowered
         t.isCanonical = true;
         return t;
     }

@@ -6,7 +6,7 @@ package ir;
  */
 public class IRMem extends IRExpr {
     public enum MemType {
-        NORMAL, IMMUTABLE;
+        NORMAL, IMMUTABLE, GLOBAL;
 
         @Override
         public String toString() {
@@ -15,6 +15,8 @@ public class IRMem extends IRExpr {
                 return "MEM";
             case IMMUTABLE:
                 return "MEM_I";
+            case GLOBAL:
+                return "MEM_G";
             }
             // Exhaustive switch statement
             assert false;
@@ -46,26 +48,19 @@ public class IRMem extends IRExpr {
         return memType;
     }
 
+    public boolean isImmutable() {
+        return memType == MemType.IMMUTABLE;
+    }
+
+    public boolean isGlobal() {
+        return memType == MemType.GLOBAL;
+    }
+
     @Override
     public String label() {
         return memType.toString();
     }
 
-    // @Override
-    // public IRNode visitChildren(IRVisitor v) {
-    //     IRExpr expr = (IRExpr) v.visit(this, this.expr);
-
-    //     if (expr != this.expr) return v.nodeFactory().IRMem(expr);
-
-    //     return this;
-    // }
-
-    // @Override
-    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
-    //     T result = v.unit();
-    //     result = v.bind(result, v.visit(expr));
-    //     return result;
-    // }
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);

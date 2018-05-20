@@ -6,11 +6,14 @@ import java.util.Optional;
 import java.util.Stack;
 
 import ast.*;
+import interpret.Configuration;
 import type.*;
 import ir.*;
 import ir.IRBinOp.OpType;
+import ir.IRMem.MemType;
 import xic.XicException;
 import xic.XicInternalException;
+import util.OrderedMap;
 import util.Pair;
 
 /**
@@ -62,7 +65,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     private Stack<IRLabel> currentLoop;
 
     // Toggle inserting library functions
-    private static final boolean INCLUDE_LIB = true;
+    private static final boolean INCLUDE_LIB = false;
 
 
     /**
@@ -110,55 +113,78 @@ public class Emitter extends ASTVisitor<IRNode> {
     /**
      * Generates init function for the class.
      */
-    private IRFuncDecl init(XiClass c) {
+    private IRFuncDecl init(XiClass cls) {
         GlobalContext gc = context.gc;
-
-        String name = context.classInit(c.id);
+        String name = context.classInit(cls.id);
+        ClassType ct = (ClassType) cls.type;
+        ClassContext cc = context.gc.lookup(ct);
 
         IRFuncDecl fn = new IRFuncDecl(name, name, 0, 0);
-        
 
-        IRExpr size = IRFactory.generateSize(c.id, context);
-        IRExpr vt = IRFactory.generateVT(c.id, context);
+        // Shuttle temp
+        IRTemp t = IRFactory.generate();
+
+        // Globals for class c
+        IRExpr size = IRFactory.generateSize(cls.id, context);
+        IRExpr vt = IRFactory.generateVT(cls.id, context);
 
         // Short circuit if already initialized
-        IRTemp t = IRFactory.generate("size_" + c.id);
-        IRLabel done = IRFactory.generateLabel(c.id);
+        IRLabel done = IRFactory.generateLabel(cls.id);
         fn.add(new IRMove(t, size));
         fn.add(new IRCJump(new IRBinOp(OpType.NEQ, Library.ZERO, t), done));
 
         // Recursively intialize parent with _I_init_parent
-        if (c.hasParent()) {
-            fn.add(new IRExp(new IRCall(new IRName(context.classInit(c.parent)), 0, List.of())));
+        if (cls.hasParent()) {
+            fn.add(new IRExp(new IRCall(new IRName(context.classInit(cls.parent)), 0, List.of())));
         }
 
-        ClassContext cc = context.gc.lookup((ClassType) c.type);
-
         // Initialize _I_size_name
-        t = IRFactory.generate("size_" + c.id);
-
-        if (c.hasParent()) {
+        if (cls.hasParent()) {
             // Allocate size
-            IRExpr parentSize = IRFactory.generateSize(c.id, context);
+            IRExpr parentSize = IRFactory.generateSize(cls.id, context);
             fn.add(new IRMove(t, parentSize));
         }
         fn.add(new IRMove(t, new IRBinOp(OpType.ADD, t, new IRConst(cc.numFields()))));
         fn.add(new IRMove(size, t));
 
         // Initialize _I_vt_name
-        t = IRFactory.generate("vt_" + c.id);
-        fn.add(new IRMove(t, new IRMem(vt)));
-        if (c.hasParent()) {
-            IRExpr parentVT = IRFactory.generateVT(c.parent, context);
-            IRTemp p = IRFactory.generate("vt_" + c.parent);
-            fn.add(new IRMove(p, parentVT));
 
-            
+        // Get vt address in c
+        IRTemp c = IRFactory.generate("vt_" + cls.id);
+        fn.add(new IRMove(c, new IRMem(vt, MemType.IMMUTABLE)));
+
+        // Get parent vt address in p
+        IRTemp p = null;
+        if (cls.hasParent()) {
+            IRExpr parentVT = IRFactory.generateVT(cls.parent, context);
+            p = IRFactory.generate("vt_" + cls.parent);
+            fn.add(new IRMove(p, new IRMem(parentVT, MemType.IMMUTABLE)));
+        }
+
+        // Copy or generate entries of vt
+        int i = 1;
+        OrderedMap<String, MethodType> methods = gc.lookupAllMethods(ct);
+        for (String method : methods.keyList()) {
+            IRConst offset = new IRConst(i * Configuration.WORD_SIZE);
+            IRMem addr = new IRMem(new IRBinOp(OpType.ADD, c, offset), MemType.IMMUTABLE);
+
+            // Copy inherited methods
+            if (!cc.containsMethod(method)) {
+                IRMem paddr = new IRMem(new IRBinOp(OpType.ADD, p, offset), MemType.IMMUTABLE);
+                fn.add(new IRMove(addr, paddr));
+
+            // Insert addresses for overriden and self defined methods
+            } else {
+                IRMem pointer = IRFactory.generateMethodAddr(method, ct, context);
+                fn.add(new IRMove(t, pointer));
+                fn.add(new IRMove(addr, t));
+            }
+            i++;
         }
 
         fn.add(done);
 
-        return null;
+        return fn;
     }
 
     /**
@@ -203,17 +229,20 @@ public class Emitter extends ASTVisitor<IRNode> {
         List<IRStmt> globals = new ArrayList<>();
         List<IRStmt> classes = new ArrayList<>();
 
-        for (Node n : p.body) {
+        for (Node node : p.body) {
+            System.out.println(node);
+
             // Visit globals
-            if (n instanceof XiGlobal) {
-                IRStmt g = (IRStmt) n.accept(this);
+            if (node instanceof XiGlobal) {
+                IRStmt g = (IRStmt) node.accept(this);
+                System.out.println("global " + node);
                 if (g != null) {
                     globals.add(g);
                 }
 
             // Visit classes
-            } else if (n instanceof XiClass) {
-                XiClass c = (XiClass) n;
+            } else if (node instanceof XiClass) {
+                XiClass c = (XiClass) node;
                 currentClass = Optional.of((ClassType) c.type);
 
                 // Create initialization function
@@ -222,20 +251,20 @@ public class Emitter extends ASTVisitor<IRNode> {
                 classes.add(new IRExp(new IRCall(name, 0, List.of())));
 
                 // Visit each method
-                for (Node m : c.body) {
-                    if (m instanceof XiFn) {
-                        program.appendFunc((IRFuncDecl) n.accept(this));
+                for (Node method : c.body) {
+                    if (method instanceof XiFn) {
+                        program.appendFunc((IRFuncDecl) method.accept(this));
                     }
                 }
 
                 currentClass = Optional.empty();
             // Visit functions
-            } else if (n instanceof XiFn) {
-                program.appendFunc((IRFuncDecl) n.accept(this));
+            } else if (node instanceof XiFn) {
+                program.appendFunc((IRFuncDecl) node.accept(this));
             }
         }
 
-        program.appendFunc(Library.generateInitFunc(globals, classes));
+        program.appendFunc(Library.generateInitFunc(classes, globals));
 
         return program;
     }
@@ -244,11 +273,8 @@ public class Emitter extends ASTVisitor<IRNode> {
     // PA7
     @Override
     public IRNode visit(XiGlobal g) throws XicException {
-        if (!(g.stmt instanceof XiAssign)) { return null; }
-        
-        XiAssign assign = (XiAssign) g.stmt;
-        if (!assign.rhs.type.isArray()) { return null; }
-
+        if (!(g.type.isArray())) { return null; }
+        System.out.println("do init");
         return g.stmt.accept(this);
     }
 
@@ -256,6 +282,7 @@ public class Emitter extends ASTVisitor<IRNode> {
     public IRNode visit(XiFn f) throws XicException {
         IRSeq body = (IRSeq) f.block.accept(this);
 
+        String name;
         int numArgs = f.args.size();
         int numRets = f.returns.size();
 
@@ -263,8 +290,11 @@ public class Emitter extends ASTVisitor<IRNode> {
         int argOffset = 0;
         if (currentClass.isPresent()) {
             body.add(0, new IRMove(Library.THIS, IRFactory.getArgument(0)));
+            name = context.mangleMethod(f.id, currentClass.get());
             argOffset++;
             numArgs++;
+        } else {
+            name = context.mangleFunction(f.id);
         }
 
         // Inject temporary for multiple returns
@@ -285,7 +315,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             body.add(new IRReturn());
         }
 
-        return new IRFuncDecl(f.id, context.mangleFunction(f.id), numArgs, numRets, body);
+        return new IRFuncDecl(f.id, name, numArgs, numRets, body);
     }
 
     /*
@@ -361,7 +391,12 @@ public class Emitter extends ASTVisitor<IRNode> {
             return null;
         }
 
-        IRTemp var = new IRTemp(d.id);
+        IRExpr var;
+        if (context.gc.contains(d.id)) {
+            var = IRFactory.generateGlobal(d.id, context);
+        } else {
+            var = new IRTemp(d.id);
+        }
 
         // Case for primitive and class
         if (d.type.isPrimitive() || d.type.isClass()) {

@@ -27,6 +27,13 @@ public class IRCompUnit extends IRNode {
         functions = new LinkedHashMap<>();
     }
 
+
+    public IRCompUnit(String name, List<IRStmt> globals) {
+        this.name = name;
+        this.globals = globals;
+        functions = new LinkedHashMap<>();
+    }
+
     public IRCompUnit(String name, List<IRStmt> globals, Map<String, IRFuncDecl> functions) {
         this.name = name;
         this.globals = globals;
