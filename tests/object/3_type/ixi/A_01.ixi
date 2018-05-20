@@ -3,3 +3,5 @@ class A {
     foo1(x:A)
     foo2(x:A):A
 }
+
+bar(): A

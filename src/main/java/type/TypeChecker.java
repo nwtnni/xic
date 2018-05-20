@@ -140,15 +140,13 @@ public class TypeChecker extends ASTVisitor<Type> {
     public Type visit(XiProgram p) throws XicException {
 
         // Initially visit all dependencies recursively
-        List<String> files = p.uses.stream()
-            .map(n -> (XiUse) n)
-            .map(use -> use.file)
-            .collect(Collectors.toList());
-
         // Global context now contains all used interfaces
         // Two cases: may or may not include interface for this module
-        for (String file : files) {
-            globalContext.merge(Importer.resolve(lib, file));
+        for (Node n : p.uses) {
+            XiUse u = (XiUse) n;
+            if (!globalContext.merge(Importer.resolve(lib, u.file))) {
+                throw new TypeException(INCOMPATIBLE_USE, u.location);
+            }
         }
 
         // First pass to populate global variables
