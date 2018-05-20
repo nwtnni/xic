@@ -1,8 +1,11 @@
 use io
 use conv
 
+x:int[5][n]
+n:int = 5
+
 main (args:int[][]) {
-    x:int = {}[5]
+    x[0][0] = 1
 }
 
 // class A {

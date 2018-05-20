@@ -49,6 +49,7 @@ public class Main {
                 xic.setOutput(Kind.CANONIZE);
                 break;
             case "--irrun":
+                xic.setOutput(Kind.CANONIZE);
                 opts.remove(Kind.INTERPRET);
                 break;
             case "--report-opts":
