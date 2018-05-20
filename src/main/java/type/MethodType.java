@@ -21,9 +21,7 @@ public class MethodType extends FnType {
 
     @Override
     public boolean equals(Object o) {
-        return super.equals(o)
-            && (o instanceof MethodType)
-            && ((MethodType) o).implicit.equals(implicit);
+        return super.equals(o) && (o instanceof MethodType);
     }
 
     @Override
