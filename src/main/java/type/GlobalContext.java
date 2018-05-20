@@ -70,4 +70,8 @@ public class GlobalContext {
 
         return ct.equals(superclass);
     }
+
+    public void merge(GlobalContext other) {
+
+    }
 }

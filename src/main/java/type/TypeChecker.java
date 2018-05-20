@@ -2,6 +2,8 @@ package type;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 import ast.*;
@@ -25,8 +27,8 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @param ast AST to typecheck
      * @throws XicException if a semantic error was found
      */
-    public static FnContext check(String lib, Node ast) throws XicException {
-        TypeChecker checker = new TypeChecker(lib, ast);
+    public static FnContext check(String source, String lib, Node ast) throws XicException {
+        TypeChecker checker = new TypeChecker(source, lib, ast);
         ast.accept(checker);
         return checker.fns;
     }
@@ -48,7 +50,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      * @param ast AST to resolve dependencies for
      * @throws XicException if a semantic error occurred while resolving dependencies
      */
-    private TypeChecker(String lib, Node ast) throws XicException {
+    private TypeChecker(String source, String lib, Node ast) throws XicException {
         this.fns = Importer.resolve(lib, ast);
         this.types = new TypeContext();
         this.vars = new VarContext();
@@ -65,7 +67,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     private List<Type> returns;
 
-    private LocalContext localContext;
+    protected LocalContext localContext;
 
     private boolean allSubclass(List<Type> subs, List<Type> supers) {
         for (int i = 0; i < subs.size(); i++) {
@@ -121,6 +123,15 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiProgram p) throws XicException {
 
+        // Initially visit all dependencies recursively
+        Set<String> visited = new HashSet<>();
+        List<String> files = p.uses.stream()
+            .map(n -> (XiUse) n)
+            .map(use -> use.file + ".ixi")
+            .collect(Collectors.toList());
+
+        // TODO: recursively typecheck
+
         // First pass to populate global variables
         for (Node n : p.body) {
             if (n instanceof XiGlobal) {
@@ -137,7 +148,59 @@ public class TypeChecker extends ASTVisitor<Type> {
             if (n instanceof XiGlobal && n.type == null) n.accept(this);
         }
 
-        // Third pass to populate function and method bodies
+        // Third pass to finish populating ALL top-level declarations
+        for (Node n : p.body) {
+
+            // Populate top-level classes and methods while checking against interfaces
+            if (n instanceof XiClass) {
+                XiClass c = (XiClass) n;
+                ClassContext cc = new ClassContext();
+                ClassType ct = new ClassType(c.id);
+
+                for (Node m : c.body) {
+
+                    if (m instanceof XiDeclr) {
+                        XiDeclr field = (XiDeclr) m;
+
+                        cc.put(
+                            field.id,
+                            (FieldType) field.xiType.accept(this)
+                        );
+                    }
+
+                    if (m instanceof XiFn) {
+                        XiFn method = (XiFn) m;
+                        cc.put(
+                            method.id,
+                            new MethodType(ct, visit(method.args), visit(method.returns))
+                        );
+                    }
+                }
+
+                // Validate context with global context from importing
+                if (globalContext.contains(ct)) {
+                    ClassContext imported = globalContext.lookup(ct);
+                    if (!cc.merge(imported)) throw new TypeException(MISMATCHED_INTERFACE, c.location);
+                }
+
+                globalContext.put(c.id, cc);
+            }
+
+            // Populate top-level functions
+            else if (n instanceof XiFn) {
+                XiFn f = (XiFn) n;
+                FnType type = new FnType(visit(f.args), visit(f.returns));
+
+                // Check interface conformance
+                if (globalContext.contains(f.id)) {
+                    if (!globalContext.lookup(f.id).equals(type)) throw new TypeException(MISMATCHED_INTERFACE, f.location);
+                }
+
+                globalContext.put(f.id, type);
+            }
+        }
+
+        // Fourth pass to populate function and method bodies
         for (Node n : p.body) {
             if (!(n instanceof XiGlobal)) n.accept(this);
         }
@@ -183,42 +246,13 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiClass c) throws XicException {
 
-        // First pass to populate class context
-        ClassContext cc = new ClassContext();
-        ClassType ct = new ClassType(c.id);
-
-        for (Node n : c.body) {
-
-            if (n instanceof XiDeclr) {
-                XiDeclr field = (XiDeclr) n;
-
-                cc.put(
-                    field.id,
-                    (FieldType) field.xiType.accept(this)
-                );
-            }
-
-            if (n instanceof XiFn) {
-                XiFn method = (XiFn) n;
-                cc.put(
-                    method.id,
-                    new MethodType(ct, visit(method.args), visit(method.returns))
-                );
-            }
-        }
-
-        // Validate context with global context from importing
-        if (globalContext.contains(ct)) {
-            ClassContext imported = globalContext.lookup(ct);
-            if (!imported.merge(cc)) throw new TypeException(MISMATCHED_INTERFACE, c.location);
-        }
-
         // Populate class method bodies
         inside = new ClassType(c.id);
         for (Node n : c.body) {
             if (n instanceof XiFn) n.accept(this);
         }
         inside = null;
+
     }
 
     /**
@@ -231,16 +265,23 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiFn f) throws XicException {
+
         localContext.push();
-        FnType fnType = (FnType) globalContext.lookup(f.id);
+        FnType ft = null;
 
-        visit(f.args);
-        returns = fnType.getReturns();
-        Type ft = f.block.accept(this);
-
-        if (f.isFn() && !ft.isVoid()) {
-            throw new TypeException(CONTROL_FLOW, f.location);
+        if (inside != null && globalContext.lookup(inside).containsMethod(f.id)) {
+            ft = globalContext.lookup(inside).lookupMethod(f.id);
+        } else if (globalContext.contains(f.id) && globalContext.lookup(f.id).isFn()) {
+            ft = (FnType) globalContext.lookup(f.id);
+        } else {
+            throw new XicException("Contexts not initialized properly");
         }
+
+        returns = ft.returns;
+        Type bt = f.block.accept(this);
+
+        // Edge case: last statement is procedure
+        if (f.isFn() && !bt.isVoid()) throw new TypeException(CONTROL_FLOW, f.location);
 
         localContext.pop();
         f.type = UnitType.UNIT;
@@ -331,6 +372,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     @Override
     public Type visit(XiBreak b) throws XicException {
+        b.type = VoidType.VOID;
         return VoidType.VOID;
     }
 
@@ -349,7 +391,7 @@ public class TypeChecker extends ASTVisitor<Type> {
             return d.type;
         }
 
-        // In this pass, we only check local variables
+        // We only check against local variables and global variables
         // We allow shadowing against class fields and methods, which can be resolved with the this keyword
         if (localContext.contains(d.id) || globalContext.contains(d.id)) throw new TypeException(DECLARATION_CONFLICT, d.location);
 
@@ -473,6 +515,7 @@ public class TypeChecker extends ASTVisitor<Type> {
             // Class comparisons are privately scoped, except when comparing to null
             if ((lt.isClass() && (lt.equals(inside) || rt.isNull()))
             ||  (rt.isClass() && (rt.equals(inside) || lt.isNull()))
+            ||  (lt.isNull()  && rt.isNull())
             ||  (lt.isClass() && lt.equals(inside) && rt.isClass() && rt.equals(inside))) {
                 b.type = BoolType.BOOL;
                 return b.type;
@@ -519,22 +562,8 @@ public class TypeChecker extends ASTVisitor<Type> {
             return c.type;
         }
 
-        FnType ft = null;
-
-        // Must be function call
-        if (c.id instanceof XiVar) {
-            GlobalType type = globalContext.lookup(((XiVar) c.id).id);
-            c.id.type = type;
-            if (type == null || !type.isFn()) throw new TypeException(SYMBOL_NOT_FOUND, c.location);
-            ft = (FnType) type;
-        }
-
-        // Must be method call
-        else {
-            Type type = c.id.accept(this);
-            if (!type.isMethod()) throw new TypeException(NOT_A_METHOD, c.location);
-            ft = (MethodType) type;
-        }
+        FnType ft = c.id.accept(this);
+        if (!ft.isFn()) throw new TypeException(INVALID_CALL, c.location);
 
         // Check parameter passing for both function and method
         List<Type> caller = visit(c.args);
@@ -550,23 +579,15 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiDot d) throws XicException {
 
-        // Must be XiVar, or else internal error
-        XiVar var = (XiVar) d.rhs;
-
         // LHS of dot operator must be class
         Type lt = d.lhs.accept(this);
         if (!lt.isClass()) throw new TypeException(INVALID_DOT, d.lhs.location);
 
-        // Class must be bound in global context
-        ClassType ct = (ClassType) lt;
-        if (!globalContext.contains(ct)) throw new TypeException(UNBOUND_CLASS, d.lhs.location);
-
-        // RHS field or method must be bound in class
-        ClassContext classContext = globalContext.lookup(ct);
-        if (!classContext.contains(var.id)) throw new TypeException(UNBOUND_FIELD, d.rhs.location);
-
-        d.rhs.type = classContext.lookup(var.id);
-        d.type = d.rhs.type;
+        // Temporarily scope rhs class
+        ClassType previous = inside;
+        inside = (ClassType) lt;
+        d.type = d.rhs.accept(this);
+        inside = previous;
         return d.type;
     }
 
@@ -628,13 +649,13 @@ public class TypeChecker extends ASTVisitor<Type> {
         }
 
         // Early return: class context contains symbol
-        if (inside != null && globalContext.lookup(inside).containsField(v.id)) {
-            v.type = globalContext.lookup(inside).lookupField(v.id);
+        if (inside != null && globalContext.lookup(inside).contains(v.id)) {
+            v.type = globalContext.lookup(inside).lookup(v.id);
             return v.type;
         }
 
         // Early return: symbol not found
-        if (!globalContext.contains(v.id) || !globalContext.lookup(v.id).isField()) {
+        if (!globalContext.contains(v.id)) {
             throw new TypeException(SYMBOL_NOT_FOUND, v.location);
         }
 

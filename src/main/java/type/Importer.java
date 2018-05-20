@@ -46,6 +46,8 @@ public class Importer extends TypeChecker {
      */
     private String lib;
 
+    private Set<String> visited;
+
     /**
      * True when this Importer is on its first or second pass through the Fn nodes
      */
@@ -60,6 +62,7 @@ public class Importer extends TypeChecker {
      */
     private Importer(String lib, Set<String> visited) throws XicException {
         this.lib = lib;
+        this.visited = visited;
         this.populate = true;
     }
 
@@ -69,27 +72,31 @@ public class Importer extends TypeChecker {
      */
     @Override
     public Type visit(XiProgram p) throws XicException {
+
+        // Recursively visit dependencies first
+        for (Node use : p.uses) {
+            use.accept(this);
+        }
+
         // First pass: populate top-level environment with function IDs
-        for (Node fn : p.body) {
-            fn.accept(this);
+        for (Node n : p.body) {
+            n.accept(this);
         }
 
         populate = false;
 
         // Second pass: check for shadowed arguments against top-level
-        for (Node fn : p.body) {
-            vars.push();
-            fn.accept(this);
-            vars.pop();
-        }
-
-        if (p.isProgram()) {
-            for (Node use : p.uses) {
-                use.accept(this);
-            }
+        for (Node n : p.body) {
+            n.accept(this);
         }
 
         return null;
+    }
+
+    @Override
+    public Type visit(XiClass c) throws XicException {
+
+
     }
 
     /**
@@ -97,8 +104,10 @@ public class Importer extends TypeChecker {
      */
     @Override
     public Type visit(XiUse u) throws XicException {
+        if (visited.contains(u.file)) return null;
+        visited.add(u.file);
         Node ast = IXiParser.from(lib, u.file + ".ixi");
-        fns.merge(Importer.resolve(lib, ast));
+        globalContext.merge(Importer.resolve(lib, ast, visited));
         return null;
     }
 
@@ -107,14 +116,16 @@ public class Importer extends TypeChecker {
      */
     @Override
     public Type visit(XiFn f) throws XicException {
+        localContext.push();
         if (!populate) {
             visit(f.args);
             visit(f.returns);
-        } else if (fns.contains(f.id)) {
+        } else if (globalContext.contains(f.id)) {
             throw new TypeException(Kind.DECLARATION_CONFLICT, f.location);
         } else {
-            fns.add(f.id, FnType.from(f));
+            globalContext.put(f.id, new FnType(visit(f.args), visit(f.returns)));
         }
+        localContext.pop();
         return null;
     }
 }
