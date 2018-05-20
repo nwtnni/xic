@@ -1,0 +1,18 @@
+xic ("Test oXi assembly") {
+  simple_method01.xi; 
+  simple_method02.xi; 
+  simple_method03.xi; 
+
+  simple_field01.xi;
+  simple_field02.xi;
+
+  this_method01.xi;
+  this_method02.xi;
+
+  inherit_method01.xi;
+  inherit_method02.xi;
+  inherit_method03.xi;
+
+  inherit_field01.xi;
+  inherit_field02.xi;
+}

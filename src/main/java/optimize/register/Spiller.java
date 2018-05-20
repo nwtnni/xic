@@ -232,7 +232,7 @@ public class Spiller extends InstrVisitor<List<Instr<Temp>>> {
 
         if (!name.isPresent()) return List.of(c);
 
-        List<Instr<Temp>> setup = name.get().second;
+        List<Instr<Temp>> setup = new ArrayList<>(name.get().second);
         setup.add(new Call.TM(name.get().first, c.numArgs, c.numRet));
         return setup;
     }
