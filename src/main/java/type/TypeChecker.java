@@ -79,6 +79,9 @@ public class TypeChecker extends ASTVisitor<Type> {
             // Equal classes can always be passed
             if (sub.equals(sup)) continue;
 
+            // Unit superclasses all
+            if (sup.isUnit()) continue;
+
             // Null subclasses objects and arrays
             if (sub.isNull() && (sup.isClass() || sup.isArray())) continue;
 
@@ -170,6 +173,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                         );
                     }
 
+                    localContext.push();
                     if (m instanceof XiFn) {
                         XiFn method = (XiFn) m;
                         cc.put(
@@ -177,6 +181,7 @@ public class TypeChecker extends ASTVisitor<Type> {
                             new MethodType(ct, visit(method.args), visit(method.returns))
                         );
                     }
+                    localContext.pop();
                 }
 
                 // Validate context with global context from importing
@@ -191,7 +196,9 @@ public class TypeChecker extends ASTVisitor<Type> {
             // Populate top-level functions
             else if (n instanceof XiFn) {
                 XiFn f = (XiFn) n;
+                localContext.push();
                 FnType type = new FnType(visit(f.args), visit(f.returns));
+                localContext.pop();
 
                 // Check interface conformance
                 if (globalContext.contains(f.id)) {
@@ -270,6 +277,8 @@ public class TypeChecker extends ASTVisitor<Type> {
     public Type visit(XiFn f) throws XicException {
 
         localContext.push();
+        visit(f.args);
+        visit(f.returns);
         FnType ft = null;
 
         if (inside != null && globalContext.lookup(inside).containsMethod(f.id)) {
@@ -533,6 +542,15 @@ public class TypeChecker extends ASTVisitor<Type> {
             }
         }
 
+        // Special case: polymorphic array coercion
+        if (lt.isPoly() && rt.isArray()) {
+            b.lhs.type = b.rhs.type;
+            lt = rt;
+        } else if (rt.isPoly() && lt.isArray()) {
+            b.rhs.type = b.lhs.type;
+            rt = lt;
+        }
+
         if (!lt.equals(rt)) {
             throw new TypeException(MISMATCHED_BINARY, b.location);
         }
@@ -541,7 +559,7 @@ public class TypeChecker extends ASTVisitor<Type> {
             b.type = b.returnsBool() ? BoolType.BOOL : IntType.INT;
         } else if (lt.isBool() && b.acceptsBool()) {
             b.type = BoolType.BOOL;
-        } else if (lt.isArray() && b.acceptsList()) {
+        } else if (lt.isArray() || lt.isPoly() && b.acceptsList()) {
             b.type = lt;
         } else {
             throw new TypeException(INVALID_BIN_OP, b.location);
@@ -558,9 +576,11 @@ public class TypeChecker extends ASTVisitor<Type> {
         // Early return: builtin length function
         if (c.id instanceof XiVar && ((XiVar) c.id).id.equals("length")) {
             XiVar fn = (XiVar) c.id;
-            if (c.args.size() != 1 || !c.args.get(0).accept(this).isArray()) {
+
+            if (c.args.size() != 1 || !(c.args.get(0).accept(this).isArray() || c.args.get(0).type.isPoly())) {
                 throw new TypeException(NOT_AN_ARRAY, c.location);
             }
+
             c.type = IntType.INT;
             return c.type;
         }
@@ -576,7 +596,18 @@ public class TypeChecker extends ASTVisitor<Type> {
         if (caller.size() != called.size()) throw new TypeException(INVALID_ARG_TYPES, c.location);
         if (!allSubclass(caller, called)) throw new TypeException(INVALID_ARG_TYPES, c.location);
 
-        c.type = (ft.getReturns().size() == 0) ? UnitType.UNIT : new TupleType(ft.getReturns());
+        switch (ft.getReturns().size()) {
+        case 0:
+            c.type = UnitType.UNIT;
+            break;
+        case 1:
+            c.type = ft.getReturns().get(0);
+            break;
+        default:
+            c.type = new TupleType(ft.getReturns());
+            break;
+        }
+
         return c.type;
     }
 
