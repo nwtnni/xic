@@ -21,6 +21,8 @@ xic ("Test oXi --typecheck") "--typecheck" {
 
   bad_obj_array1.xi;
 
+  bad_inherit1.xi;
+
   func_multi_return01.xi;
 
   method1.xi;
