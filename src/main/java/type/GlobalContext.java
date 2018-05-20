@@ -135,7 +135,6 @@ public class GlobalContext {
 
     public Pair<ClassType, List<String>> lookupFieldSource(ClassType sub, String name) {
         while (true) {
-            System.out.println(sub);
             if (sub == null || !classes.containsKey(sub)) throw new XicInternalException("Field not bound in any superclass");
 
             // Keep traversing hierarchy

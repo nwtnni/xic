@@ -13,6 +13,7 @@ test_all() {
 
 test_course() {
     xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
+    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa7 xth/tests/pa7/xthScript
     printf "\n========================================\n\n" 
 }
 

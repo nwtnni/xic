@@ -165,8 +165,6 @@ public class Emitter extends ASTVisitor<IRNode> {
         int i = -1;
         OrderedMap<String, MethodType> methods = gc.lookupAllMethods(ct);
 
-        System.out.println(methods.keyList());
-
         for (String method : methods.keyList()) {
             i++;
             if (method.matches("[0-9]+")) continue;
@@ -746,7 +744,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             return IRFactory.generateGlobal(v.id, context);
         }
 
-        if (currentClass.isPresent() && context.gc.lookup(currentClass.get()).containsField(v.id)) {
+        if (currentClass.isPresent() && context.gc.inherits(currentClass.get(), v.id) != null && context.gc.inherits(currentClass.get(), v.id).isField()) {
             return dispatch(Library.THIS, v.id, currentClass.get());
         }
 

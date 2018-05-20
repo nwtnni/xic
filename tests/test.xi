@@ -5,10 +5,10 @@ n:int = 5
 a:int[2]
 
 main (args:int[][]) {
-    a[0] = 'h'
-    a[1] = 'i'
-    println(unparseInt(n))
-    println(a)
+    // a[0] = 'h'
+    // a[1] = 'i'
+    // println(unparseInt(n))
+    // println(a)
 
     a1:A = new A
     b1:B = new B
