@@ -62,7 +62,10 @@ public class IRFactory {
      * Generates a function address.
      */
     public static IRMem generateFuncAddr(String name, ABIContext context) {
-        return new IRMem(new IRTemp(context.mangleFunction(name)), MemType.GLOBAL);
+        return new IRMem(
+            new IRMem(new IRTemp(context.mangleFunction(name)), MemType.GLOBAL),
+            MemType.GLOBAL
+        );
     }
 
 
@@ -70,7 +73,10 @@ public class IRFactory {
      * Generates a method address.
      */
     public static IRMem generateMethodAddr(String name, ClassType type, ABIContext context) {
-        return new IRMem(new IRTemp(context.mangleMethod(name, type)), MemType.GLOBAL);
+        return new IRMem(
+            new IRMem(new IRTemp(context.mangleMethod(name, type)), MemType.GLOBAL),
+            MemType.GLOBAL
+        );
     }
 
     /**
