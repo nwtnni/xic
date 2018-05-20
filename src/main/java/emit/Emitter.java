@@ -138,13 +138,19 @@ public class Emitter extends ASTVisitor<IRNode> {
             fn.add(new IRExp(new IRCall(new IRName(context.classInit(cls.parent)), 0, List.of())));
         }
 
+        int fields = cc.numFields();
+
         // Initialize _I_size_name
         if (cls.hasParent()) {
             // Allocate size
             IRExpr parentSize = IRFactory.generateSize(cls.id, context);
             fn.add(new IRMove(t, parentSize));
+        } else {
+            // Offset for vt if the base case
+            fields++;
         }
-        fn.add(new IRMove(t, new IRBinOp(OpType.ADD, t, new IRConst(cc.numFields()))));
+
+        fn.add(new IRMove(t, new IRBinOp(OpType.ADD, t, new IRConst(fields))));
         fn.add(new IRMove(size, t));
 
         // Initialize _I_vt_name
@@ -201,6 +207,7 @@ public class Emitter extends ASTVisitor<IRNode> {
             Pair<ClassType, List<String>> source = context.gc.lookupFieldSource(type, name);
 
             String cls = source.first.getID();
+
             int offset = source.second.size() - source.second.indexOf(name);
             
             // Take fixed offset off of
