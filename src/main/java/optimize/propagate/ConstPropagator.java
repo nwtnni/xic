@@ -102,7 +102,7 @@ public class ConstPropagator extends IRVisitor<Optional<IRConst>> {
     }
 
     public Optional<IRConst> visit(IRCall c) {
-        for (int i = 0; i < c.size(); i++) {
+        for (int i = 0; i < c.numArgs(); i++) {
             Optional<IRConst> cs = c.get(i).accept(this);
             if (cs.isPresent()) {
                 c.set(i, cs.get());

@@ -9,11 +9,11 @@ import java.util.ArrayList;
 public class FnType extends GlobalType {
 
     protected List<Type> args;
-    protected List<Type> returns;
+    protected List<Type> rets;
 
-    public FnType(List<Type> args, List<Type> returns) {
+    public FnType(List<Type> args, List<Type> rets) {
         this.args = new ArrayList<>(args);
-        this.returns = returns.isEmpty() ? List.of(UnitType.UNIT) : new ArrayList<>(returns);
+        this.rets = rets.isEmpty() ? List.of(UnitType.UNIT) : new ArrayList<>(rets);
     }
 
     @Override
@@ -21,21 +21,40 @@ public class FnType extends GlobalType {
 
     public List<Type> getArgs() { return new ArrayList<>(args); }
 
-    public List<Type> getReturns() { return new ArrayList<>(returns); }
+    public int getNumArgs() { return args.size(); }
+
+    public List<Type> getReturns() { return new ArrayList<>(rets); }
+
+    public int getNumRets() { return rets.size(); }
+
+    @Override
+    public String toString() { 
+        String a = args.stream()
+            .map(e -> e.toString())
+            .reduce("", (acc, s) -> acc + s);
+
+        String r = rets.stream()
+            .map(e -> e.toString())
+            .reduce("", (acc, s) -> acc + s);
+
+        String p = rets.size() == 1 && rets.get(0).equals(UnitType.UNIT) ? "p" : "";
+
+        return p + r + a;
+    }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof FnType)) return false;
 
         FnType mt = (FnType) o;
-        if (mt.args.size() != args.size() || mt.returns.size() != returns.size()) return false;
+        if (mt.args.size() != args.size() || mt.rets.size() != rets.size()) return false;
 
         for (int i = 0; i < args.size(); i++) {
             if (!mt.args.get(i).equals(args.get(i))) return false;  
         }
 
-        for (int i = 0; i < returns.size(); i++) {
-            if (!mt.returns.get(i).equals(returns.get(i))) return false;
+        for (int i = 0; i < rets.size(); i++) {
+            if (!mt.rets.get(i).equals(rets.get(i))) return false;
         }
 
         return true;
@@ -43,6 +62,6 @@ public class FnType extends GlobalType {
 
     @Override
     public int hashCode() {
-        return args.hashCode() + returns.hashCode();
+        return args.hashCode() + rets.hashCode();
     }
 }

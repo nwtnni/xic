@@ -39,7 +39,7 @@ public class Emit extends Phase {
         if (previous.isErr()) return previous;
         
         Pair<XiProgram, GlobalContext> typed = previous.ok().getTyped();
-        Pair<IRCompUnit, ABIContext> emitted = Emitter.emitIR(typed.first, typed.second);
+        Pair<IRCompUnit, ABIContext> emitted = Emitter.emitIR(config.unit, typed.first, typed.second);
         
         if (!(output || outputCFG)) return new Result<>(Product.emitted(emitted));
 

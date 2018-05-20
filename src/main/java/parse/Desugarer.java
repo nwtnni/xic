@@ -17,40 +17,29 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
     }
 
     /*
-     * Psuedo-visit method for visiting a list of nodes.
-     */
-    @Override
-    public List<MultipleNode> visit(List<Node> nodes) throws XicException {
-        List<MultipleNode> t = new ArrayList<>();
-        for (Node n : nodes) {
-            t.add(n.accept(this));
-        }
-        return t;
-    }
-
-    /*
      * Top-level AST nodes
      */
     
     @Override
     public MultipleNode visit(XiProgram p) throws XicException {
 
+        // Visit each declaration in body
+        List<MultipleNode> declrs = visit(p.body);
+
         // Rewrite body
         List<Node> body = new ArrayList<>();
-        for (Node declr : p.body) {
-            MultipleNode n = declr.accept(this);
-            if (n.isSingle()) {
-                body.add(n.getSingle());
-            } else {
-                body.addAll(n.getMultiple());
-            }
+        for (MultipleNode n : declrs) {
+            n.match(
+                single -> body.add(single),
+                multiple -> body.addAll(multiple)
+            );
         }
         p.body = body;
 
         return null;
     }
 
-    // Use statements are already desugared
+    // Use statements don't need to be desugared
     @Override
     public MultipleNode visit(XiUse u) throws XicException {
         return null;
@@ -60,16 +49,16 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
     @Override
     public MultipleNode visit(XiClass c) throws XicException {
 
+        // Visit each member of the class
+        List<MultipleNode> members = visit(c.body);
+
         // Rewrite body
         List<Node> body = new ArrayList<>();
-        for (Node declr : c.body) {
-            MultipleNode n = declr.accept(this);
-
+        for (MultipleNode n : members) {
             n.match(
                 single -> body.add(single),
                 multiple -> body.addAll(multiple)
             );
-
         }
         c.body = body;
 
@@ -80,10 +69,9 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
     @Override
     public MultipleNode visit(XiFn f) throws XicException {
 
-        // Rewrite block
+        // Rewrite block for function definitions
         if (f.isDef()) {
-            MultipleNode n = f.block.accept(this);
-            f.block = n.getSingle();
+            f.block = f.block.accept(this).getSingle();
         }
 
         return MultipleNode.of(f);
@@ -93,16 +81,20 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
     @Override
     public MultipleNode visit(XiGlobal g) throws XicException {
 
+        // Visit statement
         MultipleNode n = g.stmt.accept(this);
-        if (n.isMultiple()) {
-            List<Node> seq = new ArrayList<>();
-            for (Node d : n.getMultiple()) {
-                seq.add(new XiGlobal(d.location, d));
+        
+        // Return multiple if found
+        return n.match(
+            single -> n,
+            multiple -> { 
+                List<Node> seq = new ArrayList<>();
+                for (Node d : multiple) {
+                    seq.add(new XiGlobal(d.location, d));
+                }
+                return MultipleNode.of(seq); 
             }
-            return MultipleNode.of(seq);
-        } else {
-            return MultipleNode.of(g);
-        }
+        );
     }
 
     /*
@@ -116,6 +108,20 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
 
     @Override
     public MultipleNode visit(XiBlock b) throws XicException {
+
+        // Visit each statement
+        List<MultipleNode> stmts = visit(b.statements);
+
+        // Rewrite block
+        List<Node> block = new ArrayList<>();
+        for (MultipleNode n : stmts) {
+            n.match(
+                single -> block.add(single), 
+                multiple -> block.addAll(multiple)
+            );
+        }
+        b.statements = block;
+
         return MultipleNode.of(b);
     }
 
@@ -132,6 +138,21 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
 
     @Override
     public MultipleNode visit(XiIf i) throws XicException {
+
+        // Rewrite if block
+        i.block = i.block.accept(this).match(
+            single -> single, 
+            multiple -> new XiBlock(multiple)
+        );
+
+        // Rewrite else block if needed
+        if (i.hasElse()) {
+            i.elseBlock = i.elseBlock.accept(this).match(
+                single -> single, 
+                multiple -> new XiBlock(multiple)
+            );
+        }
+
         return MultipleNode.of(i);
     }
 
@@ -141,21 +162,31 @@ public class Desugarer extends ASTVisitor<MultipleNode> {
     }
 
     // PA7
-    // Grammar enforces no nested seqs 
     @Override
     public MultipleNode visit(XiSeq s) throws XicException {
-        List<Node> seq = new ArrayList<>();
-        for (Node n : s.stmts) {
-            seq.add(n);
-        }
-        return MultipleNode.of(seq);
+
+        // Grammar enforces no nested seqs so no need to visit;
+        return MultipleNode.of(s.stmts);
     }
 
     @Override
     public MultipleNode visit(XiWhile w) throws XicException {
+
+        // Rewrite while block
+        w.block = w.block.accept(this).match(
+            single -> single, 
+            multiple -> new XiBlock(multiple)
+        );
+
         return MultipleNode.of(w);
     }
 
-    // All expressions and constants are already desugared
+    // Calls can be treated as a statement
+    @Override
+    public MultipleNode visit(XiCall c) throws XicException {
+        return MultipleNode.of(c);
+    }
+
+    /* All expressions and constants do not require desugaring */
 
 }

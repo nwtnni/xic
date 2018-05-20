@@ -26,7 +26,7 @@ public class MethodType extends FnType {
 
     @Override
     public int hashCode() {
-        return implicit.hashCode() * args.hashCode() * returns.hashCode();
+        return implicit.hashCode() * args.hashCode() * rets.hashCode();
     }
 
 }

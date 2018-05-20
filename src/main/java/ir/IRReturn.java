@@ -57,31 +57,6 @@ public class IRReturn extends IRStmt {
         return "RETURN";
     }
 
-    // @Override
-    // public IRNode visitChildren(IRVisitor v) {
-    //     boolean modified = false;
-
-    //     List<IRExpr> results = new ArrayList<>(rets.size());
-
-    //     for (IRExpr ret : rets) {
-    //         IRExpr newExpr = (IRExpr) v.visit(this, ret);
-    //         if (newExpr != ret) modified = true;
-    //         results.add(newExpr);
-    //     }
-
-    //     if (modified) return v.nodeFactory().IRReturn(results);
-
-    //     return this;
-    // }
-
-    // @Override
-    // public <T> T aggregateChildren(AggregateVisitor<T> v) {
-    //     T result = v.unit();
-    //     for (IRExpr ret : rets)
-    //         result = v.bind(result, v.visit(ret));
-    //     return result;
-    // }
-
     @Override
     public <T> T accept(IRVisitor<T> v) {
         return v.visit(this);

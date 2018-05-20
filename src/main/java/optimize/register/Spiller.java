@@ -214,8 +214,27 @@ public class Spiller extends InstrVisitor<List<Instr<Temp>>> {
      * Call Visitor
      */
 
-    public List<Instr<Temp>> visit(Call.T c) {
+    public List<Instr<Temp>> visit(Call.TL c) {
         return List.of(c);
+    }
+
+    public List<Instr<Temp>> visit(Call.TR c) {
+        Optional<Mem<Temp>> name = spill(c.name);
+
+        if (!name.isPresent()) return List.of(c);
+
+        Temp t = TempFactory.generate("SPILL_CALL_TR");
+        return List.of(new Mov.TMR(name.get(), t), new Call.TR(t, c.numArgs, c.numRet));
+    }
+
+    public List<Instr<Temp>> visit(Call.TM c) {
+        Optional<Pair<Mem<Temp>, List<Instr<Temp>>>> name = spill(c.name);
+
+        if (!name.isPresent()) return List.of(c);
+
+        List<Instr<Temp>> setup = name.get().second;
+        setup.add(new Call.TM(name.get().first, c.numArgs, c.numRet));
+        return setup;
     }
 
     /*
@@ -413,7 +432,6 @@ public class Spiller extends InstrVisitor<List<Instr<Temp>>> {
 
         Temp t = TempFactory.generate();
         return List.of(
-            new Mov.TMR(dest.get(), t),
             new Mov.TIR(m.src, t),
             new Mov.TRM(t, dest.get())
         );
@@ -505,6 +523,30 @@ public class Spiller extends InstrVisitor<List<Instr<Temp>>> {
         }
 
         return setup;
+    }
+
+    public List<Instr<Temp>> visit(Mov.TLR m) {
+        Optional<Mem<Temp>> dest = spill(m.dest);
+
+        if (!dest.isPresent()) return List.of(m);
+
+        Temp t = TempFactory.generate();
+        return List.of(
+            new Mov.TLR(m.src, t),
+            new Mov.TRM(t, dest.get())
+        );
+    }
+
+    public List<Instr<Temp>> visit(Mov.TRL m) {
+        Optional<Mem<Temp>> src = spill(m.src);
+
+        if (!src.isPresent()) return List.of(m);
+
+        Temp t = TempFactory.generate();
+        return List.of(
+            new Mov.TMR(src.get(), t),
+            new Mov.TRL(t, m.dest)
+        );
     }
     
     /*

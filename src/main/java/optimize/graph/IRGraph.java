@@ -9,7 +9,6 @@ import java.util.Set;
 import org.jgrapht.Graphs;
 
 import ir.*;
-import util.PairEdge;
 import util.PairEdgeGraph;
 import xic.XicException;
 import xic.XicInternalException;
@@ -18,17 +17,13 @@ import xic.XicInternalException;
 @SuppressWarnings("serial")
 public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
     
-    public IRGraph(String sourceName, String name, IRStmt start, IREdgeFactory<E> edgeFactory) {
+    public IRGraph(IRFuncDecl fn, IRStmt start, IREdgeFactory<E> edgeFactory) {
         super(start, edgeFactory);
-        this.sourceName = sourceName;
-        this.name = name;
+        this.fn = fn;
     }
 
     /** The original function name from source. */
-    private String sourceName;
-
-    /** The name of the function associated with this CFG. */
-    private String name;
+    private IRFuncDecl fn;
 
     /** 
      * Gets the successor node of the given node.
@@ -44,7 +39,7 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
      */
     public IRFuncDecl toIR() {
         IRSeq body = new IRSeq();
-        IRFuncDecl fn = new IRFuncDecl(sourceName, name, body);
+        IRFuncDecl fnNew = new IRFuncDecl(fn.sourceName(), fn.name(), fn.args(), fn.rets(), body);
 
         Set<IRStmt> visited = new HashSet<>();
         Deque<IRStmt> traces = new ArrayDeque<>();
@@ -135,14 +130,14 @@ public class IRGraph<E> extends PairEdgeGraph<IRStmt, E> {
             }
         }
 
-        return fn;
+        return fnNew;
     }
 
     /**
      * Writes dot file of CFG.
      */
     public void exportCfg(String basename, String phase) throws XicException {
-        String filename = String.format("%s_%s_%s.dot", basename, sourceName, phase);
+        String filename = String.format("%s_%s_%s.dot", basename, fn.sourceName(), phase);
         super.exportCfg(filename);
     }
 

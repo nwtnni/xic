@@ -91,7 +91,17 @@ public class TempReplacer extends InstrVisitor<Boolean> {
      */
 
     @Override
-    public Boolean visit(Call.T c) {
+    public Boolean visit(Call.TL c) {
+        return true;
+    }
+
+    @Override
+    public Boolean visit(Call.TR c) {
+        return true;
+    }
+
+    @Override
+    public Boolean visit(Call.TM c) {
         return true;
     }
 

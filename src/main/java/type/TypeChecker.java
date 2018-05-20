@@ -343,7 +343,7 @@ public class TypeChecker extends ASTVisitor<Type> {
             throw new XicException("Contexts not initialized properly");
         }
 
-        returns = ft.returns;
+        returns = ft.getReturns();
         Type bt = f.block.accept(this);
 
         // Edge case: last statement is procedure

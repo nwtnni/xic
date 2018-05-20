@@ -70,7 +70,7 @@ public class TrivialAllocator extends Allocator {
     }
 
     private CompUnit<Reg> allocate() {
-        for (FuncDecl<Temp> fn : unit.fns) {
+        for (FuncDecl<Temp> fn : unit.text) {
             allocate(fn);
         }
         return allocated;
@@ -89,7 +89,7 @@ public class TrivialAllocator extends Allocator {
         }
 
         allocatedFn.stmts = instrs;
-        allocated.fns.add(allocatedFn);
+        allocated.text.add(allocatedFn);
 
         // Calculate number of words to shift %rsp
         int rsp = tempCounter + maxArgs + maxRets;
@@ -149,6 +149,12 @@ public class TrivialAllocator extends Allocator {
     public Boolean visit(Mov.TRR m) {
         super.visit(m);
         store(m.dest); 
+        return null;
+    }
+
+    public Boolean visit(Mov.TLR m) {
+        super.visit(m);
+        store(m.dest);
         return null;
     }
 }

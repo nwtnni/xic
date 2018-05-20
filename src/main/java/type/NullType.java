@@ -12,4 +12,6 @@ public class NullType extends Type {
     @Override
     public boolean isNull() { return true; }
 
+    @Override
+    public boolean isPrimitive() { return true; }
 }

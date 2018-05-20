@@ -311,8 +311,6 @@ GVTypeIndexList ::=
         RESULT = list;
     :}
     ;
-    // TODO: check if a:int[] okay for global
-    // TODO: check multiple declaration at global level type restrictions
 
 // Valid initializer for global array dimensions are integers
 // and other global identifiers (checked at typechecking)
@@ -578,7 +576,7 @@ StmtNoReturn ::=
 
 /* --- Identifiers with dot access --- */
 
-// Top level dot access production PA7
+// Top level dot access production used for RHS
 ExtendedID ::=
     IDENTIFIER:id
     {:
@@ -617,23 +615,7 @@ DotCall ::=
     :}
     ;
 
-
-/* --- Function calls --- */
-// Parser does not differentiate between procedures and functions
-
-// Top level function call production PA7
-FnCall ::= 
-    IDENTIFIER:id LPAREN Args:args RPAREN
-    {:
-        RESULT = new XiCall(idxleft, new XiVar(idxleft, id), args);
-    :}
-    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN
-    {:
-        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
-        RESULT = new XiCall(gnxleft, dot, args);
-    :}
-    ;
-
+// Top level dot access production for LHS
 GenName ::=
     IDENTIFIER:id
     {:
@@ -686,6 +668,22 @@ GenName ::=
             index = new XiIndex(i.location, index, i);
         }
         RESULT = index;
+    :}
+    ;
+
+/* --- Function calls --- */
+// Parser does not differentiate between procedures and functions
+
+// Top level function call production PA7
+FnCall ::= 
+    IDENTIFIER:id LPAREN Args:args RPAREN
+    {:
+        RESULT = new XiCall(idxleft, new XiVar(idxleft, id), args);
+    :}
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        RESULT = new XiCall(gnxleft, dot, args);
     :}
     ;
 
@@ -883,13 +881,13 @@ Assign ::=
     {:
         RESULT = new XiAssign(ilxleft, il, evalExpr(e));
     :}
-    | AssignTargetList:il EQ Expr:e1 COMMA Expr:e2 FExprList:fel // PA7 Language Extension
+    | AssignTargetList:il EQ Expr:e1 COMMA Expr:e2 FExprList:fel // PA7: Language Extension
     {:
         fel.add(0, evalExpr(e2));
         fel.add(0, evalExpr(e1));
         
-        if(il.size() != fel.size()) {
-            throw new RuntimeException(); //TODO
+        if (il.size() != fel.size()) {
+            throw ParseException.mismatchedCount(ilxleft, "Mismatched number of expressions for multiple assignment."); //TODO
         }
 
         List<Node> desugaredStmts = new ArrayList<>();
@@ -905,7 +903,6 @@ Assign ::=
         RESULT = new XiAssign(sanxleft, san, evalExpr(e));
     :}
     ;
-    // TODO: add language extension with XiSeq (will be desugared)
 
 // LHS of multiple assignment
 AssignTargetList ::= 
