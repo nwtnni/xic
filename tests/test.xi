@@ -1,11 +1,8 @@
-foo():int {
-    return new A.foo()
-}
+use io
+use conv
 
-class A {
-    x:int
+main (args:int[][]) {
+    i:int;
 
-    foo():int {
-        return x
-    }
+    i = i + 1
 }
