@@ -1,0 +1,9 @@
+xic ("Test oXi --typecheck") "--typecheck" {
+    bad_func_lang_ext01.xi;
+    bad_func_lang_ext02.xi;
+    bad_func_lang_ext03.xi;
+    bad_func_lang_ext04.xi;
+    bad_func_lang_ext05.xi;
+    
+    func_lang_ext01.xi;
+}

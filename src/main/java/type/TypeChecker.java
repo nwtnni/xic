@@ -2,11 +2,15 @@ package type;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.stream.Collectors;
 
 import ast.*;
-import type.TypeException.Kind;
 import xic.XicException;
 import xic.XicInternalException;
+
+import static type.TypeException.Kind.*;
 
 /**
  * Main type checking implementation. Recursively traverses the AST
@@ -14,66 +18,91 @@ import xic.XicInternalException;
  * Specification. This implementation mutates the provided AST, decorating
  * each node with a Type field.
  */
-public class TypeChecker extends Visitor<Type> {
+public class TypeChecker extends ASTVisitor<Type> {
 
     /**
-     * Factory method to type check the given AST and return the 
+     * Factory method to type check the given AST and return the
      * associated function context.
      * @param lib Directory to search for interface files
      * @param ast AST to typecheck
      * @throws XicException if a semantic error was found
      */
-    public static FnContext check(String lib, Node ast) throws XicException {
+    public static GlobalContext check(String lib, Node ast) throws XicException {
         TypeChecker checker = new TypeChecker(lib, ast);
         ast.accept(checker);
-        return checker.fns;
+        return checker.globalContext;
     }
 
     /**
      * Default constructor initializes empty contexts.
      */
     protected TypeChecker() {
-        this.fns = new FnContext();
-        this.types = new TypeContext();
-        this.vars = new VarContext();
+        this.globalContext = new GlobalContext();
+        this.inside = null;
+        this.returns = null;
+        this.initializing = true;
+        this.localContext = new LocalContext();
     }
 
     /**
      * This constructor initializes the FnContext with {@link Importer},
      * but leaves the other empty.
-     * 
+     *
      * @param lib Directory to search for interface files
      * @param ast AST to resolve dependencies for
      * @throws XicException if a semantic error occurred while resolving dependencies
      */
     private TypeChecker(String lib, Node ast) throws XicException {
-        this.fns = Importer.resolve(lib, ast);
-        this.types = new TypeContext();
-        this.vars = new VarContext();
+        this.lib = lib;
+        this.globalContext = new GlobalContext();
+        this.inside = null;
+        this.returns = null;
+        this.initializing = true;
+        this.localContext = new LocalContext();
     }
 
-    /**
-     * Associated function context.
-     */
-    protected FnContext fns;
+    private String lib;
 
-    /**
-     * Associated variable context.
-     */
-    protected VarContext vars;
-    
-    /**
-     * Associated type context.
-     */
-    private TypeContext types;
-    
+    protected GlobalContext globalContext;
+
+    private ClassType inside;
+    private ClassType explicit;
+
     /**
      * The current value of rho, the expected return
      * type for the current function in scope, as defined
      * in the type specification.
      */
-    private Type returns;
+    private List<Type> returns;
 
+    protected LocalContext localContext;
+
+    protected boolean initializing;
+
+    private boolean allSubclass(List<Type> subs, List<Type> supers) {
+        for (int i = 0; i < subs.size(); i++) {
+            Type sub = subs.get(i);
+            Type sup = supers.get(i);
+
+            // Equal classes can always be passed
+            if (sub.equals(sup)) continue;
+
+            // Unit superclasses all
+            if (sup.isUnit()) continue;
+
+            // Null subclasses objects and arrays
+            if (sub.isNull() && (sup.isClass() || sup.isArray())) continue;
+
+            // Polymorphic arrays can be passed as any array
+            if (sub.isPoly() && sup.isArray()) continue;
+
+            // Otherwise must check class hierarchy
+            if (sub.isClass() && sup.isClass() && globalContext.isSubclass((ClassType) sub, (ClassType) sup)) continue;
+
+            return false;
+        }
+        return true;
+    }
 
     /*
      * Visitor Methods ---------------------------------------------------------------------
@@ -82,6 +111,7 @@ public class TypeChecker extends Visitor<Type> {
     /**
      * Returns a list of types from visiting a list of nodes.
      */
+    @Override
     public List<Type> visit(List<Node> nodes) throws XicException {
         List<Type> types = new ArrayList<>();
         for (Node n : nodes) {
@@ -93,138 +123,308 @@ public class TypeChecker extends Visitor<Type> {
     /*
      * Top-level AST nodes
      */
-    
+
     /**
      * A program is valid if all of its top-level declarations
-     * are valid. Use statements and top-level declarations 
+     * are valid. Use statements and top-level declarations
      * are checked by {@link Importer},
      * while function bodies are checked by this class.
-     * 
-     * @returns {@link Type.UNIT} if program is valid
+     *
+     * @returns {@link TypeCheck.UNIT} if program is valid
      * @throws XicException if program has semantic errors
      */
-    public Type visit(Program p) throws XicException {
-        for (Node fn : p.fns) {
-            fn.accept(this);
+    @Override
+    public Type visit(XiProgram p) throws XicException {
+
+        // Initially visit all dependencies recursively
+        // Global context now contains all used interfaces
+        // Two cases: may or may not include interface for this module
+        for (Node n : p.uses) {
+            XiUse u = (XiUse) n;
+            if (!globalContext.merge(Importer.resolve(lib, u.file))) {
+                throw new TypeException(INCOMPATIBLE_USE, u.location);
+            }
         }
-        p.type = Type.UNIT;
+
+        // First pass to populate global variables
+        for (Node n : p.body) {
+            if (n instanceof XiGlobal) {
+
+                // Required try/catch if an array global uses other globals e.g.
+                // ARR: int[LEN]
+                // LEN: int = 5
+                try { n.accept(this); } catch (XicException e) {}
+            }
+        }
+
+        // Second pass to finish populating global variables
+        for (Node n : p.body) {
+            if (n instanceof XiGlobal && n.type == null) n.accept(this);
+        }
+
+        // Third pass to check top-level definitions against the interface
+        // Or to add them to the global context if not in the interface
+        for (Node n : p.body) {
+            if (n instanceof XiGlobal) continue;
+            if (n instanceof XiClass) {
+                XiClass c = (XiClass) n;
+                ClassType ct = new ClassType(c.id);
+                ClassContext cc = new ClassContext();
+
+                // Lazily extend superclasses
+                if (c.parent != null) globalContext.extend(ct, new ClassType(c.parent));
+
+                for (Node m : c.body) {
+
+                    localContext.push();
+                    if (m instanceof XiFn) {
+                        XiFn f = (XiFn) m;
+
+                        // Prevent shadowing between methods and inherited fields
+                        if (globalContext.inherits(ct, f.id) != null) {
+                            if (globalContext.inherits(ct, f.id).isField()) {
+                                throw new TypeException(DECLARATION_CONFLICT, m.location);
+                            }
+                        }
+
+                        MethodType mt = new MethodType(ct, visit(f.args), visit(f.returns));
+                        cc.put(f.id, mt);
+                    } else if (m instanceof XiDeclr) {
+                        XiDeclr d = (XiDeclr) m;
+
+                        // Prevent shadowing between fields and inherited methods
+                        if (globalContext.inherits(ct, d.id) != null) {
+                            if (globalContext.inherits(ct, d.id).isMethod()) {
+                                throw new TypeException(DECLARATION_CONFLICT, m.location);
+                            }
+                        }
+
+                        cc.put(d.id, (FieldType) d.xiType.accept(this));
+                        d.type = d.xiType.type;
+                    }
+                    localContext.pop();
+                }
+
+                // Check conformance with interface
+                // If successful, update ClassContext with class fields
+                if (globalContext.contains(ct)) {
+                    ClassContext reference = globalContext.lookup(ct);
+
+                    // Must implement all methods in interface
+                    if (reference.getMethods().size() != cc.getMethods().size()) {
+                        throw new TypeException(MISMATCHED_INTERFACE, c.location);
+                    }
+
+                    // Must have the same type as all methods in interface
+                    for (String method : cc.getMethods()) {
+                        if (!reference.lookupMethod(method).equals(cc.lookupMethod(method))) {
+                            throw new TypeException(MISMATCHED_INTERFACE, c.location);
+                        }
+                    }
+
+                    // Update interface with private class fields
+                    for (String field : cc.getFields()) {
+                        reference.put(field, cc.lookupField(field));
+                    }
+                    globalContext.put(c.id, reference);
+                }
+
+                // Otherwise update global context with class information
+                else {
+                    globalContext.put(c.id, cc);
+                }
+
+                // Update module local set
+                globalContext.setLocal(c.id);
+            }
+
+            if (n instanceof XiFn) {
+                XiFn f = (XiFn) n;
+
+                localContext.push();
+                FnType ft = new FnType(visit(f.args), visit(f.returns));
+                f.type = ft;
+                localContext.pop();
+
+                // Exists in interface
+                if (globalContext.contains(f.id)) {
+
+                    GlobalType gt = globalContext.lookup(f.id);
+
+                    // Incorrect shadowing
+                    if (!ft.equals(gt) || globalContext.isLocal(f.id)) {
+                        throw new TypeException(DECLARATION_CONFLICT, f.location);
+                    }
+                }
+
+                // Otherwise add to global context
+                else {
+                    globalContext.put(f.id, ft);
+                }
+
+                // Update module local set
+                globalContext.setLocal(f.id);
+            }
+        }
+
+        // Turn on strict type checks for XiDeclr and XiGlobal,
+        // required to handle circular dependencies
+        initializing = false;
+
+        // Fourth pass to populate function and method bodies
+        for (Node n : p.body) {
+            n.accept(this);
+        }
+
+        p.type = UnitType.UNIT;
         return p.type;
+    }
+
+    @Override
+    public Type visit(XiGlobal g) throws XicException {
+
+        // Declaration; must be either array or class
+        if (g.stmt instanceof XiDeclr) {
+            XiDeclr declr = (XiDeclr) g.stmt;
+
+            if (initializing && globalContext.contains(declr.id)) {
+                throw new TypeException(DECLARATION_CONFLICT, g.location);
+            }
+
+            globalContext.put(declr.id, (GlobalType) declr.xiType.accept(this));
+            declr.type = declr.xiType.type;
+            g.type = declr.xiType.type;
+            return g.type;
+        }
+
+        // Literal assisgnment; must be XiInt or XiBool
+        if (g.stmt instanceof XiAssign) {
+            XiAssign assign = (XiAssign) g.stmt;
+            XiVar var = (XiVar) assign.lhs.get(0);
+
+            if (initializing && globalContext.contains(var.id)) {
+                throw new TypeException(DECLARATION_CONFLICT, g.location);
+            }
+
+            var.type = assign.rhs.accept(this);
+            globalContext.put(var.id, (GlobalType) var.type);
+            g.type = var.type;
+            return g.type;
+        }
+
+        throw new XicInternalException("XiGlobal must be XiDeclr or XiAssign");
+    }
+
+    @Override
+    public Type visit(XiClass c) throws XicException {
+
+        inside = new ClassType(c.id);
+        if (!globalContext.validate(inside)) throw new TypeException(INVALID_OVERRIDE, c.location);
+
+        // Populate class method bodies
+        for (Node n : c.body) {
+            if (n instanceof XiDeclr) {
+                ((XiDeclr) n).xiType.accept(this);
+            } else if (n instanceof XiFn) {
+                // Shadowing class method against top-level declaration
+                if (globalContext.contains(((XiFn) n).id)) throw new TypeException(DECLARATION_CONFLICT, n.location);
+                n.accept(this);
+            }
+        }
+
+        c.type = inside;
+        inside = null;
+        return c.type;
     }
 
     /**
      * A function is valid if none of its arguments
      * shadow anything in the context, and its block is
      * void if it has return types.
-     * 
-     * @returns {@link Type.UNIT} is function is valid
+     *
+     * @returns {@link TypeCheck.UNIT} is function is valid
      * @throws XicException if function has semantic errors
      */
-    public Type visit(Fn f) throws XicException {
-        vars.push();
-        FnType fnType = fns.lookup(f.id);
-        if (fnType == null) {
-            // Internal error occurred; should never happen
-            throw XicInternalException.runtime("Function not found. Fix Importer.");
-        }
+    @Override
+    public Type visit(XiFn f) throws XicException {
 
+        localContext.push();
         visit(f.args);
-        returns = fnType.returns;
-        Type ft = f.block.accept(this);
+        visit(f.returns);
+        FnType ft = null;
 
-        if (f.isFn() && !ft.equals(Type.VOID)) {
-            throw new TypeException(Kind.CONTROL_FLOW, f.location);
+        if (inside != null && globalContext.inherits(inside, f.id) != null && globalContext.inherits(inside, f.id).isMethod()) {
+            ft = (FnType) globalContext.inherits(inside, f.id);
+        } else if (globalContext.contains(f.id) && globalContext.lookup(f.id).isFn()) {
+            ft = (FnType) globalContext.lookup(f.id);
+        } else {
+            throw new XicException("Contexts not initialized properly");
         }
 
-        vars.pop();
-        f.type = Type.UNIT;
+        returns = ft.getReturns();
+        Type bt = f.block.accept(this);
+
+        // Edge case: last statement is procedure
+        if (f.isFn() && !bt.isVoid()) throw new TypeException(CONTROL_FLOW, f.location);
+
+        localContext.pop();
+        f.type = ft;
         return f.type;
     }
 
     /*
      * Statement nodes
      */
-    
-    /**
-     * A declaration is valid if it doesn't shadow anything in the context.
-     * 
-     * @returns typeof(declaration) if valid
-     * @throws XicException if a conflict was found
-     */
-    public Type visit(Declare d) throws XicException {
-        if (d.isUnderscore()) {
-            d.type = Type.UNIT;
-        } else if (vars.contains(d.id) || fns.contains(d.id)) {
-            throw new TypeException(Kind.DECLARATION_CONFLICT, d.location);
-        } else {
-            d.type = d.xiType.accept(this);
-            vars.add(d.id, d.type);
-        }
-        return d.type;
-    }
 
     /**
      * An assignment is valid if each type on the RHS is a subtype of the
      * corresponding type on the LHS, and the number of types is matched.
-     * 
+     *
      * Additionally, a procedure cannot be assigned to anything, and only
      * function calls can have wildcards on the LHS.
-     * 
-     * @returns {@link Type.UNIT} if valid
+     *
+     * @returns {@link TypeCheck.UNIT} if valid
      * @throws XicException if invalid assignment
      */
-    public Type visit(Assign a) throws XicException {
-        Type rt = a.rhs.accept(this);
-        Type lt = Type.tupleFromList(visit(a.lhs));
+    @Override
+    public Type visit(XiAssign a) throws XicException {
 
-        if (!types.isSubType(rt, lt)) {
-            throw new TypeException(Kind.MISMATCHED_ASSIGN, a.location);
+        Type right = a.rhs.accept(this);
+        List<Type> lt = visit(a.lhs);
+
+        // Only function calls can use wildcards
+        if (lt.stream().anyMatch(t -> t.isUnit()) && !(a.rhs instanceof XiCall)) {
+            throw new TypeException(INVALID_WILDCARD, a.location);
         }
 
-        if (lt.equals(Type.UNIT) && !(a.rhs instanceof Call)) {
-            throw new TypeException(Kind.INVALID_WILDCARD, a.location);
+        // Procedures are disallowed in an assign
+        if (a.rhs instanceof XiCall && right.isUnit()) {
+            throw new TypeException(MISMATCHED_ASSIGN, a.location);
         }
 
-        a.type = Type.UNIT;
+        // Right hand side must subtype left hand side
+        List<Type> rt = right.isTuple() ? ((TupleType) right).getTuple() : List.of(right);
+
+        if (lt.size() != rt.size() || !allSubclass(rt, lt)) {
+            throw new TypeException(MISMATCHED_ASSIGN, a.location);
+        }
+
+        a.type = UnitType.UNIT;
         return a.type;
     }
 
     /**
-     * A return is valid if its type matches {@link TypeChecker#returns}
-     * 
-     * @returns {@link Type.VOID} if return type matches {@link TypeChecker#returns}
-     * @throws XicException if return type doesn't match
-     */
-    public Type visit(Return r) throws XicException {
-        if (r.hasValues()) {
-            Type value = Type.tupleFromList(visit(r.values));
-            for (Node n : r.values) {
-                if (n instanceof Call) {
-                    if (n.type.kind.equals(Type.Kind.TUPLE)) {
-                        throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
-                    }
-                }
-            }
-            if (!value.equals(Type.UNIT) && returns.equals(value)) {
-                r.type = Type.VOID;
-                return r.type;
-            }
-        } else if (returns.equals(Type.UNIT)) {
-            r.type = Type.VOID;
-            return r.type;
-        }
-        throw new TypeException(Kind.MISMATCHED_RETURN, r.location);
-    }
-
-    /**
      * A block is valid if each statement is valid, and no statement before the
-     * last one is type {@link Type.VOID}.
-     * 
+     * last one is type {@link TypeCheck.VOID}.
+     *
      * @returns The type of the last statement
      * @throws XicException if invalid
      */
-    public Type visit(Block b) throws XicException {
-        b.type = Type.UNIT;
-        vars.push();
+    @Override
+    public Type visit(XiBlock b) throws XicException {
+
+        b.type = UnitType.UNIT;
+        localContext.push();
         int size = b.statements.size();
 
         for (int i = 0; i < size; i++) {
@@ -233,70 +433,152 @@ public class TypeChecker extends Visitor<Type> {
             Type st = s.accept(this);
 
             // Unused function result
-            if (!st.equals(Type.VOID) && !st.equals(Type.UNIT) && s instanceof Call) {
-                throw new TypeException(Kind.UNUSED_FUNCTION, b.statements.get(i).location);
+            if (!st.isVoid() && !st.isUnit() && s instanceof XiCall) {
+                throw new TypeException(UNUSED_FUNCTION, b.statements.get(i).location);
             }
 
             // Unreachable code
-            if (i < size - 1 && st.equals(Type.VOID)) {
-                throw new TypeException(Kind.UNREACHABLE, b.statements.get(i + 1).location);
+            if (i < size - 1 && st.isVoid()) {
+                throw new TypeException(UNREACHABLE, b.statements.get(i + 1).location);
             } else {
-                b.type = st.equals(Type.VOID) ? Type.VOID : Type.UNIT;
+                b.type = st.isVoid() ? VoidType.VOID : UnitType.UNIT;
             }
         }
-        vars.pop();
+
+        localContext.pop();
         return b.type;
     }
 
     /**
-     * An if statement is valid if its guard is {@link Type.BOOL} and its block is valid.
-     * 
-     * @returns If both blocks are {@link Type.VOID}, then Type.VOID, otherwise Type.UNIT
-     * @throws XicException if invalid
+     * PA7: A break has type void.
+     *
+     * @returns {@link TypeCheck.VOID}
      */
-    public Type visit(If i) throws XicException {
-        if (!i.guard.accept(this).equals(Type.BOOL)) {
-            throw new TypeException(Kind.INVALID_GUARD, i.guard.location);
+    @Override
+    public Type visit(XiBreak b) throws XicException {
+        b.type = VoidType.VOID;
+        return VoidType.VOID;
+    }
+
+    /**
+     * A declaration is valid if it doesn't shadow anything in the context.
+     *
+     * @returns typeof(declaration) if valid
+     * @throws XicException if a conflict was found
+     */
+    @Override
+    public Type visit(XiDeclr d) throws XicException {
+
+        // Early return: underscore binds nothing
+        if (d.isUnderscore()) {
+            d.type = UnitType.UNIT;
+            return d.type;
         }
 
+        // Check against local and global contexts
+        if (localContext.contains(d.id) || globalContext.contains(d.id)) throw new TypeException(DECLARATION_CONFLICT, d.location);
+
+        d.type = d.xiType.accept(this);
+        localContext.add(d.id, (FieldType) d.type);
+        return d.type;
+    }
+
+    /**
+     * An if statement is valid if its guard is {@link TypeCheck.BOOL} and its block is valid.
+     *
+     * @returns If both blocks are {@link TypeCheck.VOID}, then Type.VOID, otherwise Type.UNIT
+     * @throws XicException if invalid
+     */
+    @Override
+    public Type visit(XiIf i) throws XicException {
+
+        if (!i.guard.accept(this).isBool()) throw new TypeException(INVALID_GUARD, i.guard.location);
+
         // Check if the statement is followed by a single statement
-        if (!(i.block instanceof Block)) {
-            i.block = new Block(i.block.location, i.block);
+        if (!(i.block instanceof XiBlock)) {
+            i.block = new XiBlock(i.block.location, i.block);
         }
+
         Type it = i.block.accept(this);
-        
         Type et = null;
+
         if (i.hasElse()) {
-            if (!(i.elseBlock instanceof Block)) {
-                i.elseBlock = new Block(i.elseBlock.location, i.elseBlock);
+            if (!(i.elseBlock instanceof XiBlock)) {
+                i.elseBlock = new XiBlock(i.elseBlock.location, i.elseBlock);
             }
             et = i.elseBlock.accept(this);
         }
 
-        if (et != null && it.equals(Type.VOID) && et.equals(Type.VOID)) {
-            i.type = Type.VOID;
+        if (et != null && it.isVoid() && et.isVoid()) {
+            i.type = VoidType.VOID;
         } else {
-            i.type = Type.UNIT;
+            i.type = UnitType.UNIT;
         }
         return i.type;
     }
 
     /**
-     * A while statement is valid if its guard is {@link Type.BOOL} and its block is valid.
-     * 
-     * @returns {@link Type.UNIT} if valid
-     * @throws XicException if invalid
+     * A return is valid if its type matches {@link TypeChecker#returns}
+     *
+     * @returns {@link TypeCheck.VOID} if return type matches {@link TypeChecker#returns}
+     * @throws XicException if return type doesn't match
      */
-    public Type visit(While w) throws XicException {
-        if (!w.guard.accept(this).equals(Type.BOOL)) {
-            throw new TypeException(Kind.INVALID_GUARD, w.guard.location);
+    @Override
+    public Type visit(XiReturn r) throws XicException {
+
+        // Procedure; no values returned
+        if (returns.get(0).isUnit()) {
+            if (r.hasValues()) throw new TypeException(MISMATCHED_RETURN, r.location);
+
+            r.type = VoidType.VOID;
+            return r.type;
         }
 
-        if (!(w.block instanceof Block)) {
-            w.block = new Block(w.block.location, w.block);
+        // Returning values
+        else if (r.hasValues()) {
+            List<Type> values = visit(r.values);
+
+            for (Node n : r.values) {
+                if (n instanceof XiCall && n.type.isTuple()) {
+                    throw new TypeException(MISMATCHED_RETURN, r.location);
+                }
+            }
+
+            if (values.size() != returns.size() || !allSubclass(values, returns)) {
+                throw new TypeException(MISMATCHED_RETURN, r.location);
+            }
+
+            r.type = VoidType.VOID;
+            return r.type;
         }
+
+        throw new TypeException(MISMATCHED_RETURN, r.location);
+    }
+
+    // Should be removed in desugaring
+    @Override
+    public Type visit(XiSeq s) throws XicException {
+        throw XicInternalException.runtime("Did not desugar AST.");
+    }
+
+    /**
+     * A while statement is valid if its guard is {@link TypeCheck.BOOL} and its block is valid.
+     *
+     * @returns {@link TypeCheck.UNIT} if valid
+     * @throws XicException if invalid
+     */
+    @Override
+    public Type visit(XiWhile w) throws XicException {
+        if (!w.guard.accept(this).isBool()) {
+            throw new TypeException(INVALID_GUARD, w.guard.location);
+        }
+
+        if (!(w.block instanceof XiBlock)) {
+            w.block = new XiBlock(w.block.location, w.block);
+        }
+
         w.block.accept(this);
-        w.type = Type.UNIT;
+        w.type = UnitType.UNIT;
         return w.type;
     }
 
@@ -305,210 +587,361 @@ public class TypeChecker extends Visitor<Type> {
      */
 
     /**
-     * A function call is valid if the arguments match the function's arguments.
-     */
-    public Type visit(Call c) throws XicException {
-        if (c.id.equals("length")) {
-            Type arg = c.args.get(0).accept(this);
-            if (!arg.isArray()) {
-                throw new TypeException(Kind.NOT_AN_ARRAY, c.location);
-            }
-            c.type = Type.INT;
-            return c.type;
-        } else {
-            FnType fn = fns.lookup(c.id);
-            if (fn == null) {
-                throw new TypeException(Kind.SYMBOL_NOT_FOUND, c.location);
-            }
-
-            Type args = Type.listFromList(visit(c.args));
-            if (args.equals(fn.args)) {
-                c.type = fn.returns;
-                return c.type;
-            } else {
-                throw new TypeException(Kind.INVALID_ARG_TYPES, c.location);
-            }
-        }
-    }
-
-    /**
      * A binary operation is valid if the types of the operands and the operator match.
      */
-    public Type visit(Binary b) throws XicException {
+    @Override
+    public Type visit(XiBinary b) throws XicException {
         Type lt = b.lhs.accept(this);
         Type rt = b.rhs.accept(this);
 
-        if (!lt.equals(rt)) {
-            throw new TypeException(Kind.MISMATCHED_BINARY, b.location);
+        // Special cases: class comparisons and array comparisons
+        if (b.kind == XiBinary.Kind.EQ || b.kind == XiBinary.Kind.NE) {
+
+            // Class comparisons are privately scoped, except when comparing to null
+            if ((lt.isClass() && (lt.equals(inside) || rt.isNull()))
+            ||  (rt.isClass() && (rt.equals(inside) || lt.isNull()))
+            ||  (lt.isNull()  && rt.isNull())
+            ||  (lt.isClass() && lt.equals(inside) && rt.isClass() && rt.equals(inside))) {
+                b.type = BoolType.BOOL;
+                return b.type;
+            }
+
+            // Arrays can always be compared to null
+            if ((lt.isArray() && rt.isNull())
+            ||  (rt.isArray() && lt.isNull())
+            ||  (lt.isNull()  && rt.isNull())) {
+                b.type = BoolType.BOOL;
+                return b.type;
+            }
         }
 
-        if (lt.equals(Type.INT) && b.acceptsInt()) {
-            if (b.returnsBool()) {
-                b.type = Type.BOOL;
-            } else {
-                b.type = Type.INT;
-            } 
-        } else if (lt.equals(Type.BOOL) && b.acceptsBool()) {
-            b.type = Type.BOOL;
-        } else if (lt.kind.equals(Type.Kind.ARRAY) && b.acceptsList()) {
-            if (b.returnsBool()) {
-                b.type = Type.BOOL;
-            } else {
-                b.type = lt;
-            }
+        // Special case: polymorphic array coercion
+        if (lt.isPoly() && rt.isArray()) {
+            b.lhs.type = b.rhs.type;
+            lt = rt;
+        } else if (rt.isPoly() && lt.isArray()) {
+            b.rhs.type = b.lhs.type;
+            rt = lt;
+        }
+
+        if (!lt.equals(rt)) {
+            throw new TypeException(MISMATCHED_BINARY, b.location);
+        }
+
+        if (lt.isInt() && b.acceptsInt()) {
+            b.type = b.returnsBool() ? BoolType.BOOL : IntType.INT;
+        } else if (lt.isBool() && b.acceptsBool()) {
+            b.type = BoolType.BOOL;
+        } else if (lt.isArray() || lt.isPoly() && b.acceptsList()) {
+            b.type = lt;
         } else {
-            throw new TypeException(Kind.INVALID_BIN_OP, b.location);
+            throw new TypeException(INVALID_BIN_OP, b.location);
         }
         return b.type;
     }
 
     /**
+     * A function call is valid if the arguments match the function's arguments.
+     */
+    @Override
+    public Type visit(XiCall c) throws XicException {
+
+        // Early return: builtin length function
+        if (c.id instanceof XiVar && ((XiVar) c.id).id.equals("length")) {
+            XiVar fn = (XiVar) c.id;
+
+            if (c.args.size() != 1 || !(c.args.get(0).accept(this).isArray() || c.args.get(0).type.isPoly())) {
+                throw new TypeException(NOT_AN_ARRAY, c.location);
+            }
+
+            c.type = IntType.INT;
+            return c.type;
+        }
+
+        Type t = c.id.accept(this);
+        if (!t.isFn()) throw new TypeException(INVALID_CALL, c.location);
+        FnType ft = (FnType) t;
+
+        // Check parameter passing for both function and method
+        List<Type> caller = visit(c.args);
+        List<Type> called = ft.getArgs();
+
+        if (caller.size() != called.size()) throw new TypeException(INVALID_ARG_TYPES, c.location);
+        if (!allSubclass(caller, called)) throw new TypeException(INVALID_ARG_TYPES, c.location);
+
+        switch (ft.getReturns().size()) {
+        case 0:
+            throw new XicInternalException("Invalid function typing");
+        case 1:
+            c.type = ft.getReturns().get(0);
+            break;
+        default:
+            c.type = new TupleType(ft.getReturns());
+            break;
+        }
+
+        return c.type;
+    }
+
+    @Override
+    public Type visit(XiDot d) throws XicException {
+
+        // LHS of dot operator must be class
+        Type lt = d.lhs.accept(this);
+        if (!lt.isClass()) throw new TypeException(INVALID_DOT, d.lhs.location);
+
+        // Temporarily scope rhs class
+        explicit = (ClassType) lt;
+        d.type = d.rhs.accept(this);
+        explicit = null;
+        return d.type;
+    }
+
+    /**
+     * An array index is valid if the array child is {@link TypeCheck.Kind.ARRAY}, and the
+     * index child is {@link TypeCheck.INT}
+     */
+    @Override
+    public Type visit(XiIndex i) throws XicException {
+        Type it = i.index.accept(this);
+        Type at = i.array.accept(this);
+
+        if (!it.isInt()) throw new TypeException(INVALID_ARRAY_INDEX, i.index.location);
+        if (at.isPoly()) throw new TypeException(EMPTY_ARRAY_INDEX, i.array.location);
+        if (!at.isArray()) throw new TypeException(NOT_AN_ARRAY, i.array.location);
+
+        ArrayType a = (ArrayType) at;
+        i.type = a.getChild();
+        return i.type;
+    }
+
+    @Override
+    public Type visit(XiNew n) throws XicException {
+        ClassType ct = new ClassType(n.name);
+        if (!globalContext.isLocal(n.name)) throw new TypeException(UNBOUND_NEW, n.location);
+        n.type = ct;
+        return n.type;
+    }
+
+    /**
      * A unary operator is valid if the type of the operator and operand match.
-     * 
+     *
      * @returns The type of the operator if valid
      * @throws XicException if operator mismatch
      */
-    public Type visit(Unary u) throws XicException {
+    @Override
+    public Type visit(XiUnary u) throws XicException {
         Type ut = u.child.accept(this);
-        if (u.isLogical()) {
-            if (ut.equals(Type.BOOL)) {
-                u.type = Type.BOOL;
-            } else {
-                throw new TypeException(Kind.LNEG_ERROR, u.location);
-            }
-        } else {
-            if (ut.equals(Type.INT)) {
-                u.type = Type.INT;
-            } else {
-                throw new TypeException(Kind.NEG_ERROR, u.location);
-            }
-        }
+
+        if (u.isLogical() && !ut.isBool()) throw new TypeException(LNEG_ERROR, u.location);
+        if (!u.isLogical() && !ut.isInt()) throw new TypeException(NEG_ERROR, u.location);
+
+        u.type = ut;
         return u.type;
     }
 
     /**
      * A variable lookup is valid if the variable exists in the context.
-     * 
+     *
      * @returns typeof(variable) if valid
      * @throws XicException if invalid
      */
-    public Type visit(Var v) throws XicException {
-        v.type = vars.lookup(v.id);
-        if (v.type == null) {
-            throw new TypeException(TypeException.Kind.SYMBOL_NOT_FOUND, v.location);
+    @Override
+    public Type visit(XiVar v) throws XicException {
+
+        // Explicit scoping
+        if (explicit != null && globalContext.inherits(explicit, v.id) != null) {
+            v.type = globalContext.inherits(explicit, v.id);
+            return v.type;
         }
-        return v.type;
-    }
 
-    /**
-     * An array index is valid if the array child is {@link Type.Kind.ARRAY}, and the
-     * index child is {@link Type.INT}
-     */
-    public Type visit(Index i) throws XicException {
-        Type it = i.index.accept(this);
-        Type at = i.array.accept(this);
-
-        if (!it.equals(Type.INT)) {
-            throw new TypeException(Kind.INVALID_ARRAY_INDEX, i.index.location);
-        } else if (at.kind != Type.Kind.ARRAY) {
-            throw new TypeException(Kind.NOT_AN_ARRAY, i.array.location);
-        } else {
-            i.type = at.children.get(0);
-            return i.type;
+        // Local context contains symbol
+        if (localContext.contains(v.id)) {
+            v.type = localContext.lookup(v.id);
+            return v.type;
         }
+
+        // Class context contains symbol
+        if (inside != null && globalContext.inherits(inside, v.id) != null) {
+            v.type = globalContext.inherits(inside, v.id);
+            return v.type;
+        }
+
+        // Must be valid global symbol
+        if (globalContext.contains(v.id)) {
+            v.type = globalContext.lookup(v.id);
+            return v.type;
+        }
+
+        // Early return: symbol not found
+        throw new TypeException(SYMBOL_NOT_FOUND, v.location);
+    }
+
+    /*
+     * Constant nodes
+     */
+
+    /**
+     * A XiArray is valid if its children are the same type.
+     *
+     * The 0-length array is polymorphic and has special type {@link TypeCheck.POLY},
+     * which is equal to all array types.
+     *
+     * Arrays of classes typecheck to the LUB of all classes.
+     *
+     * @returns Array of child types
+     * @throws XicException if invalid
+     */
+    @Override
+    public Type visit(XiArray a) throws XicException {
+
+        List<Type> types = new ArrayList<>();
+        for (Node value : a.values) {
+            types.add(value.accept(this));
+        }
+
+        // Early return: empty literal array
+        if (a.values.size() == 0) {
+            a.type = PolyType.POLY;
+            return a.type;
+        }
+
+        // Early return: entirely polymorphic array
+        if (types.stream().allMatch(elem -> elem.isPoly())) {
+            a.type = PolyType.POLY;
+            return a.type;
+        }
+
+        // Otherwise must be at least one non-polymorphic element
+        Type reference = types.stream()
+            .filter(elem -> !elem.isPoly() && !elem.isNull())
+            .findFirst()
+            .get();
+
+        for (int i = 0; i < types.size(); i++) {
+
+            Type type = types.get(i);
+
+            // Ignore null types
+            if (type.isNull() && reference.isClass()) continue;
+
+            // Coerce polymorphic types
+            if (type.isPoly() && reference.isArray()) {
+                type = reference;
+                a.values.get(i).type = reference;
+            }
+
+            // Coerce subtypes upward to LUB
+            if (reference.isClass() && type.isClass()) {
+                ClassType rt = (ClassType) reference;
+                ClassType ct = (ClassType) type;
+                if (globalContext.isSubclass(rt, ct)) {
+                    reference = type;
+                }
+                else if (!globalContext.isSubclass(ct, rt)) {
+                    throw new TypeException(NOT_UNIFORM_ARRAY, a.values.get(i).location);
+                }
+            }
+
+            else if (!type.equals(reference)) {
+                throw new TypeException(NOT_UNIFORM_ARRAY, a.values.get(i).location);
+            }
+        }
+
+        a.type = new ArrayType(reference);
+        return a.type;
     }
 
     /**
-     * A XiInt is always {@link Type.INT}
-     * 
-     * @returns {@link Type.INT}
+     * A XiBool is always {@link TypeCheck.BOOL}
+     *
+     * @returns {@link TypeCheck.BOOL}
      */
-    public Type visit(XiInt i) {
-        i.type = Type.INT;
-        return i.type;
-    }
-
-    /**
-     * A XiBool is always {@link Type.BOOL}
-     * 
-     * @returns {@link Type.BOOL}
-     */
+    @Override
     public Type visit(XiBool b) {
-        b.type = Type.BOOL;
+        b.type = BoolType.BOOL;
         return b.type;
     }
 
     /**
-     * A XiChar is always {@link Type.INT}
-     * 
-     * @returns {@link Type.INT}
+     * A XiChar is always {@link TypeCheck.INT}
+     *
+     * @returns {@link TypeCheck.INT}
      */
+    @Override
     public Type visit(XiChar c) {
-        c.type = Type.INT;
+        c.type = IntType.INT;
         return c.type;
     }
 
     /**
-     * A XiString is always a {@link Type.Kind.ARRAY} of {@link Type.INT}
-     * 
-     * @returns Array of {@link Type.INT}
+     * A XiInt is always {@link TypeCheck.INT}
+     *
+     * @returns {@link TypeCheck.INT}
      */
-    public Type visit(XiString s) {
-        s.type = new Type(Type.INT);
-        return s.type;
+    @Override
+    public Type visit(XiInt i) {
+        i.type = IntType.INT;
+        return i.type;
+    }
+
+    @Override
+    public Type visit(XiNull n) throws XicException {
+        n.type = NullType.NULL;
+        return n.type;
     }
 
     /**
-     * A XiArray is valid if its children are the same type.
-     * 
-     * The 0-length array is polymorphic and has special type {@link Type.POLY},
-     * which is equal to all array types.
-     * 
-     * @returns Array of child types
-     * @throws XicException if invalid
+     * A XiString is always a {@link TypeCheck.Kind.ARRAY} of {@link TypeCheck.INT}
+     *
+     * @returns Array of {@link TypeCheck.INT}
      */
-    public Type visit(XiArray a) throws XicException {
-        if (a.values.size() == 0) {
-            a.type = Type.POLY;
-            return Type.POLY;
-        } else {
-            Type arrayType = a.values.get(0).accept(this);
+    @Override
+    public Type visit(XiString s) {
+        s.type = new ArrayType(IntType.INT);
+        return s.type;
+    }
 
-            for (int i = 1; i < a.values.size(); i++) {
-                Type elemType = a.values.get(i).accept(this);
-                if (arrayType.isPoly()) {
-                    arrayType = elemType;
-                } else if (!arrayType.equals(elemType)) {
-                    throw new TypeException(Kind.NOT_UNIFORM_ARRAY, a.location);
-                }
-            }
-
-            // Iterate through elements again to coerce all types 
-            for (int i = 0; i < a.values.size(); i++) {
-                Type elemType = a.values.get(i).accept(this);
-                elemType.equals(arrayType);
-            }
-            
-            a.type = new Type(arrayType);
-            return a.type;
-        }
+    @Override
+    public Type visit(XiThis t) throws XicException {
+        if (inside == null) throw new TypeException(UNBOUND_THIS, t.location);
+        t.type = inside;
+        return t.type;
     }
 
     /**
      * A XiType is equal to its corresponding Type.
-     * 
+     *
      * @returns Corresponding type
      * @throws XicException if array type with invalid size
      */
+    @Override
     public Type visit(XiType t) throws XicException {
-        t.type = new Type(t);
-        
-        if (t.hasSize() && !t.size.accept(this).equals(Type.INT)) {
-            throw new TypeException(Kind.INVALID_ARRAY_SIZE, t.size.location);
+
+        // Check for size expression
+        if (t.hasSize() && !t.size.accept(this).equals(IntType.INT)) {
+            throw new TypeException(INVALID_ARRAY_SIZE, t.size.location);
         }
 
-        if (t.child != null) {
-            t.child.accept(this);
+        // Check for array type
+        if (t.isArray()) {
+            t.type = new ArrayType(t.child.accept(this));
+            return t.type;
+        }
+
+        // Must be primitive or class
+        switch (t.id) {
+        case "int":
+            t.type = IntType.INT;
+            break;
+        case "bool":
+            t.type = BoolType.BOOL;
+            break;
+        default:
+            ClassType ct = new ClassType(t.id);
+            if (!initializing && !globalContext.contains(ct)) throw new TypeException(SYMBOL_NOT_FOUND, t.location);
+            t.type = ct;
+            break;
         }
 
         return t.type;

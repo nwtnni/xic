@@ -59,13 +59,14 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
         return instr.accept(this);
     }
 
+    // TODO: this is sketchy
     /**
-     * Replaces [from] Temps inside [mem] with [to].
+     * Gets temps inside [mem].
      */
-    private Set<Reg> replace(Mem<Temp> mem) {
+    private Set<Reg> checkMem(Mem<Temp> mem) {
         switch (mem.kind) {
         case BRSO:
-            return wrap(mem.base);
+            return union(wrap(mem.base), wrap(mem.reg));
         default:
             return wrap(mem.reg);
         }
@@ -82,17 +83,17 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
 
     @Override
     public Set<Reg> visit(BinOp.TIM b) {
-        return replace(b.dest);
+        return checkMem(b.dest);
     }
 
     @Override
     public Set<Reg> visit(BinOp.TRM b) {
-        return union(wrap(b.src), replace(b.dest));
+        return union(wrap(b.src), checkMem(b.dest));
     }
 
     @Override
     public Set<Reg> visit(BinOp.TMR b) {
-        return union(replace(b.src), wrap(b.dest));
+        return union(checkMem(b.src), wrap(b.dest));
     }
 
     @Override
@@ -105,8 +106,18 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
      */
 
     @Override
-    public Set<Reg> visit(Call.T c) {
+    public Set<Reg> visit(Call.TL c) {
         return EMPTY;
+    }
+
+    @Override
+    public Set<Reg> visit(Call.TR c) {
+        return wrap(c.name);
+    }
+
+    @Override
+    public Set<Reg> visit(Call.TM c) {
+        return checkMem(c.name);
     }
 
     /*
@@ -120,12 +131,12 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
 
     @Override
     public Set<Reg> visit(Cmp.TRM c) {
-        return union(wrap(c.left), replace(c.right));
+        return union(wrap(c.left), checkMem(c.right));
     }
 
     @Override
     public Set<Reg> visit(Cmp.TMR c) {
-        return union(replace(c.left), wrap(c.right));
+        return union(checkMem(c.left), wrap(c.right));
     }
 
     @Override
@@ -153,7 +164,7 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
 
     @Override
     public Set<Reg> visit(DivMul.TM d) {
-        return replace(d.src);
+        return checkMem(d.src);
     }
 
     /*
@@ -189,7 +200,7 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
 
     @Override
     public Set<Reg> visit(Lea.T l) {
-        return union(replace(l.src), wrap(l.dest));
+        return union(checkMem(l.src), wrap(l.dest));
     }
 
     /*
@@ -203,17 +214,17 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
 
     @Override
     public Set<Reg> visit(Mov.TIM m) {
-        return replace(m.dest);
+        return checkMem(m.dest);
     }
 
     @Override
     public Set<Reg> visit(Mov.TRM m) {
-        return union(wrap(m.src), replace(m.dest));
+        return union(wrap(m.src), checkMem(m.dest));
     }
 
     @Override
     public Set<Reg> visit(Mov.TMR m) {
-        return union(replace(m.src), wrap(m.dest));
+        return union(checkMem(m.src), wrap(m.dest));
     }
 
     @Override
@@ -221,6 +232,16 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
         return union(wrap(m.src), wrap(m.dest));
     }
     
+    @Override
+    public Set<Reg> visit(Mov.TLR m) {
+        return wrap(m.dest);
+    }
+
+    @Override
+    public Set<Reg> visit(Mov.TRL m) {
+        return wrap(m.src);
+    }
+
     /*
      * Pop Visitors
      */
@@ -232,7 +253,7 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
 
     @Override
     public Set<Reg> visit(Pop.TM p) {
-        return replace(p.dest);
+        return checkMem(p.dest);
     }
 
     /*
@@ -246,7 +267,7 @@ public class GetCalleeRegs extends InstrVisitor<Set<Reg>> {
 
     @Override
     public Set<Reg> visit(Push.TM p) {
-        return replace(p.src);
+        return checkMem(p.src);
     }
 
     /*

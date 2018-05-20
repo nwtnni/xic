@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // An Xi integer
-public class XiInt extends Node {
+public class XiInt extends Expr {
 
     public long value;
     public String literal;
@@ -17,7 +17,7 @@ public class XiInt extends Node {
         this.negated = negated;
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

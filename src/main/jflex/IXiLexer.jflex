@@ -107,6 +107,8 @@ Identifier = {Letter}({Digit}|{Letter}|_|')*
 {Comment}           { /* ignore */ }
 
 "use"               { return tokenize(USE); }
+"class"             { return tokenize(CLASS); }
+"extends"           { return tokenize(EXTENDS); }
 
 // primitive types
 "int"               { return tokenize(INT); }

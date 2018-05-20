@@ -1,20 +1,7 @@
 package ir;
 
-import java.util.List;
-import java.util.ArrayList;
-
+/** Base class IR level template for visitor pattern. */
 public abstract class IRVisitor<T> {
-
-    /*
-     * Psuedo-visit method for visiting a list of nodes.
-     */
-    public List<T> visit(List<IRNode> nodes) {
-        List<T> t = new ArrayList<>();
-        for (IRNode n : nodes) {
-            t.add(n.accept(this));
-        }
-        return t;
-    }
 
     /*
      * Top level nodes

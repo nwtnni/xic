@@ -24,15 +24,41 @@ public abstract class FuncDecl<A> {
      */
     public List<String> toAssembly() {
         List<String> instrs = new ArrayList<>();
+
+        // Add directives
+        instrs.add("# " + sourceName);
+        instrs.add(".globl " + name);
+        instrs.add(".align 4");
+
+        // Insert prelude
         for (Instr<A> i : prelude) {
-            instrs.add(i.toString());
+            String assembly = i.toString();
+            if (!(i instanceof Label || i instanceof Text)) {
+                assembly = "        " + assembly;
+            }
+            instrs.add(assembly);
         }
+
+        // Insert function body
         for (Instr<A> i : stmts) {
-            instrs.add(i.toString());
+            String assembly = i.toString();
+            if (!(i instanceof Label || i instanceof Text)) {
+                assembly = "        " + assembly;
+            }
+            instrs.add(assembly);
         }
+
+        // Insert epilogue
         for (Instr<A> i : epilogue) {
-            instrs.add(i.toString());
+            String assembly = i.toString();
+            if (!(i instanceof Label || i instanceof Text)) {
+                assembly = "        " + assembly;
+            }
+            instrs.add(assembly);
         }
+
+        instrs.add("");
+
         return instrs;
     }
 
@@ -65,25 +91,19 @@ public abstract class FuncDecl<A> {
 
             // Function prelude
             prelude = new ArrayList<>();
-            prelude.add(text("################################################################################"));
-            prelude.add(text(".globl " + name));
-            prelude.add(text(".align 4"));
             prelude.add(labelFromFn(fn));
-            prelude.add(comment("Stack Setup"));
             prelude.add(pushR(Temp.RBP));
             prelude.add(movRR(Temp.RSP, Temp.RBP));
-            prelude.add(comment("~~~Replace with subtract from %rsp here"));
+            prelude.add(comment("        Replace with subtract from %rsp here"));
 
             this.stmts = stmts;
 
             // Function epilogue
             epilogue = new ArrayList<>();
             epilogue.add(returnLabel);
-            epilogue.add(comment("Stack Teardown"));
-            epilogue.add(comment("~~~Replace with add to %rsp here:"));
+            epilogue.add(comment("        Replace with add to %rsp here:"));
             epilogue.add(popR(Temp.RBP));
             epilogue.add(ret());
-            epilogue.add(text(""));
         }
     }
 
@@ -97,23 +117,17 @@ public abstract class FuncDecl<A> {
             this.returnLabel = new Label.R(fn.returnLabel);
             this.stmts = new ArrayList<>();
             this.prelude = new ArrayList<>();
-            prelude.add(new Text.R("##########################################################################"));
-            prelude.add(new Text.R(".globl " + name));
-            prelude.add(new Text.R(".align 4"));
             prelude.add(new Label.R(fn.name + ":"));
-            prelude.add(new Text.R("# Stack Setup"));
             prelude.add(new Push.RR(Reg.RBP));
             prelude.add(new Mov.RRR(Reg.RSP, Reg.RBP));
-            prelude.add(new Text.R("# ~~~Replace with subtract from %rsp here"));
+            prelude.add(new Text.R("        # Replace with subtract from %rsp here"));
 
             // Function epilogue
             this.epilogue = new ArrayList<>();
             epilogue.add(returnLabel);
-            epilogue.add(new Text.R("# Stack Teardown"));
-            epilogue.add(new Text.R("# ~~~Replace with add to %rsp here:"));
+            epilogue.add(new Text.R("        # Replace with add to %rsp here:"));
             epilogue.add(new Pop.RR(Reg.RBP));
             epilogue.add(new Ret.R());
-            epilogue.add(new Text.R(""));
         }
 
         /** 
@@ -129,7 +143,7 @@ public abstract class FuncDecl<A> {
 
             // Insert stack teardown at beginning of epilogue
             BinOp<Imm, Reg, Reg> add = new BinOp.RIR(BinOp.Kind.ADD, shift, Reg.RSP);
-            epilogue.set(2, add);
+            epilogue.set(1, add);
         }
 
     }

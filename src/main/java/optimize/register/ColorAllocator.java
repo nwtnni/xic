@@ -71,7 +71,7 @@ public class ColorAllocator extends Allocator {
     }
 
     private CompUnit<Reg> allocate() {
-        for (FuncDecl<Temp> fn : unit.fns) {
+        for (FuncDecl<Temp> fn : unit.text) {
             allocate(fn);
         }
         return allocated;
@@ -135,7 +135,7 @@ public class ColorAllocator extends Allocator {
             i.accept(this);
         }
         allocatedFn.stmts = instrs;
-        allocated.fns.add(allocatedFn);
+        allocated.text.add(allocatedFn);
 
         // Calculate number of words to shift %rsp
         int rsp = maxArgs + maxRets + spillOffset / (-8);

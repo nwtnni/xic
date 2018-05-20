@@ -4,7 +4,7 @@ import java_cup.runtime.ComplexSymbolFactory.Location;
 import xic.XicException;
 
 // An Xi character
-public class XiChar extends Node {
+public class XiChar extends Expr {
 
     public String escaped;
     public long value;
@@ -15,7 +15,7 @@ public class XiChar extends Node {
         this.value = value;
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
 }

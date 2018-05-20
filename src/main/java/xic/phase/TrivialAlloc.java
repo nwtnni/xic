@@ -2,8 +2,6 @@ package xic.phase;
 
 import java.io.IOException;
 import java.io.FileWriter;
-import java.util.Set;
-import java.util.Map;
 
 import assemble.CompUnit;
 import assemble.Temp;
@@ -11,13 +9,8 @@ import assemble.Reg;
 import assemble.TrivialAllocator;
 
 import util.Filename;
-import util.Pair;
 import util.Result;
 
-import optimize.graph.*;
-import optimize.register.*;
-
-import xic.XicException;
 import xic.XicInternalException;
 
 public class TrivialAlloc extends Phase {

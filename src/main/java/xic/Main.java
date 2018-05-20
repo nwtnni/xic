@@ -49,6 +49,7 @@ public class Main {
                 xic.setOutput(Kind.CANONIZE);
                 break;
             case "--irrun":
+                xic.setOutput(Kind.CANONIZE);
                 opts.remove(Kind.INTERPRET);
                 break;
             case "--report-opts":
@@ -145,7 +146,7 @@ public class Main {
         }
 
         for (Kind phase : opts) {
-            xic.removePhase(phase);
+            // xic.removePhase(phase);
         }
 
         xic.run();

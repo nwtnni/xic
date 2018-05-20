@@ -1,0 +1,59 @@
+class A {
+    x:int
+    x:int[]
+    x:int[][]
+    
+    x:bool
+    x:bool[]
+    x:bool[][]
+
+    x:A
+    x:A[]
+    x:A[][]
+
+    // procedures
+    foo()
+    foo(x: A)
+    foo(x: A[])
+    foo(x: A[][])
+    foo(x: A, y: B)
+    foo(a: A, b: B[])
+
+    // functions
+    bar() : A
+    bar(x: A) : A, B
+    bar(x: A[]) : B[]
+    bar(x: A[][]) : A[][]
+    bar(x: A, y: B) : A[], B[]
+    bar(a: A, b: B[]) : A[][][]
+}
+
+class B extends A {
+    x:int
+    x:int[]
+    x:int[][]
+    
+    x:bool
+    x:bool[]
+    x:bool[][]
+
+    x:A
+    x:A[]
+    x:A[][]
+
+    // procedures
+    foo()
+    foo(x: A)
+    foo(x: A[])
+    foo(x: A[][])
+    foo(x: A, y: B)
+    foo(a: A, b: B[])
+
+    // functions
+    bar() : A
+    bar(x: A) : A, B
+    bar(x: A[]) : B[]
+    bar(x: A[][]) : A[][]
+    bar(x: A, y: B) : A[], B[]
+    bar(a: A, b: B[]) : A[][][]
+}

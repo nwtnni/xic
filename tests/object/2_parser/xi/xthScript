@@ -1,0 +1,161 @@
+xic ("Test oXi --parse") "--parse" {
+  updates.xi;
+  break.xi;
+  new.xi;
+  class.xi;
+  method.xi;
+
+  bad_break01.xi;
+  bad_break02.xi;
+  bad_break03.xi;
+  bad_break04.xi;
+  bad_break05.xi;
+  bad_break06.xi;
+  bad_break07.xi;
+  bad_break08.xi;
+
+  bad_class01.xi;
+  bad_class02.xi;
+  bad_class03.xi;
+  bad_class04.xi;
+  bad_class05.xi;
+  bad_class06.xi;
+  
+  bad_dot01.xi;
+  bad_dot02.xi;
+  bad_dot03.xi;
+  
+  bad_extends01.xi;
+  
+  bad_global01.xi;
+  bad_global02.xi;
+  bad_global03.xi;
+  bad_global04.xi;
+  bad_global05.xi;
+  bad_global06.xi;
+  bad_global07.xi;
+  
+  bad_new01.xi;
+  bad_new02.xi;
+  bad_new03.xi;
+  bad_new04.xi;
+
+  break01.xi;
+  break02.xi;
+  break03.xi;
+  break04.xi;
+  break05.xi;
+  break06.xi;
+  break07.xi;
+  break08.xi;
+  break09.xi;
+  break10.xi;
+  
+  class01.xi;
+  class02.xi;
+  class03.xi;
+  class04.xi;
+  class05.xi;
+  class06.xi;
+  class07.xi;
+  class08.xi;
+  class09.xi;
+  class10.xi;
+  class11.xi;
+  class12.xi;
+
+  classVars01.xi;
+  classVars02.xi;
+  classVars03.xi;
+  classVars04.xi;
+  classVars05.xi;
+  classVars06.xi;
+  classVars07.xi;
+  classVars08.xi;
+  classVars09.xi;
+  classVars10.xi;
+  classVars11.xi;
+  classVars12.xi;
+  
+  dot01.xi;
+  dot02.xi;
+  dot03.xi;
+  dot04.xi;
+  dot05.xi;
+  dot06.xi;
+  dot07.xi;
+  dot08.xi;
+  dot09.xi;
+  dot10.xi;
+
+  expr_dot01.xi;
+  expr_dot02.xi;
+  expr_dot03.xi;
+  expr_dot04.xi;
+  expr_dot05.xi;
+  expr_dot06.xi;
+  expr_dot07.xi;
+  expr_dot08.xi;
+  expr_dot09.xi;
+  expr_dot10.xi;
+  expr_dot11.xi;
+  expr_dot12.xi;
+  expr_dot13.xi;
+  expr_dot14.xi;
+  expr_dot15.xi;
+
+  extends01.xi;
+  extends02.xi;
+  extends03.xi;
+  extends04.xi;
+  extends05.xi;
+  extends06.xi;
+
+  global01.xi;
+  global02.xi;
+  global03.xi;
+  global04.xi;
+  global05.xi;
+  global06.xi;
+  global07.xi;
+  global08.xi;
+  global08.xi;
+  global09.xi;
+  global10.xi;
+  global11.xi;
+  global12.xi;
+  global13.xi;
+  global14.xi;
+  global15.xi;
+
+  new01.xi;
+  new02.xi;
+  new03.xi;
+
+  null01.xi;
+  null02.xi;
+  null03.xi;
+  null04.xi;
+  null05.xi;
+  null06.xi;
+  null07.xi;
+  null08.xi;
+  null09.xi;
+
+  this01.xi;
+  this02.xi;
+  this03.xi;
+  this04.xi;
+  this05.xi;
+  this06.xi;
+  this07.xi;
+  this08.xi;
+  this09.xi;
+  this10.xi;
+  this11.xi;
+  this12.xi;
+  this13.xi;
+  this14.xi;
+  this15.xi;
+  
+}

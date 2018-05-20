@@ -1,0 +1,5 @@
+foo() {
+    if true {
+        break
+    }
+}

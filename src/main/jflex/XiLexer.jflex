@@ -176,19 +176,25 @@ UnicodeEscape = \\u{HexDigit}{4}
     {Whitespace}        { /* ignore */ }
     {Comment}           { /* ignore */ }
 
-    // 
+    // keywords
     "use"               { return tokenize(USE); }
     "if"                { return tokenize(IF); }
     "while"             { return tokenize(WHILE); }
     "else"              { return tokenize(ELSE); }
     "return"            { return tokenize(RETURN); }
     "length"            { return tokenize(LENGTH); }
+    "class"             { return tokenize(CLASS); }
+    "this"              { return tokenize(THIS); }
+    "extends"           { return tokenize(EXTENDS); }
+    "break"             { return tokenize(BREAK); }
+    "new"               { return tokenize(NEW); }
 
     // primitives
     "int"               { return tokenize(INT); }
     "bool"              { return tokenize(BOOL); }
     "true"              { return tokenize(TRUE); }
     "false"             { return tokenize(FALSE); }
+    "null"              { return tokenize(NULL); }
 
     // operators
     "!"                 { return tokenize(LNEG); }
@@ -206,6 +212,7 @@ UnicodeEscape = \\u{HexDigit}{4}
     "!="                { return tokenize(NEQ); }
     "&"                 { return tokenize(LAND); }
     "|"                 { return tokenize(LOR); }
+    "."                 { return tokenize(DOT); }
 
     // symbols
     "("                 { return tokenize(LPAREN); }

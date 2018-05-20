@@ -81,7 +81,7 @@ public class CSEReplaceVisitor extends IRVisitor<IRExpr> {
 
     // TODO: update this if we improve lowering of IRCalls
     public IRExpr visit(IRCall c) {
-        for (int i = 0; i < c.size(); i++) {
+        for (int i = 0; i < c.numArgs(); i++) {
             IRExpr n = c.get(i).accept(this);
             if (n != null) {
                 c.set(i, newExpr);

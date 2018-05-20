@@ -14,19 +14,19 @@ public abstract class Phase {
         return new ArrayList<>(List.of(
             new Lex(),
             new Parse(),
-            new Type(),
+            new TypeCheck(),
             new Emit(),
-            new Fold(),
+            // new Fold(),
             new Canonize(),
-            new Interpret(),
-            new ConstPropNoPrint(),
-            new FoldNoPrint(),
-            new ConstProp(),
-            new FoldNoPrint(),
-            new CSE(),
+            // new Interpret(),
+            // new ConstPropNoPrint(),
+            // new FoldNoPrint(),
+            // new ConstProp(),
+            // new FoldNoPrint(),
+            // new CSE(),
             new Irgen(),
             new Tile(),
-            new RegAlloc(),
+            // new RegAlloc(),
             new TrivialAlloc()
         ));
     }
@@ -48,6 +48,7 @@ public abstract class Phase {
         ALLOCATE;
     }
     
+    // Public for debug purposes
     protected Kind kind;
 
     protected boolean output;

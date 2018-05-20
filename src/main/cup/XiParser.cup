@@ -3,16 +3,17 @@ import java_cup.runtime.ComplexSymbolFactory.*;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import lex.*;
 import ast.*;
 import xic.XicException;
+import xic.XicInternalException;
 
 parser code {:
 
     /* Exposed Interface */
 
-    //TODO: throw XicException
     public static Node from(String source, String unit) throws XicException {
         XiLexer lexer = XiLexer.from(source, unit);
         XiParser parser = new XiParser(lexer);
@@ -22,7 +23,7 @@ parser code {:
         } catch (XicException xic) {
         	throw xic;
         } catch (Exception e) {
-        	throw ParseException.internal(e);
+        	throw new XicInternalException("File not found");
         }
     }
 
@@ -67,53 +68,114 @@ parser code {:
             expr.location = l;
             return evalInt((TempInt) expr, true);
         }
-        return new Unary(l, Unary.Kind.INEGATE, expr);
+        return new XiUnary(l, XiUnary.Kind.INEGATE, expr);
     }
 
 :};
 
 scan with {: return lexer.nextToken(); :};
 
-/* Terminals (tokens returned by the scanner). */
-terminal                    USE, IF, WHILE, ELSE, RETURN, LENGTH;
-terminal                    INT, BOOL;
-terminal                    UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
-terminal                    LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
-terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                    EQ, COLON, SEMICOLON, COMMA, /*DOT,*/ UNDERSCORE;
-terminal    Boolean         TRUE, FALSE; 
-terminal    String          IDENTIFIER;
-terminal    String          INTEGER;
-terminal    CharWrapper     CHAR;
-terminal    StringWrapper   STRING;
-terminal                    FUNCTIONCALL, ARRAYCALL; //TODO ARRAYCALL is implemented via LBRACK
 
-/* Non terminals */
-non terminal    Node            Expr;
-non terminal    List<Node>      ExprList, FExprList;
+/* --- Terminals (tokens returned by the scanner). --- */
+
+terminal                        USE, IF, WHILE, ELSE, RETURN, LENGTH, BREAK;    // PA7: BREAK
+terminal                        INT, BOOL;
+terminal                        UMINUS, LNEG, MULT, HMULT, DIV, MOD, ADD, MINUS;
+terminal                        LTE, LT, GTE, GT, EQEQ, NEQ, LAND, LOR; 
+terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                        EQ, COLON, SEMICOLON, COMMA, DOT, UNDERSCORE;   // PA7: DOT
+terminal                        THIS, CLASS, EXTENDS, NEW;                      // PA7
+terminal        Void            NULL;                                           // PA7
+terminal        Boolean         TRUE, FALSE;
+terminal        String          IDENTIFIER;
+terminal        String          INTEGER;
+terminal        CharWrapper     CHAR;
+terminal        StringWrapper   STRING;
+terminal                        FUNCTIONCALL;
+
+
+/* --- Non terminals --- */
+
+// Top level
+non terminal    Node            Program;
+non terminal    List<Node>      UseDeclarations;
+non terminal    List<Node>      ProgramBody;                                    // PA7
+
+// Use statements
+non terminal    Node            UseDeclr;
+
+// Global variables
+non terminal    Node            GlobalVar;                                      // PA7
+non terminal    Node            GVType;                                         // PA7
+non terminal    Node            GVTypeLiteral;                                  // PA7
+non terminal    List<Node>      GVTypeIndexList;                                // PA7
+
+// Classes
+non terminal    Node            ClassDeclr;                                     // PA7
+non terminal    List<Node>      ClassBody;                                      // PA7
+non terminal    Node            Field;                                          // PA7
+non terminal    Node            FieldType;                                      // PA7
+
+// Functions
+non terminal    Node            FnDeclr, FnSig;
+non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
+non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
+non terminal    Node            FnType;
+
+// Block statements
+non terminal    Node            Block;
+non terminal    Node            BlockStmts;
+non terminal    Node            SingleStmtNoReturn;
+non terminal    Node            StmtNoReturn;
+non terminal    List<Node>      StmtListNoReturn;
+
+// Function calls
 non terminal    Node            FnCall;
-non terminal    List<Node>      Args, FArgs; 
-non terminal    Node            ArrayCall;
-non terminal    List<Node>      IndexList;
-non terminal    List<Node>      ArrayElems, FArrayElems;
+non terminal    Node            GenName;                                        // PA7 (Generic name to call a function or array on)
+non terminal    List<Node>      Args, FArgs;
+
+// Variable declarations
 non terminal    Node            VarDeclr, VarType, KeyType;
 non terminal    List<Node>      VarTypeIndexList, VarTypeIndexListNoExpr;
-non terminal    Node            Assign, SingleAssignName, MultiAssignName;
+non terminal    List<Node>      VarDeclrList, FVarDeclrList;                    // PA7
+
+// Assignment
+non terminal    Node            Assign, SingleAssignTarget, MultiAssignTarget;
 non terminal    Node            AssignVarDeclr, AssignVarType;
-non terminal    List<Node>      IDList, FIDList;
-non terminal    Node            WhileStmt, IfStmt, ElseStmt;
-non terminal    Node            BlockOptBraces, BlockStmts;
-non terminal    Node            SingleStmtNoReturn, StmtNoReturn;
-non terminal    List<Node>      StmtListNoReturn;
-non terminal    Node            FnDeclr, FnDef;
-non terminal    List<Node>      ArgsTypeList, FArgsTypeList, ReturnTypeList, FReturnTypeList;
-non terminal    Node            FnType;
-non terminal    Node            UseDeclr;
-non terminal    List<Node>      UseDeclarations, FnDeclarations;
-non terminal    Node            Program;
+non terminal    List<Node>      AssignTargetList, FAssignTargetList;
+
+// Array targets for assignment
+non terminal    Node            ArrayCall;
+non terminal    List<Node>      IndexList;
+
+// Control flow statements
+non terminal    Node            IfStmt, ElseStmt;
+non terminal    Node            WhileStmt;
+
+// Blocks with breaks allowed for while
+non terminal    Node            WBlock;                                     // PA7
+non terminal    Node            WBlockStmts;                                // PA7
+non terminal    Node            WSingleStmtNoReturn;                        // PA7
+non terminal    Node            WStmtNoReturn;                              // PA7
+non terminal    List<Node>      WStmtListNoReturn;                          // PA7
+non terminal    Node            WIfStmt, WElseStmt;                         // PA7
+
+// Identifiers
+non terminal    Node            ExtendedID;                                 // PA7
+non terminal    List<Node>      DotCall;                                    // PA7
+
+// Expressions
+non terminal    Node            Expr;
+non terminal    List<Node>      ExprList, FExprList;
+
+// Array literals
+non terminal    List<Node>      ArrayElems, FArrayElems;
+
+// Optional semicolons
 non terminal                    OptSemicolon;
 
-/* Precedences */
+
+/* --- Precedences --- */
 precedence nonassoc     ELSE;
 precedence left         LOR;
 precedence left         LAND;
@@ -122,9 +184,14 @@ precedence left         LTE, LT, GTE, GT;
 precedence left         ADD, MINUS;
 precedence left         MULT, HMULT, DIV, MOD;
 precedence right        UMINUS, LNEG;
-precedence left         FUNCTIONCALL, LBRACK; //TODO LBRACK is hack to make arraycall precedence work
+precedence left         FUNCTIONCALL, LBRACK;   // LBRACK precedence is set to make ArrayCall precedence work
+precedence left         DOT;                    // PA7
+precedence left         NEW;                    // PA7
 
-/* The grammar rules */
+// precedence left         LPAREN;                 // PA7
+
+
+/* --- Productions --- */
 start with      Program;
 
 // Optional Semicolon
@@ -132,16 +199,16 @@ OptSemicolon ::=
     | SEMICOLON
     ;
 
-// Program
-Program ::= UseDeclarations:uds FnDeclr:f FnDeclarations:fds
+// Top level for program
+Program ::=
+    UseDeclarations:uds ProgramBody:body
     {:
-        fds.add(0,f);
-        RESULT = new Program(udsxleft, uds, fds);
+        RESULT = new XiProgram(udsxleft, XiProgram.Kind.PROGRAM, uds, body);
     :}
     ;
 
-// Uses
-UseDeclarations ::= 
+// Use statements
+UseDeclarations ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
@@ -152,55 +219,205 @@ UseDeclarations ::=
     :}
     ;
 
-// Use Declaration
-UseDeclr ::= 
+// Single use declaration
+UseDeclr ::=
     USE:u IDENTIFIER:id OptSemicolon
     {:
-        RESULT = new Use(uxleft, id);
+        RESULT = new XiUse(uxleft, id);
     :}
     ;
 
-// Functions
-FnDeclarations ::= 
+// Body of program after use statements 
+ProgramBody ::=
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | FnDeclr:f FnDeclarations:fds
+    | GlobalVar:v ProgramBody:pb
     {:
-        fds.add(0, f);
-        RESULT = fds;
+        pb.add(0, v);
+        RESULT = pb;
+    :} 
+    | FnDeclr:f ProgramBody:pb
+    {:
+        pb.add(0, f);
+        RESULT = pb;
+    :}
+    | ClassDeclr:c ProgramBody:pb
+    {:
+        pb.add(0, c);
+        RESULT = pb;
+    :} 
+    ;
+
+/* --- Global variables --- */
+
+// Global Variables
+// Globals can be any primitive, uninitialized object/array
+// or an array initialized to default values (0)
+GlobalVar ::=
+    IDENTIFIER:id COLON GVType:type
+    {:
+        RESULT = new XiGlobal(idxleft, new XiDeclr(idxleft, id, type));
+    :}
+    | VarDeclrList:list COLON GVType:type
+    {:
+        for (Node n : list) {
+            XiDeclr d = (XiDeclr) n;
+            d.xiType = (XiType) type;
+        }
+        RESULT = new XiGlobal(listxleft, new XiSeq(listxleft, list));
+    :}
+    | IDENTIFIER:id COLON INT EQ INTEGER:i
+    {:
+        RESULT = new XiGlobal(idxleft, new XiAssign(idxleft, new XiVar(idxleft, id), new XiInt(ixleft, Long.valueOf(i), i, false)));
+    :}
+    | IDENTIFIER:id COLON INT EQ MINUS INTEGER:i
+    {:
+        RESULT = new XiGlobal(idxleft, new XiAssign(idxleft, new XiVar(idxleft, id), new XiInt(ixleft, Long.valueOf("-" + i), i, true)));
+    :}
+    | IDENTIFIER:id COLON BOOL EQ TRUE:t
+    {:
+        RESULT = new XiGlobal(idxleft, new XiAssign(idxleft, new XiVar(idxleft, id), new XiBool(txleft, true)));
+    :}
+    | IDENTIFIER:id COLON BOOL EQ FALSE:f
+    {:
+        RESULT = new XiGlobal(idxleft, new XiAssign(idxleft, new XiVar(idxleft, id), new XiBool(fxleft, false)));
     :}
     ;
 
-// Function and Procedure Declaration
+// Type constructor for global variables
+GVType ::=
+    KeyType:type GVTypeIndexList:list
+    {:
+        for (int i = list.size() - 1; i >= 0; i--) {
+            if (list.get(i) == null) {
+                type = new XiType(typexleft, type);
+            } else {
+                type = new XiType(typexleft, type, list.get(i));
+            }
+        }
+        RESULT = type;
+    :}
+    ;
+
+// List of expressions for index values for global array types
+GVTypeIndexList ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | LBRACK GVTypeLiteral:index RBRACK GVTypeIndexList:list
+    {:
+        list.add(0, index);
+        RESULT = list;
+    :}
+    ;
+
+// Valid initializer for global array dimensions are integers
+// and other global identifiers (checked at typechecking)
+GVTypeLiteral ::=
+    INTEGER:i
+    {:
+        RESULT = new XiInt(ixleft, Long.valueOf(i), i, false);
+    :}
+    | IDENTIFIER:id
+    {:
+        RESULT = new XiVar(idxleft, id);
+    :}
+    ;
+
+/* --- Class declarations --- */
+
+// Class Declarations
+ClassDeclr ::= 
+    CLASS:c IDENTIFIER:id LBRACE ClassBody:body RBRACE
+    {:
+        RESULT = new XiClass(cxleft, id, body);
+    :}
+    | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER:parent LBRACE ClassBody:body RBRACE
+    {:
+        RESULT = new XiClass(cxleft, id, parent, body);
+    :}
+    ;
+
+// Class definition
+ClassBody ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FnDeclr:f ClassBody:body
+    {:
+        body.add(0, f);
+        RESULT = body;
+    :}
+    | Field:f ClassBody:body
+    {:
+        body.add(0, f);
+        RESULT = body;
+    :}
+    ;
+
+/* --- Field variables --- */
+
+// Fields
+Field ::=
+    IDENTIFIER:id COLON FieldType:type
+    {:
+        RESULT = new XiDeclr(idxleft, id, type);
+    :}
+    | VarDeclrList:list COLON FieldType:type
+    {:
+        for (Node n : list) {
+            XiDeclr d = (XiDeclr) n;
+            d.xiType = (XiType) type;
+        }
+        RESULT = new XiSeq(listxleft, list);
+    :}
+    ;
+
+// Type constructor for field variables
+// Fields can be any primitive or an uninitialized object/array type
+FieldType ::=
+    KeyType:type
+    {:
+        RESULT = type;
+    :}
+    | FieldType:type LBRACK RBRACK
+    {:
+        RESULT = new XiType(typexleft, type);
+    :}
+    ;
+
+/* --- Function and procedure declaration --- */
+
+// Function declaration
 FnDeclr ::= 
-    FnDef:def LBRACE:l BlockStmts:block RBRACE
+    FnSig:def LBRACE:l BlockStmts:block RBRACE
     {:
-        //TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
-
-        RESULT = new Fn(defxleft, (Fn) def, block);
+        RESULT = new XiFn(defxleft, (XiFn) def, block);
     :}
     ;
 
-FnDef ::= 
+// Function signature
+FnSig ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-        RESULT = new Fn(idxleft, id, atl, rtl);
+        RESULT = new XiFn(idxleft, id, atl, rtl);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        RESULT = new Fn(idxleft, id, atl);
+        RESULT = new XiFn(idxleft, id, atl);
     :}
     ;
 
+// Function arguments list
 ArgsTypeList ::= 
     {:
         RESULT = new ArrayList<Node>();
     :}
     | IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft, id, type));
+        fatl.add(0, new XiDeclr(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
@@ -211,11 +428,12 @@ FArgsTypeList ::=
     :}
     | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
     {:
-        fatl.add(0, new Declare(idxleft, id, type));
+        fatl.add(0, new XiDeclr(idxleft, id, type));
         RESULT = fatl;
     :}
     ;
 
+// Function return type list
 ReturnTypeList ::= 
     FnType:type FReturnTypeList:frtl
     {:
@@ -235,14 +453,11 @@ FReturnTypeList ::=
     :}
     ;
 
+// Types in function signature
 FnType ::= 
-    INT:i
+    KeyType:type
     {:
-        RESULT = new XiType(ixleft, "int");
-    :}
-    | BOOL:b
-    {:
-        RESULT = new XiType(bxleft, "bool");
+        RESULT = type;
     :}
     | FnType:type LBRACK RBRACK
     {:
@@ -250,39 +465,66 @@ FnType ::=
     :}
     ;
 
-// Block with braces OR single non-return statement
-BlockOptBraces ::=
-    LBRACE:l BlockStmts:bs RBRACE
+/* --- Blocks --- */
+
+// Block with braces OR single statement (excluding break/return)
+Block ::=
+    LBRACE:l BlockStmts:bs RBRACE OptSemicolon
     {:
         bs.location = lxleft;
         RESULT = bs;
     :}
     | SingleStmtNoReturn:ssnr
     {:
-        // ArrayList<Node> block = new ArrayList<>();
-        // block.add(ssnr);
-        // RESULT = new Block(ssnrxleft, block);
         RESULT = ssnr;
     :}
     ;
 
 // Block of statements with possible return at the end
+// Constructs a return based on the number of expressions 
+// associated with that return statement
 BlockStmts ::= 
     StmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
     {:
         if (el.size() == 0) {
-        	slnr.add(new Return(rxleft));
+        	slnr.add(new XiReturn(rxleft));
         } else {
-            slnr.add(new Return(rxleft, el));
+            slnr.add(new XiReturn(rxleft, el));
         }
-        RESULT = new Block(slnr);
+        RESULT = new XiBlock(slnr);
     :}
     | StmtListNoReturn:slnr
     {:
-        RESULT = new Block(slnr);
+        RESULT = new XiBlock(slnr);
     :}
     ;
 
+// Single statement excluding break/return TODO PA7
+SingleStmtNoReturn ::= 
+    Assign:a OptSemicolon
+    {:
+        RESULT = a;
+    :}
+    | FnCall:p OptSemicolon
+    {:
+        // Procedure calls are syntactically the same as function calls
+        RESULT = p;
+    :}
+    | IfStmt:i 
+    {:
+        RESULT = i;
+    :}
+    | WhileStmt:w 
+    {:
+        RESULT = w;
+    :}
+    | VarDeclr:v OptSemicolon
+    {:
+        RESULT = v;
+    :}
+    ;
+
+// Expression list for returns
 ExprList ::= 
     {:
         RESULT = new ArrayList<Node>();
@@ -305,29 +547,7 @@ FExprList ::=
     :}
     ;
 
-SingleStmtNoReturn ::= 
-    Assign:a OptSemicolon
-    {:
-        RESULT = a;
-    :}
-    | IfStmt:i
-    {:
-        RESULT = i;
-    :}
-    | WhileStmt:w 
-    {:
-        RESULT = w;
-    :}
-    | FnCall:p OptSemicolon // Procedure
-    {:
-        RESULT = p;
-    :}
-    | VarDeclr:v OptSemicolon
-    {:
-        RESULT = v;
-    :}
-    ;
-
+// List of statements without break/return
 StmtListNoReturn ::= 
     {:
         RESULT = new ArrayList<Node>();
@@ -339,12 +559,12 @@ StmtListNoReturn ::=
     :}
     ;
 
+// Block of statements or single statement excluding break/return 
+// with optional semicolon after block/statement.
 StmtNoReturn ::= 
     LBRACE:l BlockStmts:block RBRACE OptSemicolon
     {:
-        //TODO because only 1 lookahead--is it possible to refactor?
         block.location = lxleft;
-
         RESULT = block;
     :}
     | SingleStmtNoReturn:ssnr
@@ -353,24 +573,130 @@ StmtNoReturn ::=
     :}
     ;
 
-// Function Calls
-FnCall ::= 
-    IDENTIFIER:id LPAREN Args:args RPAREN
-        {:
-            RESULT = new Call(idxleft, id, args);
-        :}
-        %prec FUNCTIONCALL
+
+/* --- Identifiers with dot access --- */
+
+// Top level dot access production used for RHS
+ExtendedID ::=
+    IDENTIFIER:id
+    {:
+        RESULT = new XiVar(idxleft, id);
+    :}
+    | IDENTIFIER:id1 DOT IDENTIFIER:id2 DotCall:rhs
+    {:
+        XiDot dot = new XiDot(id1xleft, new XiVar(id1xleft, id1), new XiVar(id2xleft, id2));
+        for (Node id : rhs) {
+            dot = new XiDot(id.location, dot, id);
+        }
+        RESULT = dot;
+    :}
+    | THIS:t
+    {:
+        RESULT = new XiThis(txleft);
+    :}
+    | THIS:t DOT IDENTIFIER:id2 DotCall:rhs
+    {:
+        XiDot dot = new XiDot(txleft, new XiThis(txleft), new XiVar(id2xleft, id2));
+        for (Node id : rhs) {
+            dot = new XiDot(id.location, dot, id);
+        }
+        RESULT = dot;
+    :}
     ;
 
+DotCall ::=
+    {:
+        RESULT = new ArrayList<>();
+    :}
+    | DOT IDENTIFIER:id DotCall:rhs
+    {:
+        rhs.add(0, new XiVar(idxleft, id));
+        RESULT = rhs;
+    :}
+    ;
+
+// Top level dot access production for LHS
+GenName ::=
+    IDENTIFIER:id
+    {:
+        RESULT = new XiVar(idxleft, id);
+    :}
+    | IDENTIFIER:id LPAREN Args:args RPAREN
+    {:
+        RESULT = new XiCall(idxleft, new XiVar(idxleft, id), args);
+    :}
+    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiIndex index = new XiIndex(idxleft, new XiVar(idxleft, id), evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
+    :}
+    | NEW:n IDENTIFIER:id
+    {:
+        RESULT = new XiNew(nxleft, id);
+    :}
+    | THIS:t
+    {:
+        RESULT = new XiThis(txleft);
+    :}
+    | GenName:gn DOT IDENTIFIER:id
+    {:
+        RESULT = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+    :}
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        RESULT = new XiCall(gnxleft, dot, args);
+    :}
+    | GenName:gn DOT IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft,id));
+        XiIndex index = new XiIndex(idxleft, dot, evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
+    :}
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft,id));
+        XiCall call = new XiCall(gnxleft, dot, args);
+        XiIndex index = new XiIndex(idxleft, call, evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
+    :}
+    ;
+
+/* --- Function calls --- */
+// Parser does not differentiate between procedures and functions
+
+// Top level function call production PA7
+FnCall ::= 
+    IDENTIFIER:id LPAREN Args:args RPAREN
+    {:
+        RESULT = new XiCall(idxleft, new XiVar(idxleft, id), args);
+    :}
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        RESULT = new XiCall(gnxleft, dot, args);
+    :}
+    ;
+
+// List of expressions that are the arguments in a function call
 Args ::= 
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
     | Expr:e FArgs:fargs
-        {:  
-            fargs.add(0, evalExpr(e));
-            RESULT = fargs;
-        :}
+    {:  
+        fargs.add(0, evalExpr(e));
+        RESULT = fargs;
+    :}
     ;
 
 FArgs ::=
@@ -378,90 +704,120 @@ FArgs ::=
         RESULT = new ArrayList<Node>();
     :} 
     | COMMA Expr:e FArgs:fargs
-        {:
-            fargs.add(0, evalExpr(e));
-            RESULT = fargs;
-        :}
+    {:
+        fargs.add(0, evalExpr(e));
+        RESULT = fargs;
+    :}
     ;
 
-// Array Calls for LHS of assignment
+
+/* --- Array accesses for LHS --- */
+
+// Array access top level production
 ArrayCall ::= 
-    FnCall:fc LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            Index index = new Index(fcxleft, fc, il.get(0));
-            for(int i =1; i<il.size(); i++) {
-                Node n = il.get(i);
-                index = new Index(n.location, index, n);
-            }
-            RESULT = index;
-        :}
-    | IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            Index index = new Index(idxleft, new Var(idxleft, id), il.get(0));
-            for(int i =1; i<il.size(); i++) {
-                Node n = il.get(i);
-                index = new Index(n.location, index, n);
-            }
-            RESULT = index;
-        :}
+    IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiIndex index = new XiIndex(idxleft, new XiVar(idxleft, id), evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
+    :}
+    | IDENTIFIER:id LPAREN Args:args RPAREN LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiIndex index = new XiIndex(idxleft, new XiCall(idxleft, new XiVar(idxleft, id), args), evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
+    :}
+    | GenName:gn DOT IDENTIFIER:id LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        XiIndex index = new XiIndex(idxleft, dot, evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
+
+    :}
+    | GenName:gn DOT IDENTIFIER:id LPAREN Args:args RPAREN LBRACK Expr:e RBRACK IndexList:il
+    {:
+        XiDot dot = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
+        XiCall call = new XiCall(gnxleft, dot, args);
+        XiIndex index = new XiIndex(idxleft, call, evalExpr(e));
+        for (Node i : il) {
+            index = new XiIndex(i.location, index, i);
+        }
+        RESULT = index;
+    :}
     ;
 
+
+
+// List of expressions for indices in an array access
 IndexList ::=
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
     | LBRACK Expr:e RBRACK IndexList:il
-        {:
-            il.add(0, evalExpr(e));
-            RESULT = il;
-        :}
-    ;
-
-// Array List
-ArrayElems ::= 
     {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | Expr:e FArrayElems:fae
-    {:
-        fae.add(0, evalExpr(e));
-        RESULT = fae;
+        il.add(0, evalExpr(e));
+        RESULT = il;
     :}
     ;
 
-FArrayElems ::= 
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | COMMA
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | COMMA Expr:e FArrayElems:fae
-    {:
-        fae.add(0, evalExpr(e));
-        RESULT = fae;
-    :}
-    ;
 
-// Var Declaration
+/* --- Variable declaration statements --- */
+
+// Top level variable declaration production
 VarDeclr ::= 
     IDENTIFIER:id COLON VarType:type
     {:
-        RESULT = new Declare(idxleft, id, type);
-    :};
+        RESULT = new XiDeclr(idxleft, id, type);
+    :}
+    | VarDeclrList:list COLON AssignVarType:type
+    {:
+        for (Node n : list) {
+            XiDeclr d = (XiDeclr) n;
+            d.xiType = (XiType) type;
+        }
+        RESULT = new XiSeq(listxleft, list);
+    :}
+    ;
+    // TODO: check multiple declaration type restriction
+    // e.g. a, b:int[5] allowed?
+    // currently disallowing
 
+// For multiple variable declarations of the same type
+VarDeclrList ::=
+    IDENTIFIER:a COMMA IDENTIFIER:b FVarDeclrList:idList
+    {:
+        idList.add(0, new XiDeclr(bxleft, b, null));
+        idList.add(0, new XiDeclr(axleft, a, null));
+        RESULT = idList;
+    :}
+    ;
 
+FVarDeclrList ::=
+    {:
+        RESULT = new ArrayList<>();
+    :}
+    | COMMA IDENTIFIER:id FVarDeclrList:idList
+    {:
+        idList.add(0, new XiDeclr(idxleft, id, null));
+        RESULT = idList;
+    :}
+    ;
+
+// Type constructor for variable declarations
 VarType ::= 
     KeyType:type VarTypeIndexList:vtil
     {:
-        for(int i=vtil.size()-1; i>=0; i--) {
-            if(vtil.get(i) == null){
+        for (int i = vtil.size() - 1; i >= 0; i--) {
+            if (vtil.get(i) == null) {
                 type = new XiType(typexleft,type);
-            }
-            else {
+            } else {
                 type = new XiType(typexleft, type, vtil.get(i));
             }
         }
@@ -469,33 +825,7 @@ VarType ::=
     :}
     ;
 
-VarTypeIndexList ::=
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | LBRACK Expr:e RBRACK VarTypeIndexList:vtil
-    {:
-        vtil.add(0,evalExpr(e));
-        RESULT = vtil;
-    :}
-    | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
-    {:
-        vtilne.add(0,null);
-        RESULT = vtilne;
-    :}
-    ;
-
-VarTypeIndexListNoExpr ::=
-    {:
-        RESULT = new ArrayList<Node>();
-    :}
-    | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
-    {:
-        vtilne.add(0,null);
-        RESULT = vtilne;
-    :}
-    ;
-
+// Primitive and class types
 KeyType ::= 
     INT:i
     {:
@@ -505,44 +835,100 @@ KeyType ::=
     {:
         RESULT = new XiType(bxleft, "bool");
     :}
+    | IDENTIFIER:i
+    {:
+        RESULT = new XiType(ixleft, i);
+    :}
     ;
 
-// Assignment
+// List of expressions for index values for array types
+// The head of this list may be a continuous subsequence of
+// empty index values
+VarTypeIndexList ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | LBRACK Expr:e RBRACK VarTypeIndexList:vtil
+    {:
+        vtil.add(0, evalExpr(e));
+        RESULT = vtil;
+    :}
+    | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
+    {:
+        vtilne.add(0, null);
+        RESULT = vtilne;
+    :}
+    ;
+
+// List of empty index values for array types
+VarTypeIndexListNoExpr ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | LBRACK RBRACK VarTypeIndexListNoExpr:vtilne
+    {:
+        vtilne.add(0, null);
+        RESULT = vtilne;
+    :}
+    ;
+
+
+/* --- Assignment statements --- */
+
+// Top level assignment production
 Assign ::= 
-    IDList:il EQ Expr:e
+    AssignTargetList:il EQ Expr:e
     {:
-        RESULT = new Assign(ilxleft, il, evalExpr(e));
+        RESULT = new XiAssign(ilxleft, il, evalExpr(e));
     :}
-    | SingleAssignName:san EQ Expr:e
+    | AssignTargetList:il EQ Expr:e1 COMMA Expr:e2 FExprList:fel // PA7: Language Extension
     {:
-        RESULT = new Assign(sanxleft, san, evalExpr(e));
+        fel.add(0, evalExpr(e2));
+        fel.add(0, evalExpr(e1));
+        
+        if (il.size() != fel.size()) {
+            throw ParseException.mismatchedCount(ilxleft, "Mismatched number of expressions for multiple assignment."); //TODO
+        }
+
+        List<Node> desugaredStmts = new ArrayList<>();
+
+        for(int i = 0; i < il.size(); i++) {
+            desugaredStmts.add(new XiAssign(ilxleft, il.get(i), fel.get(i)));
+        }
+
+        RESULT = new XiSeq(ilxleft, desugaredStmts);
+    :}
+    | SingleAssignTarget:san EQ Expr:e
+    {:
+        RESULT = new XiAssign(sanxleft, san, evalExpr(e));
     :}
     ;
 
-IDList ::= 
-    MultiAssignName:an COMMA MultiAssignName:bn FIDList:fl
+// LHS of multiple assignment
+AssignTargetList ::= 
+    MultiAssignTarget:an COMMA MultiAssignTarget:bn FAssignTargetList:fl
     {:
         fl.add(0, bn);
         fl.add(0, an);
         RESULT = fl;
     :};
 
-FIDList ::= 
+FAssignTargetList ::= 
     {:
         RESULT = new ArrayList<Node>();
     :}
-    | COMMA MultiAssignName:an FIDList:fl
+    | COMMA MultiAssignTarget:an FAssignTargetList:fl
     {:
         fl.add(0, an);
         RESULT = fl;
     :}
     ;
 
-// LHS of multiple assignment
-MultiAssignName ::=
+// A single identifier on the LHS of a multiple assignment
+MultiAssignTarget ::=
     UNDERSCORE:u
     {:
-        RESULT = new Declare(uxleft);
+        RESULT = new XiDeclr(uxleft);
     :}
     | AssignVarDeclr:v
     {:
@@ -551,14 +937,18 @@ MultiAssignName ::=
     ;
 
 // LHS of single assignment
-SingleAssignName ::= 
+SingleAssignTarget ::= 
     UNDERSCORE:u
     {:
-        RESULT = new Declare(uxleft);
+        RESULT = new XiDeclr(uxleft);
     :}
     | IDENTIFIER:id
     {:
-        RESULT = new Var(idxleft, id);
+        RESULT = new XiVar(idxleft, id);
+    :}
+    | GenName:gn DOT IDENTIFIER:id
+    {:
+        RESULT = new XiDot(gnxleft, gn, new XiVar(idxleft, id));
     :}
     | ArrayCall:a
     {:
@@ -570,21 +960,23 @@ SingleAssignName ::=
     :}
     ;
 
+// Variable declaration on LHS of assignment
 AssignVarDeclr ::= 
     IDENTIFIER:id COLON AssignVarType:type 
     {:
-        RESULT = new Declare(idxleft, id, type);
+        RESULT = new XiDeclr(idxleft, id, type);
     :}
     ;
 
+// Variable type constructor on LHS of assignment
+// Does not allow for arrays with initialized dimensions
 AssignVarType ::=
     KeyType:type VarTypeIndexListNoExpr:vtilne
     {:
-        for(int i=vtilne.size()-1; i>=0; i--) {
-            if(vtilne.get(i) == null){
+        for (int i = vtilne.size() - 1; i >= 0; i--) {
+            if (vtilne.get(i) == null) {
                 type = new XiType(typexleft, type);
-            }
-            else {
+            } else {
                 type = new XiType(typexleft, type, vtilne.get(i));
             }
         }
@@ -593,119 +985,273 @@ AssignVarType ::=
     ;
 
 
-// While Statement
-WhileStmt ::= WHILE:w Expr:e BlockOptBraces:block
-    {:
-        RESULT = new While(wxleft, evalExpr(e), block);
-    :};
+/* --- Control flow statements --- */
 
-// If Statement
-IfStmt ::= IF:i Expr:e BlockOptBraces:block ElseStmt:el
+// If statement
+IfStmt ::= 
+    IF:i Expr:e Block:block ElseStmt:elseBlock
     {:
-        If node = (el == null) ? new If(ixleft, evalExpr(e), block) : new If(ixleft, evalExpr(e), block, el);
-        RESULT = node;
+        if (elseBlock == null) {
+            RESULT = new XiIf(ixleft, evalExpr(e), block);
+        } else {
+            RESULT = new XiIf(ixleft, evalExpr(e), block, elseBlock);
+        }
     :}
     ;
 
+// Optional else statement
 ElseStmt ::= 
     {: 
         RESULT = null;
     :}
-    | ELSE:el BlockOptBraces:block 
+    | ELSE:el Block:block 
+    {:
+        RESULT = block;
+    :}
+    ;
+    
+// While statement
+WhileStmt ::= 
+    WHILE:w Expr:e WBlock:block
+    {:
+        RESULT = new XiWhile(wxleft, evalExpr(e), block);
+    :}
+    ;
+
+// While: block
+// While statements have one of the following:
+// - A block
+// - A single statement excluding return
+WBlock ::= 
+    LBRACE:l WBlockStmts:wbs RBRACE OptSemicolon
+    {:
+        wbs.location = lxleft;
+        RESULT = wbs;
+    :}
+    | WSingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    | BREAK:b OptSemicolon
+    {:
+        RESULT = new XiBreak(bxleft);
+    :}
+    ;
+
+// While: Block of statements ending with return or break
+WBlockStmts ::=
+    WStmtListNoReturn:slnr RETURN:r ExprList:el OptSemicolon
+    {:
+        if (el.size() == 0) {
+        	slnr.add(new XiReturn(rxleft));
+        } else {
+            slnr.add(new XiReturn(rxleft, el));
+        }
+        RESULT = new XiBlock(slnr);
+    :}
+    | WStmtListNoReturn:slnr BREAK:b OptSemicolon
+    {:
+        slnr.add(new XiBreak(bxleft));
+        RESULT = new XiBlock(slnr);
+    :}
+    | WStmtListNoReturn:slnr
+    {:
+        RESULT = new XiBlock(slnr);
+    :}
+    ;
+
+// While: Single statement excluding break/return
+WSingleStmtNoReturn ::= 
+    Assign:a OptSemicolon
+    {:
+        RESULT = a;
+    :}
+    | FnCall:p OptSemicolon
+    {:
+        // Procedure calls are syntactically the same as function calls
+        RESULT = p;
+    :}
+    | WIfStmt:i 
+    {:
+        RESULT = i;
+    :}
+    | WhileStmt:w 
+    {:
+        RESULT = w;
+    :}
+    | VarDeclr:v OptSemicolon
+    {:
+        RESULT = v;
+    :}
+    ;
+
+// While: List of statements without break/return
+WStmtListNoReturn ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | WStmtNoReturn:snr WStmtListNoReturn:slnr
+    {:
+        slnr.add(0, snr);
+        RESULT = slnr;
+    :}
+    ;
+
+// While: Block of statements or single statement excluding break/return 
+// with optional semicolon after block/statement.
+WStmtNoReturn ::= 
+    LBRACE:l WBlockStmts:block RBRACE OptSemicolon
+    {:
+        block.location = lxleft;
+        RESULT = block;
+    :}
+    | WSingleStmtNoReturn:ssnr
+    {:
+        RESULT = ssnr;
+    :}
+    ;
+
+// While: if statement
+WIfStmt ::= 
+    IF:i Expr:e WBlock:block WElseStmt:elseBlock
+    {:
+        if (elseBlock == null) {
+            RESULT = new XiIf(ixleft, evalExpr(e), block);
+        } else {
+            RESULT = new XiIf(ixleft, evalExpr(e), block, elseBlock);
+        }
+    :}
+    ;
+
+// While: optional else statement
+WElseStmt ::= 
+    {: 
+        RESULT = null;
+    :}
+    | ELSE:el WBlock:block 
     {:
         RESULT = block;
     :}
     ;
 
-// Expressions
-Expr ::= 
+
+/* --- Expressions --- */
+
+Expr ::=
+    // Parens
     LPAREN Expr:e RPAREN
         {:
             RESULT = evalExpr(e);
         :}
+    
+    // Unary
     | LNEG:l Expr:e
         {:
-            RESULT = new Unary(lxleft, Unary.Kind.LNEGATE, evalExpr(e));
+            RESULT = new XiUnary(lxleft, XiUnary.Kind.LNEGATE, evalExpr(e));
         :}
     | MINUS:m Expr:e
         {:
             RESULT = evalNegExpr(mxleft, e);
         :}
         %prec UMINUS
+
+    // Binary
     | Expr:e1 MULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.TIMES, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 HMULT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.HIGH_TIMES, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.HIGH_TIMES, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 DIV:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.DIVISION, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.DIVISION, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 MOD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.MODULO, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.MODULO, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 ADD:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.PLUS, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.PLUS, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 MINUS:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.MINUS, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.MINUS, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.LE, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.LE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.LT, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.LT, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 GTE:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.GE, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.GE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 GT:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.GT, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.GT, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 EQEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.EQ, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.EQ, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 NEQ:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.NE, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.NE, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LAND:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.AND, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.AND, evalExpr(e1), evalExpr(e2));
         :}
     | Expr:e1 LOR:b Expr:e2
         {:
-            RESULT = new Binary(bxleft, Binary.Kind.OR, evalExpr(e1), evalExpr(e2));
+            RESULT = new XiBinary(bxleft, XiBinary.Kind.OR, evalExpr(e1), evalExpr(e2));
         :}
-    | FnCall:fc
+
+    // Function call
+    | ExtendedID:id LPAREN Args:args RPAREN
         {:
-            RESULT = fc;
-        :}
-    | LENGTH:l LPAREN Expr:e RPAREN
-        {:
-            RESULT = new Call(lxleft, "length", evalExpr(e));
+            RESULT = new XiCall(idxleft, id, args);
         :}
         %prec FUNCTIONCALL
+    | LENGTH:l LPAREN Expr:e RPAREN
+        {:
+            RESULT = new XiCall(lxleft, new XiVar(lxleft, "length"), evalExpr(e));
+        :}
+        %prec FUNCTIONCALL
+
+    // Arrays
     | Expr:e1 LBRACK Expr:e2 RBRACK
         {:
-            Index index = new Index(e1xleft, evalExpr(e1), evalExpr(e2));
+            XiIndex index = new XiIndex(e1xleft, evalExpr(e1), evalExpr(e2));
             RESULT = index;
         :}
     | LBRACE ArrayElems:ae RBRACE
         {:
             RESULT = new XiArray(aexleft, ae);
         :}
+
+    // TODO: fix
+    // Object expressions PA7
+    | Expr:e1 DOT IDENTIFIER:id
+        {:
+            RESULT = new XiDot(e1xleft, evalExpr(e1), new XiVar(idxleft, id));
+        :}
+    | Expr:e1 DOT IDENTIFIER:id LPAREN Args:args RPAREN
+        {:
+            RESULT = new XiCall(e1xleft, new XiDot(e1xleft, evalExpr(e1), new XiVar(idxleft, id)), args);
+        :}
+    | NEW:n IDENTIFIER:id
+        {:
+            RESULT = new XiNew(nxleft, id);
+        :}
+
+    // Constants
     | TRUE:t
         {:
             RESULT = new XiBool(txleft, t); 
@@ -726,8 +1272,41 @@ Expr ::=
         {:
             RESULT = new XiString(sxleft, s.name, s.value);
         :}
-    | IDENTIFIER:id
+    | NULL:n
         {:
-            RESULT = new Var(idxleft, id);
+            RESULT = new XiNull(nxleft);
         :}
+
+    // Identifiers
+    | ExtendedID:id
+        {:
+            RESULT = id;
+        :}
+    ;
+
+// List of exprssions for array literals
+ArrayElems ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | Expr:e FArrayElems:exprs
+    {:
+        exprs.add(0, evalExpr(e));
+        RESULT = exprs;
+    :}
+    ;
+
+FArrayElems ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA Expr:e FArrayElems:exprs
+    {:
+        exprs.add(0, evalExpr(e));
+        RESULT = exprs;
+    :}
     ;

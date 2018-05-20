@@ -39,12 +39,16 @@ public class XiType extends Node {
         this.size = null;
     }
 
-    public <T> T accept(Visitor<T> v) throws XicException {
+    public <T> T accept(ASTVisitor<T> v) throws XicException {
         return v.visit(this);
     }
 
     public boolean isClass() {
-        return kind == Kind.CLASS; 
+        return kind.equals(Kind.CLASS); 
+    }
+
+    public boolean isArray() {
+        return kind.equals(Kind.ARRAY);
     }
     
     public boolean hasSize() {

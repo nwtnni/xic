@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import assemble.*;
-import assemble.instructions.Cqo.R;
 import ir.*;
 import util.Pair;
 
@@ -186,8 +185,16 @@ public abstract class InstrFactory {
      * Call Factory Method
      */
 
-    public static Call<Temp> call(String name, int numArgs, int numRets) {
-        return new Call.T(name, numArgs, numRets);
+    public static Call<String, Temp> callS(String name, int numArgs, int numRets) {
+        return new Call.TL(name, numArgs, numRets);
+    }
+
+    public static Call<Temp, Temp> callT(Temp name, int numArgs, int numRets) {
+        return new Call.TR(name, numArgs, numRets);
+    }
+
+    public static Call<Mem<Temp>, Temp> callM(Mem<Temp> name, int numArgs, int numRets) {
+        return new Call.TM(name, numArgs, numRets);
     }
 
     /*
@@ -245,7 +252,6 @@ public abstract class InstrFactory {
         Optional<Imm> immL,
         Optional<Imm> immR
     ) {
-
         List<Instr<Temp>> instrs = new ArrayList<>();
 
         Temp shuttle = TempFactory.generate("cmp_shuttle");
@@ -267,8 +273,10 @@ public abstract class InstrFactory {
 
         // Only need to shuttle left imm in certain cases
         } else if (immL.isPresent()) {
+
             // Check if fits in imm32 for cmp instruction
             if (Config.within(32, immL.get().getValue())) {
+
                 // If right is reg, don't shuttle
                 if (r.isTemp()) {
                     instrs.add(cmpIR(immL.get(), r.getTemp()));
@@ -283,7 +291,7 @@ public abstract class InstrFactory {
             } else {
                 instrs.add(movIR(immL.get(), shuttle));
 
-                if (l.isTemp()) {
+                if (r.isTemp()) {
                     instrs.add(cmpRR(shuttle, r.getTemp()));
                 } else {
                     instrs.add(cmpRM(shuttle, r.getMem()));
@@ -361,7 +369,7 @@ public abstract class InstrFactory {
     }
 
     public static Label<Temp> labelFromRet(IRFuncDecl fn) {
-        return new Label.T("_RET_" + fn.name() + ":");
+        return new Label.T("_RET" + fn.name() + ":");
     }
 
     /*
@@ -394,6 +402,21 @@ public abstract class InstrFactory {
 
     public static Mov<Temp, Temp, Temp> movRR(Temp src, Temp dest) {
         return new Mov.TRR(src, dest);
+    }
+
+    /** Read memory at label. */
+    public static Mov<String, Temp, Temp> movLR(String src, Temp dest) {
+        return new Mov.TLR(src, dest);
+    }
+
+    /** Get address of label. */
+    public static Mov<String, Temp, Temp> movLAR(String src, Temp dest) {
+        return new Mov.TLR("$" + src, dest);
+    }
+
+    /** Write to memory at label. */
+    public static Mov<Temp, String, Temp> movRL(Temp src, String dest) {
+        return new Mov.TRL(src, dest);
     }
 
     /**

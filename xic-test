@@ -8,6 +8,13 @@ build() {
 test_all() {
   test_reg
   test_course
+  test_object
+}
+
+test_course() {
+    # xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
+    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa7 xth/tests/pa7/xthScript
+    printf "\n========================================\n\n" 
 }
 
 test_reg() {
@@ -18,6 +25,7 @@ test_reg() {
     test_type
     test_ir
     test_ir_fails
+    test_assemble
 }
 
 test_fails() {
@@ -51,7 +59,6 @@ test_type() {
     test_type_valid
     test_type_man
 }
-
 
 test_type_valid() {
     xth/xth -compilerpath . -workpath tests/type -testpath tests/type tests/type/xthScript
@@ -146,9 +153,70 @@ test_assemble() {
     test_assemble_assemble_specific
 }
 
-test_course() {
-    xth/xth -compilerpath . -workpath xth/tests -testpath xth/tests/pa5 xth/tests/pa5/xthScript
+test_optimize() {
+    test_opt_fail
+}
+
+test_opt_fail() {
+    xth/xth -compilerpath . -workpath tests/optimize/failed -testpath tests/optimize/failed tests/optimize/failed/xthScript     
     printf "\n========================================\n\n" 
+}
+
+test_object() {
+  test_object_lex
+  test_object_parse
+  test_object_typecheck
+}
+
+test_object_lex() {
+    xth/xth -compilerpath . -workpath tests/object/1_lexer -testpath tests/object/1_lexer tests/object/1_lexer/xthScript     
+    printf "\n========================================\n\n" 
+}
+
+test_object_parse() {
+  test_object_parse_language_extension
+  test_object_parse_xi
+  test_object_parse_ixi
+}
+
+test_object_parse_xi() {
+    xth/xth -compilerpath . -workpath tests/object/2_parser/xi -testpath tests/object/2_parser/xi tests/object/2_parser/xi/xthScript     
+    printf "\n========================================\n\n" 
+}
+
+test_object_parse_ixi() {
+    xth/xth -compilerpath . -workpath tests/object/2_parser/ixi -testpath tests/object/2_parser/ixi tests/object/2_parser/ixi/xthScript     
+    printf "\n========================================\n\n"   
+}
+
+test_object_parse_language_extension() {
+    xth/xth -compilerpath . -workpath tests/object/2_parser/language_extension -testpath tests/object/2_parser/language_extension tests/object/2_parser/language_extension/xthScript     
+    printf "\n========================================\n\n"   
+}
+
+test_object_typecheck() {
+    test_object_typecheck_language_extension
+    test_object_typecheck_xi
+    test_object_typecheck_ixi
+}
+
+test_object_typecheck_xi() {
+    xth/xth -compilerpath . -workpath tests/object/3_type/xi -testpath tests/object/3_type/xi tests/object/3_type/xi/xthScript
+    printf "\n========================================\n\n" 
+}
+
+test_object_typecheck_ixi() {
+    xth/xth -compilerpath . -workpath tests/object/3_type/ixi -testpath tests/object/3_type/ixi tests/object/3_type/ixi/xthScript
+    printf "\n========================================\n\n" 
+}
+
+test_object_typecheck_language_extension() {
+    xth/xth -compilerpath . -workpath tests/object/3_type/language_extension -testpath tests/object/3_type/language_extension tests/object/3_type/language_extension/xthScript
+    printf "\n========================================\n\n" 
+}
+
+test_object_asm() {
+    xth/xth -compilerpath . -workpath tests/object/4_asm -testpath tests/object/4_asm tests/object/4_asm/xthScript
 }
 
 if [[ -f $2 ]] ; then
@@ -156,7 +224,7 @@ if [[ -f $2 ]] ; then
   FILE=$2
   case $1 in
     --asm)
-      ./xic -target linux -libpath tests/libs $FILE
+      ./xic -target linux -libpath tests/libs -Oreg $FILE
       asm="${FILE%.*}.s"
       base=$(basename -- "$FILE")
       name="${base%.*}.s"
@@ -166,15 +234,23 @@ if [[ -f $2 ]] ; then
           pushd "runtime"
           echo "running assembly:"
           echo ""
-          time ./run_test "tests/$name"
+          ./linkxi.sh -o test "tests/$name"
+          time ./test
+          rm test
+          echo ""
+          echo "finished running"
           popd
       else
           echo "Cannot run assembly on $platform"
       fi
+      rm "runtime/tests/$name"
       ;;
     --ir)
       ./xic --irgen -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
       ;;
+    --irrun)
+    ./xic --irrun -libpath tests/libs --optir initial --optir cf --optir cp --optir cse --optir final --optcfg initial --optcfg cf --optcfg cp --optcfg cse --optcfg final $FILE
+    ;;
     *)
       echo "Invalid use of xic-test"
       ;;
@@ -198,8 +274,14 @@ else
   l|lexer)
       test_lex
       ;;
+  lf)
+      test_lex_fails
+      ;;
   p|parser)
       test_parse
+      ;;
+  pf)
+      test_parse_fails
       ;;
   t|type)
       test_type
@@ -212,6 +294,9 @@ else
       ;;
   tm)
       test_type_man
+      ;;
+  tf)
+      test_type_fails
       ;;
   i|ir)
       test_ir
@@ -258,6 +343,42 @@ else
   c|course)
       test_course
       ;;
+  opt|optimize)
+      test_optimize
+      ;;
+  o|object)
+      test_object
+      ;;
+  ol)
+      test_object_lex
+      ;;
+  op)
+      test_object_parse
+      ;;
+  opxi)
+      test_object_parse_xi
+      ;;
+  opixi)
+      test_object_parse_ixi
+      ;;
+  opext)
+      test_object_parse_language_extension
+      ;;
+  ot)
+      test_object_typecheck
+      ;;
+  otxi)
+      test_object_typecheck_xi
+      ;;
+  otixi)
+      test_object_typecheck_ixi
+      ;;
+  otext)
+      test_object_typecheck_language_extension
+      ;;
+  oa)
+      test_object_asm
+      ;;
   *)
       echo "Usage:"
       echo ""
@@ -267,6 +388,8 @@ else
       echo "  l[exer] p[arser] t[ype] te tv tm"
       echo "  i[r, b, c, s, o, a, f]"
       echo "  a[ssemble] as aa ab airf ao aas"
+      echo "  opt[imize]"
+      echo "  o[bject, l]"
       echo ""
       echo "OR"
       echo ""

@@ -15,7 +15,7 @@ public class IRGraphTest {
 
 	@Test
 	public void testLinear() {
-        IRFuncDecl fn = new IRFuncDecl("fn", "fn");
+        IRFuncDecl fn = new IRFuncDecl("fn", "fn", 0, 0);
         fn.add(new IRMove(new IRTemp("a"), new IRConst(0)));
         fn.add(new IRMove(new IRTemp("b"), new IRConst(1)));
         fn.add(new IRMove(new IRTemp("c"), new IRConst(2)));

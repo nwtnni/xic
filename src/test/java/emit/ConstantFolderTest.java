@@ -25,7 +25,7 @@ public class ConstantFolderTest {
     }
     @Test
     public void call1() {
-    		IRCall c = new IRCall(new IRName("foo"), b1);
+    		IRCall c = new IRCall(new IRName("foo"), 0, b1);
     		cf.visit(c);
     		Printer.debug(c);
     		assertEquals(((IRConst) c.get(0)).value(), 3);

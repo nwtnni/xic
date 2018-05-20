@@ -96,7 +96,7 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
 
     protected Allocator(CompUnit<Temp> unit) {
         this.unit = unit;
-        this.allocated = new CompUnit<>();
+        this.allocated = new CompUnit<>(unit.name, unit.data);
         this.tempStack = null;
         this.instrs = null;
         this.tempCounter = 0;
@@ -161,10 +161,24 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
      * Call Visitor
      */
 
-    public Boolean visit(Call.T c) {
+    public Boolean visit(Call.TL c) {
         maxArgs = Math.max(maxArgs, c.numArgs);
         maxRets = Math.max(maxRets, c.numRet);
-        instrs.add(new Call.R(c.name, c.numArgs, c.numRet));
+        instrs.add(new Call.RL(c.name, c.numArgs, c.numRet));
+        return true;
+    }
+
+    public Boolean visit(Call.TR c) {
+        maxArgs = Math.max(maxArgs, c.numArgs);
+        maxRets = Math.max(maxRets, c.numRet);
+        instrs.add(new Call.RR(allocate(c.name, 0).get(), c.numArgs, c.numRet));
+        return true;
+    }
+
+    public Boolean visit(Call.TM c) {
+        maxArgs = Math.max(maxArgs, c.numArgs);
+        maxRets = Math.max(maxRets, c.numRet);
+        instrs.add(new Call.RM(allocate(c.name).get(), c.numArgs, c.numRet));
         return true;
     }
 
@@ -296,6 +310,7 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
     }
 
     public Boolean visit(Mov.TIM m) {
+        // Move immediate into memory
         Optional<Mem<Reg>> dest = allocate(m.dest);
         dest.ifPresent(d -> instrs.add(new Mov.RIM(m.src, d)));
         return dest.isPresent();
@@ -326,6 +341,7 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
     }
 
     public Boolean visit(Mov.TRR m) {
+        // Move register into register
         Optional<Reg> src = allocate(m.src, 0);
         Optional<Reg> dest = allocate(m.dest, 1);
         src.ifPresent(s ->
@@ -334,6 +350,20 @@ public abstract class Allocator extends InstrVisitor<Boolean> {
             )
         );
         return src.isPresent() && dest.isPresent();
+    }
+
+    public Boolean visit(Mov.TLR m) {
+        // Move labeled memory into register
+        Optional<Reg> dest = allocate(m.dest, 1);
+        dest.ifPresent(d -> instrs.add(new Mov.RLR(m.src, d)));
+        return dest.isPresent();
+    }
+
+    public Boolean visit(Mov.TRL m) {
+        // Move register into labeled memory
+        Optional<Reg> src = allocate(m.src, 1);
+        src.ifPresent(s -> instrs.add(new Mov.RRL(s, m.dest)));
+        return src.isPresent();
     }
 
     /*

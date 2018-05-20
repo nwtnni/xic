@@ -91,7 +91,19 @@ public class TempReplacer extends InstrVisitor<Boolean> {
      */
 
     @Override
-    public Boolean visit(Call.T c) {
+    public Boolean visit(Call.TL c) {
+        return true;
+    }
+
+    @Override
+    public Boolean visit(Call.TR c) {
+        c.name = cg.getAlias(c.name);
+        return true;
+    }
+
+    @Override
+    public Boolean visit(Call.TM c) {
+        replace(c.name);
         return true;
     }
 
@@ -234,6 +246,18 @@ public class TempReplacer extends InstrVisitor<Boolean> {
         m.src = cg.getAlias(m.src);
         m.dest = cg.getAlias(m.dest);
         return !m.src.equals(m.dest);
+    }
+
+    @Override
+    public Boolean visit(Mov.TLR m) {
+        m.dest = cg.getAlias(m.dest);    
+        return true;
+    }
+
+    @Override
+    public Boolean visit(Mov.TRL m) {
+        m.src = cg.getAlias(m.src);
+        return true;
     }
     
     /*

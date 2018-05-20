@@ -11,6 +11,6 @@ public abstract class Node {
     public Location location;
     public Type type;
 
-    public abstract <T> T accept(Visitor<T> v) throws XicException;
+    public abstract <T> T accept(ASTVisitor<T> v) throws XicException;
 
 }

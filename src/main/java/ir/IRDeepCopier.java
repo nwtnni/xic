@@ -1,7 +1,6 @@
 package ir;
 
 import java.util.List;
-import java.util.HashSet;
 import java.util.ArrayList;
 
 /**
@@ -16,7 +15,7 @@ public class IRDeepCopier extends IRVisitor<IRExpr> {
         for (IRExpr e : c.args()) {
             newArgs.add(e.accept(this));
         }
-        return new IRCall((IRName) c.target().accept(this), newArgs);
+        return new IRCall(c.target().accept(this), c.numRets(), newArgs);
     }
 
     public IRExpr visit(IRBinOp b) {

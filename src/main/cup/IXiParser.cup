@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import lex.*;
 import ast.*;
 import xic.XicException;
+import xic.XicInternalException;
 
 parser code {:
 
@@ -22,7 +23,7 @@ parser code {:
         } catch (XicException xic) {
         	throw xic;
         } catch (Exception e) {
-        	throw ParseException.internal(e);
+        	throw new XicInternalException("File not found");
         }
     }
 
@@ -47,107 +48,267 @@ parser code {:
 
 scan with {: return lexer.nextToken(); :};
 
-/* Terminals (tokens returned by the scanner). */
-terminal                    USE;
-terminal                    INT, BOOL;
-terminal                    LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
-terminal                    COLON, COMMA;
-terminal    String          IDENTIFIER;
 
-/* Non terminals */
-non terminal    Node            FnDef;
-non terminal    List<Node>      FnDefList;
+/* --- Terminals (tokens returned by the scanner). --- */
+
+terminal                        USE;                                            // PA7
+terminal                        INT, BOOL;
+terminal                        LPAREN, RPAREN, LBRACK, RBRACK, LBRACE, RBRACE;
+terminal                        COLON, SEMICOLON, COMMA;                        // PA7: SEMICOLON
+terminal        String          IDENTIFIER;
+terminal                        CLASS, EXTENDS;                                 // PA7
+
+
+/* --- Non terminals --- */
+
+// Top level
+non terminal    Node            Interface;
+non terminal    List<Node>      UseDeclarations;
+non terminal    List<Node>      InterfaceBody;                                  // PA7
+
+// Use statements
+non terminal    Node            UseDeclr;
+
+// Classes
+non terminal    Node            ClassDeclr;                                     // PA7
+non terminal    List<Node>      ClassBody;                                      // PA7
+non terminal    Node            Field;                                          // PA7
+non terminal    Node            FieldType;                                      // PA7
+
+// Functions
+non terminal    Node            FnSig;
 non terminal    List<Node>      ArgsTypeList, FArgsTypeList;
 non terminal    List<Node>      ReturnTypeList, FReturnTypeList;
 non terminal    Node            FnType;
-non terminal    Node            Interface;
 
-/* The grammar rules */
+// Variable declarations
+non terminal    List<Node>      VarDeclrList, FVarDeclrList;                    // PA7
+
+// Types
+non terminal    Node            KeyType;
+
+// Optional semicolons
+non terminal                    OptSemicolon;
+
+
+/* --- Productions --- */
 start with      Interface;
 
-// Function Definitions
-FnDef ::= 
+// Optional Semicolon
+OptSemicolon ::=
+    | SEMICOLON
+    ;
+
+// Top level for interface
+Interface ::=
+    UseDeclarations:uds InterfaceBody:body
+    {:
+        RESULT = new XiProgram(udsxleft, XiProgram.Kind.INTERFACE, uds, body);
+    :}
+    ;
+
+// Use statements
+UseDeclarations ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | UseDeclarations:uds UseDeclr:u
+    {:
+        uds.add(u);
+        RESULT = uds;
+    :}
+    ;
+
+// Single use declaration
+UseDeclr ::=
+    USE:u IDENTIFIER:id OptSemicolon
+    {:
+        RESULT = new XiUse(uxleft, id);
+    :}
+    ;
+
+// Body of program after use statements 
+InterfaceBody ::=
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FnSig:f InterfaceBody:pb
+    {:
+        pb.add(0, f);
+        RESULT = pb;
+    :}
+    | ClassDeclr:c InterfaceBody:pb
+    {:
+        pb.add(0, c);
+        RESULT = pb;
+    :} 
+    ;
+
+/* --- Class declarations --- */
+
+// Class Declarations
+ClassDeclr ::= 
+    CLASS:c IDENTIFIER:id LBRACE ClassBody:body RBRACE
+    {:
+        RESULT = new XiClass(cxleft, id, body);
+    :}
+    | CLASS:c IDENTIFIER:id EXTENDS IDENTIFIER:parent LBRACE ClassBody:body RBRACE
+    {:
+        RESULT = new XiClass(cxleft, id, parent, body);
+    :}
+    ;
+
+// Class definition
+ClassBody ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | FnSig:f ClassBody:body
+    {:
+        body.add(0, f);
+        RESULT = body;
+    :}
+    | Field:f ClassBody:body
+    {:
+        body.add(0, f);
+        RESULT = body;
+    :}
+    ;
+
+/* --- Field variables --- */
+
+// Fields
+Field ::=
+    VarDeclrList:list COLON FieldType:type
+    {:
+        for (Node n : list) {
+            XiDeclr d = (XiDeclr) n;
+            d.xiType = (XiType) type;
+        }
+        RESULT = new XiSeq(listxleft, list);
+    :}
+    | IDENTIFIER:id COLON FieldType:type
+    {:
+        RESULT = new XiDeclr(idxleft, id, type);
+    :}
+    ;
+
+// Type constructor for field variables
+// Fields can be any primitive or an uninitialized object/array type
+FieldType ::=
+    KeyType:type
+    {:
+        RESULT = type;
+    :}
+    | FieldType:type LBRACK RBRACK
+    {:
+        RESULT = new XiType(typexleft, type);
+    :}
+    ;
+
+/* --- Function and procedure signatures --- */
+
+// Function signature
+FnSig ::= 
     IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN COLON ReturnTypeList:rtl
     {:
-        RESULT = new Fn(idxleft, id, atl, rtl);
+        RESULT = new XiFn(idxleft, id, atl, rtl);
     :}
     | IDENTIFIER:id LPAREN ArgsTypeList:atl RPAREN
     {:
-        RESULT = new Fn(idxleft, id, atl);
+        RESULT = new XiFn(idxleft, id, atl);
     :}
     ;
 
+// Function arguments list
 ArgsTypeList ::= 
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
-    | IDENTIFIER:id COLON FnType:type FArgsTypeList:atl
-        {:
-            atl.add(0, new Declare(idxleft, id, type));
-            RESULT = atl;
-        :}
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
+    {:
+        fatl.add(0, new XiDeclr(idxleft, id, type));
+        RESULT = fatl;
+    :}
     ;
 
-FArgsTypeList ::=
-        {:
-            RESULT = new ArrayList<Node>();
-        :} 
-    | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:atl
-        {:
-            atl.add(0, new Declare(idxleft, id, type));
-            RESULT = atl;
-        :}
+FArgsTypeList ::= 
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA IDENTIFIER:id COLON FnType:type FArgsTypeList:fatl
+    {:
+        fatl.add(0, new XiDeclr(idxleft, id, type));
+        RESULT = fatl;
+    :}
     ;
 
+// Function return type list
 ReturnTypeList ::= 
-    FnType:type FReturnTypeList:rtl
-        {:
-            rtl.add(0, type);
-            RESULT = rtl;
-        :}
+    FnType:type FReturnTypeList:frtl
+    {:
+        frtl.add(0, type);
+        RESULT = frtl;
+    :}
     ;
 
 FReturnTypeList ::= 
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
-    | COMMA FnType:type FReturnTypeList:rtl
-        {:
-            rtl.add(0, type);
-            RESULT = rtl;
-        :}
+    {:
+        RESULT = new ArrayList<Node>();
+    :}
+    | COMMA FnType:type FReturnTypeList:frtl
+    {:
+        frtl.add(0, type);
+        RESULT = frtl;
+    :}
     ;
 
+// Types in function signature
 FnType ::= 
-    INT:i
-        {:
-            RESULT = new XiType(ixleft, "int");
-        :}
-    | BOOL:b
-        {:
-            RESULT = new XiType(bxleft, "bool");
-        :}
+    KeyType:type
+    {:
+        RESULT = type;
+    :}
     | FnType:type LBRACK RBRACK
-        {:
-            RESULT = new XiType(typexleft, type);
-        :}
+    {:
+        RESULT = new XiType(typexleft, type);
+    :}
     ;
 
-// Interface
-FnDefList ::= 
-        {:
-            RESULT = new ArrayList<Node>();
-        :}
-    | FnDefList:fdl FnDef:f
-        {:
-            fdl.add(f);
-            RESULT = fdl;
-        :}
+/* --- Other --- */
+
+// For multiple variable declarations of the same type
+VarDeclrList ::=
+    IDENTIFIER:a COMMA IDENTIFIER:b FVarDeclrList:idList
+    {:
+        idList.add(0, new XiDeclr(bxleft, b, null));
+        idList.add(0, new XiDeclr(axleft, a, null));
+        RESULT = idList;
+    :}
     ;
 
-Interface ::= FnDefList:fdl FnDef:f
-        {:
-            fdl.add(f);
-            RESULT = new Program(fdlxleft, fdl);
-        :}
+FVarDeclrList ::=
+    {:
+        RESULT = new ArrayList<>();
+    :}
+    | COMMA IDENTIFIER:id FVarDeclrList:idList
+    {:
+        idList.add(new XiDeclr(idxleft, id, null));
+    :}
+    ;
+
+// Primitive and class types
+KeyType ::= 
+    INT:i
+    {:
+        RESULT = new XiType(ixleft, "int");
+    :}
+    | BOOL:b
+    {:
+        RESULT = new XiType(bxleft, "bool");
+    :}
+    | IDENTIFIER:i
+    {:
+        RESULT = new XiType(ixleft, i);
+    :}
     ;

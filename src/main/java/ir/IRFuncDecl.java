@@ -10,18 +10,28 @@ public class IRFuncDecl extends IRNode {
     /** The mangled function name. */
     private String name;
 
+    /** Number of arguments. */
+    private int args;
+
+    /** Number of returns. */
+    private int rets;
+
     /** The function body. */
     private IRSeq body;
 
-    public IRFuncDecl(String sourceName, String name) {
+    public IRFuncDecl(String sourceName, String name, int args, int rets) {
         this.sourceName = sourceName;
         this.name = name;
+        this.args = args;
+        this.rets = rets;
         this.body = new IRSeq();
     }
 
-    public IRFuncDecl(String sourceName, String name, IRSeq body) {
+    public IRFuncDecl(String sourceName, String name, int args, int rets, IRSeq body) {
         this.sourceName = sourceName;
         this.name = name;
+        this.args = args;
+        this.rets = rets;
         this.body = body;
     }
 
@@ -31,6 +41,14 @@ public class IRFuncDecl extends IRNode {
 
     public String name() {
         return name;
+    }
+
+    public int args() {
+        return args;
+    }
+
+    public int rets() {
+        return rets;
     }
 
     public IRSeq body() {
@@ -47,6 +65,10 @@ public class IRFuncDecl extends IRNode {
 
     public void add(int index, IRStmt s) {
         body.add(index, s);
+    }
+
+    public boolean addAll(List<IRStmt> s) {
+        return body.addAll(s);
     }
 
     public IRStmt set(int index, IRStmt s) {

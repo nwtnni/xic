@@ -3,121 +3,65 @@ package type;
 import java.util.List;
 import java.util.ArrayList;
 
-import ast.*;
-import java_cup.runtime.ComplexSymbolFactory.Location;
-import xic.XicException;
-
 /**
- * Represents a function type as defined the Xi Type Specification.
- * 
- * Functions can have any number of argument and return types. This
- * class visits a {@link ast.Fn} node and its {@link ast.XiType} children
- * in order to do its conversions.
- * 
- * @see Type
- * @see ast.Visitor
+ * Represents a function type in the OXi type system.
  */
-public class FnType extends Visitor<Type> {
+public class FnType extends GlobalType {
 
-    /**
-     * Convenience factory method to create a FnType from a Fn.
-     * 
-     * @param f Fn node to convert
-     * @return FnType corresponding to Fn f
-     */
-    public static FnType from(Fn f) {
-        FnType type = new FnType();
-        try {
-            type.visit(f);
-        } catch (XicException e) {
-            // Unreachable because FnType visitor does not throw type execptions
-            assert false;
-        }
-        return type;
+    protected List<Type> args;
+    protected List<Type> rets;
+
+    public FnType(List<Type> args, List<Type> rets) {
+        this.args = new ArrayList<>(args);
+        this.rets = rets.isEmpty() ? List.of(UnitType.UNIT) : new ArrayList<>(rets);
     }
 
-    public FnType() {
-        super();
-    }
-
-    public FnType(Type args, Type returns) {
-        super();
-        this.location = null;
-        this.args = args;
-        this.returns = returns;
-    }
-
-    /**
-     * Stores the Fn's location for error display.
-     */
-    public Location location;
-    
-    /**
-     * Stores the Fn's arguments. Can be a {@link Type.Kind#LIST} for
-     * functions with zero or more than one argument types, or a {@link Type.Kind#CLASS}
-     * for functions with one return type.
-     */
-    public Type args;
-    
-    /**
-     * Stores the Fn's return types. Can be a {@link Type.Kind#TUPLE} for
-     * functions with zero or more than one return types, or a {@link Type.Kind#CLASS}
-     * for functions with one return type.
-     */
-    public Type returns;
-
-    /**
-     * Override to create a list of types from a list of nodes.
-     */
     @Override
-    public List<Type> visit(List<Node> nodes) throws XicException {
-        List<Type> types = new ArrayList<>();
-        for (Node n : nodes) {
-            types.add(n.accept(this));
-        }
-        return types;
+    public boolean isFn() { return true; }
+
+    public List<Type> getArgs() { return new ArrayList<>(args); }
+
+    public int getNumArgs() { return args.size(); }
+
+    public List<Type> getReturns() { return new ArrayList<>(rets); }
+
+    public int getNumRets() { return rets.size(); }
+
+    @Override
+    public String toString() { 
+        String a = args.stream()
+            .map(e -> e.toString())
+            .reduce("", (acc, s) -> acc + s);
+
+        String r = rets.stream()
+            .map(e -> e.toString())
+            .reduce("", (acc, s) -> acc + s);
+
+        String p = rets.size() == 1 && rets.get(0).equals(UnitType.UNIT) ? "p" : "";
+
+        return p + r + a;
     }
 
-    /**
-     * Visits a Fn and populates the fields of this FnType.
-     */
-    public Type visit(Fn f) throws XicException {
-        location = f.location;
-        args = Type.listFromList(visit(f.args));
-        returns = Type.tupleFromList(visit(f.returns));
-        return null;
-    }
-
-    /**
-     * Visits a Declare node and returns its type.
-     */
-    public Type visit(Declare d) throws XicException {
-        return d.xiType.accept(this);
-    }
-
-    /**
-     * Visits a XiType node and converts it to a Type.
-     */
-    public Type visit(XiType xt) {
-        return new Type(xt);
-    }
-
-    /**
-     * Two functions are equal if their argument and return types
-     * are equal.
-     */
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof FnType)) { return false; }
-        FnType type = (FnType) o;
-        return args.equals(type.args) && returns.equals(type.returns);
+        if (!(o instanceof FnType)) return false;
+
+        FnType mt = (FnType) o;
+        if (mt.args.size() != args.size() || mt.rets.size() != rets.size()) return false;
+
+        for (int i = 0; i < args.size(); i++) {
+            if (!mt.args.get(i).equals(args.get(i))) return false;  
+        }
+
+        for (int i = 0; i < rets.size(); i++) {
+            if (!mt.rets.get(i).equals(rets.get(i))) return false;
+        }
+
+        return true;
     }
 
-    /**
-     * Implemented to maintain equivalence with equals.
-     */
     @Override
     public int hashCode() {
-        return args.hashCode() * returns.hashCode();
+        return args.hashCode() + rets.hashCode();
     }
 }

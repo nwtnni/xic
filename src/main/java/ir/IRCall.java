@@ -9,20 +9,20 @@ import java.util.List;
  * CALL(e_target, e_1, ..., e_n)
  */
 public class IRCall extends IRExpr {
-    /**
-    *
-    * target and args were IRExpr in release code
-    */
-    private IRName target;
+    
+    private IRExpr target;
+
     private List<IRExpr> args;
+
+    private int numRets;
 
     /**
      *
      * @param target address of the code for this function call
      * @param args arguments of this function call
      */
-    public IRCall(IRName target, IRExpr... args) {
-        this(target, new ArrayList<>(Arrays.asList(args)));
+    public IRCall(IRExpr target, int rets, IRExpr... args) {
+        this(target, rets, new ArrayList<>(Arrays.asList(args)));
     }
 
     /**
@@ -30,14 +30,15 @@ public class IRCall extends IRExpr {
      * @param target address of the code for this function call
      * @param args arguments of this function call
      */
-    public IRCall(IRName target, List<IRExpr> args) {
+    public IRCall(IRExpr target, int rets, List<IRExpr> args) {
         this.target = target;
         this.args = args;
+        this.numRets = rets;
     }
 
     /* Public interface for call. */
 
-    public IRName target() {
+    public IRExpr target() {
         return target;
     }
 
@@ -67,8 +68,12 @@ public class IRCall extends IRExpr {
         return args.get(index);
     }
 
-    public int size() {
+    public int numArgs() {
         return args.size();
+    }
+
+    public int numRets() {
+        return numRets;
     }
 
     @Override

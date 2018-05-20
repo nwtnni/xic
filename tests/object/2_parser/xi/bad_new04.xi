@@ -1,0 +1,3 @@
+foo() {
+    x = new == new
+}

@@ -1,0 +1,3 @@
+foo() {
+    x = this *>> this
+}

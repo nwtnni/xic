@@ -1,7 +1,6 @@
 package assemble.instructions;
 
-import assemble.*;
-
+/** Base class assembly level template for visitor pattern. */
 public abstract class InstrVisitor<T> {
 
     /*
@@ -32,7 +31,15 @@ public abstract class InstrVisitor<T> {
      * Call Visitor
      */
 
-    public T visit(Call.T c) {
+    public T visit(Call.TL c) {
+        return null;
+    }
+
+    public T visit(Call.TR c) {
+        return null;
+    }
+
+    public T visit(Call.TM c) {
         return null;
     }
 
@@ -129,6 +136,14 @@ public abstract class InstrVisitor<T> {
     }
 
     public T visit(Mov.TRR m) {
+        return null;
+    }
+
+    public T visit(Mov.TLR m) {
+        return null;
+    }
+
+    public T visit(Mov.TRL m) {
         return null;
     }
     

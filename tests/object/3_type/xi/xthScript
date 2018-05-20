@@ -1,0 +1,86 @@
+xic ("Test oXi --typecheck") "--typecheck" {
+
+  bad_add_obj1.xi;
+
+  bad_assign_new1.xi;
+  bad_assign_new2.xi;
+  bad_assign_new3.xi;
+  bad_assign_new4.xi;
+
+  bad_div_obj1.xi;
+
+  bad_func_multi_return01.xi;
+
+  bad_hmult_obj1.xi;
+
+  bad_method_multi_return01.xi;
+
+  bad_mod_obj1.xi;
+  bad_mult_obj1.xi;
+  bad_sub_obj1.xi;
+
+  bad_obj_array1.xi;
+
+  bad_inherit1.xi;
+
+  bad_method_shadow1.xi;
+  bad_method_shadow2.xi;
+
+  func_multi_return01.xi;
+
+  method1.xi;
+  method2.xi;
+  method3.xi;
+  method4.xi;
+  method5.xi;
+
+  method_multi_return01.xi;
+
+  method_override1.xi;
+  method_override2.xi;
+  method_override3.xi;
+
+  inherit1.xi;
+  inherit2.xi;
+  inherit3.xi;
+
+  local_shadow1.xi;
+  local_shadow2.xi;
+
+  null1.xi;
+  null2.xi;
+  null3.xi;
+  null4.xi;
+
+  obj_arg1.xi;
+  obj_arg2.xi;
+  obj_arg3.xi;
+
+  obj_argret1.xi;
+  obj_argret2.xi;
+  obj_argret3.xi;
+
+  obj_array1.xi;
+  obj_array2.xi;
+
+  obj_assign1.xi;
+  obj_assign2.xi;
+  obj_assign3.xi;
+  obj_assign4.xi;
+
+  obj_field1.xi;
+  obj_field2.xi;
+  obj_field3.xi;
+
+  obj_eqeq1.xi;
+  obj_eqeq2.xi;
+  obj_eqeq3.xi;
+
+  obj_neq1.xi;
+  obj_neq2.xi;
+  obj_neq3.xi;
+
+  obj_ret1.xi;
+  obj_ret2.xi;
+  obj_ret3.xi;
+}

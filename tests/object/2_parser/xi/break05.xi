@@ -1,0 +1,9 @@
+x:int
+
+foo():int  {
+    while(true) {
+        x = x+1
+        {{break}}
+    }
+    return x
+}
