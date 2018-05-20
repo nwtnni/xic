@@ -1,5 +1,7 @@
 package type;
 
+import java.util.List;
+
 import util.OrderedMap;
 import util.Either;
 
@@ -13,6 +15,10 @@ public class ClassContext {
     public ClassContext() {
         this.fields = new OrderedMap<>();
         this.methods = new OrderedMap<>();
+    }
+
+    public List<String> getMethods() {
+        return methods.keyList();
     }
 
     public boolean contains(String id) {

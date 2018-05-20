@@ -46,7 +46,7 @@ public class GlobalContext {
             ct = hierarchy.get(ct);
         }
 
-        hierarchy.put(subclass, superclass);    
+        hierarchy.put(subclass, superclass);
         return true;
     }
 
@@ -64,6 +64,40 @@ public class GlobalContext {
 
     public ClassContext lookup(ClassType ct) {
         return classes.get(ct);
+    }
+
+    public OrderedMap<String, MethodType> lookupAllMethods(ClassType ct) {
+
+        // Record stack of ancestors
+        Stack<ClassType> ancestors = new Stack<>();
+        OrderedMap<String, MethodType> methods = new OrderedMap<>();
+
+        // Start off at subclass
+        ClassType traverse = ct;
+        ancestors.push(traverse);
+
+        // Traverse upwards through hierarchy
+        while (hierarchy.containsKey(traverse)) {
+            traverse = hierarchy.get(traverse);
+            ancestors.push(traverse);
+        }
+
+        // Add methods top-down to preserve correct order
+        while (!ancestors.isEmpty()) {
+
+            ClassContext ancestor = classes.get(ancestors.pop());
+
+            for (String method : ancestor.getMethods()) {
+
+                // Method already defined in superclass
+                if (methods.containsKey(method)) continue;
+
+                // Otherwise add it to the ordered map
+                methods.put(method, ancestor.lookupMethod(method));
+            }
+        }
+
+        return methods;
     }
 
     public boolean isSubclass(ClassType subclass, ClassType superclass) {
