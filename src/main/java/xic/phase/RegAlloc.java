@@ -2,12 +2,8 @@ package xic.phase;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 import assemble.*;
-import assemble.instructions.*;
-import optimize.graph.*;
 import optimize.register.*;
 
 import util.Result;

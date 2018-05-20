@@ -1,0 +1,220 @@
+.file "xi-object.s"
+.data
+
+.globl _I_size_A
+_I_size_A:
+        .quad   0
+
+.globl _I_vt_A
+_I_vt_A:
+        .zero   8 * 2
+
+.globl _I_size_B
+_I_size_B:
+        .quad   0
+
+.globl _I_vt_B
+_I_vt_B:
+        .zero   8 * 3
+
+.section .ctors
+.align 4
+.quad   _I_init_p
+
+.text
+
+# Main init
+.local _I_init
+.align 4
+_I_init_p:
+        # init class vt and size
+        callq _I_init_A
+        callq _I_init_B
+
+        retq
+
+.globl _I_init_A
+.align 4
+_I_init_A:
+        # Skip if already initialized
+        cmpq $0, _I_size_A
+        jne _RET_I_init_A
+
+        movq $97, %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        # A has 1 field f1
+        movq $1, %rdi
+        movq %rdi, _I_size_A
+
+        # Address of A's vt
+        movq $_I_vt_A, %rax
+
+        # Store pointer to a1() in A[1]
+        movq $_Ia1_p, %rdi
+        movq %rdi, 8(%rax)
+
+_RET_I_init_A:
+        retq
+
+.globl _I_init_B
+.align 4
+_I_init_B:
+        # Skip if already initialized
+        cmpq $0, _I_size_B
+        jne _RET_I_init_B
+
+        movq $98, %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        # Initialize superclass
+        callq _I_init_A
+
+        # B has 1 field f2 
+        # in addition A's fields
+        movq $1, %rdi
+        movq _I_size_A, %rsi
+        addq %rsi, %rdi
+        movq %rdi, _I_size_B
+
+        # Address of B's vt
+        movq $_I_vt_B, %rax
+
+        # Copy A's vt
+        movq $_I_vt_A, %rsi
+        movq 8(%rsi), %rdi
+        movq %rdi, 8(%rax)
+        
+        movq $_Ib1_p, %rdi
+        movq %rdi, 16(%rax)
+
+_RET_I_init_B:
+        retq
+
+# A.a1
+.local _Ia1_p
+.align 4
+_Ia1_p:
+        pushq %rbp
+        movq %rsp, %rbp
+        subq $32, %rsp
+        movq %r12, -8(%rbp)
+
+        movq %rdi, %r12
+
+        movq 8(%r12), %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        addq $1, 8(%r12)
+
+        movq -8(%rbp), %r12
+        addq $32, %rsp
+        popq %rbp
+        retq
+
+# B.b1
+.local _Ib1_p
+.align 4
+_Ib1_p:
+        pushq %rbp
+        movq %rsp, %rbp
+        subq $32, %rsp
+        movq %r12, -8(%rbp)
+
+        movq %rdi, %r12
+
+        movq 16(%r12), %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        addq $2, 16(%r12)
+
+        movq -8(%rbp), %r12
+        addq $32, %rsp
+        popq %rbp
+        retq
+
+# main
+.globl _Imain_paai
+.align 4
+_Imain_paai:
+        pushq %rbp
+        movq %rsp, %rbp
+        subq $32, %rsp
+        movq %r12, -8(%rbp)
+        movq %r13, -16(%rbp)
+
+        # println("main") -> main
+        movq $40, %rdi
+        callq _xi_alloc
+        movq %rax, %rdx
+        movq $4, (%rdx)
+        movq $109, 8(%rax)
+        movq $97, 16(%rax)
+        movq $105, 24(%rax)
+        movq $110, 32(%rax)
+        addq $8, %rax
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        # x = new A
+        movq $16, %rdi
+        callq _xi_alloc
+        movq %rax, %r12
+        movq $_I_vt_A, %rax
+        movq %rax, (%r12)
+
+        # x.a1()
+        movq (%r12), %rax
+        movq %r12, %rdi
+        callq * 8(%rax)
+
+        # print(x.f1)
+        movq 8(%r12), %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        # y = new B
+        movq $24, %rdi
+        callq _xi_alloc
+        movq %rax, %r13
+        movq $_I_vt_B, %rax
+        movq %rax, (%r13)
+
+        # y.a1()
+        movq (%r13), %rax
+        movq %r13, %rdi
+        callq * 8(%rax)
+
+        # print(y.f1)
+        movq 8(%r13), %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        # y.b1()
+        movq (%r13), %rax
+        movq %r13, %rdi
+        callq * 16(%rax)
+
+        # print(y.f2)
+        movq 16(%r13), %rdi
+        callq _IunparseInt_aii
+        movq %rax, %rdi
+        callq _Iprintln_pai
+
+        movq -8(%rbp), %r12
+        movq -16(%rbp), %r13
+        jmp _RET_Imain_paai
+_RET_Imain_paai:
+        addq $32, %rsp
+        popq %rbp
+        retq

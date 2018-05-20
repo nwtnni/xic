@@ -44,4 +44,11 @@ public class ParseException extends XicException {
     public static ParseException numberFormatException(Location l, String literal) {
         return new ParseException(l, "Invalid integer literal " + literal);
     }
+
+    /**
+     * PA7: Wrapper for language extension exception.
+     */
+    public static ParseException mismatchedCount(Location l, String literal) {
+        return new ParseException(l, literal);
+    }
 }

@@ -89,7 +89,7 @@ public class ColorGraph {
             List<Temp> live = new ArrayList<>(liveVars.get(instr));
 
             // Inject caller saved registers at call instructions
-            if (instr instanceof Call<?>) {
+            if (instr instanceof Call<?, ?>) {
                 live.addAll(
                     Set.of(Temp.RAX, Temp.RCX, Temp.RDX, Temp.RDI, Temp.RSI, 
                             Temp.R8, Temp.R9, Temp.R10, Temp.R11)

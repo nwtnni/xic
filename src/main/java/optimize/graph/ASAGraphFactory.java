@@ -39,7 +39,7 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
      */
     public Map<String, ASAGraph<E>> getAllCfgs(CompUnit<Temp> compUnit) {
         Map<String, ASAGraph<E>> fns = new HashMap<>();
-        for (FuncDecl<Temp> fn : compUnit.fns) {
+        for (FuncDecl<Temp> fn : compUnit.text) {
             // Generate graph
             makeCfg(fn);
             fns.put(fn.name, cfg);
@@ -92,15 +92,19 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
         return b;
     }
 
-    public Instr<Temp> visit(Call<Temp> i) {
-        return i;
-    }
-
     /*
      * Call Visitor
      */
 
-    public Instr<Temp> visit(Call.T c) {
+    public Instr<Temp> visit(Call.TL c) {
+        return c;
+    }
+
+    public Instr<Temp> visit(Call.TR c) {
+        return c;
+    }
+
+    public Instr<Temp> visit(Call.TM c) {
         return c;
     }
 
@@ -232,6 +236,14 @@ public class ASAGraphFactory<E> extends InstrVisitor<Instr<Temp>> {
 
     public Instr<Temp> visit(Mov.TRR m) {
         return m;
+    }
+
+    public Instr<Temp> visit(Mov.TLR m) {
+        return null;
+    }
+
+    public Instr<Temp> visit(Mov.TRL m) {
+        return null;
     }
     
     /*

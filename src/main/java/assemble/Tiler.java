@@ -109,6 +109,7 @@ public class Tiler extends IRVisitor<Operand> {
      */
     
     public Operand visit(IRCompUnit c) {
+        unit.name = c.name();
         for (IRFuncDecl fn : c.functions().values()) {
             fn.accept(this);
         }
@@ -153,11 +154,10 @@ public class Tiler extends IRVisitor<Operand> {
 
         // Set up prologue and epilogue
         FuncDecl.T fn = new FuncDecl.T(f, args, returns, instrs);
-        unit.fns.add(fn);
+        unit.text.add(fn);
         
         return null;
     }
-
 
     public Operand visit(IRBinOp b) {
         Optional<Imm> immL = checkImm(b.left());
@@ -278,7 +278,7 @@ public class Tiler extends IRVisitor<Operand> {
             instrs.addAll(mov(val, Config.callerArg(i + callIsMultiple), imm));
         }
 
-        instrs.add(call(target, callerNumArgs, numRets));
+        instrs.add(callS(target, callerNumArgs, numRets));
         return Config.callerRet(0, callerNumArgs);
     }
 
