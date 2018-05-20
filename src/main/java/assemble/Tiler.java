@@ -17,6 +17,7 @@ import interpret.Configuration;
 import ir.*;
 import ir.IRBinOp.OpType;
 import ir.IRMem.MemType;
+import type.ClassType;
 import xic.XicInternalException;
 
 import util.Pair;
@@ -82,8 +83,6 @@ public class Tiler extends IRVisitor<Operand> {
     public Operand visit(IRCompUnit c) {
         unit.name = c.name();
 
-        System.out.println(c.globals());
-
         // Add globals
         for (String name : c.globals().keySet()) {
             unit.data.add(".local " + name);
@@ -91,7 +90,22 @@ public class Tiler extends IRVisitor<Operand> {
             unit.data.add("        .quad   " + c.globals().get(name));
         }
 
+        System.out.println(context.gc.lookupLocalClasses());
+
         // Add globals for all classes
+        for (ClassType cls : context.gc.lookupLocalClasses()) {
+            String name = cls.getID();
+
+            // _I_size_name
+            unit.data.add(".global " + context.classSize(name));
+            unit.data.add(context.classSize(name) + ":");
+            unit.data.add("        .quad   0");
+
+            // _I_vt_name
+            unit.data.add(".global " + context.classVT(name));
+            unit.data.add(context.classVT(name) + ":");
+            unit.data.add("        .zero   8 * " + context.gc.lookupAllMethods(cls).size());
+        }
 
         for (IRFuncDecl fn : c.functions().values()) {
             fn.accept(this);

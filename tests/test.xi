@@ -9,6 +9,9 @@ main (args:int[][]) {
     a[1] = 'i'
     println(unparseInt(n))
     println(a)
+
+    x:A = new A
+    y:B = new B
 }
 
 class A {
