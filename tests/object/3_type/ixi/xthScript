@@ -1,4 +1,7 @@
 xic ("Test oXi --typecheck") "--typecheck" {
     bad_class_overlap01.xi;
+    bad_class_interface_00.xi;
     func_with_ixi01.xi;
+    tree_00.xi;
+    private_tree_00.xi;
 }

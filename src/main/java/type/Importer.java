@@ -1,6 +1,7 @@
 package type;
 
 import java.util.Set;
+import java.util.HashSet;
 import java.io.IOException;
 
 import ast.*;
@@ -38,7 +39,7 @@ public class Importer extends TypeChecker {
      * @throws XicException if any functions are illegally shadowed
      */
     public static GlobalContext resolve(String lib, String file) throws XicException {
-        return resolve(lib, file, Set.of(file));
+        return resolve(lib, file, new HashSet<>(Set.of(file)));
     }
 
     private static GlobalContext resolve(String lib, String file, Set<String> visited) throws XicException {

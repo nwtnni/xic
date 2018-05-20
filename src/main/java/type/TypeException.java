@@ -47,6 +47,7 @@ public class TypeException extends XicException {
         INVALID_ARRAY_SIZE("Expected integer for array size"),
         NOT_UNIFORM_ARRAY("Arrays must contain values of uniform type"),
         NOT_AN_ARRAY("Expected array"),
+        EMPTY_ARRAY_INDEX("Cannot index into empty array"),
 
         // Context exceptions
         DECLARATION_CONFLICT("Conflicting declarations"),
