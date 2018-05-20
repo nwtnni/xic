@@ -38,9 +38,16 @@ public class GlobalContext {
     }
 
     //TODO: make sure overrides line up
-    public void extend(ClassType subclass, ClassType superclass) throws TypeException {
+    public boolean extend(ClassType subclass, ClassType superclass) {
 
+        ClassType ct = superclass;
+        while (ct != null) {
+            if (ct.equals(subclass)) return false;
+            ct = hierarchy.get(ct);
+        }
 
+        hierarchy.put(subclass, superclass);    
+        return true;
     }
 
     public boolean contains(ClassType ct) {
@@ -61,10 +68,8 @@ public class GlobalContext {
 
     public boolean isSubclass(ClassType subclass, ClassType superclass) {
 
-        if (subclass.equals(superclass)) return true;
-
         ClassType ct = subclass;
-        while (hierarchy.containsKey(subclass) && !hierarchy.get(ct).equals(superclass)) {
+        while (hierarchy.containsKey(ct) && !ct.equals(superclass)) {
             ct = hierarchy.get(ct);
         }
 

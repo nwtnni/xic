@@ -38,6 +38,7 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     protected TypeChecker() {
         this.globalContext = new GlobalContext();
+        this.moduleClasses = new HashSet<>();
         this.inside = null;
         this.returns = null;
         this.localContext = new LocalContext();
@@ -53,12 +54,15 @@ public class TypeChecker extends ASTVisitor<Type> {
      */
     private TypeChecker(String lib, Node ast) throws XicException {
         this.globalContext = new GlobalContext();
+        this.moduleClasses = new HashSet<>();
         this.inside = null;
         this.returns = null;
         this.localContext = new LocalContext();
     }
 
     protected GlobalContext globalContext;
+
+    protected Set<ClassType> moduleClasses; 
 
     private ClassType inside;
 
@@ -191,6 +195,8 @@ public class TypeChecker extends ASTVisitor<Type> {
                 }
 
                 globalContext.put(c.id, cc);
+                moduleClasses.add(ct);
+                if (c.parent != null) globalContext.extend(ct, new ClassType(c.parent));
             }
 
             // Populate top-level functions
@@ -296,7 +302,7 @@ public class TypeChecker extends ASTVisitor<Type> {
         if (f.isFn() && !bt.isVoid()) throw new TypeException(CONTROL_FLOW, f.location);
 
         localContext.pop();
-        f.type = UnitType.UNIT;
+        f.type = ft;
         return f.type;
     }
 
@@ -646,7 +652,7 @@ public class TypeChecker extends ASTVisitor<Type> {
     @Override
     public Type visit(XiNew n) throws XicException {
         ClassType ct = new ClassType(n.name);
-        if (inside == null || !inside.equals(ct)) throw new TypeException(UNBOUND_NEW, n.location);
+        if (!moduleClasses.contains(ct)) throw new TypeException(UNBOUND_NEW, n.location);
         n.type = ct;
         return n.type;
     }
@@ -709,6 +715,8 @@ public class TypeChecker extends ASTVisitor<Type> {
      * The 0-length array is polymorphic and has special type {@link TypeCheck.POLY},
      * which is equal to all array types.
      *
+     * Arrays of classes typecheck to the LUB of all classes.
+     *
      * @returns Array of child types
      * @throws XicException if invalid
      */
@@ -734,7 +742,7 @@ public class TypeChecker extends ASTVisitor<Type> {
 
         // Otherwise must be at least one non-polymorphic element
         Type reference = types.stream()
-            .filter(elem -> !elem.isPoly())
+            .filter(elem -> !elem.isPoly() && !elem.isNull())
             .findFirst()
             .get();
 
@@ -742,10 +750,27 @@ public class TypeChecker extends ASTVisitor<Type> {
 
             Type type = types.get(i);
 
+            // Ignore null types
+            if (type.isNull() && reference.isClass()) continue;
+
             // Coerce polymorphic types
-            if (type.isPoly()) {
+            if (type.isPoly() && reference.isArray()) {
                 a.values.get(i).type = reference;
-            } else if (!type.equals(reference)) {
+            }
+
+            // Coerce subtypes upward to LUB
+            if (reference.isClass() && type.isClass()) {
+                ClassType rt = (ClassType) reference;
+                ClassType ct = (ClassType) type;
+                if (globalContext.isSubclass(rt, ct)) {
+                    reference = type;
+                }
+                else if (!globalContext.isSubclass(ct, rt)) {
+                    throw new TypeException(NOT_UNIFORM_ARRAY, a.values.get(i).location);
+                }
+            }
+            
+            else if (!type.equals(reference)) {
                 throw new TypeException(NOT_UNIFORM_ARRAY, a.values.get(i).location);
             }
         }

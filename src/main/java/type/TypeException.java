@@ -19,7 +19,7 @@ public class TypeException extends XicException {
         UNBOUND_THIS("Keyword 'this' can only be used inside of a class"),
         UNBOUND_CLASS("Class not found"),
         UNBOUND_FIELD("Field or method not found"),
-        UNBOUND_NEW("Keyword 'new' can only be used inside of the class"),
+        UNBOUND_NEW("Keyword 'new' can only be used inside of the module where this class is defined"),
         INVALID_DOT("Left-hand side of dot operator must be a class"),
         NOT_A_METHOD("Expected method"),
         PRIVATE_EQ("Object equality is private to the class definition"),

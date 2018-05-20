@@ -16,6 +16,11 @@ public class ClassType extends FieldType {
     }
 
     @Override
+    public String toString() {
+        return id;
+    }
+
+    @Override
     public boolean isClass() {
         return true;
     }

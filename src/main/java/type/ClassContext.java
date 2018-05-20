@@ -10,6 +10,11 @@ public class ClassContext {
     private OrderedMap<String, FieldType> fields;
     private OrderedMap<String, MethodType> methods;
 
+    public ClassContext() {
+        this.fields = new OrderedMap<>();
+        this.methods = new OrderedMap<>();
+    }
+
     public boolean contains(String id) {
         return fields.containsKey(id) || methods.containsKey(id);
     }
