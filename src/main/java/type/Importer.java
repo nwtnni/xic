@@ -141,7 +141,7 @@ public class Importer extends TypeChecker {
         }
 
         // Second pass: check everything
-        this.strict = true;
+        this.initializing = false;
         for (Node n : p.body) {
             n.accept(this);
         }
