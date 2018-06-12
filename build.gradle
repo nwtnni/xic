@@ -15,9 +15,7 @@ dependencies {
     testCompile "org.hamcrest:hamcrest-core:1.3"
     testCompile "junit:junit:4.12"
     compile files("libs/java_cup.jar")
-    compile files("libs/commons-io-2.6.jar")
     compile files("libs/sexp-printer.jar")
-    compile files("libs/pcollections.jar")
     compile files("libs/jgrapht-core-1.1.0.jar")
     compile files("libs/jgrapht-io-1.1.0-uber.jar")
 }

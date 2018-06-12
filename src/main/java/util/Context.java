@@ -1,19 +1,16 @@
 package util;
 
-import org.pcollections.*;
 import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Iterator;
 
 import xic.XicInternalException;
 
 /**
- * Persistent implementation of a generic symbol table. Reinforces uniqueness of symbols.
- * 
- * This class is backed by the <a href="https://pcollections.org/">PCollections</a>
- * library, which offers several implementations of persistent data structures.
- * Since cloning is cheap, we can afford to cache the symbol table while traversing
- * the AST.
+ * Generic symbol table. Reinforces uniqueness of symbols.
  * 
  * @param <S> Symbol representation
  * @param <T> Type representation
@@ -25,27 +22,17 @@ import xic.XicInternalException;
 public class Context<S,T> {
 
     /**
-     * The backing persistent data structure.
-     * 
-     * We use a PStack to represent entering and leaving different scopes,
-     * and PMaps to record key-value pairs.
+     * We use a Stack to represent entering and leaving different scopes,
+     * and Maps to record key-value pairs.
      */
-    protected PStack<PMap<S,T>> context;
+    protected Stack<Map<S,T>> context;
 
     /**
      * Default constructor initializes a single empty map.
      */
     public Context() {
-        this.context = ConsPStack.singleton(HashTreePMap.empty());
-    }
-    
-    /**
-     * Internal constructor to clone a Context.
-     * 
-     * @param c Context to clone
-     */
-    protected Context(Context<S,T> c) {
-        this.context = c.context;
+        this.context = new Stack<>();
+        this.context.push(new LinkedHashMap<>());
     }
 
     /**
@@ -55,7 +42,7 @@ public class Context<S,T> {
      * @return Type t if it exists in this context, else null
      */
     public T lookup(S s) {
-        for (PMap<S,T> map : context) {
+        for (Map<S,T> map : context) {
             T t = map.get(s);
             if (t != null){
                 return t;
@@ -73,17 +60,14 @@ public class Context<S,T> {
      */
     public void add(S s, T t) {
         if (contains(s)) { throw XicInternalException.runtime("Shadowing key in context"); }
-        PMap<S, T> map = context.get(0);
-        context = context.minus(0);
-        map = map.plus(s, t);
-        context = context.plus(map);
+        context.peek().put(s, t);
     }
 
     /**
      * Pushes a new scope onto the stack.
      */
     public void push() {
-        context = context.plus(HashTreePMap.empty());
+        context.push(new LinkedHashMap<>());
     }
 
     /**
@@ -91,7 +75,7 @@ public class Context<S,T> {
      */
     public void pop() {
         if (context.size() > 1) {
-            context = context.minus(0);
+            context.pop();
             return;
         }
         throw XicInternalException.runtime("Cannot remove global context.");
@@ -112,10 +96,10 @@ public class Context<S,T> {
      */
     public Map<S,T> getMap() {
         Map<S,T> aggregateMap = new LinkedHashMap<>();
-        for (PMap<S,T> map : context) {
+        for (Map<S,T> map : context) {
             Iterator<Map.Entry<S,T>> it = map.entrySet().iterator();
             while (it.hasNext()) {
-                Map.Entry<S,T> e = (Map.Entry<S,T>) it.next();
+                Map.Entry<S,T> e = it.next();
                 aggregateMap.put(e.getKey(), e.getValue());
             }
         }
