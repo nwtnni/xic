@@ -3,6 +3,7 @@
 buildSrc/.gradle/
 buildSrc/build/
 build/
+gradle/
 
 # Javadoc
 doc/

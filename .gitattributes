@@ -1,0 +1,5 @@
+runtime/* linguist-vendored
+tests/*   linguist-vendored
+gradle/*  linguist-vendored
+xth/*     linguist-vendored
+libs/*    linguist-vendored
