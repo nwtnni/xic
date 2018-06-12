@@ -146,7 +146,7 @@ public class Main {
         }
 
         for (Kind phase : opts) {
-            // xic.removePhase(phase);
+            xic.removePhase(phase);
         }
 
         xic.run();

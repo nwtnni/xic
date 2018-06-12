@@ -1,6 +1,6 @@
 # xic
 
-Compiles `Xi` and `OXi` source files down to `x86_64` assembly.
+Compiles `Xi` and `oXi` source files down to `x86_64` assembly.
 
 The compiler is divided into the following phases:
 
@@ -66,9 +66,9 @@ executable creation. Run `./xic-build` to generate the `xic` executable.
 
 ### Example
 
-###### hello\_world.xi
-
 ```
+// hello_world.xi
+
 use io
 
 main(args: int[][]) {
@@ -80,96 +80,39 @@ main(args: int[][]) {
 
 Running `./xic -libpath tests/libs hello_world.xi` generates:
 
-###### hello\_world.s
 
 ```asm
-# main
+# hello_world.s
+
 .globl _Imain_paai
 .align 4
 _Imain_paai:
         pushq %rbp
         movq %rsp, %rbp
-        subq $96, %rsp
-        movq %r15, %r11
-        movq %r11, -8(%rbp)
-        movq %r14, %r11
-        movq %r11, -16(%rbp)
-        movq %r13, %r11
-        movq %r11, -24(%rbp)
-        movq %r12, %r11
-        movq %r11, -32(%rbp)
-        movq %rbx, %r11
-        movq %r11, -40(%rbp)
-        movq %rdi, %r11
-        movq %r11, -48(%rbp)
+        subq $32, %rsp
         movq $112, %rdi
-        movq %r11, -56(%rbp)
         callq _xi_alloc
-        movq %rax, %r11
-        movq %r11, -64(%rbp)
-        movq -64(%rbp), %r10
-        movq %r10, %r11
-        movq %r11, -72(%rbp)
-        movq -72(%rbp), %r10
-        movq $13, (%r10)
-        movq -64(%rbp), %r10
-        movq $72, 8(%r10)
-        movq -64(%rbp), %r10
-        movq $101, 16(%r10)
-        movq -64(%rbp), %r10
-        movq $108, 24(%r10)
-        movq -64(%rbp), %r10
-        movq $108, 32(%r10)
-        movq -64(%rbp), %r10
-        movq $111, 40(%r10)
-        movq -64(%rbp), %r10
-        movq $44, 48(%r10)
-        movq -64(%rbp), %r10
-        movq $32, 56(%r10)
-        movq -64(%rbp), %r10
-        movq $119, 64(%r10)
-        movq -64(%rbp), %r10
-        movq $111, 72(%r10)
-        movq -64(%rbp), %r10
-        movq $114, 80(%r10)
-        movq -64(%rbp), %r10
-        movq $108, 88(%r10)
-        movq -64(%rbp), %r10
-        movq $100, 96(%r10)
-        movq -64(%rbp), %r10
-        movq $33, 104(%r10)
-        movq -64(%rbp), %r10
-        movq %r10, %r11
-        movq %r11, -80(%rbp)
-        movq -80(%rbp), %r11
-        addq $8, %r11
-        movq %r11, -80(%rbp)
-        movq -80(%rbp), %r10
-        movq -64(%rbp), %r11
-        movq %r10, %r11
-        movq %r11, -64(%rbp)
-        movq -64(%rbp), %r10
-        movq %r10, %rdi
-        movq %r11, -56(%rbp)
+        movq %rax, %rcx
+        movq $13, (%rcx)
+        movq $72, 8(%rax)
+        movq $101, 16(%rax)
+        movq $108, 24(%rax)
+        movq $108, 32(%rax)
+        movq $111, 40(%rax)
+        movq $44, 48(%rax)
+        movq $32, 56(%rax)
+        movq $119, 64(%rax)
+        movq $111, 72(%rax)
+        movq $114, 80(%rax)
+        movq $108, 88(%rax)
+        movq $100, 96(%rax)
+        movq $33, 104(%rax)
+        addq $8, %rax
+        movq %rax, %rdi
         callq _Iprintln_pai
-        movq -40(%rbp), %r10
-        movq %r10, %rbx
-        movq %r11, -56(%rbp)
-        movq -32(%rbp), %r10
-        movq %r10, %r12
-        movq %r11, -56(%rbp)
-        movq -24(%rbp), %r10
-        movq %r10, %r13
-        movq %r11, -56(%rbp)
-        movq -16(%rbp), %r10
-        movq %r10, %r14
-        movq %r11, -56(%rbp)
-        movq -8(%rbp), %r10
-        movq %r10, %r15
-        movq %r11, -56(%rbp)
         jmp _RET_Imain_paai
 _RET_Imain_paai:
-        addq $96, %rsp
+        addq $32, %rsp
         popq %rbp
         retq
 ```
